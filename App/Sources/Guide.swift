@@ -22,7 +22,12 @@ enum Guide {
             "A click does what pressing the box key does. The window does not take the keyboard away from the app you are working in.",
             "It stays above other windows, you can drag it anywhere, and it remembers its place.",
             "The top line shows the profile and page names and a button to set up keys. While \"Set up keys\" is open the floating keys step aside, and come back when you close it.",
-            "It works without the box, so you can use the keys on a Mac with no box plugged in."
+            "It works without the box, so you can use the keys on a Mac with no box plugged in.",
+            "Three choices in Settings, in the card \"Keys on screen\". \"Show them\": \"Where I left them\" or \"At the mouse pointer\".",
+            "At the mouse pointer, the keys appear under the pointer each time. Near the edge of the screen they move in until they are whole. The place you drag them to is not remembered then.",
+            "\"Hide after a key is pressed\" hides the keys after a click on a key that does something on the Mac. A key that only moves around leaves them open.",
+            "\"Size\": Small, Normal or Large. The window changes size at once.",
+            "Together: press Control-Option-D, the keys appear under the mouse, click one, and they are gone."
         ]),
         Section(id: "look", title: "The look of a key", part: "keys", lines: [
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
@@ -76,7 +81,7 @@ enum Guide {
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
-            "\"Settings\" holds the box, brightness, change profile with the app in front, open at login, permissions and bring over again.",
+            "\"Settings\" holds the box, brightness, change profile with the app in front, the keys on screen (where they show, hide after a key, size), open at login, permissions and bring over again.",
             "The version number, Quit and Done stay at the bottom."
         ]),
         Section(id: "kept", title: "Where things are kept", part: "settings", lines: [
@@ -87,6 +92,16 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.2", date: "14 Nov 2026", new: [
+            "Keys on screen can now work like a virtual deck: press Control-Option-D, the keys appear under the mouse, click one, and they are gone.",
+            "\"Show them\": \"Where I left them\" (as before, the window comes back where you last dragged it) or \"At the mouse pointer\". With the pointer, the window appears centred on it each time it is shown, from the menu or with Control-Option-D. It starts as \"Where I left them\".",
+            "At the mouse pointer: near an edge of the screen the window moves in until it is whole, 8 points from the edge. It appears on the screen the pointer is on. The place you drag it to is not remembered in this mode.",
+            "\"Hide after a key is pressed\" (a checkbox, off to start with): after a click on a key that does something on the Mac, the keys hide by themselves. That means opening an app or a link, running a Raycast command, pressing a shortcut, typing text or controlling music.",
+            "A key that only moves around leaves the keys open, because you are not done yet. That means a folder, Back, next or previous page and switch profile. A \"several things in a row\" key hides them when at least one of its steps does something on the Mac. Only clicks on the screen hide them, not pressing a key on the box.",
+            "\"Size\": Small, Normal or Large. One key is 48, 64 or 80 points wide, with a gap of 6, 8 or 10 points. It starts as Normal, the size 0.1 had. The window changes size at once."
+        ], changed: [
+            "Settings has a new card, \"Keys on screen\", for these three choices."
+        ], fixed: []),
         Release(id: "0.1", date: "14 Nov 2026", new: [
             "AMS Deck Mate: a new Mac menu bar app that drives a Stream Deck box with 15 keys (Stream Deck 2019 and MK.2) straight over its cable. No Elgato app, no subscription.",
             "Not yet tried on the real box: 0.1 was built while the box was away. The first real test is planned for January 2027.",

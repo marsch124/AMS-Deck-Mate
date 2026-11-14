@@ -103,6 +103,43 @@ final class RulesTests: XCTestCase {
         XCTAssertEqual(tidy.profiles[0].page(main.pages[0].id)?.keys.count, 4)
     }
 
+    func testKeysOnScreenAppearUnderThePointerButNeverOffTheScreen() {
+        let area = CGRect(x: 0, y: 0, width: 1000, height: 600)
+        let size = CGSize(width: 300, height: 200)
+        XCTAssertEqual(ScreenDeckRules.origin(pointer: CGPoint(x: 500, y: 300), size: size, area: area), CGPoint(x: 350, y: 200))
+        XCTAssertEqual(ScreenDeckRules.origin(pointer: CGPoint(x: 5, y: 595), size: size, area: area), CGPoint(x: 8, y: 392),
+                       "top left corner: moved in, 8 points from the edges")
+        XCTAssertEqual(ScreenDeckRules.origin(pointer: CGPoint(x: 990, y: 2), size: size, area: area), CGPoint(x: 692, y: 8))
+        let second = CGRect(x: 1000, y: -200, width: 800, height: 500)
+        XCTAssertEqual(ScreenDeckRules.origin(pointer: CGPoint(x: 1010, y: 0), size: size, area: second), CGPoint(x: 1008, y: -100),
+                       "a second screen beside the first")
+        XCTAssertEqual(ScreenDeckRules.origin(pointer: CGPoint(x: 10, y: 10), size: CGSize(width: 1200, height: 100), area: area).x, -100,
+                       "wider than the screen: centred")
+    }
+
+    func testKeysOnScreenHideOnlyAfterAKeyThatDidSomething() {
+        let (deck, _, _, _) = deck()
+        let start = Navigator.start(in: deck)!
+        let opened = Navigator.press(0, at: start, in: deck)
+        let folder = Navigator.press(1, at: start, in: deck)
+        let several = Navigator.press(4, at: start, in: deck)
+        XCTAssertTrue(ScreenDeckRules.hides(after: opened, setting: true))
+        XCTAssertFalse(ScreenDeckRules.hides(after: opened, setting: false), "switched off: they stay")
+        XCTAssertFalse(ScreenDeckRules.hides(after: folder, setting: true), "a folder only moves around: he is not done")
+        XCTAssertTrue(ScreenDeckRules.hides(after: several, setting: true))
+        XCTAssertFalse(ScreenDeckRules.hides(after: Navigator.press(9, at: start, in: deck), setting: true), "an empty place")
+    }
+
+    func testTheScreenChoicesSurviveAnOddFile() throws {
+        let odd = try JSONDecoder().decode(Deck.self, from: Data(#"{"screenSize": "huge", "screenAtPointer": "yes"}"#.utf8))
+        XCTAssertEqual(odd.screenSize, .normal)
+        XCTAssertFalse(odd.screenAtPointer)
+        XCTAssertFalse(odd.screenHidesAfterKey)
+        let set = Deck(screenAtPointer: true, screenHidesAfterKey: true, screenSize: .large)
+        XCTAssertEqual(try JSONDecoder().decode(Deck.self, from: JSONEncoder().encode(set)), set)
+        XCTAssertEqual(ScreenSize.allCases.map(\.keySide), [48, 64, 80])
+    }
+
     func testAKeyPictureIsCutIntoPacketsOf1024() {
         let jpeg = Data((0..<2500).map { UInt8($0 % 251) })
         let packets = StreamDeckProtocol.imagePackets(key: 7, jpeg: jpeg)

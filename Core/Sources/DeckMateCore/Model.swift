@@ -237,14 +237,24 @@ public struct Deck: Codable, Equatable, Sendable {
     public var brightness: Int
     /// Change the profile by itself when another app comes to the front.
     public var autoSwitch: Bool
+    /// Keys on screen: appear at the mouse pointer instead of where he left them.
+    public var screenAtPointer: Bool
+    /// Keys on screen: hide by themselves after a key that did something on the Mac.
+    public var screenHidesAfterKey: Bool
+    /// Keys on screen: small, normal or large.
+    public var screenSize: ScreenSize
 
     public init(version: Int = 1, profiles: [DeckProfile] = [], defaultProfile: UUID? = nil,
-                brightness: Int = 70, autoSwitch: Bool = true) {
+                brightness: Int = 70, autoSwitch: Bool = true, screenAtPointer: Bool = false,
+                screenHidesAfterKey: Bool = false, screenSize: ScreenSize = .normal) {
         self.version = version
         self.profiles = profiles
         self.defaultProfile = defaultProfile
         self.brightness = brightness
         self.autoSwitch = autoSwitch
+        self.screenAtPointer = screenAtPointer
+        self.screenHidesAfterKey = screenHidesAfterKey
+        self.screenSize = screenSize
     }
 
     public init(from decoder: Decoder) throws {
@@ -254,6 +264,9 @@ public struct Deck: Codable, Equatable, Sendable {
         defaultProfile = try? c.decodeIfPresent(UUID.self, forKey: .defaultProfile)
         brightness = min(100, max(0, c.value(.brightness, 70)))
         autoSwitch = c.value(.autoSwitch, true)
+        screenAtPointer = c.value(.screenAtPointer, false)
+        screenHidesAfterKey = c.value(.screenHidesAfterKey, false)
+        screenSize = c.value(.screenSize, .normal)
     }
 
     public func profile(_ id: UUID) -> DeckProfile? { profiles.first { $0.id == id } }

@@ -95,7 +95,7 @@ struct ScreenDeckView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Text(model.placeLine)
-                    .font(.callout.weight(.medium))
+                    .font((model.deck.screenSize == .small ? Font.caption : Font.callout).weight(.medium))
                     .foregroundStyle(.white.opacity(0.92))
                     .lineLimit(1)
                     .accessibilityIdentifier("deckPlace")
@@ -108,7 +108,8 @@ struct ScreenDeckView: View {
                 headerButton("control-settings", "Set up keys", "deckSetup", openSetup)
                 headerButton("control-close", "Hide the keys", "deckClose", close)
             }
-            KeyGrid(keys: model.keys, pressed: model.pressed, side: 64, gap: 8) { model.click($0) }
+            KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
+                    gap: model.deck.screenSize.gap) { model.click($0) }
         }
         .padding(10)
         .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))

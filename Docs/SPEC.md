@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.1 (build 1), 14 Nov 2026
+# AMS Deck Mate, specification, version 0.2 (build 2), 14 Nov 2026
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -21,6 +21,22 @@ The icon opens a menu:
 - It does not take the keyboard from the app the user works in. It stays above other windows, can be dragged anywhere and remembers its place.
 - The top line shows the profile and page names and a button to set up keys.
 - It works without the box.
+- Three choices, made in Settings in the card "Keys on screen" (rules in `ScreenDeck.swift`: `ScreenDeckRules`, `ScreenSize`). Together they make the keys on screen a virtual deck: Control-Option-D, the keys appear under the mouse, click a key, they are gone.
+
+**Show them** (`screenAtPointer`, default false)
+- "Where I left them": the window comes back where the user last dragged it (as in 0.1).
+- "At the mouse pointer": each time the window is shown (from the menu or with Control-Option-D) it is centred on the mouse pointer. The place the user drags it to is not remembered in this mode.
+- Placement (`ScreenDeckRules.origin(pointer:size:area:margin:)`): `area` is the usable part of the screen the pointer is on; `margin` is 8 points. On each axis the wanted lower left corner is the pointer minus half the window size, then held between `low + margin` and `high - margin - length`. If the window is larger than that room, it is centred on the area. The answer is the lower left corner.
+
+**Hide after a key is pressed** (`screenHidesAfterKey`, default false)
+- Rule (`ScreenDeckRules.hides(after:setting:)`): the keys hide when the setting is on and the outcome of the click ran something on the Mac (`outcome.run` is not empty).
+- A key that only moves around (folder, Back, next or previous page, switch profile) runs nothing, so the keys stay open.
+- A "several things in a row" key hides them when at least one of its steps runs something on the Mac.
+- Only clicks on the screen hide the keys. Pressing a key on the box does not.
+
+**Size** (`screenSize`, default normal)
+- `ScreenSize`: small, normal, large. The side of one key (`keySide`) is 48, 64 or 80 points; the gap between keys (`gap`) is 6, 8 or 10 points. Normal is the size 0.1 had.
+- The window changes size at once.
 
 ## 4. Key look and colours
 - A flat coloured tile, a white hand-drawn icon, a short title.
@@ -107,7 +123,7 @@ Not yet tried on the real box (see the warning at the top).
 - The Mac may ask for Input Monitoring when the box is first plugged in.
 
 ## 12. Settings
-Three tabs: Settings (box, brightness, change profile with the app in front, open at login, permissions, bring over again), How it works, What's new. The version, Quit and Done are at the bottom.
+Three tabs: Settings (box, brightness, change profile with the app in front, the card "Keys on screen" (Show them, Hide after a key is pressed, Size), open at login, permissions, bring over again), How it works, What's new. The version, Quit and Done are at the bottom.
 
 ## 13. Storage
 - One file: `~/Library/Application Support/AMS Deck Mate/deck.json`. Each save first keeps the previous file as a safety copy (the last 20) in `Backups` beside it.
@@ -116,7 +132,7 @@ Three tabs: Settings (box, brightness, change profile with the app in front, ope
 
 | Object | Fields |
 |---|---|
-| Deck | version (1), profiles, defaultProfile (id), brightness (0 to 100, default 70), autoSwitch (default true) |
+| Deck | version (1), profiles, defaultProfile (id), brightness (0 to 100, default 70), autoSwitch (default true), screenAtPointer (true or false, default false), screenHidesAfterKey (true or false, default false), screenSize ("small", "normal" or "large", default "normal"). A missing or odd value of the last three means the default |
 | Profile | id, name, apps (bundle identifiers), pages |
 | Page | id, name, parent (id of the page holding the folder key, or empty for a top page), keys (place 0 to 14 as the key; 0 top left, left to right, top to bottom) |
 | Key | id, title, icon, action |
@@ -124,7 +140,7 @@ Three tabs: Settings (box, brightness, change profile with the app in front, ope
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
-- Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding). Run: `cd Core && swift test`.
+- Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). 19 tests in all: 18 rule tests and the take-over test. Run: `cd Core && swift test`.
 
 ## 15. Build and install
 1. `xcodegen generate`
@@ -133,7 +149,7 @@ Three tabs: Settings (box, brightness, change profile with the app in front, ope
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-## 16. Not in 0.1
+## 16. Not in 0.2
 - The first Stream Deck from 2017.
 - Other box sizes (6 and 32 keys, XL, Mini, Plus, Neo, pedal).
 - Dragging keys to move them.

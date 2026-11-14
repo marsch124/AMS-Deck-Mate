@@ -98,6 +98,22 @@ struct SettingsView: View {
         .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
+    /// One of a few choices in a row: the picked one is full colour, also when the window is not in front.
+    private func choice(_ title: String, _ picked: Bool, _ id: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.callout.weight(.medium))
+                .foregroundStyle(picked ? Color.white : Palette.part("screen", scheme))
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3)
+                .background(picked ? Palette.fill("screen") : Palette.part("screen", scheme).opacity(0.12), in: Capsule())
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(id)
+        .accessibilityAddTraits(picked ? .isSelected : [])
+    }
+
     private func note(_ text: String) -> some View {
         Text(text).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
     }
@@ -138,6 +154,25 @@ struct SettingsView: View {
                 }
                 note("Not yet tried on the real box: this version was built while the box was away. The keys on screen work without it.")
             }
+            card("Keys on screen", "screen") {
+                HStack(spacing: 6) {
+                    Text("Show them")
+                    choice("Where I left them", !model.deck.screenAtPointer, "placeLeft") { model.change { $0.screenAtPointer = false } }
+                    choice("At the mouse pointer", model.deck.screenAtPointer, "placePointer") { model.change { $0.screenAtPointer = true } }
+                }
+                HStack(spacing: 6) {
+                    Text("Size")
+                    ForEach(ScreenSize.allCases, id: \.self) { size in
+                        choice(size.title, model.deck.screenSize == size, "size-\(size.rawValue)") { model.change { $0.screenSize = size } }
+                    }
+                }
+                Toggle("Hide after a key is pressed", isOn: Binding(
+                    get: { model.deck.screenHidesAfterKey },
+                    set: { on in model.change { $0.screenHidesAfterKey = on } }))
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("hideAfterKey")
+                note("Control-Option-D shows or hides them. A folder, Back or a page key never hides them: you are not done yet.")
+            }
             card("Profiles", "profiles") {
                 Toggle("Change profile with the app in front", isOn: Binding(
                     get: { model.deck.autoSwitch },
@@ -170,7 +205,6 @@ struct SettingsView: View {
                     }
                 }
                 note("The Mac asks once, under Privacy & Security, Accessibility. Opening apps, links and Raycast needs no permission.")
-                note("Shortcut: Control-Option-D shows or hides the keys on screen.")
             }
             card("Keys from Elgato", "keys") {
                 if let count = model.importedKeys {

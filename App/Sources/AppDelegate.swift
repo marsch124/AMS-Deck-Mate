@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import Combine
 import DeckMateCore
 import ServiceManagement
 import SwiftUI
@@ -31,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     private var settingsWindow: NSWindow?
     /// The keys on screen were showing when "Set up keys" opened, and come back when it closes.
     private var deckWaits = false
+    private var sizeWatch: AnyCancellable?
     private static let note = "com.schabbauer.AMSDeckMate."
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -60,6 +62,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         }
         model = AppModel(store: store)
         makeItem()
+        model.onScreenKeyActed = { [weak self] in self?.deckPanel?.orderOut(nil) }
+        // A new size in Settings shows at once.
+        sizeWatch = model.$deck.map(\.screenSize).removeDuplicates().dropFirst()
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.fitDeck() } }
         HotKey.register(keyCode: kVK_ANSI_D, modifiers: controlKey | optionKey) { [weak self] in self?.toggleDeck() }
 
         // Lets a check from outside open the real windows and press keys.
@@ -154,13 +160,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     private func showDeck() {
         let panel = deckPanel ?? makeDeckPanel()
         deckPanel = panel
-        // Back into sight when its remembered place is on a screen that is gone.
-        let onScreen = NSScreen.screens.contains { $0.visibleFrame.intersects(panel.frame) }
-        if !onScreen, let screen = NSScreen.main {
-            let area = screen.visibleFrame
-            panel.setFrameOrigin(NSPoint(x: area.maxX - panel.frame.width - 24, y: area.minY + 24))
+        fitDeck()
+        if model.deck.screenAtPointer {
+            // Under the mouse pointer, on the screen the pointer is on, never off its edge.
+            let pointer = AppDelegate.pointer()
+            let screen = NSScreen.screens.first { NSMouseInRect(pointer, $0.frame, false) } ?? NSScreen.main
+            if let area = screen?.visibleFrame {
+                let origin = ScreenDeckRules.origin(pointer: pointer, size: panel.frame.size, area: area)
+                panel.setFrameOrigin(origin)
+            }
+        } else {
+            // Back into sight when its remembered place is on a screen that is gone.
+            let onScreen = NSScreen.screens.contains { $0.visibleFrame.intersects(panel.frame) }
+            if !onScreen, let screen = NSScreen.main {
+                let area = screen.visibleFrame
+                panel.setFrameOrigin(NSPoint(x: area.maxX - panel.frame.width - 24, y: area.minY + 24))
+            }
         }
         panel.orderFrontRegardless()
+    }
+
+    /// Where the mouse pointer is right now, in screen points (origin bottom left).
+    /// Asked of the window server directly: NSEvent.mouseLocation can be stale in an app that is not in front.
+    static func pointer() -> NSPoint {
+        guard let at = CGEvent(source: nil)?.location, let top = NSScreen.screens.first?.frame.maxY else {
+            return NSEvent.mouseLocation
+        }
+        return NSPoint(x: at.x, y: top - at.y)
+    }
+
+    /// Makes the floating window as large as its keys (after a change of size), keeping its top left corner.
+    private func fitDeck() {
+        guard let panel = deckPanel, let host = panel.contentView else { return }
+        let size = host.fittingSize
+        guard size != panel.frame.size else { return }
+        let corner = NSPoint(x: panel.frame.minX, y: panel.frame.maxY)
+        panel.setContentSize(size)
+        panel.setFrameTopLeftPoint(corner)
     }
 
     private func makeDeckPanel() -> NSPanel {
@@ -190,7 +226,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     }
 
     func windowDidMove(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow, window === deckPanel else { return }
+        // Only a place he dragged it to is remembered, not the place under the pointer.
+        guard let window = notification.object as? NSWindow, window === deckPanel, !model.deck.screenAtPointer else { return }
         UserDefaults.standard.set(NSStringFromPoint(window.frame.origin), forKey: "deckOrigin")
     }
 
@@ -253,6 +290,11 @@ enum Snapshots {
             shot(SettingsView(model: model, startTab: .guide), "guide-\(name)", look, folder)
             shot(SettingsView(model: model, startTab: .news), "news-\(name)", look, folder)
             shot(IconPicker(current: "", pick: { _ in }), "icons-\(name)", look, folder)
+        }
+        for size in [ScreenSize.small, .large] {
+            var deck = Sample.deck()
+            deck.screenSize = size
+            shot(ScreenDeckView(model: AppModel(sample: deck)).padding(16), "deck-\(size.rawValue)", .aqua, folder)
         }
         // The key pictures exactly as the box gets them (before they are turned), three times enlarged.
         let keys = model.keys

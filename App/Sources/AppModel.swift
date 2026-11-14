@@ -22,6 +22,9 @@ final class AppModel: ObservableObject {
     /// True for the made-up setup used for pictures: nothing is saved, no box, no watching.
     let isSample: Bool
 
+    /// A click on screen did something on the Mac and the keys are set to hide after that.
+    var onScreenKeyActed: (() -> Void)?
+
     private var frontApp: String?
     private var shown: [DeckKey?] = []
     private var saveTimer: Timer?
@@ -116,22 +119,27 @@ final class AppModel: ObservableObject {
 
     // MARK: Pressing
 
-    /// A key was pressed, on screen or on the box.
-    func press(_ index: Int) {
-        guard let position else { return }
+    /// A key was pressed, on screen or on the box. Says what came of it.
+    @discardableResult
+    func press(_ index: Int) -> Navigator.Outcome? {
+        guard let position else { return nil }
         let outcome = Navigator.press(index, at: position, in: deck)
         move(to: outcome.position)
         ActionRunner.run(outcome.run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
         }
+        return outcome
     }
 
-    /// A click on screen: the key looks pressed for a moment, then acts.
+    /// A click on screen: the key looks pressed for a moment, then acts. With "hide after a key is
+    /// pressed" on, the keys then step away (only after a key that did something on the Mac).
     func click(_ index: Int) {
         pressed.insert(index)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
-        press(index)
+        guard let outcome = press(index),
+              ScreenDeckRules.hides(after: outcome, setting: deck.screenHidesAfterKey) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in self?.onScreenKeyActed?() }
     }
 
     private func boxKey(_ index: Int, _ isDown: Bool) {

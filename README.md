@@ -1,8 +1,8 @@
 # AMS Deck Mate
 
-A small Mac menu bar app, version 0.1 (build 1). It drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
+A small Mac menu bar app, version 0.2 (build 2). It drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
-Each key can open an app, a link or a file, run a Raycast command, press a keyboard shortcut, type text, control music and sound, move to another page or profile, or do several things in a row. The keys change by themselves when another app comes to the front. A floating window on the screen shows the same 15 keys, so the keys also work with no box plugged in. At first start the keys from Elgato's app are brought over.
+Each key can open an app, a link or a file, run a Raycast command, press a keyboard shortcut, type text, control music and sound, move to another page or profile, or do several things in a row. The keys change by themselves when another app comes to the front. A floating window on the screen shows the same 15 keys, so the keys also work with no box plugged in. The keys on screen can also work as a virtual deck: press Control-Option-D, the keys appear under the mouse pointer, click one and they are gone. At first start the keys from Elgato's app are brought over.
 
 ## Look
 Flat coloured tiles with white hand-drawn icons, one colour per kind of key: apps blue, links teal, Raycast red-orange, shortcuts purple, text amber, music green, moving around grey-blue.
