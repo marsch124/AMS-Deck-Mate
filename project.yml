@@ -1,0 +1,53 @@
+name: AMSDeckMate
+options:
+  bundleIdPrefix: com.schabbauer
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+packages:
+  DeckMateCore:
+    path: Core
+targets:
+  AMSDeckMate:
+    type: application
+    platform: macOS
+    sources:
+      - App/Sources
+      - path: App/Resources
+        excludes:
+          - AppIcon.icns
+          - Icons
+      - path: App/Resources/Icons
+        type: folder
+        buildPhase: resources
+    info:
+      path: App/Config/Info.plist
+      properties:
+        CFBundleDisplayName: AMS Deck Mate
+        CFBundleShortVersionString: "0.1"
+        CFBundleVersion: "1"
+        CFBundleIconFile: AppIcon
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.utilities
+        NSAppleEventsUsageDescription: AMS Deck Mate asks other apps to quit or open only when a key of yours says so.
+    settings:
+      base:
+        PRODUCT_NAME: AMS Deck Mate
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        PRODUCT_BUNDLE_IDENTIFIER: com.schabbauer.AMSDeckMate
+        SWIFT_VERSION: "5.0"
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: Apple Development
+        DEVELOPMENT_TEAM: D24ENP83QQ
+        ENABLE_HARDENED_RUNTIME: NO
+    dependencies:
+      - package: DeckMateCore
+schemes:
+  AMS Deck Mate:
+    build:
+      targets:
+        AMSDeckMate: all
+    run:
+      config: Release
