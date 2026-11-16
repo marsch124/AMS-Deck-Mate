@@ -33,6 +33,7 @@ enum Guide {
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
             "Each kind has its own colour: apps blue, links teal, Raycast red-orange, keyboard shortcuts purple, typed text amber, music and sound green, moving around grey-blue.",
             "A key that opens an app shows the app's own icon, unless you pick a hand-drawn one.",
+            "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
             "There are 245 hand-drawn icons to pick from."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
@@ -51,6 +52,7 @@ enum Guide {
             "Nothing leaves the key empty."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
+            "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
             "Pick a command from a list. It holds the commands of the Raycast extensions on this Mac, found by itself, and 16 of Raycast's own.",
             "Or paste any Raycast link: in Raycast select a command, press Command-K and choose \"Copy Deeplink\".",
             "A script command goes on a key by its name, and an AI command by its name.",
@@ -75,13 +77,27 @@ enum Guide {
             "Settings warns you when Elgato's app is running and has a \"Quit Elgato's app\" button.",
             "When Deck Mate quits, the box goes back to the Elgato logo."
         ]),
+        Section(id: "iphone", title: "On your iPhone", part: "settings", lines: [
+            "Deck Mate for the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the profile and page the Mac shows, so it changes when the app in front changes.",
+            "Tap a key on the iPhone and the Mac does it, exactly as if you had pressed it on the box. The keys on the Mac screen do not hide because of a tap on the iPhone.",
+            "The iPhone finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
+            "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" Choose Allow. After that the Mac remembers the iPhone. If you choose Don't Allow, the iPhone shows \"Ask again\".",
+            "The pictures are drawn by the Mac, so keys that open an app show the real app icon.",
+            "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network."
+        ]),
+        Section(id: "iphonecard", title: "The iPhone card in Settings", part: "settings", lines: [
+            "In the Mac's Settings there is a card \"iPhone\".",
+            "The checkbox \"Let an iPhone use these keys\" is on to start with. Switch it off and no iPhone can use your keys.",
+            "Under it you see the iPhone that is connected right now, and the list of allowed iPhones. \"Forget\" next to one takes the permission back. That iPhone has to ask again.",
+            "The first time, the Mac may ask to \"find devices on local networks\". That is this feature. Answer Allow."
+        ]),
         Section(id: "permissions", title: "What the Mac asks for", part: "settings", lines: [
             "Accessibility, once, for keys that press a keyboard shortcut, type text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
             "The Mac may also ask for Input Monitoring when the box is first plugged in."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
-            "\"Settings\" holds the box, brightness, change profile with the app in front, the keys on screen (where they show, hide after a key, size), open at login, permissions and bring over again.",
+            "\"Settings\" holds the box, brightness, change profile with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions and bring over again.",
             "The version number, Quit and Done stay at the bottom."
         ]),
         Section(id: "kept", title: "Where things are kept", part: "settings", lines: [
@@ -92,6 +108,24 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.3", date: "16 Nov 2026", new: [
+            "Deck Mate on the iPhone: a new iPhone app, on TestFlight. It shows the same 15 keys as the box, in the same places and with the same pictures.",
+            "The iPhone follows the profile and page the Mac shows. When the app in front on the Mac changes and the profile changes with it, the iPhone changes too.",
+            "Tap a key on the iPhone and the Mac does it, exactly as if the key had been pressed on the box. The keys on the Mac screen do not hide because of a tap on the iPhone.",
+            "The iPhone finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
+            "First time: the Mac asks \"“iPhone name” wants to use your keys. Allow?\" with Allow and Don't Allow. After Allow the iPhone is remembered. If you refuse, the iPhone shows \"Ask again\".",
+            "The iPhone keeps its screen on while it is connected.",
+            "iPhone Settings: which Mac it uses, \"Forget this Mac\", the version, How it works and What's new.",
+            "The iPhone app works upright and sideways.",
+            "The pictures are drawn by the Mac, so keys that open an app show the real app icons on the iPhone.",
+            "A new card \"iPhone\" in the Mac's Settings: the checkbox \"Let an iPhone use these keys\" (on to start with), the iPhone connected right now, and the allowed iPhones, each with \"Forget\" to take the permission back.",
+            "The first time, the Mac may ask to \"find devices on local networks\". That is this feature. Answer Allow.",
+            "A Raycast folder in the author's own setup: on Page 1 of the Default Profile a key \"Raycast\" opens a folder with Back and 14 Raycast commands from the installed extensions: Clipboard, AI Chat, Ask Perplexity, Hide apps, New reminder, Reminders, Notion note, Find in Notion, Daily plan (NotePlan), Screenshot (CleanShot area), Text from screen (CleanShot OCR), Play/Pause and Next song (Spotify) and Passwords (1Password).",
+            "The keys of that folder that need no window run quietly. You can change them in Set up keys as usual."
+        ], changed: [
+            "A key that opens an app and has no words of its own now shows the app's name. The keys of the Apps folder now read Mail, Safari, Calculator and so on. Words you write on a key always win. This is the same on the box, on the Mac screen and on the iPhone.",
+            "Settings on the Mac now holds the iPhone card, and How it works has two new parts: \"On your iPhone\" and \"The iPhone card in Settings\"."
+        ], fixed: []),
         Release(id: "0.2", date: "14 Nov 2026", new: [
             "Keys on screen can now work like a virtual deck: press Control-Option-D, the keys appear under the mouse, click one, and they are gone.",
             "\"Show them\": \"Where I left them\" (as before, the window comes back where you last dragged it) or \"At the mouse pointer\". With the pointer, the window appears centred on it each time it is shown, from the menu or with Control-Option-D. It starts as \"Where I left them\".",

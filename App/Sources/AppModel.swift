@@ -142,6 +142,13 @@ final class AppModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in self?.onScreenKeyActed?() }
     }
 
+    /// A tap on the iPhone: like a press on the box (the keys on screen show it, and never hide for it).
+    func pressFromPhone(_ index: Int) {
+        pressed.insert(index)
+        press(index)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
+    }
+
     private func boxKey(_ index: Int, _ isDown: Bool) {
         if isDown {
             pressed.insert(index)

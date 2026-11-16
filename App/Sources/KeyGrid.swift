@@ -80,7 +80,7 @@ struct KeyGrid: View {
         .scaleEffect(isPressed ? 0.95 : 1)
         .animation(.easeOut(duration: 0.08), value: isPressed)
         .accessibilityElement()
-        .accessibilityLabel(keys[index]?.title ?? "Empty key")
+        .accessibilityLabel(keys[index] == nil ? "Empty key" : KeyArt.title(keys[index]))
         .accessibilityIdentifier("key\(index)")
     }
 }

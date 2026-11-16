@@ -5,3 +5,5 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 xcuserdata/
+build-phone/
+build-phone-test/

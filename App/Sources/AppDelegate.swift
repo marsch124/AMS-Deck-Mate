@@ -33,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     /// The keys on screen were showing when "Set up keys" opened, and come back when it closes.
     private var deckWaits = false
     private var sizeWatch: AnyCancellable?
+    private var phone: PhoneServer!
     private static let note = "com.schabbauer.AMSDeckMate."
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -61,6 +62,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             store = Store(folder: URL(fileURLWithPath: arguments[index + 1]))
         }
         model = AppModel(store: store)
+        phone = PhoneServer(model: model)
+        phone.start()
         makeItem()
         model.onScreenKeyActed = { [weak self] in self?.deckPanel?.orderOut(nil) }
         // A new size in Settings shows at once.
@@ -273,7 +276,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     }
 
     @objc private func openSettings() {
-        show(&settingsWindow, title: "AMS Deck Mate", SettingsView(model: model) { [weak self] in self?.settingsWindow?.close() })
+        show(&settingsWindow, title: "AMS Deck Mate", SettingsView(model: model, phone: phone) { [weak self] in self?.settingsWindow?.close() })
     }
 }
 
@@ -282,13 +285,14 @@ enum Snapshots {
     static func write(to folder: URL) {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let model = AppModel(sample: Sample.deck())
+        let phone = PhoneServer(model: model)
         for (name, look) in [("day", NSAppearance.Name.aqua), ("night", NSAppearance.Name.darkAqua)] {
             shot(ScreenDeckView(model: model).padding(16), "deck-\(name)", look, folder)
             shot(SetupView(model: model, startSlot: 5), "setup-\(name)", look, folder)
             shot(SetupView(model: model, startSlot: 13), "setup-steps-\(name)", look, folder)
-            shot(SettingsView(model: model, startTab: .settings), "settings-\(name)", look, folder)
-            shot(SettingsView(model: model, startTab: .guide), "guide-\(name)", look, folder)
-            shot(SettingsView(model: model, startTab: .news), "news-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .settings), "settings-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .guide), "guide-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .news), "news-\(name)", look, folder)
             shot(IconPicker(current: "", pick: { _ in }), "icons-\(name)", look, folder)
         }
         for size in [ScreenSize.small, .large] {

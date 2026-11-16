@@ -18,6 +18,7 @@ struct SettingsView: View {
     }
 
     @ObservedObject var model: AppModel
+    @ObservedObject var phone: PhoneServer
     var close: () -> Void = {}
     var startTab: Tab = .settings
     @State private var picked: Tab?
@@ -172,6 +173,25 @@ struct SettingsView: View {
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("hideAfterKey")
                 note("Control-Option-D shows or hides them. A folder, Back or a page key never hides them: you are not done yet.")
+            }
+            card("iPhone", "raycast") {
+                Toggle("Let an iPhone use these keys", isOn: Binding(get: { phone.isOn }, set: { phone.setOn($0) }))
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("phoneOn")
+                if phone.isOn {
+                    Text(phone.connected.map { "Connected now: \($0)" } ?? "No iPhone connected right now")
+                        .accessibilityIdentifier("phoneConnected")
+                    ForEach(phone.allowed.sorted { $0.value < $1.value }, id: \.key) { token, name in
+                        HStack {
+                            Text("Allowed: \(name)")
+                            Spacer()
+                            Button("Forget") { phone.forget(token) }
+                                .buttonStyle(PlainButton())
+                                .accessibilityIdentifier("forgetPhone")
+                        }
+                    }
+                }
+                note("Open Deck Mate on the iPhone close to this Mac; on the same Wi-Fi it finds the Mac by itself. The first time, this Mac asks whether to allow it.")
             }
             card("Profiles", "profiles") {
                 Toggle("Change profile with the app in front", isOn: Binding(

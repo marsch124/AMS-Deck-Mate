@@ -8,41 +8,74 @@
 
 /* Begin PBXBuildFile section */
 		00FCE55168B6F6A070298A8D /* ActionFields.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A487AF008BC5BB7FFBE6BD /* ActionFields.swift */; };
+		03E53A68CBAD200344C371C9 /* DeckScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACD6565181DB47E69CFAA61 /* DeckScreenTests.swift */; };
+		090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */; };
+		1299E87862CE7E6F4603A897 /* PhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3762868082154D49F518F35B /* PhoneApp.swift */; };
+		1C597609067AF54D584AAB04 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A8E776FF15C6691A7E97DAEC /* Assets.xcassets */; };
 		1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D4D729F81F0D52A25801405 /* SetupView.swift */; };
 		25400F3FCE0C8D5C9C29F5A2 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 746B67243A944BBECEE02900 /* AppIcon.icon */; };
 		26D75374A396705120CCC51C /* KeyGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23E6227D8C44A9DFC3F2FA1A /* KeyGrid.swift */; };
 		34E7DE0F68EA4D10AA121D6F /* DeckMateCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1D17AFF0C37A27F8AADFA9A8 /* DeckMateCore */; };
+		3B70ECA8DF91E158674A968C /* DeckMateCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF894429027E7994D6F202BD /* DeckMateCore */; };
 		4A781AC1BFD7A07BC72A82A3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA62F3E5031DFF998CEDD376 /* main.swift */; };
 		5258AB390D63E2C32EE5A792 /* Look.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F54CE7221A8B17D5AC8DDE /* Look.swift */; };
 		6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9085CF6126FF6B11B8514D /* SettingsView.swift */; };
+		76DE12C927BB43C6B8E51E11 /* SampleLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EECC7045EF82EDD6111E1DE /* SampleLink.swift */; };
+		79D9A6140848CF13AB2B5204 /* PhoneLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564D1488659C79AEC8657E00 /* PhoneLook.swift */; };
 		87759550CBD8EF9192A8C9A4 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7613A567D91FF441F5BE1118 /* AppModel.swift */; };
 		8A5A44F82DAB1FA19644D27A /* DeckDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8095E39B39479EDAE38E3FAC /* DeckDevice.swift */; };
 		A7FA39D2512E3E6990EF8E49 /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884B2B68338DE11AE6C9F9D /* Guide.swift */; };
 		AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769601D7D405BCA33D04C661 /* Store.swift */; };
 		D1AB1A8CC15E29A1F052F335 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A350CF35FC73A197CECBAA /* AppDelegate.swift */; };
+		D21A48CA32E29820EBA8EDE8 /* LinkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F4A172CE57401656C065E8 /* LinkClient.swift */; };
 		D4957990805AD31915C212CF /* KeyArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD91C2A2EE1636B6BA7A5CA3 /* KeyArt.swift */; };
+		D56BBF46D1A11591A630A143 /* PhoneGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC5304A926380E265BD2D024 /* PhoneGuide.swift */; };
 		E686271E607224BFB3B65318 /* ActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A63C7CEBB25FEEB670001E /* ActionRunner.swift */; };
 		EA6A4503DEDC4DB681A62E31 /* Icons in Resources */ = {isa = PBXBuildFile; fileRef = 81AF782BD024BAB473ADCB48 /* Icons */; };
+		EE222C5887D4D79DD417E6AE /* PhoneSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881C1DA770F5E89BAA84499D /* PhoneSettings.swift */; };
+		FB8FA2789316833AE2EA0C1C /* DeckScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0D9C2764FF86C3866F8DB1 /* DeckScreen.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4DE0AB1B6E5E6C17EB838B90 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DA1D5A46FCF676C29D6A80F1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FFEA3CFD36DB46587A0C38FB;
+			remoteInfo = AMSDeckMatePhone;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		10F54CE7221A8B17D5AC8DDE /* Look.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Look.swift; sourceTree = "<group>"; };
 		23E6227D8C44A9DFC3F2FA1A /* KeyGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyGrid.swift; sourceTree = "<group>"; };
 		24229BE64894202451537757 /* Core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Core; path = Core; sourceTree = SOURCE_ROOT; };
+		25F4A172CE57401656C065E8 /* LinkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkClient.swift; sourceTree = "<group>"; };
+		3762868082154D49F518F35B /* PhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneApp.swift; sourceTree = "<group>"; };
+		3C0D9C2764FF86C3866F8DB1 /* DeckScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckScreen.swift; sourceTree = "<group>"; };
 		3D4D729F81F0D52A25801405 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		3EECC7045EF82EDD6111E1DE /* SampleLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLink.swift; sourceTree = "<group>"; };
+		3F209460743B3DCE0F217DDD /* AMSDeckMatePhoneUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AMSDeckMatePhoneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A350CF35FC73A197CECBAA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4FE2EB6D6F2F10CB60B37C28 /* AMSDeckMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AMSDeckMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		564D1488659C79AEC8657E00 /* PhoneLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneLook.swift; sourceTree = "<group>"; };
 		746B67243A944BBECEE02900 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		7613A567D91FF441F5BE1118 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		769601D7D405BCA33D04C661 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		7884B2B68338DE11AE6C9F9D /* Guide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guide.swift; sourceTree = "<group>"; };
 		8095E39B39479EDAE38E3FAC /* DeckDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDevice.swift; sourceTree = "<group>"; };
 		81AF782BD024BAB473ADCB48 /* Icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Icons; path = App/Resources/Icons; sourceTree = SOURCE_ROOT; };
+		881C1DA770F5E89BAA84499D /* PhoneSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettings.swift; sourceTree = "<group>"; };
 		A6A63C7CEBB25FEEB670001E /* ActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRunner.swift; sourceTree = "<group>"; };
+		A8E776FF15C6691A7E97DAEC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AC9085CF6126FF6B11B8514D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AED56CB99CC67EE60E920C36 /* AMSDeckMatePhone.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AMSDeckMatePhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA62F3E5031DFF998CEDD376 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		BD91C2A2EE1636B6BA7A5CA3 /* KeyArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyArt.swift; sourceTree = "<group>"; };
+		CC5304A926380E265BD2D024 /* PhoneGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneGuide.swift; sourceTree = "<group>"; };
 		D2A487AF008BC5BB7FFBE6BD /* ActionFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionFields.swift; sourceTree = "<group>"; };
+		D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneServer.swift; sourceTree = "<group>"; };
+		EACD6565181DB47E69CFAA61 /* DeckScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckScreenTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +87,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7EC573FFDAFCB151BFCB0D97 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3B70ECA8DF91E158674A968C /* DeckMateCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -61,8 +102,28 @@
 			isa = PBXGroup;
 			children = (
 				4FE2EB6D6F2F10CB60B37C28 /* AMSDeckMate.app */,
+				AED56CB99CC67EE60E920C36 /* AMSDeckMatePhone.app */,
+				3F209460743B3DCE0F217DDD /* AMSDeckMatePhoneUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		356E8F80C8763F646EF1C455 /* Phone */ = {
+			isa = PBXGroup;
+			children = (
+				D2FDB842CF8A217200DE47B0 /* Resources */,
+				F160FBFB7D0EB11E7C9E8E10 /* Sources */,
+				5405E0640603006D724D3165 /* UITests */,
+			);
+			path = Phone;
+			sourceTree = "<group>";
+		};
+		5405E0640603006D724D3165 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				EACD6565181DB47E69CFAA61 /* DeckScreenTests.swift */,
+			);
+			path = UITests;
 			sourceTree = "<group>";
 		};
 		68E40F7A5EEE02631655D574 /* App */ = {
@@ -87,6 +148,7 @@
 			children = (
 				68E40F7A5EEE02631655D574 /* App */,
 				A45BE25FE0FA3D68463C8DC9 /* Packages */,
+				356E8F80C8763F646EF1C455 /* Phone */,
 				172DF2E3179A8DAA3CA6877E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,11 +166,20 @@
 				23E6227D8C44A9DFC3F2FA1A /* KeyGrid.swift */,
 				10F54CE7221A8B17D5AC8DDE /* Look.swift */,
 				BA62F3E5031DFF998CEDD376 /* main.swift */,
+				D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */,
 				AC9085CF6126FF6B11B8514D /* SettingsView.swift */,
 				3D4D729F81F0D52A25801405 /* SetupView.swift */,
 				769601D7D405BCA33D04C661 /* Store.swift */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		D2FDB842CF8A217200DE47B0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A8E776FF15C6691A7E97DAEC /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		D9811A1E711F605229A7DF70 /* Resources */ = {
@@ -118,6 +189,20 @@
 				81AF782BD024BAB473ADCB48 /* Icons */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		F160FBFB7D0EB11E7C9E8E10 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				3C0D9C2764FF86C3866F8DB1 /* DeckScreen.swift */,
+				25F4A172CE57401656C065E8 /* LinkClient.swift */,
+				3762868082154D49F518F35B /* PhoneApp.swift */,
+				CC5304A926380E265BD2D024 /* PhoneGuide.swift */,
+				564D1488659C79AEC8657E00 /* PhoneLook.swift */,
+				881C1DA770F5E89BAA84499D /* PhoneSettings.swift */,
+				3EECC7045EF82EDD6111E1DE /* SampleLink.swift */,
+			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -143,6 +228,44 @@
 			productReference = 4FE2EB6D6F2F10CB60B37C28 /* AMSDeckMate.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FDD0E2740C3AAE66CDABDCF9 /* AMSDeckMatePhoneUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 148DC5313C8CDDA46F9961AE /* Build configuration list for PBXNativeTarget "AMSDeckMatePhoneUITests" */;
+			buildPhases = (
+				986B7077715AB29BA8F700F2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F8C50A45EE7817F3C947B149 /* PBXTargetDependency */,
+			);
+			name = AMSDeckMatePhoneUITests;
+			packageProductDependencies = (
+			);
+			productName = AMSDeckMatePhoneUITests;
+			productReference = 3F209460743B3DCE0F217DDD /* AMSDeckMatePhoneUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		FFEA3CFD36DB46587A0C38FB /* AMSDeckMatePhone */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1100965442C6802B59767401 /* Build configuration list for PBXNativeTarget "AMSDeckMatePhone" */;
+			buildPhases = (
+				92A9963F734D36091671C716 /* Sources */,
+				7B8AB45D291E3FE0D8C73D4C /* Resources */,
+				7EC573FFDAFCB151BFCB0D97 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AMSDeckMatePhone;
+			packageProductDependencies = (
+				FF894429027E7994D6F202BD /* DeckMateCore */,
+			);
+			productName = AMSDeckMatePhone;
+			productReference = AED56CB99CC67EE60E920C36 /* AMSDeckMatePhone.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -155,6 +278,15 @@
 					E1B30B19E34D6558C4EA39E4 = {
 						DevelopmentTeam = D24ENP83QQ;
 						ProvisioningStyle = Manual;
+					};
+					FDD0E2740C3AAE66CDABDCF9 = {
+						DevelopmentTeam = D24ENP83QQ;
+						ProvisioningStyle = Automatic;
+						TestTargetID = FFEA3CFD36DB46587A0C38FB;
+					};
+					FFEA3CFD36DB46587A0C38FB = {
+						DevelopmentTeam = D24ENP83QQ;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -176,6 +308,8 @@
 			projectRoot = "";
 			targets = (
 				E1B30B19E34D6558C4EA39E4 /* AMSDeckMate */,
+				FFEA3CFD36DB46587A0C38FB /* AMSDeckMatePhone */,
+				FDD0E2740C3AAE66CDABDCF9 /* AMSDeckMatePhoneUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -187,6 +321,14 @@
 			files = (
 				25400F3FCE0C8D5C9C29F5A2 /* AppIcon.icon in Resources */,
 				EA6A4503DEDC4DB681A62E31 /* Icons in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7B8AB45D291E3FE0D8C73D4C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C597609067AF54D584AAB04 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,6 +348,7 @@
 				D4957990805AD31915C212CF /* KeyArt.swift in Sources */,
 				26D75374A396705120CCC51C /* KeyGrid.swift in Sources */,
 				5258AB390D63E2C32EE5A792 /* Look.swift in Sources */,
+				090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */,
 				6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */,
 				1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */,
 				AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */,
@@ -213,9 +356,58 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		92A9963F734D36091671C716 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB8FA2789316833AE2EA0C1C /* DeckScreen.swift in Sources */,
+				D21A48CA32E29820EBA8EDE8 /* LinkClient.swift in Sources */,
+				1299E87862CE7E6F4603A897 /* PhoneApp.swift in Sources */,
+				D56BBF46D1A11591A630A143 /* PhoneGuide.swift in Sources */,
+				79D9A6140848CF13AB2B5204 /* PhoneLook.swift in Sources */,
+				EE222C5887D4D79DD417E6AE /* PhoneSettings.swift in Sources */,
+				76DE12C927BB43C6B8E51E11 /* SampleLink.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		986B7077715AB29BA8F700F2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				03E53A68CBAD200344C371C9 /* DeckScreenTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		F8C50A45EE7817F3C947B149 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FFEA3CFD36DB46587A0C38FB /* AMSDeckMatePhone */;
+			targetProxy = 4DE0AB1B6E5E6C17EB838B90 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		245CA832A2C7C37C8CA9BABC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = D24ENP83QQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhoneUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AMSDeckMatePhone;
+			};
+			name = Release;
+		};
 		5C06E3B77620C29461F97F4E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -261,11 +453,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -279,7 +471,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -287,13 +479,76 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
+		};
+		B5387975ACC59C815891F204 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = D24ENP83QQ;
+				INFOPLIST_FILE = Phone/Config/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
+				PRODUCT_NAME = "Deck Mate";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		C878D255D9F22CF7BC4712A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = D24ENP83QQ;
+				INFOPLIST_FILE = Phone/Config/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
+				PRODUCT_NAME = "Deck Mate";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DAE8964CF4D81D956AB9D4B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = D24ENP83QQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhoneUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = AMSDeckMatePhone;
+			};
+			name = Debug;
 		};
 		DD7ADFE2F38103740D6E75EA /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -346,12 +601,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -365,7 +620,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -373,7 +628,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;
@@ -384,6 +639,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1100965442C6802B59767401 /* Build configuration list for PBXNativeTarget "AMSDeckMatePhone" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C878D255D9F22CF7BC4712A1 /* Debug */,
+				B5387975ACC59C815891F204 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		148DC5313C8CDDA46F9961AE /* Build configuration list for PBXNativeTarget "AMSDeckMatePhoneUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DAE8964CF4D81D956AB9D4B1 /* Debug */,
+				245CA832A2C7C37C8CA9BABC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		6DC396DE6DD3ECF06028B648 /* Build configuration list for PBXNativeTarget "AMSDeckMate" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -413,6 +686,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		1D17AFF0C37A27F8AADFA9A8 /* DeckMateCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DeckMateCore;
+		};
+		FF894429027E7994D6F202BD /* DeckMateCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = DeckMateCore;
 		};

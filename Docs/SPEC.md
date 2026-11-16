@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.2 (build 2), 14 Nov 2026
+# AMS Deck Mate, specification, version 0.3 (build 3), 16 Nov 2026
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -6,7 +6,8 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 
 ## 1. Purpose
 - Give the 15-key Stream Deck (2019) and MK.2 their keys without Elgato's app.
-- Mac only. Menu bar only, no Dock icon. The version shows in Settings.
+- Mac app: menu bar only, no Dock icon. The version shows in Settings.
+- Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 
 ## 2. Menu bar
 The icon opens a menu:
@@ -43,6 +44,7 @@ The icon opens a menu:
 - One colour per kind (`KeyKind`): app blue, web (links) teal, raycast red-orange, shortcut purple, text amber, media green, move (folder, back, pages, profile) grey-blue, empty neutral.
 - A "several things" key takes the kind of its first step that is not "nothing".
 - An app key shows the app's own icon unless an icon is picked.
+- An app key with an empty title shows the app's name (`DeckKey.shownTitle(appName:)`, see section 18). Own words always win.
 - 245 hand-drawn icons: the AMS Icon Library plus new ones drawn for this app. A key's `icon` is a drawing's name; empty means the automatic one (`autoIcon`): deck-link, deck-raycast, deck-keyboard, deck-text, deck-play, deck-next, deck-previous, deck-volume-up, deck-volume-down, deck-mute, deck-folder, deck-back, deck-page-next, deck-page-previous, deck-profile, deck-multi.
 
 ## 5. Set up keys
@@ -123,7 +125,7 @@ Not yet tried on the real box (see the warning at the top).
 - The Mac may ask for Input Monitoring when the box is first plugged in.
 
 ## 12. Settings
-Three tabs: Settings (box, brightness, change profile with the app in front, the card "Keys on screen" (Show them, Hide after a key is pressed, Size), open at login, permissions, bring over again), How it works, What's new. The version, Quit and Done are at the bottom.
+Three tabs: Settings (box, brightness, change profile with the app in front, the card "Keys on screen" (Show them, Hide after a key is pressed, Size), the card "iPhone" (section 17), open at login, permissions, bring over again), How it works, What's new. The version, Quit and Done are at the bottom.
 
 ## 13. Storage
 - One file: `~/Library/Application Support/AMS Deck Mate/deck.json`. Each save first keeps the previous file as a safety copy (the last 20) in `Backups` beside it.
@@ -140,7 +142,9 @@ Three tabs: Settings (box, brightness, change profile with the app in front, the
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
-- Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). 19 tests in all: 18 rule tests and the take-over test. Run: `cd Core && swift test`.
+- Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
+- New in 0.3: `PhoneLink` framing: round trip (encode then decode gives the same message), split (a message arriving in pieces is put together; a half message waits), broken (a length over 4 MB or text that is not a message is refused, not crashed on). And `shownTitle`: own title wins; empty title on an app key gives the app's name; empty title and no app name stays empty; other kinds are unchanged.
+- The iPhone app has one screen test that finds its keys by identifier.
 
 ## 15. Build and install
 1. `xcodegen generate`
@@ -149,9 +153,54 @@ Three tabs: Settings (box, brightness, change profile with the app in front, the
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-## 16. Not in 0.2
+## 16. Not in 0.3
 - The first Stream Deck from 2017.
 - Other box sizes (6 and 32 keys, XL, Mini, Plus, Neo, pedal).
 - Dragging keys to move them.
 - Elgato plug-ins.
 - Driving the real box (first test planned for January 2027).
+- The iPhone app on iPad or Mac, and editing keys from the iPhone (keys are set up on the Mac only).
+
+## 17. The iPhone link (0.3)
+**What it is.** Deck Mate on the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the profile and page the Mac shows (so it changes with the app in front). A tap on a key makes the Mac do it.
+
+**Finding each other.**
+- Two Bonjour offers over TCP, same instance name (the Mac's name): `_amsdeckmate._tcp` without peer-to-peer (the shared network — proven, also from the iOS Simulator) and `_amsdeckdirect._tcp` with peer-to-peer on (AWDL, like AirDrop). On his Mac (16 Nov 2026) the peer-to-peer listener goes ready but never registers its service, so the direct way is NOT proven; a shared Wi-Fi (or the Mac on the iPhone's hotspot) is the way that works. The iPhone browses both types with peer-to-peer on and picks the Mac it talked to last, else the first by name. A connection not ready within 6 s is dropped and the search goes on. The Mac also makes a short Bonjour browse and a one-byte UDP send to 224.0.0.251:5353 at start, so macOS asks for (or refreshes) Local Network permission — each new build gets a new executable UUID, and until that refresh the system silently keeps the offer from registering.
+- The Mac listens and advertises the service. The iPhone browses for it.
+- The iPhone needs the Local Network permission (Settings, Privacy & Security, Local Network). The Mac may ask once to "find devices on local networks": answer Allow.
+
+**Messages** (`PhoneLink.Message`, in `Core`, used by both apps).
+- Frame: 4 bytes, big-endian, giving the length of the JSON that follows, then the JSON. Largest message: 4 MB; anything longer is refused.
+- `hello(phone, token?)`: the iPhone says its name and, if it has one, its token.
+- `waiting`: the Mac is asking its user; the iPhone shows that it waits.
+- `welcome(token, mac)`: allowed. The Mac sends the token to keep and its own name.
+- `refused`: not allowed (the user chose Don't Allow, or the checkbox is off). The iPhone shows "Ask again".
+- `keys(place, keys[index, title, PNG])`: `place` is the position (the line on top of the keys, as the Mac shows it: the profile's name, plus " · " and the page's name when the profile has more than one page (e.g. "OmniFocus · Page 2") as shown on the Mac); each key has its place 0 to 14, the title shown (see `shownTitle`) and its picture as PNG, drawn by the Mac (so app keys have the real app icon). The Mac sends `keys` first when the iPhone is allowed, then again whenever the position or the setup changes.
+- `press(index)`: the iPhone tapped a key.
+
+**Allowing.**
+- First contact: `hello` with no token. The Mac asks "“<iPhone name>” wants to use your keys. Allow?" with Allow and Don't Allow. Allow gives a random token and the iPhone is remembered; Don't Allow sends `refused`.
+- Tokens are random. The Mac keeps them in its preferences with the iPhone's name; the iPhone keeps the token per Mac name. A `hello` with a known token is welcomed at once, with no question.
+- The iPhone's "Ask again" sends a new `hello` with no token.
+- "Forget" on the Mac removes the token; "Forget this Mac" on the iPhone removes its copy.
+
+**Pressing.** A `press(index)` goes through the same press path as a key on the box (`outcome` and navigation are the same). The "Hide after a key is pressed" rule does not apply: only clicks on the Mac screen hide the keys.
+
+**Mac Settings, card "iPhone".**
+- Checkbox "Let an iPhone use these keys" (default on). Off: no listening, connected iPhones are dropped.
+- The iPhone connected right now.
+- The allowed iPhones, each with "Forget" to take the permission back.
+
+**The iPhone app.**
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone only; on TestFlight. Version 0.3 (3). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
+- States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
+- Settings: which Mac, "Forget this Mac", the version, How it works, What's new.
+
+## 18. App names on keys (0.3)
+- `DeckKey.shownTitle(appName:)`: the title if it is not empty; otherwise, for an app key, the app's name (as the Mac knows it from the bundle or path); otherwise empty. Other kinds are unchanged.
+- Used by the box, the Mac screen and the iPhone, so the Apps folder's keys now read Mail, Safari, Calculator and so on.
+
+## 19. The Raycast folder (the author's own setup, data)
+- On Page 1 of the Default Profile, a key "Raycast" opens a folder: Back plus 14 Raycast commands from the installed extensions: Clipboard, AI Chat, Ask Perplexity, Hide apps, New reminder, Reminders, Notion note, Find in Notion, Daily plan (NotePlan), Screenshot (CleanShot area), Text from screen (CleanShot OCR), Play/Pause and Next song (Spotify), Passwords (1Password).
+- Keys that need no window run quietly (`quiet`). Changed in Set up keys as usual. This is data in `deck.json`, not a feature.

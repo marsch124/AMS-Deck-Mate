@@ -6,6 +6,7 @@ import DeckMateCore
 enum KeyArt {
     private static var appIcons: [String: NSImage] = [:]
     private static var pictures: [String: CGImage] = [:]
+    private static var phonePictures: [String: Data] = [:]
 
     /// The app a key opens, as a file on this Mac.
     static func appURL(_ target: String) -> URL? {
@@ -27,9 +28,14 @@ enum KeyArt {
         return icon
     }
 
+    /// The words on a key: its own, or the app's name for an app key without words.
+    static func title(_ key: DeckKey?) -> String {
+        key?.shownTitle(appName: { appURL($0) == nil ? "" : appName($0) }) ?? ""
+    }
+
     /// The key as a picture of `pixels` x `pixels`. nil = an empty place.
     static func image(for key: DeckKey?, pixels: Int) -> CGImage? {
-        let cacheKey = "\(pixels)|\(key?.title ?? "")|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)"
+        let cacheKey = "\(pixels)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)"
         if let hit = pictures[cacheKey] { return hit }
         let size = CGFloat(pixels)
         guard let context = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
@@ -52,7 +58,7 @@ enum KeyArt {
 
     private static func draw(_ key: DeckKey, size: CGFloat) {
         let k = size / 72
-        let title = key.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = Self.title(key)
         let hasTitle = !title.isEmpty
         let iconName = key.shownIcon
         // The drawing sits a little above the middle when there is a title under it.
@@ -111,8 +117,20 @@ enum KeyArt {
         return NSBitmapImageRep(cgImage: turned).representation(using: .jpeg, properties: [.compressionFactor: 0.92])
     }
 
+    /// The key as a PNG picture of 216 x 216, for the iPhone. nil = an empty place.
+    static func pngForPhone(_ key: DeckKey?) -> Data? {
+        guard let key, let picture = image(for: key, pixels: 216) else { return nil }
+        let cacheKey = "\(title(key))|\(key.shownIcon)|\(key.action.hashValue)"
+        if let hit = phonePictures[cacheKey] { return hit }
+        let png = NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
+        if phonePictures.count > 300 { phonePictures.removeAll() }
+        phonePictures[cacheKey] = png
+        return png
+    }
+
     static func forgetAppIcons() {
         appIcons.removeAll()
         pictures.removeAll()
+        phonePictures.removeAll()
     }
 }
