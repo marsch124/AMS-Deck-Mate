@@ -53,7 +53,7 @@ struct DeckScreen: View {
     /// The navigation picture shows on an iPad held on its side ("-forceMap" shows it anywhere, for checks).
     private var mapShows: Bool {
         showMap && connected && !link.map.isEmpty
-            && ((isPad && onItsSide) || CommandLine.arguments.contains("-forceMap"))
+            && (onItsSide || CommandLine.arguments.contains("-forceMap"))
     }
     private var favouritesShow: Bool { showFavourites && link.newMac && link.hasFavourites }
     /// The last touch, for the resting clock.
@@ -63,32 +63,23 @@ struct DeckScreen: View {
     var body: some View {
         ZStack {
             (ground.colour ?? PhonePalette.ground).ignoresSafeArea()
-            VStack(spacing: 8) {
-                topBar.padding(.leading, inWindow ? 76 : 0)
-                HStack(spacing: 14) {
-                if mapShows { navigationPicture }
-                VStack(spacing: 8) {
-                if keysPlace == .top { keysBlock }
-                GeometryReader { room in
-                    // The free room: the message while there is no Mac, else the clock when it fits.
-                    ZStack {
-                        if !connected {
-                            messageCard
-                        } else if showClock, room.size.height >= 110 {
-                            BigClock(size: min(room.size.height * 0.5, room.size.width * 0.22, 150))
-                        }
+            Group {
+                if phoneSideways {
+                    // iPhone on its side: everything but the keys sits in a panel on the left, so the keys get the whole height.
+                    HStack(spacing: 12) {
+                        sidePanel
+                        keysColumn(note: false)
                     }
-                    .frame(width: room.size.width, height: room.size.height)
+                } else {
+                    VStack(spacing: 8) {
+                        topBar.padding(.leading, inWindow ? 76 : 0)
+                        HStack(spacing: 14) {
+                            if mapShows { navigationPicture(width: 230) }
+                            keysColumn(note: showNote)
+                        }
+                        glanceLine
+                    }
                 }
-                .frame(minHeight: connected ? 0 : 150)
-                .layoutPriority(-1)
-                if keysPlace != .top {
-                    keysBlock
-                    if keysPlace == .middle { Color.clear.layoutPriority(-1) }
-                }
-                }
-                }
-                glanceLine
             }
             .padding(.horizontal, isPad ? 20 : 12)
             .padding(.vertical, isPad ? 14 : 8)
@@ -118,10 +109,68 @@ struct DeckScreen: View {
         .accessibilityIdentifier("deckScreen")
     }
 
+    /// An iPhone held on its side ("-sideways" forces it, for checks).
+    private var phoneSideways: Bool {
+        (!isPad && onItsSide) || CommandLine.arguments.contains("-sideways")
+    }
+
+    /// iPhone on its side: the top line, the note, the navigation picture and the Mac at a glance, on the left.
+    private var sidePanel: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 0) {
+                statusDot
+                Spacer(minLength: 4)
+                if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
+                settingsButton
+            }
+            .padding(.horizontal, -10)
+            placeLine.frame(maxWidth: .infinity, alignment: .leading)
+            if let battery { batteryLine(battery) }
+            if showNote, link.note != nil { noteLine }
+            if mapShows {
+                navigationPicture(width: Self.sidePanelWidth)
+            } else {
+                Spacer(minLength: 0)
+            }
+            glanceLine
+        }
+        .frame(width: Self.sidePanelWidth)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("sidePanel")
+    }
+
+    /// The width of the left panel on an iPhone held on its side.
+    static let sidePanelWidth: CGFloat = 200
+
+    /// The keys with the free room for the message or the clock, where the settings put them.
+    private func keysColumn(note: Bool) -> some View {
+                VStack(spacing: 8) {
+                if keysPlace == .top { keysBlock(note: note) }
+                GeometryReader { room in
+                    // The free room: the message while there is no Mac, else the clock when it fits.
+                    ZStack {
+                        if !connected {
+                            messageCard
+                        } else if showClock, room.size.height >= 110 {
+                            BigClock(size: min(room.size.height * 0.5, room.size.width * 0.22, 150))
+                        }
+                    }
+                    .frame(width: room.size.width, height: room.size.height)
+                }
+                .frame(minHeight: connected ? 0 : 150)
+                .layoutPriority(-1)
+                if keysPlace != .top {
+                    keysBlock(note: note)
+                    if keysPlace == .middle { Color.clear.layoutPriority(-1) }
+                }
+                }
+    }
+
     /// The note on what ran, the 15 keys and the page dots.
-    private var keysBlock: some View {
+    private func keysBlock(note: Bool) -> some View {
         VStack(spacing: 8) {
-            if showNote { noteLine }
+            if note { noteLine }
             GeometryReader { box in
                 let side = Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow) * keySize.scale
                 VStack(spacing: keyGap.points + Self.favouritesGap) {
@@ -213,7 +262,7 @@ struct DeckScreen: View {
     // MARK: Navigation picture
 
     /// Every page group with its pages as small pictures; the page showing has a frame; a tap goes there.
-    private var navigationPicture: some View {
+    private func navigationPicture(width: CGFloat) -> some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(link.map, id: \.id) { group in
@@ -258,7 +307,7 @@ struct DeckScreen: View {
             }
             .padding(10)
         }
-        .frame(width: 230)
+        .frame(width: width)
         .background(PhonePalette.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("navigationPicture")
@@ -339,18 +388,22 @@ struct DeckScreen: View {
                     statusDot
                     Spacer(minLength: 8)
                     if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
-                    Button { showSettings = true } label: {
-                        PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
-                            .foregroundStyle(PhonePalette.part("settings"))
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("Settings")
-                    .accessibilityIdentifier("settingsButton")
+                    settingsButton
                 }
             }
             if let battery { batteryLine(battery) }
         }
+    }
+
+    private var settingsButton: some View {
+        Button { showSettings = true } label: {
+            PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
+                .foregroundStyle(PhonePalette.part("settings"))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel("Settings")
+        .accessibilityIdentifier("settingsButton")
     }
 
     /// The link to the Mac as one small coloured dot; a tap says it in words.
@@ -402,52 +455,14 @@ struct DeckScreen: View {
         }
     }
 
-    /// The place; a tap on it picks a profile (Automatic, or lock one), like the Mac's menu.
-    @ViewBuilder
+    /// The place, only as a heading (picking or locking a page group is in Settings since 0.10).
     private var placeLine: some View {
-        let title = Text(link.place.isEmpty ? "Deck Mate" : link.place)
-            .font(isPad ? .largeTitle.weight(.bold) : .title2.weight(.bold))
+        Text(link.place.isEmpty ? "Deck Mate" : link.place)
+            .font(isPad ? .largeTitle.weight(.bold) : (phoneSideways ? .title3.weight(.bold) : .title2.weight(.bold)))
             .foregroundStyle(.primary)
-            .lineLimit(1)
+            .lineLimit(phoneSideways ? 2 : 1)
             .minimumScaleFactor(0.6)
-        if let status = link.status, connected {
-            let own = ownKeys && link.newMac
-            Menu {
-                if !own {
-                    Button { link.pickProfile(nil) } label: {
-                        if !status.held { Label("Automatic", systemImage: "checkmark") } else { Text("Automatic") }
-                    }
-                }
-                Section(own ? "My own keys" : "Lock one") {
-                    ForEach(status.profiles, id: \.id) { profile in
-                        Button { link.pickProfile(profile.id) } label: {
-                            if (status.held || own) && status.current == profile.id {
-                                Label(profile.name, systemImage: "checkmark")
-                            } else {
-                                Text(profile.name)
-                            }
-                        }
-                    }
-                }
-            } label: {
-                HStack(spacing: 5) {
-                    title
-                    if status.held {
-                        // Locked: this profile stays until "Automatic" is chosen.
-                        PhoneIcon(name: "iconLock", size: isPad ? 20 : 16)
-                            .foregroundStyle(PhonePalette.part("profiles"))
-                            .accessibilityLabel("Locked")
-                            .accessibilityIdentifier("profileLock")
-                    }
-                    Text("▾").font((isPad ? Font.title3 : Font.subheadline).weight(.semibold))
-                        .foregroundStyle(PhonePalette.part("profiles"))
-                }
-            }
-            .tint(.primary)
             .accessibilityIdentifier("deckPlace")
-        } else {
-            title.accessibilityIdentifier("deckPlace")
-        }
     }
 
     private var statusColour: Color {

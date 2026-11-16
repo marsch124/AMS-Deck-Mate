@@ -13,7 +13,7 @@ enum PhoneGuide {
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings. Since 0.7 the first part is \"Keys\".",
             "Keys (since 0.7, at the top): \"Follow the Mac\" (as before) or \"My own keys\", and then, in the row \"Page group\", you pick a page group. See \"My own keys\" below. With an older Mac this card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the new parts stay hidden.",
-            "Keys (since 0.8): a switch \"Navigation picture\" (on at first). It shows the page groups and pages as small pictures on the left of an iPad held on its side. It needs a Mac at 0.6.",
+            "Keys (since 0.8): a switch \"Navigation picture\" (on at first). It shows the page groups and pages as small pictures on the left of an iPad or iPhone held on its side (iPhone since 0.10). It needs a Mac at 0.6.",
             "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest, Plum, Rust or Slate. The colours are deep, calm shades and the words turn light on them.",
             "Look, A colour for each page group (under Background): every page group from your Mac is listed with its own choice, \"Same as background\" (at first) or one of the colours. When that group shows, the background takes its colour, so you see at a glance which one is up. It needs a Mac at 0.4 or later, because the list comes from the Mac. Before a Mac is connected the list says so.",
             "Look, Key shape: Rounded (as before), Square or Pillow (very round corners).",
@@ -53,6 +53,7 @@ enum PhoneGuide {
             "The iPhone keeps its screen on while it is connected, except while the Mac sleeps (since 0.9, see \"Dark while the Mac sleeps\"). It works upright and sideways.",
             "On an iPad (since 0.5) the keys are large, low and centred, in all four ways round; since 0.5.1 they grow as far as the screen or window allows. On a newer iPad the app can open as a floating window: make it large once with the window's green button (or drag its corner) and the iPad remembers it. Everything else works the same.",
             "Since 0.4 the 15 keys sit low on the screen, near your thumb, with the place line on top.",
+            "Held on its side (since 0.10), the iPhone puts the top line (status dot, page group name, music button, settings gear), the note on what a key did and the navigation picture in a panel on the left, so the keys get the whole height on the right and are much larger.",
             "Swipe left or right on the keys for the next or previous page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
             "After a tap a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
@@ -61,24 +62,24 @@ enum PhoneGuide {
         ]),
         Section(id: "profiles", title: "Page groups follow the Mac", part: "profiles", lines: [
             "The iPhone shows the page group and page the Mac shows. When the app in front on the Mac changes and the page group changes with it, the iPhone changes too.",
-            "To use a different page group, tap the top line (the name of the group). A menu offers \"Automatic\" or \"Lock one\" of the page groups, the same as the Mac's menu. A group you picked by hand shows a small lock beside its name (since 0.5.2): it stays until you choose \"Automatic\". You can also change it on the Mac, or tap a key that switches page group.",
-            "Since 0.5.1: swipe up or down on the keys for the next or previous page group. It is then locked (a small lock shows beside the name) until you choose \"Automatic\" in the top line."
+            "To use a different page group, open Settings and use the row \"Page group\" in the Keys card (since 0.10). Its chips are \"Automatic\" and one chip for each page group, the same as the Mac's menu. A group you pick locks: it stays until you choose \"Automatic\", and a small lock drawing shows on its chip. The name at the top is only a heading; tapping it does nothing. You can also change it on the Mac, or tap a key that switches page group.",
+            "Since 0.5.1: swipe up or down on the keys for the next or previous page group. It is then locked until you choose \"Automatic\" in Settings, Keys, row \"Page group\" (or in the Mac's menu)."
         ]),
         Section(id: "ownkeys", title: "My own keys", part: "profiles", lines: [
             "In Settings, the card \"Keys\" at the top has two choices. \"Follow the Mac\" is as before: this iPhone or iPad shows the page group and page the Mac shows.",
             "\"My own keys\": pick a page group in the row \"Page group\". This iPhone or iPad then moves through that group on its own: pages, folders and Back, at its own place.",
             "The Mac's keys on screen and the box stay where they are, and the Mac still does what the tapped key says. Keys pressed elsewhere do not light up here.",
-            "Swipe up or down on the keys, or use the menu in the top line, to change your own page group. It is remembered on this device. With own keys there is no lock and no \"Automatic\" in that menu. If the group you picked is gone, the default group shows.",
+            "Swipe up or down on the keys, or use the row \"Page group\" in Settings, to change your own page group. It is remembered on this device. With own keys there is no lock and no \"Automatic\" chip in that row. If the group you picked is gone, the default group shows.",
             "The Mac keeps one place for each connected device, for as long as it is connected. After it connects again, the device starts at the first page of its group.",
             "Needs the AMS Deck Mate app at 0.5 on the Mac. With an older Mac, the Keys card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the app follows the Mac as before."
         ]),
         Section(id: "navmap", title: "The navigation picture", part: "keys", lines: [
-            "On an iPad held on its side (wider than tall), the keys sit on the right and, on the left, a picture shows every page group with every one of its pages and folders as a small picture of its 15 keys, with the page's name under it.",
+            "On an iPad or an iPhone held on its side (wider than tall; the iPhone since 0.10), the keys sit on the right and, in the panel on the left, a picture shows every page group with every one of its pages and folders as a small picture of its 15 keys, with the page's name under it.",
             "The page showing now has a coloured frame, and its page group's name is highlighted. The list scrolls when it is long.",
-            "Tap a small page and the keys go there. When the iPad follows the Mac, the Mac goes there too and that page group is locked until you choose \"Automatic\" in the top line. With \"My own keys\", only the iPad's own place moves, and the page group you picked is remembered.",
-            "An iPad held upright and the iPhone show no picture, because there is no room.",
+            "Tap a small page and the keys go there. When the iPad follows the Mac, the Mac goes there too and that page group is locked until you choose \"Automatic\" in Settings, Keys, row \"Page group\". With \"My own keys\", only the iPad's own place moves, and the page group you picked is remembered.",
+            "An iPad or iPhone held upright shows no picture, because there is no room.",
             "In Settings, the switch \"Navigation picture\" in the Keys card (on at first) turns it off.",
-            "Needs the AMS Deck Mate app at 0.6 on the Mac. With an older Mac the picture stays hidden. Not yet tried on the real iPad."
+            "Needs the AMS Deck Mate app at 0.6 on the Mac. With an older Mac the picture stays hidden. Not yet tried on a real iPhone held on its side."
         ]),
         Section(id: "longpress", title: "Long press", part: "keys", lines: [
             "A key with a small white dot in its top right corner has a second action. Hold the key for half a second and the second action runs. You feel a stronger buzz.",
@@ -134,9 +135,19 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
-        Release(id: "0.8.2", date: "16 Nov 2026", new: [], changed: [], fixed: [
-            "The music plate (opened by the small music button) and the connection card (opened by the coloured dot) now have a solid background. Before, they were see-through, so the colours of the keys behind shone through and the buttons were hard to read."
-        ]),
+        Release(id: "0.10", date: "16 Nov 2026", new: [
+            "New row \"Page group\" in Settings, in the Keys card, on the iPhone and the iPad. It has chips: \"Automatic\" and one chip for each page group. Pick a page group and it is locked: the Mac stays on it until you pick \"Automatic\". A small lock drawing shows on the chip you picked.",
+            "The navigation picture now also shows on an iPhone held on its side. Before, only an iPad on its side had it. Every page group and page shows as small pictures on the left, and a tap goes there.",
+            "Not yet tried: the new side panel on a real iPhone held on its side."
+        ], changed: [
+            "An iPhone held on its side (wider than tall) now has much larger keys. Before, the top line, the note on what a key did and the page dots sat above and below the keys, so the keys were about 80 points. Now the top line (the status dot, the page group name, the music button and the settings gear), the note on what a key did and the navigation picture sit in a panel on the left, about 200 points wide on the iPhone and 230 on the iPad. The keys get the whole height on the right and are about 100 to 115 points.",
+            "The lock moved to Settings, on the iPhone and the iPad. Before, you tapped the page group name at the top and chose \"Automatic\" or \"Lock one\", and a lock drawing showed beside the name. Now the name at the top is only a heading: nothing happens when you tap it and there is no lock drawing beside it. Use the row \"Page group\" in Settings, Keys.",
+            "Swiping up or down on the keys, and tapping a page in the navigation picture, still lock a page group. To unlock, choose \"Automatic\" in Settings (or in the Mac's menu).",
+            "With \"My own keys\", the row \"Page group\" lists only the page groups, with no \"Automatic\", as before.",
+            "The note under the switch \"Navigation picture\" now says it shows on an iPad or an iPhone held on its side. An iPhone or iPad held upright shows no picture, because there is no room.",
+            "The clock above the keys still does not show on an iPhone on its side.",
+            "How it works has the new places for all of these. The Mac app is unchanged."
+        ], fixed: []),
         Release(id: "0.9", date: "16 Nov 2026", new: [
             "New switch \"Dark while the Mac sleeps\" in Settings, under Showing (on at first). When the Mac's screen goes to sleep, or the Mac sleeps, the iPhone or iPad goes black with a small moon drawing and the words \"Mac asleep\".",
             "While it is dark, the screen is allowed to lock itself like normal. It no longer keeps itself awake.",
@@ -147,7 +158,9 @@ enum PhoneGuide {
             "Version rule: the dark screen needs the AMS Deck Mate app at 0.7 on the Mac (now 0.7, build 9). With an older Mac nothing changes.",
             "With the switch off, the app works as in 0.8.1.",
             "How it works has two new parts, \"Dark while the Mac sleeps\" and \"Recent app and Ask AI keys\", and Settings has the new line."
-        ], fixed: []),
+        ], fixed: [
+            "The music plate (opened by the small music button) and the connection card (opened by the coloured dot) now have a solid background. Before, they were see-through, so the colours of the keys behind shone through and the buttons were hard to read."
+        ]),
         Release(id: "0.8.1", date: "16 Nov 2026", new: [], changed: [
             "The top of the key screen is less crowded. Everything below is on the key screen of the iPhone and iPad.",
             "The heading is larger and centred. The place, for example \"OmniFocus · OF Main\", now sits in the middle at the top: bold large title size on the iPad, title size on the iPhone. A tap on it still opens the menu of page groups, and the lock still shows beside it.",

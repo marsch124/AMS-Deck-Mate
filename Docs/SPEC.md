@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.7 (build 9), 16 Nov 2026; iPhone and iPad app 0.9 (build 13)
+# AMS Deck Mate, specification, version 0.7 (build 9), 16 Nov 2026; iPhone and iPad app 0.10 (build 14)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -8,7 +8,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Give the 15-key Stream Deck (2019) and MK.2 their keys without Elgato's app.
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
-- Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29).
+- Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music button, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
@@ -188,7 +188,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 
 **0.7 (Mac, build 9, 16 Nov 2026).** The keys "Recent app" and "Ask AI (copied text)" (sections 31, 32), and the Mac's sleep and wake news for the iPhone and iPad (section 33). The iPhone and iPad app is 0.9 (build 13). Not proven yet: "Ask AI" against the real Raycast, the dark screen on the real iPad.
 
-**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.8.2 (build 13). Not proven yet: the navigation picture on the real iPad.
+**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.9 (build 13) at that time; 0.10 (build 14) is the side panel and the lock in Settings (section 34). Not proven yet: the navigation picture on the real iPad.
 
 **0.5 (Mac, build 7, 16 Nov 2026).** The features of sections 24 to 28, and "All pages" in Set up keys. The iPhone and iPad app is 0.7 (build 10). Not proven yet: long press on the real box, long press on a real iPhone or iPad, play or pause from the strip.
 
@@ -241,7 +241,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.8.2 (13). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.10 (14). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -271,7 +271,7 @@ The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Layout: the 15 keys sit at the bottom of the screen, near the thumb; the heading is on top (see section 30).
 - Page groups by swipe (0.5.1): a swipe up on the keys locks the next page group, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one page group. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
-- Page group menu: a tap on the top line (the name of the page group) opens a menu: "Automatic", or "Lock one" of the page groups (as the Mac's menu). A hand-picked page group shows the lock beside its name (0.5.2). *
+- Page group lock (changed in 0.10, section 34): the name at the top is only a heading, with no menu and no lock drawing. The lock is the row "Page group" in Settings, Keys card: chips "Automatic" and one per page group. Before 0.10 a tap on the top line opened a menu "Automatic" / "Lock one" and the lock showed beside the name (0.5.2). *
 - Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
 - What ran: after a tap a short note at the bottom, for example "Opened OmniFocus" or "Raycast: Clipboard history". When the Mac could not do it the note is red with the warning drawing, for example "The app is not on this Mac" or "The Mac has not allowed key presses yet". *
 - Day look: the iPhone screen follows day and night (light grey by day, dark by night); the keys stay as drawn.
@@ -366,8 +366,8 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
 - Not yet tried: play or pause from the plate.
 
-## 29. The navigation picture (Mac 0.6, iPad 0.8)
-- Where: only on an iPad held on its side (wider than tall). The keys sit on the right and the navigation picture on the left. An iPad held upright and the iPhone are unchanged, because there is no room on the left.
+## 29. The navigation picture (Mac 0.6, iPad 0.8, iPhone on its side 0.10)
+- Where: on an iPad or, since 0.10, an iPhone held on its side (wider than tall). The keys sit on the right and the navigation picture on the left, in the side panel (section 34). An iPad or iPhone held upright shows no picture, because there is no room on the left.
 - What it shows: every page group, with every one of its pages and folders, each as a small picture of its 15 keys with the page's name under it. A folder shows its folder mark. The page showing now has a coloured frame and the name of its page group is highlighted. The list scrolls when it is long.
 - Pictures: drawn by the Mac, PNG, 166 x 98 px each, and sent when the setup changes (and when a device that announced version 4 connects).
 - Messages (only to a side that announced version 4): Mac to iPhone `map(groups:)`; each group has id, name and pages; each page has id, name, folder (yes or no) and its PNG picture. iPhone to Mac `go(profile:page:)`.
@@ -375,13 +375,13 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Tap on a small page: the iPad sends `go(profile:page:)`. The rule `Navigator.go`: an unknown page group or page changes nothing.
 - Follow the Mac: the Mac goes to that page and that page group is locked, as when it is picked in the top-line menu. "Automatic" in that menu lets it follow the app in front again.
 - My own keys (section 26): only the iPad's own place moves, and the picked page group is remembered on the device.
-- Settings, Keys card: new switch "Navigation picture" (setting key `showMap`, default on, stored on that device), with the note that it shows on an iPad held on its side.
+- Settings, Keys card: new switch "Navigation picture" (setting key `showMap`, default on, stored on that device), with the note (since 0.10) that it shows on an iPad or iPhone held on its side.
 - Older versions: the picture needs the Mac at 0.6 and the iPad app at 0.8. With an older Mac (no `map`) the picture stays hidden and everything else works as before.
-- Not proven yet: on the real iPad.
+- Not proven yet: on the real iPad, and (0.10) on a real iPhone held on its side.
 
 ## 30. The key screen's top (iPhone and iPad 0.8.1)
 Made after 0.7 on a real iPad, where the top was too crowded. Only the key screen changes; the Mac app is unchanged (0.6, build 8).
-- Heading: the place (for example "OmniFocus · OF Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. A tap opens the menu of page groups (section 21). The lock shows beside it for a page group picked by hand.
+- Heading: the place (for example "OmniFocus · OF Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. Since 0.10 it is only a heading: no menu on a tap and no lock drawing beside it (section 34).
 - Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected. Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to MS MBP 2021") and what the colours mean. Since 0.8.2 the card has a solid background (the card colour), not see-through glass. The big message card in the middle while there is no Mac is unchanged.
 - Music: one small round button at the top right, beside the settings button; the plate it opens is in section 28. The Settings switch is called "Music button".
 - The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27). Same switch.
@@ -413,10 +413,24 @@ Made after 0.7 on a real iPad, where the top was too crowded. Only the key scree
 - Needs the Mac at 0.7 or later.
 - Not proven yet: on the real iPad.
 
-## Not proven yet (0.5, 0.6, 0.7, 0.8.1 and 0.9)
+## 34. Side panel and lock in Settings (iPhone and iPad 0.10, build 14)
+Only the iPhone and iPad app changes; the Mac app is unchanged.
+- Side panel: when the screen is wider than tall (iPhone or iPad on its side), the key screen has two parts. On the left is the side panel (accessibility identifier `sidePanel`), 200 points wide on the iPhone and 230 on the iPad. On the right the keys get the whole height.
+- In the panel, top to bottom: the top line (status dot, page group name as heading, music button, settings gear), the note on what a key did ("what ran", section 21), and the navigation picture (section 29).
+- Key size on an iPhone on its side: about 100 to 115 points (before 0.10 about 80, because the top line, note and page dots sat above and below the keys). The iPad's keys grow as far as the space allows, as before.
+- Navigation picture: now also on the iPhone on its side, same as the iPad on its side. Upright (iPhone or iPad): no picture, as before. The Settings switch `showMap` still turns it off.
+- Clock above the keys: still not shown on an iPhone on its side.
+- Heading: the page group name at the top is only a heading. A tap does nothing (no menu) and there is no lock drawing beside it.
+- Lock in Settings (iPhone and iPad): Keys card, new row "Page group" with chips. Follow the Mac: chip "Automatic" (identifier `lockGroup-Automatic`) plus one chip per page group (identifier `lockGroup-<name>`). Picking a page group locks it: the Mac stays on it until "Automatic" (same message as before, `profile(id:)`; "Automatic" sends the unlock). The picked chip shows a small hand-drawn lock drawing. The row with "My own keys" (section 26) lists only the page groups, with no "Automatic", as before.
+- Still locking: a swipe up or down on the keys (section 21) and a tap on a page in the navigation picture. To unlock: "Automatic" in Settings, or the Mac's menu (section 2).
+- Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
+- Not proven yet: on a real iPhone held on its side.
+
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9 and 0.10)
 - "Ask AI (copied text)" against the real Raycast.
 - The dark screen on the real iPad.
 - The navigation picture on the real iPad.
+- The side panel and larger keys on a real iPhone held on its side.
 - Long press on the real box (away until January 2027).
 - Long press on a real iPhone or iPad.
 - Play or pause from the music plate.

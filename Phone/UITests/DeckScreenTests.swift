@@ -10,7 +10,6 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["key0"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.descendants(matching: .any)["deckPlace"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["pageDots"].exists)
-        XCTAssertTrue(app.descendants(matching: .any)["profileLock"].exists, "a profile picked by hand shows the lock")
 
         // Round B: the favourites row, the Mac at a glance and the music strip show with a Mac at 0.5.
         XCTAssertTrue(app.descendants(matching: .any)["favourite0"].exists)
@@ -32,6 +31,10 @@ final class DeckScreenTests: XCTestCase {
         app.buttons["own-My own keys"].tap()
         XCTAssertTrue(app.buttons["ownGroup-Writing"].waitForExistence(timeout: 3), "own keys: pick a page group")
         app.buttons["own-Follow the Mac"].tap()
+        // The lock lives in Settings since 0.10: the locked page group is the picked chip.
+        XCTAssertTrue(app.buttons["lockGroup-Default"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["lockGroup-Default"].isSelected, "a page group picked by hand shows as locked")
+        XCTAssertFalse(app.buttons["lockGroup-Automatic"].isSelected)
         XCTAssertTrue(app.descendants(matching: .any)["showFavourites"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["showMusic"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["showGlance"].exists)
@@ -58,6 +61,17 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 10), "the navigation picture shows every page")
         XCTAssertTrue(app.buttons["mapPage-p1"].isSelected, "the page showing now is marked")
         XCTAssertTrue(app.buttons["mapPage-w1"].exists)
+    }
+
+    /// An iPhone on its side: the side panel on the left holds the heading, settings and the navigation picture.
+    func testSidePanel() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-sideways", "-forceMap"]
+        app.launch()
+        XCTAssertTrue(app.descendants(matching: .any)["sidePanel"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["settingsButton"].exists)
+        XCTAssertTrue(app.buttons["mapPage-p1"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["key14"].exists)
     }
 
     /// Still looking after 20 seconds: the hotspot hint shows and can be closed.

@@ -1,4 +1,5 @@
 import SwiftUI
+import DeckMateCore
 
 /// Settings in three tabs, like the Mac: Settings, How it works, What's new.
 struct PhoneSettings: View {
@@ -126,6 +127,10 @@ struct PhoneSettings: View {
                     note("This \(DeckScreen.device) moves through its own page group. The Mac’s keys on screen and the Stream Deck stay where they are; the Mac still does what you tap.")
                 } else {
                     note("This \(DeckScreen.device) shows the page group and page the Mac shows.")
+                    if let status = link.status, !status.profiles.isEmpty {
+                        row("Page group") { lockChips(status) }
+                        note("Automatic follows the app in front on the Mac. Pick a page group to lock it: it then stays, on the Mac too, until you choose Automatic.")
+                    }
                 }
                 Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")
                 note("Five keys under the others that stay in place on every page and in every page group. You fill them on the Mac, in Set up keys.")
@@ -134,7 +139,7 @@ struct PhoneSettings: View {
                 Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
                 note("The Mac’s battery and the app in front, in one small line at the very bottom.")
                 Toggle("Navigation picture", isOn: $showMap).accessibilityIdentifier("showMap")
-                note("On an iPad held on its side: every page group and page as a small picture on the left. Tap one to go there.")
+                note("On an iPad or iPhone held on its side: every page group and page as a small picture on the left. Tap one to go there.")
                 note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
                 if link.macName != nil, !link.newMac {
                     Text("Needs AMS Deck Mate 0.5 on the Mac")
@@ -237,6 +242,32 @@ struct PhoneSettings: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("\(id)-\(title(value))")
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
+                }
+            }
+        }
+    }
+
+    /// Automatic, or lock one page group; the locked one carries a small lock drawing.
+    private func lockChips(_ status: PhoneLink.Status) -> some View {
+        let choices: [(id: String?, name: String)] = [(nil, "Automatic")] + status.profiles.map { ($0.id, $0.name) }
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(choices, id: \.name) { choice in
+                    let isOn = choice.id == nil ? !status.held : (status.held && status.current == choice.id)
+                    Button { link.pickProfile(choice.id) } label: {
+                        HStack(spacing: 4) {
+                            if isOn, choice.id != nil { PhoneIcon(name: "iconLock", size: 14) }
+                            Text(choice.name).font(.callout.weight(.medium))
+                        }
+                        .foregroundStyle(isOn ? Color.white : PhonePalette.part("screen"))
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 5)
+                        .background(isOn ? PhonePalette.fill("screen") : PhonePalette.part("screen").opacity(0.14), in: Capsule())
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("lockGroup-\(choice.name)")
                     .accessibilityAddTraits(isOn ? .isSelected : [])
                 }
             }
