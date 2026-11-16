@@ -88,7 +88,7 @@ struct KeyGrid: View {
         .overlay(shape.strokeBorder(Color.white.opacity(keys[index] == nil ? 0.10 : 0), lineWidth: 1))
         .overlay(shape.inset(by: -3).strokeBorder(Color.white, lineWidth: selected == index ? 2.5 : 0))
         .overlay(alignment: .topLeading) {
-            if letters, let letter = ScreenDeckRules.keyLetter(index) {
+            if letters, keys[index] != nil, let letter = ScreenDeckRules.keyLetter(index) {
                 Text(letter)
                     .font(.system(size: max(9, side * 0.17), weight: .bold, design: .rounded))
                     .foregroundStyle(Color.black.opacity(0.8))
