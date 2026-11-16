@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.9.1 (build 13), 16 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.9.2 (build 14), 16 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -11,9 +11,10 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
+- Since 0.9.2 (Mac): six new drawings to choose for a key (Home, Arrow up, Arrow left, Arrow right, Window top half, Window bottom half), 251 in all instead of 245; they show on the Stream Deck, on screen keys and, drawn by the Mac, on the iPhone and iPad with no update there (section 14 history below). iPhone and iPad stay 0.16.
 - Since 0.9.1 (Mac): the Raycast kind is a clear red (before, a red-orange that looked close to the amber of text keys), a little deeper so white words stay easy to read. It shows in the box, on screen keys, Set up keys, "All pages", and by itself on the iPhone and iPad (keys and navigation picture) with no update there. iPhone and iPad stay 0.15.
 - Since 0.9 (Mac) and 0.12 (iPhone and iPad): the weekly copy of the keys in iCloud Drive (section 40), the list choice of "Last copied text" (section 41), and the lock mark for the private line (section 42).
-- Since 0.16 (iPhone and iPad): page groups in the navigation picture sit in framed panels with a full-colour name ribbon; on an iPhone on its side the app pill, lock, music and gear form one narrow column to the right of the keys, the heading stands in one line in the middle above the keys with the connection dot in front of it, and the left panel holds only the navigation picture, which uses the whole height (section 45). The Mac app is unchanged at 0.9.1.
+- Since 0.16 (iPhone and iPad): page groups in the navigation picture sit in framed panels with a full-colour name ribbon; on an iPhone on its side the app pill, lock, music and gear form one narrow column to the right of the keys, the heading stands in one line in the middle above the keys with the connection dot in front of it, and the left panel holds only the navigation picture, which uses the whole height (section 45). The Mac app is unchanged at 0.9.1 (later 0.9.2).
 - Since 0.15 (iPhone and iPad): the Mac at a glance pill, the connection dot (connected) and the private-line lock all use the same green as the settings gear; on its side the lock moves to the bottom left (section 44). The Mac app is unchanged at 0.9.
 - Since 0.14 (iPhone and iPad): the Mac at a glance no longer shows the Mac's battery, only one blue pill with the app in front (sections 27 and 43). The Mac app is unchanged at 0.9.
 - Since 0.13 (iPhone and iPad): the navigation picture is as tall as the keys, the music and settings buttons move to the bottom left on its side, and the Mac at a glance is two pills (section 43; the battery pill was removed in 0.14).
@@ -67,7 +68,7 @@ The icon opens a menu:
 - A "several things" key takes the kind of its first step that is not "nothing".
 - An app key shows the app's own icon unless an icon is picked.
 - An app key with an empty title shows the app's name (`DeckKey.shownTitle(appName:)`, see section 18). Own words always win.
-- 245 hand-drawn icons: the AMS Icon Library plus new ones drawn for this app. A key's `icon` is a drawing's name; empty means the automatic one (`autoIcon`): deck-link, deck-raycast, deck-keyboard, deck-text, deck-play, deck-next, deck-previous, deck-volume-up, deck-volume-down, deck-mute, deck-folder, deck-back, deck-page-next, deck-page-previous, deck-profile, deck-multi.
+- 251 hand-drawn icons (245 before 0.9.2): the AMS Icon Library plus new ones drawn for this app. Since 0.9.2 six more come from the library: Home (a small house), Arrow up, Arrow left, Arrow right (an arrow down was already there) and Window top half, Window bottom half (joining Window left half, Window right half and Full window). Same style (one line, round ends, no fill); existing keys keep their drawings. A key's `icon` is a drawing's name; empty means the automatic one (`autoIcon`): deck-link, deck-raycast, deck-keyboard, deck-text, deck-play, deck-next, deck-previous, deck-volume-up, deck-volume-down, deck-mute, deck-folder, deck-back, deck-page-next, deck-page-previous, deck-profile, deck-multi.
 
 ## 5. Set up keys
 - Left: page groups (heading "Page groups"). Add ("Add a page group"; the new one is named "New page group"), rename, delete, make default, "Use with apps" (the apps a page group belongs to).
@@ -199,6 +200,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.9.2 (Mac, build 14, 16 Nov 2026).** Six new drawings to choose for a key in Set up keys: Home, Arrow up, Arrow left, Arrow right, Window top half, Window bottom half. Before: no house, only an arrow down, and for windows only left, right and full; 245 drawings. Now: 251. They come from the shared AMS icon library and show on the Stream Deck, on screen keys and on the iPhone and iPad (the Mac draws the keys), so the iPhone and iPad app stays 0.16 (build 21). Nothing else changed; existing keys keep their drawings.
 
 **0.9.1 (Mac, build 13, 16 Nov 2026).** Only the colour of Raycast keys: a clear red instead of red-orange. iPhone and iPad are 0.15 (build 20) at that time; they take the colour from the Mac. Nothing else changed.
 
@@ -537,7 +540,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Not proven yet: on a real iPad and a real iPhone.
 
 ## 45. Page group panels and the iPhone button row (iPhone and iPad 0.16, build 21)
-Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged at 0.9.1 (build 13). Code: Phone/Sources/DeckScreen.swift.
+Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged at 0.9.1 (build 13; 0.9.2 later added six drawings). Code: Phone/Sources/DeckScreen.swift.
 - Navigation picture (section 29), page group names: before, each page group's name was a plain small word above its pages, purple for the page group you are in and grey for the others. Now each page group sits in its own framed panel. The name is white bold words on a full-colour ribbon that stretches across both small pages: purple for the page group you are in, grey-blue for the others. The panel behind the pages is softly tinted in the same colour. The blue frame around the page that is showing is unchanged, as are the pictures, the names under them, the scrolling and the tap.
 - iPhone on its side, buttons: before (0.13 to 0.15), the app pill, the settings gear, the music button and the lock sat in the left side panel (section 34) under the navigation picture, which cut the picture short. Now these four sit in one narrow column to the right of the keys, in the empty strip by the screen's edge. At the top, in line with the top keys: the app pill (section 27), turned on its side so it reads from top to bottom. At the bottom, in line with the bottom keys, one above the other: the lock (identifier `privateMark`), then music, then settings (gear) lowest, in the corner. The keys keep exactly their size and place. Their actions are unchanged.
 - iPhone on its side, other direction: if the iPhone is turned so that the camera cut-out is on the right, the column moves to the free strip at the left edge of the screen, left of the navigation picture, so nothing hides behind the cut-out.

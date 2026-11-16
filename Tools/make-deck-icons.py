@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The 22 icons drawn for AMS Deck Mate, in the AMS style: a 24-point grid, one 1.9 stroke with
+"""The 24 icons drawn for AMS Deck Mate, in the AMS style: a 24-point grid, one 1.9 stroke with
 round ends, no fill. Written as SVG files next to the copy of the AMS Icon Library in
 App/Resources/Icons (names start with "deck-").
 
@@ -34,6 +34,8 @@ ICONS = {
     "window-left": ("Window left half", WINDOW + " M12 5.5v13 M5.8 9h3.4 M5.8 12h3.4 M5.8 15h3.4"),
     "window-right": ("Window right half", WINDOW + " M12 5.5v13 M14.8 9h3.4 M14.8 12h3.4 M14.8 15h3.4"),
     "window-full": ("Window full size", WINDOW + " M6.5 12V9.5H9 M17.5 12v2.5H15"),
+    "window-top": ("Window top half", WINDOW + " M3 12h18 M6.5 8.75h11"),
+    "window-bottom": ("Window bottom half", WINDOW + " M3 12h18 M6.5 15.25h11"),
     "ai": ("AI", "M11 4.5c.6 3.8 2.2 5.4 6 6-3.8.6-5.4 2.2-6 6-.6-3.8-2.2-5.4-6-6 3.8-.6 5.4-2.2 6-6z M18 15.5v4 M16 17.5h4"),
     "app": ("App", "M6.5 4.5h11a2 2 0 0 1 2 2v11a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2-2v-11a2 2 0 0 1 2-2z M9 9h.01 M15 9h.01 M9 15h.01 M15 15h.01"),
 }

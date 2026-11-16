@@ -46,7 +46,7 @@ enum Guide {
             "Each kind has its own colour: apps blue, links teal, Raycast red, keyboard shortcuts purple, typed text amber, music and sound green, moving around grey-blue.",
             "A key that opens an app shows the app's own icon, unless you pick a hand-drawn one.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
-            "There are 245 hand-drawn icons to pick from."
+            "There are 251 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
@@ -240,6 +240,12 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.9.2", date: "16 Nov 2026", new: [
+            "Six new hand-drawn drawings to choose for a key in \"Set up keys\", where you pick a key's drawing: Home (a small house), Arrow up, Arrow left, Arrow right, Window top half and Window bottom half.",
+            "Before, there was no house, only an arrow down, and for windows only left half, right half and full window. Now there are arrows in all four directions, and window top half and bottom half join the other three window drawings.",
+            "There are now 251 drawings to choose from, instead of 245. They are drawn in the same style as all the others (one line, round ends, no fill) and come from the shared AMS icon library, so the other AMS apps can use the same drawings.",
+            "Existing keys keep their drawings. The new ones show on the Stream Deck, on the keys on screen, and on the iPhone and iPad, because the Mac draws the keys. No iPhone or iPad update is needed. The Mac app is now 0.9.2 (build 14); the iPhone and iPad app stays 0.16."
+        ], changed: [], fixed: []),
         Release(id: "0.9.1", date: "16 Nov 2026", new: [], changed: [
             "Before, Raycast keys were a red-orange that looked close to the amber of \"type text\" keys. Now they are a clear red, like Raycast's own red, a little deeper so the white words and drawings stay easy to read.",
             "The new red shows everywhere the Mac draws keys: the box, the keys on screen, Set up keys and \"All pages\". The Raycast headings in Settings and in the guide use the matching red.",
