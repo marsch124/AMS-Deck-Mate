@@ -297,6 +297,13 @@ final class LinkClient: ObservableObject {
         send(.profile(id: id))
     }
 
+    /// A swipe up or down: the next page group, not locked (a Mac before 0.7.1 can only lock it).
+    func swipeProfile(_ id: String) {
+        if ownOn, newMac { pickProfile(id); return }
+        guard case .connected = state, !isSample else { return }
+        send(macVersion >= 6 ? .visit(profile: id) : .profile(id: id))
+    }
+
     func press(_ index: Int) {
         guard case .connected = state, !isSample else { return }
         send(.press(index: index))

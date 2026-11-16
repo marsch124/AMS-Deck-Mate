@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.7 (build 9), 16 Nov 2026; iPhone and iPad app 0.10 (build 14)
+# AMS Deck Mate, specification, version 0.7.1 (build 10), 16 Nov 2026; iPhone and iPad app 0.10.1 (build 15)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -186,6 +186,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
+**0.7.1 (Mac, build 10, 16 Nov 2026).** Understands the new link message `visit(profile:)` (link version 6): a swipe on the iPhone or iPad shows a page group without locking it (section 35). The iPhone and iPad app is 0.10.1 (build 15).
+
 **0.7 (Mac, build 9, 16 Nov 2026).** The keys "Recent app" and "Ask AI (copied text)" (sections 31, 32), and the Mac's sleep and wake news for the iPhone and iPad (section 33). The iPhone and iPad app is 0.9 (build 13). Not proven yet: "Ask AI" against the real Raycast, the dark screen on the real iPad.
 
 **0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.9 (build 13) at that time; 0.10 (build 14) is the side panel and the lock in Settings (section 34). Not proven yet: the navigation picture on the real iPad.
@@ -269,7 +271,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 ## 21. The iPhone app, 0.4
 The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Layout: the 15 keys sit at the bottom of the screen, near the thumb; the heading is on top (see section 30).
-- Page groups by swipe (0.5.1): a swipe up on the keys locks the next page group, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one page group. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
+- Page groups by swipe: a swipe up on the keys shows the next page group, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`); nothing happens with one page group. Since 0.10.1 (Mac 0.7.1) the swipe does not lock: it is sent as `visit(profile:)` (link version 6) and the Mac's `AppModel.visit(_:)` clears any lock and shows that group, so the keys stay on Automatic and follow the next app that comes forward. From 0.5.1 to 0.10 a swipe locked, sent as `profile(id:)`; that is still what happens when the Mac is older than 0.7.1 (link version below 6). A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
 - Page group lock (changed in 0.10, section 34): the name at the top is only a heading, with no menu and no lock drawing. The lock is the row "Page group" in Settings, Keys card: chips "Automatic" and one per page group. Before 0.10 a tap on the top line opened a menu "Automatic" / "Lock one" and the lock showed beside the name (0.5.2). *
 - Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
@@ -294,7 +296,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 
 **0.5.2 (iPhone and iPad app, build 7) and Mac 0.4.2 (build 6), both 16 Nov 2026.**
 - The word "held" is gone from every text; it now says "locked".
-- A page group picked by hand (the top line's menu, a swipe up or down on the iPhone and iPad, or the Mac's menu) shows a small hand-drawn lock beside the name of the page group: on the iPhone and iPad top line and on the Mac's keys on screen. Locked: the page group stays until "Automatic" is chosen (tap the top line on the iPhone and iPad; the menu bar menu on the Mac). No lock: on the Mac the page group follows the app in front.
+- A page group picked by hand (the row "Page group" in Settings on the iPhone and iPad, or the Mac's menu; a swipe up or down no longer locks since 0.10.1, section 35) shows a small hand-drawn lock beside the name of the page group: on the iPhone and iPad top line and on the Mac's keys on screen. Locked: the page group stays until "Automatic" is chosen (tap the top line on the iPhone and iPad; the menu bar menu on the Mac). No lock: on the Mac the page group follows the app in front.
 - Mac menu line: "Page group: <name> (locked)" or "(automatic)". iPhone and iPad menu section: "Lock one".
 - iPad only: the top line is larger: the name of the page group is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged. (Changed in 0.8.1, see section 30: the heading is centred, there is no "Connected to …" line any more, and the iPhone heading is title size.)
 - Nothing else changes. The Mac and the iPhone and iPad app work with each other in any mix of these versions.
@@ -422,7 +424,7 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Clock above the keys: still not shown on an iPhone on its side.
 - Heading: the page group name at the top is only a heading. A tap does nothing (no menu) and there is no lock drawing beside it.
 - Lock in Settings (iPhone and iPad): Keys card, new row "Page group" with chips. Follow the Mac: chip "Automatic" (identifier `lockGroup-Automatic`) plus one chip per page group (identifier `lockGroup-<name>`). Picking a page group locks it: the Mac stays on it until "Automatic" (same message as before, `profile(id:)`; "Automatic" sends the unlock). The picked chip shows a small hand-drawn lock drawing. The row with "My own keys" (section 26) lists only the page groups, with no "Automatic", as before.
-- Still locking: a swipe up or down on the keys (section 21) and a tap on a page in the navigation picture. To unlock: "Automatic" in Settings, or the Mac's menu (section 2).
+- Still locking: a tap on a page in the navigation picture. A swipe up or down on the keys locked in 0.10 but no longer does since 0.10.1 (section 35). To unlock: "Automatic" in Settings, or the Mac's menu (section 2).
 - Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
 - Not proven yet: on a real iPhone held on its side.
 
@@ -434,3 +436,10 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Long press on the real box (away until January 2027).
 - Long press on a real iPhone or iPad.
 - Play or pause from the music plate.
+
+## 35. Swipe no longer locks (Mac 0.7.1, iPhone and iPad 0.10.1)
+- Before (0.5.1 to 0.10): a swipe up or down on the iPhone or iPad keys changed the page group and locked it (`profile(id:)`). Unlocking needed Settings, Keys, Page group, Automatic.
+- Now: the swipe sends `visit(profile:)` (link version 6, `PhoneLink.currentVersion` is 6). The Mac's `AppModel.visit(_:)` clears the lock and shows that page group. The mode stays Automatic, so the next time a different app comes forward on the Mac the keys follow that app. If a group was locked before the swipe, the swipe unlocks it.
+- Still locking: picking a page group in Settings (`lockGroup-<name>`, section 34), a tap on a page in the navigation picture, and the Mac's menu.
+- With "My own keys": unchanged; a swipe changes the own page group, no lock.
+- Versions: needs the Mac at 0.7.1 or later. `visit(profile:)` goes only to a side at link version 6; with an older Mac the iPhone and iPad app sends `profile(id:)` and a swipe still locks. An older iPhone or iPad app with the new Mac works as before.

@@ -153,6 +153,17 @@ final class AppModel: ObservableObject {
         move(to: Navigator.step(step, at: position, in: deck))
     }
 
+    /// A swipe on the iPhone: show this page group without locking it; Automatic stays on,
+    /// so the next app that comes forward on the Mac takes over again.
+    func visit(_ id: UUID) {
+        guard deck.profile(id) != nil else { return }
+        if pinned != nil {
+            pinned = nil
+            UserDefaults.standard.removeObject(forKey: AppModel.pinnedKey)
+        }
+        move(to: Navigator.start(in: deck, profile: id))
+    }
+
     func pin(_ id: UUID?) {
         pinned = id
         UserDefaults.standard.set(id?.uuidString, forKey: AppModel.pinnedKey)

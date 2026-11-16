@@ -69,6 +69,9 @@ public enum PhoneLink {
         case go(profile: String, page: String)
         /// Mac → iPhone (version 5): the Mac's screen went to sleep (true) or woke (false).
         case asleep(Bool)
+        /// iPhone → Mac (version 6): a swipe up or down: show this page group WITHOUT locking it
+        /// (it follows the app in front again at the next app change).
+        case visit(profile: String)
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -79,14 +82,15 @@ public enum PhoneLink {
             case .own, .hold, .favourite, .music, .favourites, .mac: return 3
             case .map, .go: return 4
             case .asleep: return 5
+            case .visit: return 6
             }
         }
     }
 
     /// The version that understands everything above: 2 = status, pressed, ran, page and profile;
     /// 3 = own keys, long press, favourites, the Mac at a glance and the music strip.
-    /// 4 = the navigation picture; 5 = the Mac says when it sleeps.
-    public static let currentVersion = 5
+    /// 4 = the navigation picture; 5 = the Mac says when it sleeps; 6 = a swipe shows a page group without locking it.
+    public static let currentVersion = 6
 
     /// One page group of the navigation picture.
     public struct MapGroup: Codable, Equatable, Sendable {

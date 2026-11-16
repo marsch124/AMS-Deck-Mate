@@ -125,7 +125,8 @@ enum Guide {
         Section(id: "profiles", title: "Page groups change by themselves", part: "profiles", lines: [
             "When an app that belongs to a page group comes to the front, the keys change to that page group. Any other app shows the default page group.",
             "A page group you pick by hand stays while you move between apps that share a group. It changes when you go to an app with another group.",
-            "Picking a page group in the menu locks it: a small lock shows beside its name on the keys on screen (since 0.4.2), and it stays until you choose \"Automatic\". You can switch the automatic change off in Settings."
+            "Picking a page group in the menu locks it: a small lock shows beside its name on the keys on screen (since 0.4.2), and it stays until you choose \"Automatic\". You can switch the automatic change off in Settings.",
+            "Since 0.7.1: when you swipe up or down on the keys of the iPhone or iPad, that device shows the next or previous page group, but it does not lock it. The Mac goes back to following the app in front, and if a group was locked, the swipe unlocks it. Picking a group in the iPhone's or iPad's Settings, or tapping a page in the navigation picture, still locks. This needs the iPhone or iPad app at 0.10.1; with an older app a swipe still locks."
         ]),
         Section(id: "bringover", title: "Bringing over your Elgato keys", part: "profiles", lines: [
             "At first start the app reads the keys from Elgato's app for the 15-key box: apps, links, shortcuts, typed text, music keys, folders, pages, several-things keys and which app a page group belongs to.",
@@ -200,6 +201,13 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.7.1", date: "16 Nov 2026", new: [
+            "Works with the iPhone and iPad app 0.10.1: a swipe up or down on the keys there now shows the next or previous page group without locking it."
+        ], changed: [
+            "Before, a swipe on the iPhone or iPad changed the page group and locked it, so it stayed when another app came forward on the Mac. Now the Mac shows the page group but stays on \"Automatic\", so the next time a different app comes forward, the keys follow that app again. If a group was locked before the swipe, the swipe unlocks it.",
+            "Picking a page group in the menu or in the iPhone's Settings, and tapping a page in the navigation picture, still lock it. With \"My own keys\" nothing changes.",
+            "With an older iPhone or iPad app (before 0.10.1) a swipe still locks, as before."
+        ], fixed: []),
         Release(id: "0.7", date: "16 Nov 2026", new: [
             "New key \"Recent app\". In Set up keys, under \"What it does\", choose \"Recent app\" and pick 1st, 2nd or 3rd. It shows the icon and name of an app you used before the one in front: 1st is the app just before, 2nd the one before that, 3rd the one before that.",
             "The picture changes by itself as you switch apps, on the box, on the keys on screen and on the iPhone and iPad. Press the key and that app comes forward.",

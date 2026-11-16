@@ -145,5 +145,7 @@ final class ReleaseNineTests: XCTestCase {
         let long = RaycastLink.ask(String(repeating: "x", count: 5000))
         XCTAssertEqual(long.count, RaycastLink.aiChat.count + "?fallbackText=".count + 4000)
         XCTAssertEqual(PhoneLink.Message.asleep(true).since, 5)
+        // A swipe that does not lock: only a Mac at version 6 knows it.
+        XCTAssertEqual(PhoneLink.Message.visit(profile: "a").since, 6)
     }
 }

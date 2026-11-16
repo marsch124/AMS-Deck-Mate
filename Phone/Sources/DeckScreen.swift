@@ -192,14 +192,14 @@ struct DeckScreen: View {
                     .opacity(connected ? 1 : 0.35)
                     .contentShape(Rectangle())
                     .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
-                        // Sideways = pages; up or down = the next or previous profile (it is then locked).
+                        // Sideways = pages; up or down = the next or previous page group (not locked since 0.10.1).
                         let across = drag.translation.width
                         let along = drag.translation.height
                         if abs(across) > 60, abs(across) > abs(along) * 1.5 {
                             link.page(across < 0 ? 1 : -1)
                         } else if swipeProfiles, abs(along) > 60, abs(along) > abs(across) * 1.5,
                                   let next = link.status?.profile(after: along < 0 ? 1 : -1) {
-                            link.pickProfile(next)
+                            link.swipeProfile(next)
                         }
                     })
             }

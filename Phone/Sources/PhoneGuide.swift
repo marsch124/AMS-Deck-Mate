@@ -63,7 +63,7 @@ enum PhoneGuide {
         Section(id: "profiles", title: "Page groups follow the Mac", part: "profiles", lines: [
             "The iPhone shows the page group and page the Mac shows. When the app in front on the Mac changes and the page group changes with it, the iPhone changes too.",
             "To use a different page group, open Settings and use the row \"Page group\" in the Keys card (since 0.10). Its chips are \"Automatic\" and one chip for each page group, the same as the Mac's menu. A group you pick locks: it stays until you choose \"Automatic\", and a small lock drawing shows on its chip. The name at the top is only a heading; tapping it does nothing. You can also change it on the Mac, or tap a key that switches page group.",
-            "Since 0.5.1: swipe up or down on the keys for the next or previous page group. It is then locked until you choose \"Automatic\" in Settings, Keys, row \"Page group\" (or in the Mac's menu)."
+            "Swipe up or down on the keys to look at the next or previous page group. Since 0.10.1 this does not lock it: you stay on \"Automatic\", and the next time a different app comes forward on the Mac, the keys follow that app again. If a group was locked before the swipe, the swipe unlocks it. Only picking a group in Settings, or tapping a page in the navigation picture, locks. Needs the Mac app at 0.7.1; with an older Mac app a swipe still locks, as it did in 0.5.1 to 0.10."
         ]),
         Section(id: "ownkeys", title: "My own keys", part: "profiles", lines: [
             "In Settings, the card \"Keys\" at the top has two choices. \"Follow the Mac\" is as before: this iPhone or iPad shows the page group and page the Mac shows.",
@@ -135,6 +135,15 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.10.1", date: "16 Nov 2026", new: [
+            "Needs the Mac app at 0.7.1 or later. With an older Mac app a swipe still locks, as before."
+        ], changed: [
+            "Swiping up or down on the keys no longer locks the page group. Before (since 0.5.1), a swipe changed the page group and locked it, so it stayed even when another app came forward on the Mac, and to unlock you had to go to Settings, Keys, Page group, Automatic. Now a swipe shows the next or previous page group but you stay on Automatic, so the next time a different app comes forward on the Mac, the keys follow that app again.",
+            "If a page group was locked before the swipe, the swipe also unlocks it.",
+            "Picking a page group in Settings, and tapping a page in the navigation picture, still lock it. To unlock, choose \"Automatic\" in Settings (or in the Mac's menu).",
+            "With \"My own keys\" nothing changes: a swipe changes your own page group and there is no lock.",
+            "How it works has the new swipe rule. The Mac app is now 0.7.1."
+        ], fixed: []),
         Release(id: "0.10", date: "16 Nov 2026", new: [
             "New row \"Page group\" in Settings, in the Keys card, on the iPhone and the iPad. It has chips: \"Automatic\" and one chip for each page group. Pick a page group and it is locked: the Mac stays on it until you pick \"Automatic\". A small lock drawing shows on the chip you picked.",
             "The navigation picture now also shows on an iPhone held on its side. Before, only an iPad on its side had it. Every page group and page shows as small pictures on the left, and a tap goes there.",

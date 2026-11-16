@@ -114,7 +114,7 @@ final class RoundBTests: XCTestCase {
 
     /// New messages only go to a side that said it knows them, and the Mac's version rides in welcome.
     func testNewMessagesNeedVersionThree() throws {
-        XCTAssertEqual(PhoneLink.currentVersion, 4)
+        XCTAssertEqual(PhoneLink.currentVersion, 6)
         XCTAssertEqual(PhoneLink.Message.press(index: 1).since, 1)
         XCTAssertEqual(PhoneLink.Message.page(step: 1).since, 2)
         let new: [PhoneLink.Message] = [.own(profile: "a"), .hold(index: 1), .favourite(index: 0, long: true),

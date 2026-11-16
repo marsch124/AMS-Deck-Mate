@@ -250,6 +250,10 @@ final class PhoneServer: ObservableObject {
             // An iPhone with its own keys changes its profile with `own`; it never holds the Mac's.
             guard phone.trusted, phone.own == nil else { return }
             model.pin(id.flatMap { UUID(uuidString: $0) })
+        case let .visit(profile):
+            // A swipe: show that page group, but keep following the app in front (no lock).
+            guard phone.trusted, phone.own == nil, let id = UUID(uuidString: profile) else { return }
+            model.visit(id)
         case let .own(profile):
             guard phone.trusted else { return }
             phone.own = Navigator.own(profile: profile, was: phone.own, in: model.deck)
