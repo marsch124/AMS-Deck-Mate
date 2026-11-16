@@ -258,7 +258,7 @@ final class LinkClient: ObservableObject {
             map = groups
         case let .asleep(asleep):
             macAsleep = asleep
-        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go:
+        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit:
             break
         }
     }
