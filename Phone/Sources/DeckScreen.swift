@@ -50,6 +50,7 @@ struct DeckScreen: View {
     @State private var onItsSide = false
     @State private var showStatus = false
     @State private var showMusicPlate = false
+    @State private var showPrivate = false
     /// Where the keys sit in the row they share with the navigation picture, so the plate lines up with them.
     @State private var keysFrame = CGRect.zero
     /// On its side, Settings and music sit at the bottom left (upright: top right, as ever).
@@ -151,6 +152,7 @@ struct DeckScreen: View {
         HStack(spacing: 2) {
             settingsButton
             if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
+            if connected, link.isPrivate { privateLock }
             Spacer(minLength: 8)
         }
         .accessibilityElement(children: .contain)
@@ -455,16 +457,40 @@ struct DeckScreen: View {
         .accessibilityIdentifier("settingsButton")
     }
 
+    /// On its side: the lock (the line to the Mac is private) by Settings and music; a tap says it in words.
+    private var privateLock: some View {
+        Button { showPrivate = true } label: {
+            PhoneIcon(name: "iconLock", size: isPad ? 21 : 18)
+                .foregroundStyle(PhonePalette.part("settings"))
+                .frame(width: 36, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Private line")
+        .accessibilityIdentifier("privateLock")
+        .popover(isPresented: $showPrivate) {
+            Text("Private line: nobody else on the Wi-Fi can read your keys or press them.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(14)
+                .frame(width: 270, alignment: .leading)
+                .presentationCompactAdaptation(.popover)
+                .presentationBackground(PhonePalette.card)
+                .accessibilityIdentifier("privateCard")
+        }
+    }
+
     /// The link to the Mac as one small coloured dot; a tap says it in words.
     private var statusDot: some View {
         Button { showStatus = true } label: {
             Circle().fill(statusColour)
                 .frame(width: isPad ? 16 : 13, height: isPad ? 16 : 13)
                 .frame(width: 44, height: 44)
-                // A small lock beside the dot: the line to the Mac is private.
+                // Upright, a small lock beside the dot: the line to the Mac is private.
+                // (On its side the lock sits bottom left, by Settings and music.)
                 .overlay(alignment: .trailing) {
-                    if link.isPrivate {
-                        PhoneIcon(name: "iconLock", size: isPad ? 13 : 11).foregroundStyle(statusColour)
+                    if link.isPrivate, !lowButtons {
+                        PhoneIcon(name: "iconLock", size: isPad ? 17 : 14).foregroundStyle(PhonePalette.part("settings"))
                     }
                 }
                 .contentShape(Rectangle())
@@ -485,7 +511,7 @@ struct DeckScreen: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("privateMark")
                 }
-                ForEach([("Green", "connected to your Mac", Color(red: 0.25, green: 0.70, blue: 0.36)),
+                ForEach([("Green", "connected to your Mac", PhonePalette.part("settings")),
                          ("Amber", "looking for the Mac, or waiting for it to allow this \(Self.device)", Color(red: 0.93, green: 0.62, blue: 0.14)),
                          ("Red", "the Mac said no", Color(red: 0.90, green: 0.33, blue: 0.24))], id: \.0) { row in
                     HStack(alignment: .firstTextBaseline, spacing: 7) {
@@ -504,11 +530,11 @@ struct DeckScreen: View {
         }
     }
 
-    /// The Mac at a glance at the very bottom: the app in front, in one small blue pill (his pick, 0.14: no battery).
+    /// The Mac at a glance at the very bottom: the app in front, in one small pill, green like Settings (his picks: 0.14 no battery, 0.15 green).
     @ViewBuilder
     private var glanceLine: some View {
         if showGlance, connected, link.newMac, let mac = link.mac, !mac.app.isEmpty {
-            glancePill(icon: nil, words: mac.app, part: "screen")
+            glancePill(icon: nil, words: mac.app, part: "settings")
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Mac: \(mac.app)")
@@ -540,7 +566,7 @@ struct DeckScreen: View {
 
     private var statusColour: Color {
         switch link.state {
-        case .connected: return Color(red: 0.25, green: 0.70, blue: 0.36)
+        case .connected: return PhonePalette.part("settings")   // the same green as Settings (his pick, 0.15)
         case .refused: return Color(red: 0.90, green: 0.33, blue: 0.24)
         default: return Color(red: 0.93, green: 0.62, blue: 0.14)
         }

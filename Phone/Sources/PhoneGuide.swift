@@ -31,7 +31,7 @@ enum PhoneGuide {
             "Showing, Dark while the Mac sleeps (on at first, since 0.9): when the Mac's screen goes to sleep, this screen goes black with a small moon and \"Mac asleep\". See \"Dark while the Mac sleeps\" below. Needs a Mac at 0.7.",
             "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows centred under the heading, and also under the resting clock. It goes away when charging or above 20 %.",
             "Showing, Favourites row (on at first): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
-            "Showing, Mac at a glance (on at first): the name of the app in front on the Mac, as one small blue pill at the bottom middle (since 0.13 a pill; since 0.14 without the battery). Needs a Mac at 0.5.",
+            "Showing, Mac at a glance (on at first): the name of the app in front on the Mac, as one small pill at the bottom middle, in the same green as the settings gear (since 0.13 a pill; since 0.14 without the battery; since 0.15 green instead of blue). Needs a Mac at 0.5.",
             "Showing, Music button (on at first): one small round button, at the top right beside the settings button (since 0.13, with the iPad or iPhone held on its side, at the bottom left). Tap it for a small plate that shows what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
             "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
@@ -46,7 +46,7 @@ enum PhoneGuide {
             "After that the Mac remembers your iPhone and the keys appear by themselves. An iPad is asked the same way, once, and appears in the Mac's \"iPhone\" part in Settings by its name.",
             "Since 0.11 the link to the Mac is private: everything is scrambled from the first moment, so on a shared Wi-Fi (hotel, café) nobody can listen in or press your keys. The number is there so nobody can sit in between.",
             "Every iPhone and iPad has to be allowed once more after the update (one click on the Mac). The app 0.11 only talks to a Mac at 0.8 or later. With an older Mac it says \"Update AMS Deck Mate on your Mac\". An older app with the new Mac sees \"said no\".",
-            "Since 0.12, while this device is connected, a small lock drawing sits beside the status dot at the top left. It says the line to the Mac is private. Tap the dot and the card says: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\"",
+            "Since 0.12, while this device is connected, a small lock drawing says the line to the Mac is private. Since 0.15 it is the same green as the settings gear and a little larger. Held upright it sits beside the status dot at the top left. Held on its side it sits at the bottom left, in the line with the settings gear and the music button (gear, music, lock), and a tap on it shows a small card: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\" A tap on the dot shows the connection card with the same sentence. The dot itself is the same green as the gear when connected, amber while looking or waiting, red when the Mac said no.",
             "If the Mac was told Don't Allow, the iPhone shows \"Ask again\". Tap it and the Mac asks once more."
         ]),
         Section(id: "tapping", title: "Tapping keys", part: "keys", lines: [
@@ -100,7 +100,7 @@ enum PhoneGuide {
             "Needs the AMS Deck Mate app at 0.5 on the Mac."
         ]),
         Section(id: "macnow", title: "The Mac at a glance and the music button", part: "settings", lines: [
-            "Mac at a glance: one small blue pill at the bottom middle of the screen, with the name of the app in front on the Mac, for example \"Safari\". It no longer shows the Mac's battery (0.13 had a second, green pill for it; it was removed in 0.14). With the iPhone held on its side, the pill sits in the left panel, just above the two buttons.",
+            "Mac at a glance: one small pill at the bottom middle of the screen, with the name of the app in front on the Mac, for example \"Safari\". Since 0.15 the words and the pill are the same green as the settings gear (before, blue words on a light blue pill). It no longer shows the Mac's battery (0.13 had a second, green pill for it; it was removed in 0.14). With the iPhone held on its side, the pill sits in the left panel, just above the buttons.",
             "Music button: a small round button. Held upright it is at the top right, beside the settings button. Since 0.13, with the iPad or iPhone held on its side, it is at the bottom left: on the iPad in the bottom-left corner under the navigation picture, on the iPhone at the bottom of the left panel. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. The plate has a solid background. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
             "Until the next change of song or pause after the Mac app has started, the plate says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
             "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs none. Play or pause is not yet tried.",
@@ -144,6 +144,12 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.15", date: "16 Nov 2026", new: [], changed: [
+            "The pill with the app in front on the Mac (Mac at a glance) is green now. Before, the words were blue on a light blue pill. Now the words and the pill are the same green as the settings gear.",
+            "The connection dot at the top left is the same green as the settings gear when connected. Before, it had its own, brighter green. Amber (looking or waiting) and red (the Mac said no) are unchanged.",
+            "The small lock for the private line is the same green as the gear and a little larger. Before, it was a very small lock right beside the connection dot at the top left. With the iPad or iPhone held on its side it moves to the bottom left, in the line with settings and music (gear, music, lock). A tap on it shows a small card: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\" Held upright it stays beside the dot (there the gear and music are top right), only larger and in the new green. A tap on the dot still shows the connection card with the same sentence.",
+            "Nothing else moved on the key screen. The Mac app is unchanged at 0.9."
+        ], fixed: []),
         Release(id: "0.14", date: "16 Nov 2026", new: [], changed: [
             "Mac at a glance no longer shows the Mac's battery. Before (0.13), there were two small pills at the bottom middle: a green one with a battery drawing and the Mac's battery, for example \"95 %\", and a blue one with the app in front on the Mac. Now there is only the blue pill with the app in front, for example \"Claude\".",
             "Nothing else moved: the navigation picture, the music and settings buttons and the heading are exactly as in 0.13. The switch \"Mac at a glance\" in Settings, Showing, works as before. The low battery warning for the iPhone or iPad itself stays.",

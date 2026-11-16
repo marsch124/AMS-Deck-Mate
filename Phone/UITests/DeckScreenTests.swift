@@ -70,6 +70,10 @@ final class DeckScreenTests: XCTestCase {
         let gear = app.buttons["settingsButton"].frame
         XCTAssertGreaterThan(gear.midY, plate.maxY, "Settings sits under the plate")
         XCTAssertLessThan(gear.midX, plate.midX, "Settings sits at the left")
+        // His placement (0.15): the lock sits in the same line as Settings and music, right of them.
+        let lock = app.buttons["privateLock"].frame
+        XCTAssertEqual(lock.midY, gear.midY, accuracy: 3, "the lock is in line with Settings")
+        XCTAssertGreaterThan(lock.midX, gear.midX, "the lock comes after Settings and music")
         XCTAssertTrue(app.descendants(matching: .any)["macGlance"].exists)
 
         // The plate is as tall as the keys (short on an upright iPhone), so the last page group is a scroll away.
