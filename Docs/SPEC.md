@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.9 (build 12), 16 Nov 2026; iPhone and iPad app 0.15 (build 20)
+# AMS Deck Mate, specification, version 0.9.1 (build 13), 16 Nov 2026; iPhone and iPad app 0.15 (build 20)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -11,6 +11,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
+- Since 0.9.1 (Mac): the Raycast kind is a clear red (before, a red-orange that looked close to the amber of text keys), a little deeper so white words stay easy to read. It shows in the box, on screen keys, Set up keys, "All pages", and by itself on the iPhone and iPad (keys and navigation picture) with no update there. iPhone and iPad stay 0.15.
 - Since 0.9 (Mac) and 0.12 (iPhone and iPad): the weekly copy of the keys in iCloud Drive (section 40), the list choice of "Last copied text" (section 41), and the lock mark for the private line (section 42).
 - Since 0.15 (iPhone and iPad): the Mac at a glance pill, the connection dot (connected) and the private-line lock all use the same green as the settings gear; on its side the lock moves to the bottom left (section 44). The Mac app is unchanged at 0.9.
 - Since 0.14 (iPhone and iPad): the Mac at a glance no longer shows the Mac's battery, only one blue pill with the app in front (sections 27 and 43). The Mac app is unchanged at 0.9.
@@ -61,7 +62,7 @@ The icon opens a menu:
 
 ## 4. Key look and colours
 - A flat coloured tile, a white hand-drawn icon, a short title.
-- One colour per kind (`KeyKind`): app blue, web (links) teal, raycast red-orange, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
+- One colour per kind (`KeyKind`): app blue, web (links) teal, raycast red, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
 - A "several things" key takes the kind of its first step that is not "nothing".
 - An app key shows the app's own icon unless an icon is picked.
 - An app key with an empty title shows the app's name (`DeckKey.shownTitle(appName:)`, see section 18). Own words always win.
@@ -197,6 +198,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.9.1 (Mac, build 13, 16 Nov 2026).** Only the colour of Raycast keys: a clear red instead of red-orange. iPhone and iPad stay 0.15 (build 20); they take the colour from the Mac. Nothing else changed.
 
 **0.9 (Mac, build 12, 16 Nov 2026).** The weekly copy of the keys in iCloud Drive (section 40), the list choice of "Last copied text" (section 41). The iPhone and iPad app is 0.12 (build 17): the lock mark (section 42). Link version stays 7. The code is public on GitHub with the rule tests running there at every change (section 14). Not proven yet: the iCloud Drive question and copy on a real Mac over weeks; the list on a real Mac in daily use.
 
@@ -420,7 +423,7 @@ Made after 0.7 on a real iPad, where the top was too crowded. Only the key scree
 - Colour: blue (kind app). Broken-key check: never broken.
 
 ## 32. The "Ask AI (copied text)" key (Mac 0.7)
-- Set up keys, "What it does", "Ask AI (copied text)". Raycast colour (red-orange), an AI drawing, title "Ask AI".
+- Set up keys, "What it does", "Ask AI (copied text)". Raycast colour (red), an AI drawing, title "Ask AI".
 - Press: the Mac reads the text last copied (the clipboard) and opens Raycast AI Chat with it filled in. Nothing copied, or a picture copied: AI Chat just opens. Text over 4,000 characters is cut at 4,000.
 - The link used is the corrected AI Chat link of section 7, with the text added to it.
 - Not proven yet: against the real Raycast. If the text does not arrive in AI Chat, this is a first version and needs a second look.

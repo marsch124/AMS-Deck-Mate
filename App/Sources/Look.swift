@@ -22,7 +22,7 @@ enum Palette {
         switch kind {
         case .app: return rgb(0.18, 0.44, 0.88)        // blue
         case .web: return rgb(0.08, 0.54, 0.48)        // teal
-        case .raycast: return rgb(0.85, 0.33, 0.17)    // red-orange
+        case .raycast: return rgb(0.86, 0.22, 0.25)    // a clear red, like Raycast's own (his pick, 0.9.1; was red-orange)
         case .shortcut: return rgb(0.48, 0.37, 0.82)   // purple
         case .text: return rgb(0.73, 0.47, 0.06)       // amber
         case .media: return rgb(0.18, 0.61, 0.31)      // green
@@ -48,7 +48,7 @@ enum Palette {
     static func part(_ part: String, _ scheme: ColorScheme) -> Color {
         let night = scheme == .dark
         switch part {
-        case "raycast": return Color(nsColor: night ? rgb(0.98, 0.55, 0.40) : rgb(0.80, 0.29, 0.13))
+        case "raycast": return Color(nsColor: night ? rgb(1.00, 0.52, 0.52) : rgb(0.78, 0.17, 0.20))
         case "profiles": return Color(nsColor: night ? rgb(0.72, 0.64, 0.98) : rgb(0.43, 0.32, 0.78))
         case "box": return Color(nsColor: night ? rgb(0.36, 0.80, 0.72) : rgb(0.05, 0.48, 0.42))
         case "screen": return Color(nsColor: night ? rgb(0.47, 0.71, 1.00) : rgb(0.14, 0.40, 0.84))

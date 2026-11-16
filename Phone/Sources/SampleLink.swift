@@ -43,7 +43,7 @@ enum SampleLink {
     }
 
     private static let blue = UIColor(red: 0.18, green: 0.44, blue: 0.88, alpha: 1)
-    private static let raycast = UIColor(red: 0.85, green: 0.33, blue: 0.17, alpha: 1)
+    private static let raycast = UIColor(red: 0.86, green: 0.22, blue: 0.25, alpha: 1)
     private static let teal = UIColor(red: 0.08, green: 0.54, blue: 0.48, alpha: 1)
     private static let green = UIColor(red: 0.18, green: 0.61, blue: 0.31, alpha: 1)
     private static let grey = UIColor(red: 0.36, green: 0.42, blue: 0.51, alpha: 1)

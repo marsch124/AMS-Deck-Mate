@@ -43,7 +43,7 @@ enum Guide {
         ]),
         Section(id: "look", title: "The look of a key", part: "keys", lines: [
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
-            "Each kind has its own colour: apps blue, links teal, Raycast red-orange, keyboard shortcuts purple, typed text amber, music and sound green, moving around grey-blue.",
+            "Each kind has its own colour: apps blue, links teal, Raycast red, keyboard shortcuts purple, typed text amber, music and sound green, moving around grey-blue.",
             "A key that opens an app shows the app's own icon, unless you pick a hand-drawn one.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
             "There are 245 hand-drawn icons to pick from."
@@ -107,7 +107,7 @@ enum Guide {
         ]),
         Section(id: "askai", title: "Ask AI about copied text", part: "raycast", lines: [
             "New in 0.7. In Set up keys, under \"What it does\", choose \"Ask AI (copied text)\".",
-            "Press the key and Raycast AI Chat opens with the text you copied last already filled in. The key is Raycast red-orange, with an AI drawing and the title \"Ask AI\".",
+            "Press the key and Raycast AI Chat opens with the text you copied last already filled in. The key is Raycast red, with an AI drawing and the title \"Ask AI\".",
             "If nothing is copied, or you copied a picture, AI Chat just opens.",
             "Very long text is cut at 4,000 characters.",
             "Not yet tried against the real Raycast. This is a first version: if the text does not arrive in AI Chat, tell me."
@@ -240,6 +240,11 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.9.1", date: "16 Nov 2026", new: [], changed: [
+            "Before, Raycast keys were a red-orange that looked close to the amber of \"type text\" keys. Now they are a clear red, like Raycast's own red, a little deeper so the white words and drawings stay easy to read.",
+            "The new red shows everywhere the Mac draws keys: the box, the keys on screen, Set up keys and \"All pages\". The Raycast headings in Settings and in the guide use the matching red.",
+            "On the iPhone and iPad the keys and the small page pictures in the navigation picture get the new red by themselves once the Mac app is updated. No iPhone or iPad update is needed. The Mac app is now 0.9.1 (build 13); the iPhone and iPad app stays 0.15."
+        ], fixed: []),
         Release(id: "0.9", date: "16 Nov 2026", new: [
             "A weekly copy of your keys in iCloud Drive. Once a week the Mac puts a copy of your keys file into iCloud Drive, in the folder \"AMS Deck Mate\", named by its day, for example \"deck 2026-11-16.json\". The newest 8 are kept (about two months) and older ones are removed. The Mac looks at start and every 6 hours whether a week has passed.",
             "In Settings, \"Where your setup is kept\": a switch \"Keep a weekly copy in iCloud Drive\" (on at first), a line \"Last copy: <date and time>\" (or \"No copy yet\") and a button \"Copy now\".",
