@@ -75,21 +75,78 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertEqual(lock.midY, gear.midY, accuracy: 3, "the lock is in line with Settings")
         XCTAssertGreaterThan(lock.midX, gear.midX, "the lock comes after Settings and music")
         XCTAssertTrue(app.descendants(matching: .any)["macGlance"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["mapGroup-1"].exists, "every page group has its ribbon (0.16)")
+        snap(app, "navigation")
 
         // The plate is as tall as the keys (short on an upright iPhone), so the last page group is a scroll away.
         app.descendants(matching: .any)["navigationPicture"].swipeUp()
         XCTAssertTrue(app.buttons["mapPage-w1"].waitForExistence(timeout: 5))
     }
 
-    /// An iPhone on its side: the side panel on the left holds the heading, settings and the navigation picture.
+    /// An iPhone on its side: the side panel on the left holds the heading and the navigation picture;
+    /// his placement (0.16): the Mac's app, the lock, music and Settings stand in one column right of the keys.
     func testSidePanel() {
+        let phone = UIDevice.current.userInterfaceIdiom == .phone
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { XCUIDevice.shared.orientation = .portrait }
         let app = XCUIApplication()
-        app.launchArguments = ["-sample", "-sideways", "-forceMap"]
+        // As he has it: no favourites row, so the keys are as wide as the room allows.
+        app.launchArguments = (phone ? ["-sample"] : ["-sample", "-sideways", "-forceMap"]) + ["-showFavourites", "NO"]
         app.launch()
         XCTAssertTrue(app.descendants(matching: .any)["sidePanel"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.buttons["settingsButton"].exists)
         XCTAssertTrue(app.buttons["mapPage-p1"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["mapGroup-1"].exists, "every page group has its ribbon")
         XCTAssertTrue(app.descendants(matching: .any)["key14"].exists)
+
+        let lastKey = app.descendants(matching: .any)["key4"].frame
+        let bottomKey = app.descendants(matching: .any)["key14"].frame
+        let gear = app.buttons["settingsButton"].frame
+        let lock = app.buttons["privateLock"].frame
+        let pill = app.descendants(matching: .any)["macGlance"].frame
+        XCTAssertGreaterThan(gear.minX, lastKey.maxX - 4, "Settings stands right of the keys")
+        XCTAssertGreaterThan(lock.minX, lastKey.maxX - 4, "the lock stands right of the keys")
+        XCTAssertGreaterThan(pill.minX, lastKey.maxX - 4, "the Mac's app stands right of the keys")
+        XCTAssertGreaterThan(gear.midY, lock.midY, "Settings is the lowest, the lock above it")
+        XCTAssertLessThan(pill.midY, lock.midY, "the Mac's app is at the top")
+        let favourites = app.descendants(matching: .any)["favouritesRow"]
+        let keysBottom = favourites.exists ? favourites.frame.maxY : bottomKey.maxY
+        XCTAssertLessThanOrEqual(gear.maxY, keysBottom + 6, "the column ends with the bottom keys")
+        if phone {
+            // The keys keep their size: the column stands in the free strip by the screen's edge, not in their room.
+            XCTAssertGreaterThan(gear.midX, app.windows.firstMatch.frame.maxX - 60, "the column is in the strip by the edge")
+        }
+
+        // His placement (0.16): the heading in one line in the middle over the keys; the plate starts at the very top.
+        let heading = app.staticTexts["deckPlace"].frame
+        let topKey = app.descendants(matching: .any)["key0"].frame
+        let middleKey = app.descendants(matching: .any)["key2"].frame
+        XCTAssertLessThanOrEqual(heading.maxY, topKey.minY + 2, "the heading stands over the keys")
+        XCTAssertEqual(heading.midX, middleKey.midX, accuracy: 30, "the heading is in the middle over the keys")
+        XCTAssertLessThan(app.descendants(matching: .any)["sidePanel"].frame.minY, heading.maxY, "the plate starts at the top")
+        if phone {
+            XCTAssertGreaterThan(topKey.width, 85, "the keys keep their size")
+        }
+        snap(app, "sideways")
+
+        // Settings still opens from there.
+        app.buttons["settingsButton"].tap()
+        XCTAssertTrue(app.buttons["doneButton"].waitForExistence(timeout: 5))
+        app.buttons["doneButton"].tap()
+
+        // Turned the other way the camera cut-out is on the right: the column moves to the free left edge.
+        if phone {
+            XCUIDevice.shared.orientation = .landscapeRight
+            let panel = app.descendants(matching: .any)["sidePanel"]
+            let moved = NSPredicate { _, _ in app.buttons["settingsButton"].frame.midX < panel.frame.minX }
+            wait(for: [expectation(for: moved, evaluatedWith: nil)], timeout: 6)
+            snap(app, "sideways-turned")
+        }
+    }
+
+    /// A picture for the eye, only when the run asks for it (TEST_RUNNER_DECK_SHOTS=<folder>).
+    private func snap(_ app: XCUIApplication, _ name: String) {
+        guard let folder = ProcessInfo.processInfo.environment["DECK_SHOTS"] else { return }
+        try? XCUIScreen.main.screenshot().pngRepresentation.write(to: URL(fileURLWithPath: folder).appendingPathComponent(name + ".png"))
     }
 
     /// Still looking after 20 seconds: the hotspot hint shows and can be closed.

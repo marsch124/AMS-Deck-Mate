@@ -53,6 +53,9 @@ struct DeckScreen: View {
     @State private var showPrivate = false
     /// Where the keys sit in the row they share with the navigation picture, so the plate lines up with them.
     @State private var keysFrame = CGRect.zero
+    /// The camera cut-out is on the right (iPhone turned the other way): the column beside the keys moves left.
+    @State private var islandTrailing = false
+    @State private var sideInsets = EdgeInsets()
     /// On its side, Settings and music sit at the bottom left (upright: top right, as ever).
     private var lowButtons: Bool {
         phoneSideways || (isPad && onItsSide) || CommandLine.arguments.contains("-forceMap")
@@ -75,7 +78,23 @@ struct DeckScreen: View {
                     // iPhone on its side: everything but the keys sits in a panel on the left, so the keys get the whole height.
                     HStack(spacing: 12) {
                         sidePanel
-                        keysColumn(note: false)
+                        // His pick (0.16): the heading in one line in the middle over the keys, in the room
+                        // that was free there anyway, so the keys keep their size and their place.
+                        VStack(spacing: 2) {
+                            sideHeading
+                            keysColumn(note: false)
+                        }
+                    }
+                    .coordinateSpace(.named("keysRow"))
+                    .onPreferenceChange(KeysFrameKey.self) { keysFrame = $0 }
+                    // His pick (0.16): the app pill, lock, music and Settings stand in the free strip by the
+                    // screen's edge, beside the keys, so the keys keep their size and their place.
+                    .padding(islandTrailing ? .leading : .trailing, edgeReserve)
+                    .overlay(alignment: islandTrailing ? .topLeading : .topTrailing) {
+                        edgeColumn
+                            .frame(width: Self.edgeWidth, height: max(keysFrame.height, 0))
+                            .offset(x: (islandTrailing ? -1 : 1) * (Self.edgeWidth + Self.edgeGap - edgeReserve),
+                                    y: max(keysFrame.minY, 0))
                     }
                 } else {
                     VStack(spacing: 8) {
@@ -107,12 +126,19 @@ struct DeckScreen: View {
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
         }
         .onChange(of: link.macAsleep) { _, _ in keysWhileAsleep = false }
+        // Turned from one side straight to the other the size stays the same: only this tells.
+        .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in readIslandSide() }
         .preferredColorScheme(ground == .auto ? nil : .dark)
         .background(GeometryReader { box in
             // In a floating window on the iPad its three round buttons sit top left: the top line steps aside.
-            Color.clear.onAppear { windowWidth = box.size.width; onItsSide = box.size.width > box.size.height }
-                .onChange(of: box.size) { _, new in windowWidth = new.width; onItsSide = new.width > new.height }
+            Color.clear.onAppear { windowWidth = box.size.width; onItsSide = box.size.width > box.size.height; readIslandSide() }
+                .onChange(of: box.size) { _, new in windowWidth = new.width; onItsSide = new.width > new.height; readIslandSide() }
         }.ignoresSafeArea())
+        .background(GeometryReader { box in
+            // The free strips left and right of the safe area (beside the camera cut-out and opposite it).
+            Color.clear.onAppear { sideInsets = box.safeAreaInsets }
+                .onChange(of: box.safeAreaInsets) { _, new in sideInsets = new }
+        })
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("deckScreen")
@@ -123,14 +149,22 @@ struct DeckScreen: View {
         (!isPad && onItsSide) || CommandLine.arguments.contains("-sideways")
     }
 
-    /// iPhone on its side: the top line, the note, the navigation picture and the Mac at a glance, on the left.
+    /// iPhone on its side: the connection dot and the heading in one line, in the middle over the keys.
+    private var sideHeading: some View {
+        HStack(spacing: -8) {
+            statusDot
+            placeLine
+        }
+        .frame(height: 26)
+        .frame(maxWidth: .infinity)
+        .offset(x: -8)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("sideHeading")
+    }
+
+    /// iPhone on its side: the navigation picture on the left, from the very top (a battery line or the note above it).
     private var sidePanel: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 0) {
-                statusDot
-                placeLine.frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.leading, -10)
             if let battery { batteryLine(battery) }
             if showNote, link.note != nil { noteLine }
             if mapShows {
@@ -138,13 +172,59 @@ struct DeckScreen: View {
             } else {
                 Spacer(minLength: 0)
             }
-            glanceLine
-            lowButtonRow.padding(.leading, -10)
         }
         .frame(width: Self.sidePanelWidth)
         .frame(maxHeight: .infinity, alignment: .top)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sidePanel")
+    }
+
+    /// iPhone on its side (his pick, 0.16): beside the keys, in the free strip by the screen's edge, one column:
+    /// the Mac's app on its side at the top; the lock, music and Settings at the bottom, Settings in the corner.
+    private var edgeColumn: some View {
+        VStack(spacing: 0) {
+            GeometryReader { room in
+                if showGlance, connected, link.newMac, let mac = link.mac, !mac.app.isEmpty {
+                    // Turned a quarter: it reads from the top down and is as long as the room allows.
+                    glancePill(icon: nil, words: mac.app, part: "settings")
+                        .frame(height: Self.edgePill)
+                        .frame(width: max(room.size.height - 6, 10), alignment: .leading)
+                        .rotationEffect(.degrees(90), anchor: .topLeading)
+                        .offset(x: (room.size.width + Self.edgePill) / 2)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Mac: \(mac.app)")
+                        .accessibilityIdentifier("macGlance")
+                }
+            }
+            if connected, link.isPrivate { privateLock }
+            if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
+            settingsButton
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("edgeColumn")
+    }
+
+    /// The column beside the keys: its width, its distance from the keys and the height of the pill on its side.
+    static let edgeWidth: CGFloat = 36
+    static let edgeGap: CGFloat = 8
+    static let edgePill: CGFloat = 22
+
+    /// The room the column still needs inside the safe area: none on an iPhone with a camera cut-out
+    /// (the strip beside the keys is free there), else just enough to keep it on the screen.
+    private var edgeReserve: CGFloat {
+        let strip = (islandTrailing ? sideInsets.leading : sideInsets.trailing) + 12
+        return min(Self.edgeWidth + Self.edgeGap, max(0, Self.edgeWidth + Self.edgeGap + 6 - strip))
+    }
+
+    /// Which side the camera cut-out is on: turned so that it is on the right, the column moves to the left edge.
+    private func readIslandSide() {
+        for wait in [0.0, 0.4, 1.0] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+                let right = !isPad && scene?.effectiveGeometry.interfaceOrientation == .landscapeLeft
+                if right != islandTrailing { islandTrailing = right }
+            }
+        }
     }
 
     /// Settings in the corner and music beside it, at the bottom left.
@@ -313,15 +393,24 @@ struct DeckScreen: View {
     /// Every page group with its pages as small pictures; the page showing has a frame; a tap goes there.
     private func navigationPicture(width: CGFloat) -> some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
                 ForEach(link.map, id: \.id) { group in
                     let here = group.id == link.status?.current
-                    VStack(alignment: .leading, spacing: 6) {
+                    // His pick (0.16, "style 4"): every page group in its own frame, its name on a full-colour
+                    // ribbon across both pages: purple where he is, grey-blue for the others.
+                    let ribbon = here ? PhonePalette.fill("profiles") : PhonePalette.quietFill
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(group.name)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(here ? PhonePalette.part("profiles") : Color.secondary)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(.white)
                             .lineLimit(1)
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 78, maximum: 110), spacing: 8, alignment: .top)],
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(ribbon)
+                            .accessibilityAddTraits(here ? [.isHeader, .isSelected] : .isHeader)
+                            .accessibilityIdentifier("mapGroup-\(group.id)")
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 74, maximum: 110), spacing: 8, alignment: .top)],
                                   alignment: .leading, spacing: 8) {
                             ForEach(group.pages, id: \.id) { page in
                                 let current = here && page.id == link.status?.pageID
@@ -351,10 +440,13 @@ struct DeckScreen: View {
                                 .accessibilityIdentifier("mapPage-\(page.id)")
                             }
                         }
+                        .padding(6)
                     }
+                    .background(ribbon.opacity(0.14))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
             }
-            .padding(10)
+            .padding(7)
         }
         .frame(width: width)
         .background(PhonePalette.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -559,7 +651,7 @@ struct DeckScreen: View {
         Text(link.place.isEmpty ? "Deck Mate" : link.place)
             .font(isPad ? .largeTitle.weight(.bold) : (phoneSideways ? .title3.weight(.bold) : .title2.weight(.bold)))
             .foregroundStyle(.primary)
-            .lineLimit(phoneSideways ? 2 : 1)
+            .lineLimit(1)
             .minimumScaleFactor(0.6)
             .accessibilityIdentifier("deckPlace")
     }

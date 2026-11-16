@@ -39,6 +39,9 @@ enum PhonePalette {
         }
     }
 
+    /// A calm grey-blue fill with white words, for what he is not in right now (the other page groups' ribbons).
+    static let quietFill = Color(uiColor: rgb(0.40, 0.44, 0.54))
+
     /// The dark ground behind the keys.
     static let ground = dynamic(day: rgb(0.93, 0.93, 0.94), night: rgb(0.11, 0.11, 0.115))
     /// An empty key place.
