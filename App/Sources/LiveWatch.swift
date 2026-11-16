@@ -118,6 +118,11 @@ struct RestoreView: View {
                         Button { picked = copy } label: {
                             HStack {
                                 Text(copy.date.formatted(date: .abbreviated, time: .shortened))
+                                if copy.inCloud {
+                                    Text("iCloud").font(.caption2.weight(.semibold))
+                                        .padding(.horizontal, 5).padding(.vertical, 1)
+                                        .background(Color.primary.opacity(picked == copy ? 0.25 : 0.10), in: Capsule())
+                                }
                                 Spacer()
                                 Text(copy.words).foregroundStyle(picked == copy ? Color.white.opacity(0.9) : .secondary)
                             }

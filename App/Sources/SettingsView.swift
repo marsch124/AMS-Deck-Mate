@@ -301,7 +301,7 @@ struct SettingsView: View {
             }
         case .kept:
             card("Where your setup is kept", "screen") {
-                note("One file on this Mac, with the last \(Store.keptCopies) earlier states beside it as safety copies. Nothing leaves the Mac.")
+                note("One file on this Mac, with the last \(Store.keptCopies) earlier states beside it as safety copies. Apart from the weekly copy in iCloud Drive, nothing leaves the Mac.")
                 HStack {
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.store.file]) }
                         .buttonStyle(PlainButton())
@@ -315,6 +315,10 @@ struct SettingsView: View {
                     Spacer()
                 }
                 if let restoredNote { note(restoredNote) }
+                if model.cloudCopy.isReal || model.isSample {
+                    Divider()
+                    CloudCopyRows(cloud: model.cloudCopy)
+                }
             }
             .sheet(isPresented: $restoring) {
                 RestoreView(copies: copies, bringBack: { copy in

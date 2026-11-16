@@ -121,7 +121,12 @@ enum Guide {
             "Deck Mate only watches what you copy while at least one such key exists in your setup.",
             "It needs the same one-time Accessibility yes as \"Type text\".",
             "The key is amber, like the other keys that type text.",
-            "On the iPhone and iPad the key shows too, drawn by the Mac. The first words of a copied text are visible on the key."
+            "On the iPhone and iPad the key shows too, drawn by the Mac. The first words of a copied text are visible on the key.",
+            "New in 0.9: a fourth choice, \"A list to pick from\". The key shows a clipboard drawing and the words \"Copied texts\".",
+            "Press it and a small list opens at the mouse pointer on the Mac. It shows your earlier copied texts, up to three, each with its first 60 letters.",
+            "Click one and it is pasted where your cursor is, exactly like the 1st, 2nd and 3rd keys.",
+            "Click anywhere else, press the key again, or wait 10 seconds, and the list goes away.",
+            "Pressed from the iPhone, iPad or the box, the list also opens on the Mac, because the choice is made with the mouse."
         ]),
         Section(id: "recentfilekey", title: "Recent file key", part: "keys", lines: [
             "New in 0.8. In Set up keys, under \"What it does\", choose \"Recent file\" and then 1st, 2nd or 3rd.",
@@ -221,13 +226,34 @@ enum Guide {
             "Each save first keeps the previous file as a safety copy. The last 20 are kept in a \"Backups\" folder beside it.",
             "Since 0.8, Settings, \"Where your setup is kept\", has a button \"Bring back an earlier state…\". It opens a list of the safety copies, newest first, each with its date and time and for example \"3 page groups · 47 keys\". Pick one and choose \"Bring back\", or Cancel (Escape is Cancel).",
             "Before it brings one back, your setup as it is now is kept as a safety copy, and Undo (Command-Z) also takes it back.",
+            "New in 0.9: once a week the Mac also puts a copy of your keys file into iCloud Drive, in a folder called \"AMS Deck Mate\". Each copy is named by its day, for example \"deck 2026-11-16.json\". If this Mac is lost or broken, your keys are still there.",
+            "The newest 8 copies are kept, about two months. Older ones are removed.",
+            "In Settings, \"Where your setup is kept\", there is a switch \"Keep a weekly copy in iCloud Drive\" (on at first), a line \"Last copy: <date and time>\" (or \"No copy yet\") and a button \"Copy now\".",
+            "The first time, the Mac asks once whether AMS Deck Mate may use iCloud Drive. Choose Allow.",
+            "If iCloud Drive is not switched on on this Mac, Settings says so and nothing is copied.",
+            "\"Bring back an earlier state…\" now also lists the iCloud copies, marked \"iCloud\".",
+            "Only the keys file goes to iCloud Drive. Your copied texts and the permissions for iPhones never do.",
             "If your keys file is damaged, Deck Mate now repairs itself at start. It brings back the newest safety copy that can be read, keeps the damaged file in the Backups folder as \"damaged <date>.json\", and shows a message saying which copy (date and time) it brought back. If no copy can be read, it starts with empty keys and says so.",
             "The box diary in \"~/Library/Logs/AMS Deck Mate\" is trimmed at each start: when it has more than 1,000 lines, only the last 500 are kept.",
-            "Nothing leaves your Mac."
+            "Apart from the weekly iCloud Drive copy, nothing leaves your Mac."
         ])
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.9", date: "16 Nov 2026", new: [
+            "A weekly copy of your keys in iCloud Drive. Once a week the Mac puts a copy of your keys file into iCloud Drive, in the folder \"AMS Deck Mate\", named by its day, for example \"deck 2026-11-16.json\". The newest 8 are kept (about two months) and older ones are removed. The Mac looks at start and every 6 hours whether a week has passed.",
+            "In Settings, \"Where your setup is kept\": a switch \"Keep a weekly copy in iCloud Drive\" (on at first), a line \"Last copy: <date and time>\" (or \"No copy yet\") and a button \"Copy now\".",
+            "The first time, macOS asks once whether AMS Deck Mate may use iCloud Drive. Choose Allow. If iCloud Drive is not switched on on this Mac, Settings says so and nothing is copied.",
+            "\"Bring back an earlier state…\" now also lists the iCloud copies, marked \"iCloud\".",
+            "Only the keys file goes to iCloud Drive. No copied texts and no permissions for iPhones.",
+            "The key \"Last copied text\" has a fourth choice, \"A list to pick from\". Press it and a small list appears at the mouse pointer with your earlier copied texts (up to three, each with its first 60 letters). Click one and it is pasted where your cursor is, like the 1st, 2nd and 3rd keys. Click anywhere else, press the key again, or wait 10 seconds and the list goes away.",
+            "That key shows a clipboard drawing and the words \"Copied texts\". Pressed from the iPhone, iPad or the box, the list also opens on the Mac, because the choice is made with the mouse."
+        ], changed: [
+            "Before, your keys and their 20 safety copies lived only on this Mac, so a lost or broken Mac meant lost keys. Now there is also a weekly copy in iCloud Drive.",
+            "Before, \"Last copied text\" had three choices (1st, 2nd, 3rd). Now it has four.",
+            "The Mac app is now 0.9 (build 12). The iPhone and iPad app is 0.12 (build 17). The link between them is unchanged.",
+            "How it works has new lines in \"Last copied text key\" and \"Where things are kept\"."
+        ], fixed: []),
         Release(id: "0.8", date: "16 Nov 2026", new: [
             "New key \"Last copied text\". In Set up keys, under \"What it does\", choose \"Last copied text\" and pick 1st, 2nd or 3rd: 1st is the text copied just before the current one, 2nd the one before that, 3rd the one before that. The key shows the first words of that text (18 letters). Press it and the text is pasted where your cursor is, and it becomes the text you copied last.",
             "Deck Mate remembers your last 4 copied texts (the current one and three before it) in memory only. They are never written to a file and are gone when the app quits. Copies that a password manager marks as secret are skipped. Deck Mate only watches what you copy while at least one such key exists. It needs the same Accessibility yes as \"Type text\". The key is amber.",

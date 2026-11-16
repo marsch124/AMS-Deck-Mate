@@ -37,16 +37,26 @@ enum ActionRunner {
     /// The texts copied last, newest first (the current one first); kept up to date by AppModel.
     static var copiedTexts: [String] = []
 
+    /// Shows the list of earlier copied texts at the mouse pointer (set by the app at start).
+    static var showCopiedList: (([String]) -> Void)?
+
+    /// The text becomes the copied text again and is pasted where the cursor is.
+    static func paste(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            press(KeyCombo(keyCode: 9, command: true, keyName: "V"))
+        }
+    }
+
     static func run(_ action: DeckAction) {
         switch action.type {
         case .copied:
-            // The earlier text becomes the copied text again and is pasted where the cursor is.
-            guard let text = CopiedTexts.text(number: RecentApps.number(action.target), in: copiedTexts) else { return }
             guard mayPressKeys else { askToPressKeys(); return }
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(text, forType: .string)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-                press(KeyCombo(keyCode: 9, command: true, keyName: "V"))
+            if action.target == CopiedTexts.list {
+                showCopiedList?(CopiedTexts.choices(in: copiedTexts))
+            } else if let text = CopiedTexts.text(number: RecentApps.number(action.target), in: copiedTexts) {
+                paste(text)
             }
         case .recentFile:
             break       // AppModel turns it into "open this file" before it gets here; none yet = nothing

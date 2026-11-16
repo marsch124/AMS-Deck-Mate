@@ -164,6 +164,38 @@ final class HardeningTests: XCTestCase {
         XCTAssertTrue(deck.uses(.copied))
     }
 
+    func testAWeeklyCopyGoesToTheCloudFolderAndCanBeBroughtBack() throws {
+        let day = Date(timeIntervalSince1970: 1_794_800_000)
+        XCTAssertTrue(CloudCopies.due(last: nil, now: day))
+        XCTAssertFalse(CloudCopies.due(last: day.addingTimeInterval(-6 * 86_400), now: day))
+        XCTAssertTrue(CloudCopies.due(last: day.addingTimeInterval(-7 * 86_400), now: day))
+        XCTAssertTrue(CloudCopies.name(for: day).hasPrefix("deck 20"))
+
+        let cloud = emptyFolder().appendingPathComponent("AMS Deck Mate")
+        let store = Store(folder: emptyFolder(), cloud: cloud)
+        XCTAssertFalse(store.copyToCloud(now: day))                      // no keys file yet
+        store.save(deck(named: "One"))
+        for week in 0..<10 { XCTAssertTrue(store.copyToCloud(now: day.addingTimeInterval(Double(week) * CloudCopies.every))) }
+        XCTAssertTrue(store.copyToCloud(now: day.addingTimeInterval(9 * CloudCopies.every)))   // same day: written over
+        let kept = try FileManager.default.contentsOfDirectory(atPath: cloud.path)
+        XCTAssertEqual(kept.count, CloudCopies.kept)
+        XCTAssertFalse(kept.contains(CloudCopies.name(for: day)))        // the oldest are gone
+
+        let copies = store.copies()
+        XCTAssertEqual(copies.filter(\.inCloud).count, CloudCopies.kept)
+        XCTAssertEqual(copies.first(where: \.inCloud).flatMap(store.deck(of:))?.profiles.first?.name, "One")
+        XCTAssertFalse(Store(folder: emptyFolder()).copyToCloud())       // no iCloud folder: nothing is made
+    }
+
+    func testTheListOfCopiedTexts() {
+        XCTAssertEqual(CopiedTexts.choices(in: ["now", "a", "b", "c"]), ["a", "b", "c"])
+        XCTAssertEqual(CopiedTexts.choices(in: ["now"]), [])
+        XCTAssertEqual(CopiedTexts.line("one\ntwo   three"), "one two three")
+        XCTAssertEqual(CopiedTexts.line(String(repeating: "x", count: 80)).count, 60)
+        let key = DeckKey(action: DeckAction(type: .copied, target: CopiedTexts.list))
+        XCTAssertEqual(key.resolving(LiveKeys(copied: ["now", "Earlier"])).title, "Copied texts")
+    }
+
     func testTheMacIsBackNoteOnlyAfterSleep() {
         XCTAssertEqual(PhoneLink.wakeNote(wasAsleep: true, asleep: false), "Mac is back")
         XCTAssertNil(PhoneLink.wakeNote(wasAsleep: false, asleep: false))

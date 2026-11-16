@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.8 (build 11), 16 Nov 2026; iPhone and iPad app 0.11 (build 16)
+# AMS Deck Mate, specification, version 0.9 (build 12), 16 Nov 2026; iPhone and iPad app 0.12 (build 17)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -11,6 +11,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
+- Since 0.9 (Mac) and 0.12 (iPhone and iPad): the weekly copy of the keys in iCloud Drive (section 40), the list choice of "Last copied text" (section 41), and the lock mark for the private line (section 42).
 - Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music button, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
@@ -91,6 +92,7 @@ The icon opens a menu:
 | Recent app (0.7) | "1", "2" or "3" (1st, 2nd, 3rd) | brings that recent app forward; see 31 |
 | Ask AI (copied text) (0.7) | none | opens Raycast AI Chat with the copied text; see 32 |
 | Last copied text (0.8) | `copied`; "1", "2" or "3" (1st, 2nd, 3rd) | pastes that copied text; see 36 |
+| Last copied text, list (0.9) | `copied`; "list" | opens a small list at the mouse pointer; see 41 |
 | Recent file (0.8) | `recentFile`; "1", "2" or "3" (1st, 2nd, 3rd) | opens that file; see 36 |
 | Nothing | none | nothing |
 
@@ -177,6 +179,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 ## 14. Tests
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
 - New in 0.5 (round B): `Core` has 36 data tests (37 since 0.6, see below), 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
+- New in 0.9 (data tests, seconds each): `CloudCopies.due(last:now:)` (never copied, or 7 days or more ago, is due), the copy's name ("deck <day>.json"), keeping only the newest 8; `Store.copies()` also lists the iCloud copies (`Copy.inCloud`); `CopiedTexts.choices(in:)` and `CopiedTexts.line(_:)` for the list. The iPhone app's screen test also finds `privateMark`.
+- Since 0.9 the code is public on GitHub and the rule tests (49 or more) run there by themselves at every change (`.github/workflows/tests.yml`).
 - New in 0.8 (data tests, seconds each): `Store` recovery (`start()` gives `.first`, `.loaded`, `.recovered` or `.lost`; a damaged file is kept as "damaged <date>.json") and `copies()` / `deck(of:)`; `Diary.trimmed` (over 1,000 lines keeps the last 500); `SecureLine` (both sides agree on the keys, a tampered message is refused, a repeated or reordered message is refused, the proof checks out and a wrong secret fails); `CopiedTexts` (the last 4, secret copies skipped, press makes it current); `RecentFiles` (the last 7 days, home folder, exclusions); `PhoneLink.wakeNote(wasAsleep:asleep:)`.
 - New in 0.7: two new data tests (39 in all): the recent-apps list and "Recent app" key (`RecentApps`, `resolvingRecent`), and the Ask AI link (`RaycastLink.ask`, `fallbackText`, cut at 4,000) plus `asleep` needing version 5. The iPhone app has one more screen test, `testDarkWhileMacSleeps` (launch argument `-macAsleep`). `PhoneLink.currentVersion` is 5; message `asleep(Bool)` goes only to a side at version 5.
 - New in 0.6: one new data test (37 in all) for the rule `Navigator.go`: an unknown page group or page changes nothing. The iPhone app's screen test now also finds the navigation picture by identifier.
@@ -190,6 +194,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.9 (Mac, build 12, 16 Nov 2026).** The weekly copy of the keys in iCloud Drive (section 40), the list choice of "Last copied text" (section 41). The iPhone and iPad app is 0.12 (build 17): the lock mark (section 42). Link version stays 7. The code is public on GitHub with the rule tests running there at every change (section 14). Not proven yet: the iCloud Drive question and copy on a real Mac over weeks; the list on a real Mac in daily use.
 
 **0.8 (Mac, build 11, 16 Nov 2026).** The keys "Last copied text" and "Recent file" (section 36), "Bring back an earlier state…" and the self-repairing keys file (section 37), the private link `secure(promise:key:)`, link version 7 (section 38), the trimmed box diary and the "Mac is back" note (section 39). `Store` moved into `Core`. The iPhone and iPad app is 0.11 (build 16). Mac 0.8 and app 0.11 only talk to each other. Not proven yet: "Recent file" and "Last copied text" on the real Mac in daily use; the number check on a real iPhone and iPad.
 
@@ -483,3 +489,24 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 ## 39. "Mac is back" note and the box diary (Mac 0.8, iPhone and iPad 0.11)
 - iPhone and iPad: when the Mac wakes from sleep (the sleep message of section 33), a short note "Mac is back" shows on the key screen. `PhoneLink.wakeNote(wasAsleep:asleep:)` decides (a note only on the step from asleep to awake). It shows together with the "what ran" note, so the Settings switch "What ran" note hides it too. Works with a Mac at 0.7 or later (no new message).
 - Mac: the box diary, `~/Library/Logs/AMS Deck Mate/box.log`, is trimmed at each start by `Diary.trimmed`: over 1,000 lines keeps the last 500. Before, it only ever grew.
+
+## 40. Weekly copy in iCloud Drive (Mac 0.9)
+- Why: `deck.json` and its 20 safety copies lived only on this Mac, so a lost or broken Mac meant lost keys.
+- Rule: `CloudCopies` in `Core/Sources/DeckMateCore/Store.swift`. `due(last:now:)` is true when there was never a copy or the last one is 7 days or more ago. `Store.copyToCloud` writes `deck <yyyy-MM-dd>.json` (named by its day) into `~/Library/Mobile Documents/com~apple~CloudDocs/AMS Deck Mate` and keeps the newest 8 (about two months); older ones are removed.
+- App: `CloudCopy` in `App/Sources/LiveWatch.swift` checks at start and every 6 hours. UserDefaults keys: `cloudCopyOff` (the switch) and `cloudCopyLast` (date of the last copy).
+- Settings, "Where your setup is kept": switch "Keep a weekly copy in iCloud Drive" (on at first), a line "Last copy: <date and time>" or "No copy yet", and a button "Copy now". If iCloud Drive is not switched on on the Mac, Settings says so and nothing is copied.
+- The first time macOS asks once whether AMS Deck Mate may use iCloud Drive (answer Allow).
+- "Bring back an earlier state…" (section 37) also lists the iCloud copies, marked "iCloud" (`Store.Copy.inCloud`).
+- Only the keys file goes there: no copied texts, no `pairedPhones`.
+
+## 41. "A list to pick from" (Mac 0.9)
+- `copied` gains the `target` "list" beside "1", "2", "3". Shown in Set up keys as "A list to pick from". An older Mac reads the unknown target as no choice.
+- Key: clipboard drawing and the title "Copied texts". Colour: amber, as section 36.
+- Press: a small panel (`CopiedListPanel` in `App/Sources/CopiedList.swift`) opens at the mouse pointer with the earlier copied texts (up to three, not the current one), each line its first 60 letters (`CopiedTexts.line(_:)`; the choices come from `CopiedTexts.choices(in:)`). A click pastes that text where the cursor is, as the 1st, 2nd and 3rd keys do (needs Accessibility). A click elsewhere, a second press of the key, or 10 seconds closes the panel.
+- From the iPhone, iPad or the box the panel also opens on the Mac (the choice is made with the mouse).
+- Same privacy as section 36: memory only, secret copies skipped.
+
+## 42. Lock mark for the private line (iPhone and iPad 0.12, build 17)
+- While connected, a small lock drawing (identifier `privateMark`, Phone/Sources/DeckScreen.swift) sits beside the status dot at the top left. It shows when `LinkClient.isPrivate` is true (the line is sealed, section 38).
+- The connection card (tap the dot) also says "Private line: nobody else on the Wi-Fi can read your keys or press them."
+- Nothing changes in how the link works. Test: the phone screen test checks the lock mark by its identifier.

@@ -239,7 +239,7 @@ public enum ActionWords {
         case .media: return (MediaKey(rawValue: action.target) ?? .playPause).title
         case .recent: return "No recent app yet"
         case .askAI: return "Raycast: Ask AI"
-        case .copied: return "Pasted the copied text"
+        case .copied: return action.target == CopiedTexts.list ? "Pick a copied text on the Mac" : "Pasted the copied text"
         case .recentFile: return "No recent file yet"
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi: return "Done"
         }

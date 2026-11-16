@@ -21,8 +21,10 @@ final class DeckScreenTests: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
         XCTAssertTrue(app.buttons["musicPlay"].waitForNonExistence(timeout: 5))
         // The link is one small dot; a tap says it in words.
+        XCTAssertEqual(app.buttons["linkStatus"].value as? String, "Private line", "the lock beside the dot")
         app.buttons["linkStatus"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["linkStatusCard"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["privateMark"].exists)
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
         XCTAssertTrue(app.descendants(matching: .any)["linkStatusCard"].waitForNonExistence(timeout: 5))
 

@@ -57,6 +57,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var recentFiles: [String] = []
     /// What happened to the keys file at start, when it was damaged (for one message); nil = all well.
     private(set) var startNote: String?
+    /// The weekly copy of the keys file in iCloud Drive.
+    let cloudCopy: CloudCopy
     private let clipboard = ClipboardWatch()
     private let filesWatch = RecentFilesWatch()
     private var shown: [DeckKey?] = []
@@ -71,6 +73,7 @@ final class AppModel: ObservableObject {
 
     init(store: Store = Store(), sample: Deck? = nil) {
         self.store = store
+        cloudCopy = CloudCopy(store: store)
         isSample = sample != nil
         if let sample {
             deck = sample
@@ -130,6 +133,8 @@ final class AppModel: ObservableObject {
             self.refreshBox()
         }
         watchLive()
+        cloudCopy.save = { [weak self] in self?.saveNow() }
+        cloudCopy.start()
         device.onState = { [weak self] state in self?.boxChanged(state) }
         device.onKey = { [weak self] index, isDown in self?.boxKey(index, isDown) }
         device.start()

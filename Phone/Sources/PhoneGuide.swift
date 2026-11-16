@@ -46,6 +46,7 @@ enum PhoneGuide {
             "After that the Mac remembers your iPhone and the keys appear by themselves. An iPad is asked the same way, once, and appears in the Mac's \"iPhone\" part in Settings by its name.",
             "Since 0.11 the link to the Mac is private: everything is scrambled from the first moment, so on a shared Wi-Fi (hotel, café) nobody can listen in or press your keys. The number is there so nobody can sit in between.",
             "Every iPhone and iPad has to be allowed once more after the update (one click on the Mac). The app 0.11 only talks to a Mac at 0.8 or later. With an older Mac it says \"Update AMS Deck Mate on your Mac\". An older app with the new Mac sees \"said no\".",
+            "Since 0.12, while this device is connected, a small lock drawing sits beside the status dot at the top left. It says the line to the Mac is private. Tap the dot and the card says: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\"",
             "If the Mac was told Don't Allow, the iPhone shows \"Ask again\". Tap it and the Mac asks once more."
         ]),
         Section(id: "tapping", title: "Tapping keys", part: "keys", lines: [
@@ -119,7 +120,8 @@ enum PhoneGuide {
             "\"Ask AI\" opens Raycast AI Chat on the Mac with the text you last copied there already filled in. Not yet tried against the real Raycast.",
             "Since Mac 0.8, two more kinds of key show and work here too, drawn by the Mac.",
             "\"Last copied text\" (1st, 2nd or 3rd) shows the first words of a text you copied on the Mac, up to 18 letters. Those first words are visible on the key, so take care when others can see your screen. Tap it and the Mac pastes that text where its cursor is.",
-            "\"Recent file\" (1st, 2nd or 3rd) shows the name of a file you opened lately on the Mac. Tap it and the Mac opens the file."
+            "\"Recent file\" (1st, 2nd or 3rd) shows the name of a file you opened lately on the Mac. Tap it and the Mac opens the file.",
+            "Since Mac 0.9, \"Last copied text\" has a fourth choice, \"A list to pick from\". The key shows a clipboard drawing and \"Copied texts\". Tap it and a small list of your earlier copied texts opens on the Mac, at its mouse pointer. You choose there with the Mac's mouse, not on this screen."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -141,6 +143,14 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.12", date: "16 Nov 2026", new: [
+            "A small lock drawing beside the connection dot at the top left of the key screen, shown while this device is connected. It tells you the line to the Mac is private (scrambled, as since 0.11).",
+            "The connection card (tap the dot) now also says: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\"",
+            "Works with the Mac app 0.9: its key \"Last copied text\" has a fourth choice, \"A list to pick from\", which shows here as a clipboard drawing with \"Copied texts\". Tap it and the list opens on the Mac, where you pick with the mouse."
+        ], changed: [
+            "Nothing changes in how the link to the Mac works.",
+            "How it works has new lines in \"Allowing the iPhone\" and \"Recent app and Ask AI keys\". The Mac app is now 0.9 (build 12)."
+        ], fixed: []),
         Release(id: "0.11", date: "16 Nov 2026", new: [
             "The link between this iPhone or iPad and the Mac is now private. Every message is scrambled from the first moment. Before, key pictures, taps and the permission code travelled readable on the Wi-Fi, so on a shared Wi-Fi (hotel, café) someone could listen in and press your keys. Now nobody can.",
             "The first time, the Mac asks and shows a 4-digit number, and this device shows the same number. Allow on the Mac only if both numbers are the same. The number comes from both sides, so nobody can sit in between.",

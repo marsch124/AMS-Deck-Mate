@@ -37,6 +37,12 @@ final class LinkClient: ObservableObject {
     /// Favourites pressed a moment ago.
     @Published private(set) var litFavourites: Set<Int> = []
 
+    /// True while connected over the sealed line (always, since 0.11): the key screen shows a small lock.
+    var isPrivate: Bool {
+        guard case .connected = state else { return false }
+        return isSample || session != nil
+    }
+
     /// True with a Mac that knows the new parts.
     var newMac: Bool { macVersion >= 3 }
     /// The navigation picture: every page group with its pages (from a Mac at 0.6 or later).

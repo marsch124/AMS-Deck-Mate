@@ -70,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     private var model: AppModel!
     private var item: NSStatusItem?
     private var deckPanel: DeckPanel?
+    private let copiedList = CopiedListPanel()
     private var setupWindow: NSWindow?
     private var settingsWindow: NSWindow?
     /// The keys on screen were showing when "Set up keys" opened, and come back when it closes.
@@ -99,8 +100,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             NSApp.terminate(nil)
             return
         }
-        // For checks: "--data <folder>" keeps the setup somewhere else than his real one.
-        var store = Store()
+        // For checks: "--data <folder>" keeps the setup somewhere else than the real one (and makes no iCloud copies).
+        var store = Store(cloud: CloudCopy.folder)
         if let index = arguments.firstIndex(of: "--data"), index + 1 < arguments.count {
             store = Store(folder: URL(fileURLWithPath: arguments[index + 1]))
         }
@@ -117,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             }
         }
         makeEditMenu()
+        ActionRunner.showCopiedList = { [weak self] texts in self?.copiedList.toggle(texts: texts) }
         phone = PhoneServer(model: model)
         phone.start()
         makeItem()
@@ -440,6 +442,9 @@ enum Snapshots {
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             shot(RestoreView(copies: (0..<6).map { Store.Copy(name: "deck \($0)", date: day.addingTimeInterval(Double($0) * -4000), groups: 3, keys: 47 - $0) },
                              bringBack: { _ in }, cancel: {}), "restore-\(name)", look, folder)
+            shot(CopiedListView(texts: ["Meeting notes for Monday morning, with the agenda", "https://example.com/a/long/address", "Thank you!"],
+                                pick: { _ in }).padding(12), "copied-list-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .kept), "settings-kept-\(name)", look, folder)
         }
         for size in [ScreenSize.small, .large] {
             var deck = Sample.deck()

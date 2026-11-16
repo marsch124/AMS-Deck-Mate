@@ -133,10 +133,11 @@ struct ActionFields: View {
                     Text("1st – the text copied just before the current one").tag("1")
                     Text("2nd").tag("2")
                     Text("3rd").tag("3")
+                    Text("A list to pick from").tag(CopiedTexts.list)
                 }
                 .labelsHidden()
                 .accessibilityIdentifier("copiedPicker")
-                note("Shows the first words of a text you copied earlier and pastes it where the cursor is. Deck Mate remembers your last four copied texts in memory only, never in a file, and skips what a password manager marks as secret.")
+                note("Shows the first words of a text you copied earlier and pastes it where the cursor is. Deck Mate remembers your last four copied texts in memory only, never in a file, and skips what a password manager marks as secret. “A list to pick from” shows the earlier texts at the mouse pointer; click one to paste it.")
             case .recentFile:
                 Picker("", selection: $action.target) {
                     Text("1st – the file opened last").tag("1")

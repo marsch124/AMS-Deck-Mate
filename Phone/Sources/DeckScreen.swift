@@ -412,14 +412,30 @@ struct DeckScreen: View {
             Circle().fill(statusColour)
                 .frame(width: isPad ? 16 : 13, height: isPad ? 16 : 13)
                 .frame(width: 44, height: 44)
+                // A small lock beside the dot: the line to the Mac is private.
+                .overlay(alignment: .trailing) {
+                    if link.isPrivate {
+                        PhoneIcon(name: "iconLock", size: isPad ? 13 : 11).foregroundStyle(statusColour)
+                    }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(statusText)
+        .accessibilityValue(link.isPrivate ? "Private line" : "")
         .accessibilityIdentifier("linkStatus")
         .popover(isPresented: $showStatus) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(statusText).font(.headline)
+                if link.isPrivate {
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        PhoneIcon(name: "iconLock", size: 12).foregroundStyle(statusColour)
+                        Text("Private line: nobody else on the Wi-Fi can read your keys or press them.")
+                            .font(.callout).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("privateMark")
+                }
                 ForEach([("Green", "connected to your Mac", Color(red: 0.25, green: 0.70, blue: 0.36)),
                          ("Amber", "looking for the Mac, or waiting for it to allow this \(Self.device)", Color(red: 0.93, green: 0.62, blue: 0.14)),
                          ("Red", "the Mac said no", Color(red: 0.90, green: 0.33, blue: 0.24))], id: \.0) { row in

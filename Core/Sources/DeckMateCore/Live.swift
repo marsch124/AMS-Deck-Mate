@@ -37,6 +37,18 @@ public enum CopiedTexts {
         return before[number - 1]
     }
 
+    /// A key set to this shows a list of the earlier texts instead of pasting one.
+    public static let list = "list"
+
+    /// The texts the list offers: the ones copied before the current one, newest first.
+    public static func choices(in list: [String]) -> [String] { Array(list.dropFirst().prefix(kept - 1)) }
+
+    /// A text as one line of the list: at most 60 letters.
+    public static func line(_ text: String) -> String {
+        let line = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return line.count > 60 ? line.prefix(59).trimmingCharacters(in: .whitespaces) + "…" : line
+    }
+
     /// The first words of a text, for the key: one line, at most 18 letters.
     public static func preview(_ text: String) -> String {
         let line = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
@@ -101,7 +113,9 @@ extension DeckKey {
             }
             key.action = now
         case .copied:
-            if key.title.isEmpty {
+            if key.title.isEmpty, key.action.target == CopiedTexts.list {
+                key.title = "Copied texts"
+            } else if key.title.isEmpty {
                 let text = CopiedTexts.text(number: RecentApps.number(key.action.target), in: live.copied)
                 key.title = text.map(CopiedTexts.preview) ?? "Nothing copied"
             }
