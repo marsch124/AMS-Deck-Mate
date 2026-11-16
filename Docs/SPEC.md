@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.4.1 (build 5), 16 Nov 2026
+# AMS Deck Mate, specification, version 0.4.1 (build 5), 16 Nov 2026; iPhone and iPad app 0.5 (build 5)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -171,14 +171,14 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app stays at 0.4 (4).
+**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app was then at 0.4 (4); it is now 0.5 (5), see section 22.
 
 ## 16. Not in 0.4
 - The first Stream Deck from 2017.
 - Other box sizes (6 and 32 keys, XL, Mini, Plus, Neo, pedal).
 - Elgato plug-ins.
 - Driving the real box (first test planned for January 2027).
-- The iPhone app on iPad or Mac, and editing keys from the iPhone (keys are set up on the Mac only).
+- The iPhone app on the Mac (the iPad came in 0.5), and editing keys from the iPhone (keys are set up on the Mac only).
 
 ## 17. The iPhone link (0.3)
 **What it is.** Deck Mate on the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the profile and page the Mac shows (so it changes with the app in front). A tap on a key makes the Mac do it.
@@ -211,7 +211,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone only; on TestFlight. Version 0.4 (4). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.5 (5). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -246,3 +246,12 @@ The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Day look: the iPhone screen follows day and night (light grey by day, dark by night); the keys stay as drawn.
 - Hotspot hint: after 20 seconds of "Looking for your Mac…" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. Button "Open Settings"; the close (x) button hides the hint.
 - The app uses its own warning and close drawings; the 22 hand-drawn deck drawings are also in the AMS Icon Library as app marks.
+
+## 22. The iPad, 0.5 (iPhone and iPad app, build 5, 16 Nov 2026)
+The Mac app stays 0.4.1 (5) and is unchanged. On the iPhone only the version number changes.
+- Deck Mate is now also an iPad app, made for the iPad mini. It fills the whole screen, upright and on its side (all four ways round), instead of a phone-sized window.
+- The 15 keys are larger and sit low and centred. The top line, page dots, swipe for pages, profile menu, lit keys and the "what ran" note work the same as on the iPhone.
+- On an iPad the words on screen say "iPad" instead of "iPhone".
+- Hint after 20 seconds of "Looking for your Mac…" on an iPad: put the iPad and the Mac on the same Wi-Fi, for example both on the iPhone's hotspot (an iPad without mobile data has no hotspot of its own).
+- The Mac asks once whether to allow the iPad, exactly like for an iPhone; in the Mac's Settings it appears in the "iPhone" part by its name.
+- Installed from TestFlight on the iPad like on the iPhone.

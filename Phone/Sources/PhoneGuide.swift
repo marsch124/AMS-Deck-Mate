@@ -13,11 +13,12 @@ enum PhoneGuide {
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
             "It finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
             "Wi-Fi must be on, on the iPhone and on the Mac. Some hotel networks keep devices apart; then put the Mac on your iPhone's hotspot.",
-            "The first time, the iPhone may ask to find devices on your local network. Choose Allow."
+            "The first time, the iPhone may ask to find devices on your local network. Choose Allow.",
+            "On an iPad: put the iPad and the Mac on the same Wi-Fi, for example both on your iPhone's hotspot (an iPad without mobile data has no hotspot of its own)."
         ]),
         Section(id: "allowing", title: "Allowing the iPhone", part: "settings", lines: [
             "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" Choose Allow on the Mac.",
-            "After that the Mac remembers your iPhone and the keys appear by themselves.",
+            "After that the Mac remembers your iPhone and the keys appear by themselves. An iPad is asked the same way, once, and appears in the Mac's \"iPhone\" part in Settings by its name.",
             "If the Mac was told Don't Allow, the iPhone shows \"Ask again\". Tap it and the Mac asks once more."
         ]),
         Section(id: "tapping", title: "Tapping keys", part: "keys", lines: [
@@ -25,6 +26,7 @@ enum PhoneGuide {
             "A key that opens a folder, goes back or moves to another page changes the keys on the iPhone and on the Mac together.",
             "A key that opens an app shows the real app icon, and its name when it has no words of its own. The Mac draws all the pictures.",
             "The iPhone keeps its screen on while it is connected. It works upright and sideways.",
+            "On an iPad (since 0.5) the keys fill the screen, larger, low and centred, in all four ways round. Everything else works the same.",
             "Since 0.4 the 15 keys sit low on the screen, near your thumb, with the place line on top.",
             "Swipe left or right on the keys for the next or previous page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
@@ -56,6 +58,16 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.5", date: "16 Nov 2026", new: [
+            "Deck Mate is now also a proper iPad app, made for the iPad mini. It fills the whole screen, upright and on its side (all four ways round), instead of a phone-sized window.",
+            "On the iPad the 15 keys are larger and sit low and centred. The top line, page dots, swiping for pages, the profile menu, the lit keys and the \"what ran\" note work the same as on the iPhone.",
+            "On an iPad the words on screen say \"iPad\" instead of \"iPhone\".",
+            "On an iPad, the tip after 20 seconds of \"Looking for your Mac…\" says: put the iPad and the Mac on the same Wi-Fi, for example both on your iPhone's hotspot (an iPad without mobile data has no hotspot of its own).",
+            "The Mac asks once whether to allow the iPad, exactly like an iPhone. In the Mac's Settings it appears in the \"iPhone\" part by its name.",
+            "Install it from TestFlight on the iPad, like on the iPhone. The Mac app stays at 0.4.1 and needs no update."
+        ], changed: [
+            "Nothing changes on the iPhone except the version number."
+        ], fixed: []),
         Release(id: "0.4", date: "16 Nov 2026", new: [
             "The keys sit low on the screen, near your thumb, with the place line on top.",
             "Swipe left or right on the keys for the next or previous page. Small page dots under the keys show which page you are on (none inside a folder or with one page).",

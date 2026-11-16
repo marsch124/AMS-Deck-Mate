@@ -81,7 +81,7 @@ struct PhoneSettings: View {
                     Button("Forget this Mac") { link.forget() }
                         .buttonStyle(PhonePlainButton())
                         .accessibilityIdentifier("forgetMac")
-                    Text("The iPhone then looks for a Mac again, and the Mac asks before it lets this iPhone in.")
+                    Text("The \(DeckScreen.device) then looks for a Mac again, and the Mac asks before it lets this \(DeckScreen.device) in.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }

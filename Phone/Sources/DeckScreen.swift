@@ -9,6 +9,10 @@ struct DeckScreen: View {
     @State private var showSettings = false
     @State private var hintClosed = false
 
+    /// "iPad" on an iPad, "iPhone" on an iPhone, for the words on screen.
+    static let device = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
+    private var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
     private var connected: Bool {
         if case .connected = link.state { return true }
         return false
@@ -36,10 +40,11 @@ struct DeckScreen: View {
                         })
                 }
                 .aspectRatio(5.0 / 3.0, contentMode: .fit)
+                .frame(maxWidth: isPad ? 860 : .infinity)
                 pageDots
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, isPad ? 20 : 12)
+            .padding(.vertical, isPad ? 14 : 8)
         }
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .accessibilityElement(children: .contain)
@@ -131,7 +136,7 @@ struct DeckScreen: View {
         switch link.state {
         case .looking: return "Looking for your Mac…"
         case let .connecting(mac): return "Connecting to \(mac)…"
-        case let .waiting(mac): return "Waiting for \(mac) to allow this iPhone"
+        case let .waiting(mac): return "Waiting for \(mac) to allow this \(Self.device)"
         case let .connected(mac): return "Connected to \(mac)"
         case let .refused(mac): return "\(mac) said no"
         }
@@ -218,7 +223,8 @@ struct DeckScreen: View {
                 .accessibilityLabel("Close the hint")
                 .accessibilityIdentifier("closeHint")
             }
-            Text("Away from home Wi-Fi: turn on Personal Hotspot on this iPhone (Settings, Personal Hotspot), then pick this iPhone in the Mac’s Wi-Fi menu.")
+            Text(isPad ? "The iPad and the Mac must be on the same Wi-Fi. Away from home: turn on Personal Hotspot on your iPhone and join it from both the iPad and the Mac."
+                       : "Away from home Wi-Fi: turn on Personal Hotspot on this iPhone (Settings, Personal Hotspot), then pick this iPhone in the Mac’s Wi-Fi menu.")
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Open Settings") {
@@ -236,7 +242,7 @@ struct DeckScreen: View {
         switch link.state {
         case .looking: return "Looking for your Mac…"
         case let .connecting(mac): return "Connecting to \(mac)…"
-        case let .waiting(mac): return "Allow this iPhone on \(mac)"
+        case let .waiting(mac): return "Allow this \(Self.device) on \(mac)"
         case let .refused(mac): return "\(mac) said no"
         case .connected: return ""
         }
@@ -244,8 +250,9 @@ struct DeckScreen: View {
 
     private var cardText: String? {
         switch link.state {
-        case .looking: return "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi — or the Mac on this iPhone’s hotspot."
-        case .waiting: return "Your Mac is asking whether this iPhone may use the keys. Click Allow there."
+        case .looking: return isPad ? "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi."
+                             : "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi — or the Mac on this iPhone’s hotspot."
+        case .waiting: return "Your Mac is asking whether this \(Self.device) may use the keys. Click Allow there."
         default: return nil
         }
     }
