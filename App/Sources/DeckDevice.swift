@@ -4,7 +4,7 @@ import IOKit.hid
 
 /// A small diary of what happens with the box, for the first real test: ~/Library/Logs/AMS Deck Mate/box.log
 enum BoxLog {
-    private static let url: URL = {
+    static let url: URL = {
         let folder = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Logs/AMS Deck Mate", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

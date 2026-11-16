@@ -28,7 +28,8 @@ public enum PhoneLink {
 
     public enum Message: Codable, Equatable, Sendable {
         /// iPhone → Mac, the first thing it says: its name, and the token it was given before (if any).
-        case hello(phone: String, token: String?)
+        /// `version` 2 = the iPhone understands the messages below `press` (left out by the first iPhone app).
+        case hello(phone: String, token: String?, version: Int? = nil)
         /// Mac → iPhone: the Mac is asking its owner whether this iPhone may use the keys.
         case waiting
         /// Mac → iPhone: allowed. Keep the token and bring it next time.
@@ -39,6 +40,44 @@ public enum PhoneLink {
         case keys(place: String, keys: [Key])
         /// iPhone → Mac: a key was tapped.
         case press(index: Int)
+        /// Mac → iPhone (version 2): the profiles to choose from and where the deck is.
+        case status(Status)
+        /// Mac → iPhone (version 2): a key was pressed somewhere (box, screen or iPhone): light it up.
+        case pressed(index: Int)
+        /// Mac → iPhone (version 2): what a key did, in a few words; `ok` false = the Mac could not do it.
+        case ran(text: String, ok: Bool)
+        /// iPhone → Mac (version 2): a swipe: +1 = next page, -1 = page before.
+        case page(step: Int)
+        /// iPhone → Mac (version 2): hold this profile (its id), or nil = Automatic.
+        case profile(id: String?)
+    }
+
+    /// The iPhone app version that understands status, pressed, ran, page and profile.
+    public static let currentVersion = 2
+
+    /// The profiles and pages, for the iPhone's top line and page dots.
+    public struct Status: Codable, Equatable, Sendable {
+        public struct Choice: Codable, Equatable, Sendable {
+            public var id: String
+            public var name: String
+            public init(id: String, name: String) { self.id = id; self.name = name }
+        }
+        public var profiles: [Choice]
+        /// The profile showing now.
+        public var current: String
+        /// True when a profile is held by hand; false = Automatic.
+        public var held: Bool
+        /// The page showing now among the profile's pages (0 = first); nil inside a folder.
+        public var page: Int?
+        public var pages: Int
+
+        public init(profiles: [Choice], current: String, held: Bool, page: Int?, pages: Int) {
+            self.profiles = profiles
+            self.current = current
+            self.held = held
+            self.page = page
+            self.pages = pages
+        }
     }
 
     /// A message ready to send: its length in 4 bytes (big end first), then the JSON.

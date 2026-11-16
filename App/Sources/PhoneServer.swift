@@ -18,6 +18,7 @@ final class PhoneServer: ObservableObject {
     private var waitingToAsk: [Phone] = []
     private var asking = false
     private var watch: AnyCancellable?
+    private var events: [AnyCancellable] = []
     private var restart: DispatchWorkItem?
 
     private static let allowedKey = "allowedPhones"
@@ -31,6 +32,9 @@ final class PhoneServer: ObservableObject {
         var token: String?
         var trusted = false
         var lastSent: Data?
+        var lastStatus: Data?
+        /// 2 = it understands status, pressed, ran, page and profile.
+        var version = 1
         init(_ connection: NWConnection) { self.connection = connection }
     }
 
@@ -40,12 +44,24 @@ final class PhoneServer: ObservableObject {
         isOn = !UserDefaults.standard.bool(forKey: PhoneServer.offKey)
     }
 
+    /// Made up, for pictures: never his own iPhones.
+    init(sampleFor model: AppModel) {
+        self.model = model
+        allowed = ["sample": "Sample iPhone"]
+        connected = "Sample iPhone"
+        isOn = true
+    }
+
     func start() {
         guard isOn, listeners.isEmpty else { return }
         // The keys go out again whenever the deck moves or the setup changes.
-        watch = model.$position.combineLatest(model.$deck)
+        watch = model.$position.combineLatest(model.$deck, model.$pinned)
             .debounce(for: .milliseconds(60), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.sendKeysToAll() }
+        events = [
+            model.pressedEvents.sink { [weak self] index in self?.toNewPhones(.pressed(index: index)) },
+            model.ranEvents.sink { [weak self] text, ok in self?.toNewPhones(.ran(text: text, ok: ok)) },
+        ]
         // Two offers: on the shared network, and directly (like AirDrop) where the Mac allows it.
         for (type, direct) in [(PhoneLink.service, false), (PhoneLink.directService, true)] {
             let parameters = NWParameters.tcp
@@ -97,6 +113,7 @@ final class PhoneServer: ObservableObject {
         listeners.forEach { $0.cancel() }
         listeners = []
         watch = nil
+        events = []
         phones.values.forEach { $0.connection.cancel() }
         phones = [:]
         waitingToAsk = []
@@ -159,7 +176,8 @@ final class PhoneServer: ObservableObject {
 
     private func handle(_ message: PhoneLink.Message, from phone: Phone) {
         switch message {
-        case let .hello(name, token):
+        case let .hello(name, token, version):
+            phone.version = version ?? 1
             phone.name = name.isEmpty ? "iPhone" : name
             if let token, allowed[token] != nil {
                 welcome(phone, token: token)
@@ -171,6 +189,12 @@ final class PhoneServer: ObservableObject {
         case let .press(index):
             guard phone.trusted, (0..<StreamDeckProtocol.keyCount).contains(index) else { return }
             model.pressFromPhone(index)
+        case let .page(step):
+            guard phone.trusted, step == 1 || step == -1 else { return }
+            model.stepPage(step)
+        case let .profile(id):
+            guard phone.trusted else { return }
+            model.pin(id.flatMap { UUID(uuidString: $0) })
         default:
             break
         }
@@ -230,8 +254,23 @@ final class PhoneServer: ObservableObject {
             PhoneLink.Key(index: index, title: KeyArt.title(keys[index]), picture: KeyArt.pngForPhone(keys[index]))
         }
         let data = PhoneLink.frame(.keys(place: model.placeLine, keys: list))
-        guard data != phone.lastSent else { return }
-        phone.lastSent = data
-        phone.connection.send(content: data, completion: .contentProcessed { _ in })
+        if data != phone.lastSent {
+            phone.lastSent = data
+            phone.connection.send(content: data, completion: .contentProcessed { _ in })
+        }
+        guard phone.version >= 2, let position = model.position else { return }
+        let numbers = Navigator.pageNumber(at: position, in: model.deck)
+        let status = PhoneLink.Status(
+            profiles: model.deck.profiles.map { .init(id: $0.id.uuidString, name: $0.name.isEmpty ? "No name" : $0.name) },
+            current: position.profile.uuidString, held: model.pinned != nil, page: numbers.page, pages: numbers.pages)
+        let frame = PhoneLink.frame(.status(status))
+        guard frame != phone.lastStatus else { return }
+        phone.lastStatus = frame
+        phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+    }
+
+    /// Only iPhone apps that know the message get it (the first iPhone app would close the line).
+    private func toNewPhones(_ message: PhoneLink.Message) {
+        for phone in phones.values where phone.trusted && phone.version >= 2 { send(message, to: phone) }
     }
 }

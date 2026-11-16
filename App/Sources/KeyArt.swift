@@ -66,7 +66,13 @@ enum KeyArt {
         let iconMid = CGPoint(x: size / 2, y: hasTitle ? size - 27 * k : size / 2)
         let iconRect = CGRect(x: iconMid.x - iconSide / 2, y: iconMid.y - iconSide / 2, width: iconSide, height: iconSide)
 
-        if !iconName.isEmpty, let icon = IconStore.image(iconName) {
+        if key.icon.isEmpty, key.action.type == .raycast, let icon = RaycastIcons.image(forLink: key.action.target) {
+            // An extension command shows its extension's own icon on a light round tile, so dark icons read too.
+            let tile = iconRect.insetBy(dx: -2 * k, dy: -2 * k)
+            NSColor.white.withAlphaComponent(0.92).setFill()
+            NSBezierPath(roundedRect: tile, xRadius: 9 * k, yRadius: 9 * k).fill()
+            icon.draw(in: tile.insetBy(dx: 4 * k, dy: 4 * k), from: .zero, operation: .sourceOver, fraction: 1)
+        } else if !iconName.isEmpty, let icon = IconStore.image(iconName) {
             icon.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1)
         } else if key.action.type == .app, let icon = appIcon(key.action.target) {
             let grown = iconRect.insetBy(dx: -4 * k, dy: -4 * k)
@@ -132,5 +138,64 @@ enum KeyArt {
         appIcons.removeAll()
         pictures.removeAll()
         phonePictures.removeAll()
+    }
+}
+
+/// The icons of the installed Raycast extensions: a command's own icon, else its extension's.
+/// Raycast keeps each extension in a folder with a made-up name; package.json says which it is.
+enum RaycastIcons {
+    private struct Entry {
+        var folder: URL
+        var icon: String
+        var commands: [String: String]
+    }
+
+    private static var index: [String: Entry]?
+    private static var images: [String: NSImage] = [:]
+
+    private static func load() -> [String: Entry] {
+        if let index { return index }
+        var found: [String: Entry] = [:]
+        let files = FileManager.default
+        let root = RaycastCatalog.extensionsFolder
+        for name in (try? files.contentsOfDirectory(atPath: root.path)) ?? [] {
+            let folder = root.appendingPathComponent(name)
+            guard let data = try? Data(contentsOf: folder.appendingPathComponent("package.json")),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let ext = json["name"] as? String else { continue }
+            var commands: [String: String] = [:]
+            for entry in (json["commands"] as? [[String: Any]]) ?? [] {
+                if let command = entry["name"] as? String, let icon = entry["icon"] as? String { commands[command] = icon }
+            }
+            let entry = Entry(folder: folder, icon: json["icon"] as? String ?? "", commands: commands)
+            // Links name the owner when there is one, else the author: both find it.
+            for owner in [json["owner"] as? String, json["author"] as? String].compactMap({ $0 }) where !owner.isEmpty {
+                found["\(owner)/\(ext)".lowercased()] = entry
+            }
+        }
+        index = found
+        return found
+    }
+
+    static func installed(owner: String, extensionName: String) -> Bool {
+        load()["\(owner)/\(extensionName)".lowercased()] != nil
+    }
+
+    static func image(forLink link: String) -> NSImage? {
+        guard let parts = RaycastLink.parts(link),
+              let entry = load()["\(parts.owner)/\(parts.extensionName)".lowercased()] else { return nil }
+        let name = entry.commands[parts.command] ?? entry.icon
+        guard !name.isEmpty else { return nil }
+        let file = entry.folder.appendingPathComponent("assets").appendingPathComponent(name)
+        if let hit = images[file.path] { return hit }
+        guard let image = NSImage(contentsOf: file) else { return nil }
+        images[file.path] = image
+        return image
+    }
+
+    /// After extensions were added or removed in Raycast.
+    static func forget() {
+        index = nil
+        images.removeAll()
     }
 }

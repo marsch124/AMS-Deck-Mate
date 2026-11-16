@@ -47,8 +47,16 @@ struct SetupView: View {
                 editorColumn.frame(width: 300)
             }
             Divider()
-            HStack {
-                Text("Changes are kept as you make them. Every earlier state stays as a safety copy.")
+            HStack(spacing: 6) {
+                Button("Undo") { undo() }
+                    .buttonStyle(PlainButton())
+                    .disabled(model.undoStack.isEmpty)
+                    .accessibilityIdentifier("undo")
+                Button("Redo") { redo() }
+                    .buttonStyle(PlainButton())
+                    .disabled(model.redoStack.isEmpty)
+                    .accessibilityIdentifier("redo")
+                Text("Changes are kept as you make them. ⌘Z takes them back; every earlier state also stays as a safety copy.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -60,7 +68,49 @@ struct SetupView: View {
         .padding(14)
         .frame(width: 1010, height: 620)
         .background(slot == nil ? Button("") { model.saveNow(); close() }.keyboardShortcut(.cancelAction).opacity(0) : nil)
+        .onAppear {
+            model.edit.copy = { copyKey() }
+            model.edit.paste = { pasteKey() }
+        }
         .accessibilityIdentifier("setup")
+    }
+
+    // MARK: Copy, paste, undo
+
+    private func copyKey() {
+        guard let slot, let key = page?.keys[slot] else { NSSound.beep(); return }
+        model.copiedKey = draft == saved ? key : draft
+    }
+
+    /// Puts the copied key on the picked place (a key already there makes way).
+    private func pasteKey() {
+        guard let slot, let profile, let page, let copied = model.copiedKey else { NSSound.beep(); return }
+        let key = copied.copied()
+        edit(profile) { item in
+            guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
+            item.pages[index].keys[slot] = key
+        }
+        draft = key
+        saved = key
+    }
+
+    private func undo() {
+        slot = nil
+        model.undo()
+    }
+
+    private func redo() {
+        slot = nil
+        model.redo()
+    }
+
+    /// A key dropped on a key, or on a page chip (then it goes to the same place on that page).
+    private func moveKey(_ item: String, to target: (page: UUID, slot: Int)) {
+        let bits = item.split(separator: ":")
+        guard bits.count == 3, let from = UUID(uuidString: String(bits[1])), let at = Int(bits[2]),
+              let profile, leaveKey() else { return }
+        model.change { $0.moveKey(in: profile.id, from: (from, at), to: target) }
+        if target.page == pageID { slot = nil; pick(target.slot) } else { slot = nil }
     }
 
     // MARK: Profiles
@@ -123,6 +173,14 @@ struct SetupView: View {
                         Button("Make default") { model.change { $0.defaultProfile = profile.id } }
                             .buttonStyle(PlainButton())
                     }
+                    Button("Duplicate") {
+                        guard leaveKey() else { return }
+                        let copy = profile.duplicated(name: profile.name + " copy")
+                        model.change { $0.profiles.append(copy) }
+                        showProfile(copy)
+                    }
+                    .buttonStyle(PlainButton())
+                    .accessibilityIdentifier("duplicateProfile")
                     if model.deck.profiles.count > 1 {
                         Button("Delete") { deleteProfile(profile) }
                             .buttonStyle(PlainButton())
@@ -207,6 +265,12 @@ struct SetupView: View {
                                 .contentShape(Capsule())
                             }
                             .buttonStyle(.plain)
+                            .dropDestination(for: String.self) { items, _ in
+                                guard let first = items.first, first.hasPrefix("deckkey:"),
+                                      let at = Int(first.split(separator: ":").last ?? "") else { return false }
+                                moveKey(first, to: (item.id, at))
+                                return true
+                            }
                             .accessibilityIdentifier("page-\(item.name)")
                         }
                         Button(action: addPage) { Mark(name: "control-add", size: 15, colour: Palette.part("keys", scheme)) }
@@ -215,7 +279,9 @@ struct SetupView: View {
                             .accessibilityIdentifier("addPage")
                     }
                 }
-                KeyGrid(keys: page.keys, selected: slot, side: 72, gap: 10) { pick($0) }
+                KeyGrid(keys: page.keys, selected: slot, side: 72, gap: 10,
+                        broken: Set(model.problems(on: page, of: profile).keys), dragPage: page.id,
+                        onDrop: { moveKey($0, to: (page.id, $1)) }) { pick($0) }
                     .padding(13)
                     .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 HStack(spacing: 8) {
@@ -223,6 +289,16 @@ struct SetupView: View {
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 170)
                         .accessibilityIdentifier("pageName")
+                    if page.parent == nil {
+                        Button("Duplicate page") {
+                            guard leaveKey() else { return }
+                            var copyID: UUID?
+                            edit(profile) { copyID = $0.duplicatePage(page.id) }
+                            if let copyID, let copy = model.deck.profile(profile.id)?.page(copyID) { showPage(copy) }
+                        }
+                        .buttonStyle(PlainButton())
+                        .accessibilityIdentifier("duplicatePage")
+                    }
                     if page.parent != nil || profile.topPages.count > 1 {
                         Button(page.parent != nil ? "Delete folder" : "Delete page") { deletePage(profile, page) }
                             .buttonStyle(PlainButton())
@@ -230,7 +306,8 @@ struct SetupView: View {
                     }
                     Spacer()
                 }
-                Text("Click a key to change it.").font(.caption).foregroundStyle(.secondary)
+                Text("Click a key to change it. Drag it onto another key or a page to move it. ⌘C and ⌘V copy a key.")
+                    .font(.caption).foregroundStyle(.secondary)
                 legend
             } else {
                 Text("No profile yet. Add one on the left.").foregroundStyle(.secondary)
@@ -339,6 +416,13 @@ struct SetupView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("Key \(slot + 1)").font(.headline).foregroundStyle(Palette.part("keys", scheme))
                     Text("row \(slot / 5 + 1), place \(slot % 5 + 1)").font(.caption).foregroundStyle(.secondary)
+                }
+                if let why = KeyCheck.problem(draft, in: profile, deck: model.deck, world: KeyWorldOnMac.world) {
+                    HStack(spacing: 5) {
+                        Mark(name: "app-warning", size: 14, colour: Color(red: 0.86, green: 0.16, blue: 0.14))
+                        Text(why).font(.callout).foregroundStyle(Color(red: 0.86, green: 0.16, blue: 0.14))
+                    }
+                    .accessibilityIdentifier("keyProblem")
                 }
                 FieldLabel("Title")
                 TextField("Title", text: $draft.title)

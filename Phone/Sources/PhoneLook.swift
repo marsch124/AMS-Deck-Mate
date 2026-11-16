@@ -40,7 +40,13 @@ enum PhonePalette {
     }
 
     /// The dark ground behind the keys.
-    static let ground = Color(red: 0.11, green: 0.11, blue: 0.115)
+    static let ground = dynamic(day: rgb(0.93, 0.93, 0.94), night: rgb(0.11, 0.11, 0.115))
+    /// An empty key place.
+    static let emptyKey = dynamic(day: rgb(0.84, 0.84, 0.86), night: rgb(0, 0, 0))
+    /// The cards on the ground (messages, hints).
+    static let card = dynamic(day: rgb(1, 1, 1), night: rgb(0.19, 0.19, 0.2))
+    /// The red of "could not do it".
+    static let problem = dynamic(day: rgb(0.80, 0.15, 0.13), night: rgb(1.0, 0.45, 0.40))
 }
 
 /// A main button: always full colour with white words.

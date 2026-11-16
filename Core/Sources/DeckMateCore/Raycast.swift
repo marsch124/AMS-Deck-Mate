@@ -68,7 +68,7 @@ public enum RaycastLink {
         if text.contains("left-half") { return "deck-window-left" }
         if text.contains("right-half") { return "deck-window-right" }
         if text.contains("window-management") { return "deck-window-full" }
-        if text.contains("ai-commands") || text.contains("raycast-ai") { return "deck-ai" }
+        if text.contains("ai-commands") || text.contains("raycast-ai") || text.contains("/raycast/ai/") { return "deck-ai" }
         if text.contains("script-commands") { return "deck-script" }
         if text.contains("snippets") { return "app-snippets" }
         if text.contains("search") { return "app-search" }
@@ -95,8 +95,8 @@ public enum RaycastLink {
     public static let builtIn: [RaycastCommand] = [
         own("clipboard-history", "clipboard-history", "Clipboard History"),
         own("snippets", "search-snippets", "Search Snippets"),
-        own("raycast", "search-quicklinks", "Search Quicklinks"),
-        own("raycast-ai", "ai-chat", "AI Chat"),
+        own("quicklinks", "search-quicklinks", "Search Quicklinks"),
+        own("ai", "ai-chat", "AI Chat"),
         own("raycast-notes", "raycast-notes", "Raycast Notes"),
         own("file-search", "search-files", "Search Files"),
         own("emoji-symbols", "search-emoji-symbols", "Search Emoji and Symbols"),

@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.3 (build 3), 16 Nov 2026
+# AMS Deck Mate, specification, version 0.4 (build 4), 16 Nov 2026
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -13,7 +13,9 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 The icon opens a menu:
 - "Show keys on screen" (shortcut Control-Option-D).
 - "Set up keys…".
+- Status lines at the top: "Profile: <name> (automatic)" or "(held)"; "iPhone: connected – <name>" or "iPhone: none connected"; the box line.
 - "Profile": "Automatic", or one profile pinned by hand. A pinned profile is held.
+- "Profile for <front app>": a sub-menu of the profiles and "None – use the default". Picking one puts the front app's bundle identifier into that profile's `apps` and takes it off every other profile, so the profile then shows by itself whenever that app is in front. "None" takes the app off all profiles.
 - "Settings…".
 - "Quit AMS Deck Mate".
 
@@ -35,6 +37,13 @@ The icon opens a menu:
 - A "several things in a row" key hides them when at least one of its steps runs something on the Mac.
 - Only clicks on the screen hide the keys. Pressing a key on the box does not.
 
+**Keyboard on the keys on screen (0.4)**
+- Right after the keys are shown (Control-Option-D or the menu) the window takes the keyboard. Keys 1 to 5 press the top row (places 0 to 4), Q W E R T the middle row (5 to 9), A S D F G the bottom row (10 to 14). These are matched by key position, so they are the same places on every keyboard layout.
+- Left and right arrows, or Tab and Shift-Tab, change page (as Next page and Previous page). Escape hides the keys.
+- After a key that does something on the Mac, the keyboard goes back to the app the user was in.
+
+**Broken keys (0.4).** A key whose app, file or folder, Raycast extension, folder page or profile is gone shows a red corner mark on the screen (see section 20).
+
 **Size** (`screenSize`, default normal)
 - `ScreenSize`: small, normal, large. The side of one key (`keySide`) is 48, 64 or 80 points; the gap between keys (`gap`) is 6, 8 or 10 points. Normal is the size 0.1 had.
 - The window changes size at once.
@@ -52,6 +61,7 @@ The icon opens a menu:
 - Middle: the 15 keys, with the pages and folders of the profile above them. Add page, delete page.
 - Right: the clicked key. Title, Icon, "What it does". Cancel and Save on every edit; Escape is Cancel.
 - "Clear key" empties a key. "Try it" runs the key.
+- 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate profile; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
 `ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, profile, multi. An unknown name decodes as none.
@@ -76,6 +86,8 @@ A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyNa
 ## 7. Raycast
 - A key holds the whole link, `raycast://extensions/<owner>/<extension>/<command>`.
 - The list offers the commands of the Raycast extensions installed on this Mac (found by itself; 15 on the author's Mac, for example Notion, Spotify, CleanShot X, 1Password, Reminders) and 16 of Raycast's own (Clipboard History, AI Chat, window left and right half, Search Snippets, Search Quicklinks, Lock Screen and more).
+- Since 0.4 an extension command shows the extension's own icon, read from the installed extension. Raycast's own commands keep the hand-drawn drawings.
+- Since 0.4 two built-in links are corrected: AI Chat is `raycast://extensions/raycast/ai/ai-chat` and Search Quicklinks is `raycast://extensions/raycast/quicklinks/search-quicklinks`. The other built-in links could not be confirmed from the Mac; if one does not work, use "Copy Deeplink" in Raycast and paste it.
 - Any Raycast link can be pasted (in Raycast: select a command, Command-K, "Copy Deeplink"). Pasted text is tidied; text that is not a Raycast link is refused.
 - Script command by its file name: `raycast://script-commands/<slug>`. AI command by its name: `raycast://ai-commands/<slug>`.
 - Slug: lower case, accents removed, letters and digits joined by hyphens ("Fix Spelling and Grammar" becomes fix-spelling-and-grammar).
@@ -125,7 +137,11 @@ Not yet tried on the real box (see the warning at the top).
 - The Mac may ask for Input Monitoring when the box is first plugged in.
 
 ## 12. Settings
-Three tabs: Settings (box, brightness, change profile with the app in front, the card "Keys on screen" (Show them, Hide after a key is pressed, Size), the card "iPhone" (section 17), open at login, permissions, bring over again), How it works, What's new. The version, Quit and Done are at the bottom.
+Three tabs: Settings, How it works, What's new. The version, Quit and Done are at the bottom.
+Since 0.4 the Settings tab is a list on the left with one part at a time on the right (before: one long scroll). The parts, in order: The box (box, brightness), First time with the box, Keys on screen (Show them, Hide after a key is pressed, Size), iPhone (section 17), Profiles (change profile with the app in front), Check keys, This Mac (open at login, permissions), From Elgato (bring over again), Where it is kept.
+- "First time with the box": the steps for the first day with the real box (quit Elgato's app, plug the box in, allow Input Monitoring if the Mac asks), the box's answer in plain words, and a button to show the box diary (box log). Reminder: the real box is still untried (the author is away until January 2027).
+- "Check keys": the button "Check all keys" lists every broken key as "Profile · Page · key: reason" (section 20).
+- The picture used for checks (sample Settings picture) shows a made-up iPhone, never real data.
 
 ## 13. Storage
 - One file: `~/Library/Application Support/AMS Deck Mate/deck.json`. Each save first keeps the previous file as a safety copy (the last 20) in `Backups` beside it.
@@ -143,6 +159,7 @@ Three tabs: Settings (box, brightness, change profile with the app in front, the
 
 ## 14. Tests
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
+- New in 0.4: one small data test per new rule: the new `PhoneLink` messages (round trip), the broken-key reasons, duplicate page and profile, copy and paste, moving and swapping keys between pages, undo and redo (30 steps), the keyboard places, and the "Profile for <app>" rule (an app belongs to one profile only). The iPhone app has one more screen test that finds the profile menu and page dots by identifier.
 - New in 0.3: `PhoneLink` framing: round trip (encode then decode gives the same message), split (a message arriving in pieces is put together; a half message waits), broken (a length over 4 MB or text that is not a message is refused, not crashed on). And `shownTitle`: own title wins; empty title on an app key gives the app's name; empty title and no app name stays empty; other kinds are unchanged.
 - The iPhone app has one screen test that finds its keys by identifier.
 
@@ -153,10 +170,9 @@ Three tabs: Settings (box, brightness, change profile with the app in front, the
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-## 16. Not in 0.3
+## 16. Not in 0.4
 - The first Stream Deck from 2017.
 - Other box sizes (6 and 32 keys, XL, Mini, Plus, Neo, pedal).
-- Dragging keys to move them.
 - Elgato plug-ins.
 - Driving the real box (first test planned for January 2027).
 - The iPhone app on iPad or Mac, and editing keys from the iPhone (keys are set up on the Mac only).
@@ -192,8 +208,9 @@ Three tabs: Settings (box, brightness, change profile with the app in front, the
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone only; on TestFlight. Version 0.3 (3). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone only; on TestFlight. Version 0.4 (4). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
+- 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
 - Settings: which Mac, "Forget this Mac", the version, How it works, What's new.
 
@@ -204,3 +221,25 @@ Three tabs: Settings (box, brightness, change profile with the app in front, the
 ## 19. The Raycast folder (the author's own setup, data)
 - On Page 1 of the Default Profile, a key "Raycast" opens a folder: Back plus 14 Raycast commands from the installed extensions: Clipboard, AI Chat, Ask Perplexity, Hide apps, New reminder, Reminders, Notion note, Find in Notion, Daily plan (NotePlan), Screenshot (CleanShot area), Text from screen (CleanShot OCR), Play/Pause and Next song (Spotify), Passwords (1Password).
 - Keys that need no window run quietly (`quiet`). Changed in Set up keys as usual. This is data in `deck.json`, not a feature.
+
+## 20. Set up keys, 0.4 (Mac)
+**Drag.** A key is dragged to another place of the page: it moves there, or swaps with the key already there. A key dropped on a page chip at the top moves to that page, to the same place; a key already there swaps. A folder key takes its folder (and the folder's pages) along.
+
+**Copy and paste.** Edit menu: Command-C and Command-V, when a key is picked and no text field is being edited. The pasted key replaces the picked one (it gets a new id).
+
+**Duplicate.** "Duplicate page" (button beside Delete page) copies the page and its folders; the copy is named "<name> copy". "Duplicate profile" (button beside Make default) copies the profile; the copy belongs to no app (`apps` is empty).
+
+**Undo and Redo.** Command-Z and Shift-Command-Z, also two buttons in Set up keys. They go back and forward through the last 30 changes to the setup, as long as the app runs (the list is not saved). The safety copies on disk (section 13) stay as before.
+
+**Broken keys.** A key is broken when: its app is not found (bundle identifier or path), its file or folder is gone, its Raycast extension is not installed, its folder page is gone, or its profile is gone. A broken key gets a red corner mark on the screen and in Set up keys; the picked key shows the one-line reason. Settings, "Check keys", "Check all keys" lists every broken key as "Profile · Page · key: reason".
+
+## 21. The iPhone app, 0.4
+The iPhone needs the Mac at 0.4 for the new parts (marked *).
+- Layout: the 15 keys sit at the bottom of the screen, near the thumb; the place line is on top.
+- Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
+- Profile menu: a tap on the top line (the profile name) opens a menu: "Automatic", or hold one of the profiles (as the Mac's menu). *
+- Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
+- What ran: after a tap a short note at the bottom, for example "Opened OmniFocus" or "Raycast: Clipboard history". When the Mac could not do it the note is red with the warning drawing, for example "The app is not on this Mac" or "The Mac has not allowed key presses yet". *
+- Day look: the iPhone screen follows day and night (light grey by day, dark by night); the keys stay as drawn.
+- Hotspot hint: after 20 seconds of "Looking for your Mac…" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. Button "Open Settings"; the close (x) button hides the hint.
+- The app uses its own warning and close drawings; the 22 hand-drawn deck drawings are also in the AMS Icon Library as app marks.

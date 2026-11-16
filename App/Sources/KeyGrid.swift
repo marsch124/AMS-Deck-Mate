@@ -35,6 +35,12 @@ struct KeyGrid: View {
     var selected: Int?
     var side: CGFloat = 64
     var gap: CGFloat = 8
+    /// Broken keys get a red corner.
+    var broken: Set<Int> = []
+    /// Set up keys: keys are picked with a plain click and can be dragged onto each other
+    /// ("deckkey:<page>:<place>"); the keys on screen use the click catcher instead.
+    var dragPage: UUID?
+    var onDrop: ((String, Int) -> Void)?
     var onPress: (Int) -> Void
 
     private var width: CGFloat { side * 5 + gap * 4 }
@@ -46,6 +52,7 @@ struct KeyGrid: View {
                 keyView(index)
                     .offset(x: CGFloat(index % 5) * (side + gap), y: CGFloat(index / 5) * (side + gap))
             }
+            if dragPage == nil {
             ClickCatcher { point in
                 let column = Int(point.x / (side + gap))
                 let row = Int(point.y / (side + gap))
@@ -55,6 +62,7 @@ struct KeyGrid: View {
                 onPress(row * 5 + column)
             }
             .frame(width: width, height: height)
+            }
         }
         .frame(width: width, height: height, alignment: .topLeading)
     }
@@ -77,8 +85,15 @@ struct KeyGrid: View {
         .overlay(shape.fill(Color.black.opacity(isPressed ? 0.28 : 0)))
         .overlay(shape.strokeBorder(Color.white.opacity(keys[index] == nil ? 0.10 : 0), lineWidth: 1))
         .overlay(shape.inset(by: -3).strokeBorder(Color.white, lineWidth: selected == index ? 2.5 : 0))
+        .overlay(alignment: .topTrailing) {
+            if broken.contains(index) {
+                BrokenCorner(side: side * 0.3).accessibilityIdentifier("broken\(index)")
+            }
+        }
         .scaleEffect(isPressed ? 0.95 : 1)
         .animation(.easeOut(duration: 0.08), value: isPressed)
+        .modifier(DragKey(page: dragPage, index: index, filled: keys[index] != nil,
+                          press: { onPress(index) }, drop: { onDrop?($0, index) }))
         .accessibilityElement()
         .accessibilityLabel(keys[index] == nil ? "Empty key" : KeyArt.title(keys[index]))
         .accessibilityIdentifier("key\(index)")
@@ -109,7 +124,8 @@ struct ScreenDeckView: View {
                 headerButton("control-close", "Hide the keys", "deckClose", close)
             }
             KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
-                    gap: model.deck.screenSize.gap) { model.click($0) }
+                    gap: model.deck.screenSize.gap,
+                    broken: Set(model.problems(on: model.page, of: model.profile).keys)) { model.click($0) }
         }
         .padding(10)
         .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -126,5 +142,50 @@ struct ScreenDeckView: View {
             .help(help)
             .accessibilityLabel(help)
             .accessibilityIdentifier(id)
+    }
+}
+
+/// The red corner of a key that cannot work any more.
+struct BrokenCorner: View {
+    let side: CGFloat
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 0))
+                path.addLine(to: CGPoint(x: side, y: 0))
+                path.addLine(to: CGPoint(x: side, y: side))
+                path.closeSubpath()
+            }
+            .fill(Color(red: 0.86, green: 0.16, blue: 0.14))
+            Text("!").font(.system(size: side * 0.42, weight: .heavy)).foregroundStyle(.white)
+                .padding(.trailing, side * 0.1).padding(.top, side * 0.0)
+        }
+        .frame(width: side, height: side)
+        .clipShape(UnevenRoundedRectangle(topTrailingRadius: side * 0.5, style: .continuous))
+    }
+}
+
+/// In Set up keys: a click picks the key, a drag moves it.
+private struct DragKey: ViewModifier {
+    let page: UUID?
+    let index: Int
+    let filled: Bool
+    let press: () -> Void
+    let drop: (String) -> Void
+
+    func body(content: Content) -> some View {
+        if let page {
+            content
+                .contentShape(Rectangle())
+                .onTapGesture(perform: press)
+                .draggable(filled ? "deckkey:\(page.uuidString):\(index)" : "")
+                .dropDestination(for: String.self) { items, _ in
+                    guard let item = items.first, item.hasPrefix("deckkey:") else { return false }
+                    drop(item)
+                    return true
+                }
+        } else {
+            content
+        }
     }
 }

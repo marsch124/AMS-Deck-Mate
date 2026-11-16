@@ -11,9 +11,22 @@ final class LinkClient: ObservableObject {
         case looking, connecting(String), waiting(String), connected(String), refused(String)
     }
 
-    @Published private(set) var state: State = .looking
+    @Published private(set) var state: State = .looking {
+        didSet {
+            if state == .looking { if lookingSince == nil { lookingSince = Date() } } else { lookingSince = nil }
+        }
+    }
     @Published private(set) var place = ""
     @Published private(set) var keys: [Int: PhoneLink.Key] = [:]
+    /// The profiles and pages (from a Mac at 0.4 or later).
+    @Published private(set) var status: PhoneLink.Status?
+    /// Keys pressed a moment ago, anywhere (box, Mac screen or here): they light up.
+    @Published private(set) var lit: Set<Int> = []
+    /// What the last tap did, for a moment; ok false = the Mac could not do it.
+    @Published private(set) var note: (text: String, ok: Bool)?
+    /// Since when it has been looking for the Mac (for the hotspot hint).
+    @Published private(set) var lookingSince: Date? = Date()
+    private var noteID = 0
 
     /// The Mac it is connected to, or the one it remembers.
     var macName: String? {
@@ -49,6 +62,12 @@ final class LinkClient: ObservableObject {
             client.state = .connected("Sample Mac")
             client.place = SampleLink.place
             client.keys = SampleLink.keys()
+            client.status = SampleLink.status
+            client.lookingSince = nil
+            if CommandLine.arguments.contains("-looking") {
+                client.state = .looking
+                client.lookingSince = .distantPast
+            }
         }
         return client
     }
@@ -116,7 +135,7 @@ final class LinkClient: ObservableObject {
                 guard let self, let line, self.connection === line else { return }
                 switch state {
                 case .ready:
-                    self.send(.hello(phone: UIDevice.current.name, token: self.tokens[mac]))
+                    self.send(.hello(phone: UIDevice.current.name, token: self.tokens[mac], version: PhoneLink.currentVersion))
                 case .failed, .cancelled:
                     self.lost(line)
                 default:
@@ -174,7 +193,14 @@ final class LinkClient: ObservableObject {
         case let .keys(place, list):
             self.place = place
             keys = Dictionary(list.map { ($0.index, $0) }, uniquingKeysWith: { $1 })
-        case .hello, .press:
+        case let .status(status):
+            self.status = status
+        case let .pressed(index):
+            lit.insert(index)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in self?.lit.remove(index) }
+        case let .ran(text, ok):
+            show(text, ok: ok)
+        case .hello, .press, .page, .profile:
             break
         }
     }
@@ -184,6 +210,27 @@ final class LinkClient: ObservableObject {
     }
 
     // MARK: What the screens ask for
+
+    private func show(_ text: String, ok: Bool) {
+        noteID += 1
+        let id = noteID
+        note = (text, ok)
+        DispatchQueue.main.asyncAfter(deadline: .now() + (ok ? 2 : 4)) { [weak self] in
+            if self?.noteID == id { self?.note = nil }
+        }
+    }
+
+    /// A swipe: +1 = next page, -1 = page before.
+    func page(_ step: Int) {
+        guard case .connected = state, !isSample else { return }
+        send(.page(step: step))
+    }
+
+    /// Hold a profile (its id), or nil = Automatic.
+    func pickProfile(_ id: String?) {
+        guard case .connected = state, !isSample else { return }
+        send(.profile(id: id))
+    }
 
     func press(_ index: Int) {
         guard case .connected = state, !isSample else { return }

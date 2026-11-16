@@ -2,10 +2,12 @@ import SwiftUI
 import UIKit
 import DeckMateCore
 
-/// The main screen: the place line, the link status, and the 5 x 3 keys.
+/// The main screen: the place line on top, the 15 keys low near the thumb, page dots and a short
+/// note on what a tap did.
 struct DeckScreen: View {
     @ObservedObject var link: LinkClient
     @State private var showSettings = false
+    @State private var hintClosed = false
 
     private var connected: Bool {
         if case .connected = link.state { return true }
@@ -15,22 +17,30 @@ struct DeckScreen: View {
     var body: some View {
         ZStack {
             PhonePalette.ground.ignoresSafeArea()
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 topBar
+                Spacer(minLength: 0)
+                if !connected { messageCard }
+                Spacer(minLength: 0)
+                noteLine
                 GeometryReader { box in
                     let side = Self.keySide(in: box.size)
                     KeyGrid(link: link, side: side)
-                        .frame(width: box.size.width, height: box.size.height)
+                        .frame(width: box.size.width, height: box.size.height, alignment: .bottom)
                         .opacity(connected ? 1 : 0.35)
-                        .overlay {
-                            if !connected { messageCard }
-                        }
+                        .contentShape(Rectangle())
+                        .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
+                            let across = drag.translation.width
+                            guard abs(across) > 60, abs(across) > abs(drag.translation.height) * 1.5 else { return }
+                            link.page(across < 0 ? 1 : -1)
+                        })
                 }
+                .aspectRatio(5.0 / 3.0, contentMode: .fit)
+                pageDots
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
-        .preferredColorScheme(.dark)
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("deckScreen")
@@ -49,16 +59,12 @@ struct DeckScreen: View {
     private var topBar: some View {
         HStack(alignment: .center, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(link.place.isEmpty ? "Deck Mate" : link.place)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .accessibilityIdentifier("deckPlace")
+                placeLine
                 HStack(spacing: 6) {
                     Circle().fill(statusColour).frame(width: 8, height: 8)
                     Text(statusText)
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
                 .accessibilityElement(children: .combine)
@@ -67,7 +73,7 @@ struct DeckScreen: View {
             Spacer(minLength: 8)
             Button { showSettings = true } label: {
                 PhoneIcon(name: "iconSettings", size: 24)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(PhonePalette.part("settings"))
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
@@ -76,11 +82,48 @@ struct DeckScreen: View {
         }
     }
 
+    /// The place; a tap on it picks a profile (Automatic, or hold one), like the Mac's menu.
+    @ViewBuilder
+    private var placeLine: some View {
+        let title = Text(link.place.isEmpty ? "Deck Mate" : link.place)
+            .font(.headline)
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+        if let status = link.status, connected {
+            Menu {
+                Button { link.pickProfile(nil) } label: {
+                    if !status.held { Label("Automatic", systemImage: "checkmark") } else { Text("Automatic") }
+                }
+                Section("Hold one") {
+                    ForEach(status.profiles, id: \.id) { profile in
+                        Button { link.pickProfile(profile.id) } label: {
+                            if status.held && status.current == profile.id {
+                                Label(profile.name, systemImage: "checkmark")
+                            } else {
+                                Text(profile.name)
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 5) {
+                    title
+                    Text(status.held ? "held ▾" : "▾").font(.subheadline.weight(.semibold))
+                        .foregroundStyle(PhonePalette.part("profiles"))
+                }
+            }
+            .tint(.primary)
+            .accessibilityIdentifier("deckPlace")
+        } else {
+            title.accessibilityIdentifier("deckPlace")
+        }
+    }
+
     private var statusColour: Color {
         switch link.state {
-        case .connected: return Color(red: 0.36, green: 0.80, blue: 0.45)
-        case .refused: return Color(red: 0.95, green: 0.40, blue: 0.30)
-        default: return Color(red: 0.95, green: 0.70, blue: 0.25)
+        case .connected: return Color(red: 0.25, green: 0.70, blue: 0.36)
+        case .refused: return Color(red: 0.90, green: 0.33, blue: 0.24)
+        default: return Color(red: 0.93, green: 0.62, blue: 0.14)
         }
     }
 
@@ -91,6 +134,48 @@ struct DeckScreen: View {
         case let .waiting(mac): return "Waiting for \(mac) to allow this iPhone"
         case let .connected(mac): return "Connected to \(mac)"
         case let .refused(mac): return "\(mac) said no"
+        }
+    }
+
+    // MARK: Under and over the keys
+
+    /// What the last tap did, for a moment.
+    @ViewBuilder
+    private var noteLine: some View {
+        if let note = link.note {
+            HStack(spacing: 6) {
+                if !note.ok { PhoneIcon(name: "iconWarning", size: 16) }
+                Text(note.text).font(.callout.weight(.medium)).lineLimit(2)
+            }
+            .foregroundStyle(note.ok ? Color.primary : PhonePalette.problem)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(PhonePalette.card, in: Capsule())
+            .transition(.opacity)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("ranNote")
+        } else {
+            Color.clear.frame(height: 30)
+        }
+    }
+
+    /// One dot per page; none inside a folder or with one page.
+    @ViewBuilder
+    private var pageDots: some View {
+        if let status = link.status, let page = status.page, status.pages > 1, connected {
+            HStack(spacing: 7) {
+                ForEach(0..<status.pages, id: \.self) { index in
+                    Circle()
+                        .fill(index == page ? PhonePalette.part("screen") : Color.secondary.opacity(0.35))
+                        .frame(width: 7, height: 7)
+                }
+            }
+            .frame(height: 14)
+            .accessibilityElement()
+            .accessibilityLabel("Page \(page + 1) of \(status.pages)")
+            .accessibilityIdentifier("pageDots")
+        } else {
+            Color.clear.frame(height: 14)
         }
     }
 
@@ -108,14 +193,43 @@ struct DeckScreen: View {
                     .padding(.top, 4)
                     .accessibilityIdentifier("askAgain")
             }
+            TimelineView(.periodic(from: .now, by: 2)) { context in
+                if let since = link.lookingSince, context.date.timeIntervalSince(since) > 20, !hintClosed {
+                    hotspotHint
+                }
+            }
         }
         .padding(16)
-        .frame(maxWidth: 340)
-        .background(Color(red: 0.19, green: 0.19, blue: 0.2), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .foregroundStyle(.white)
-        .padding(20)
+        .frame(maxWidth: 360)
+        .background(PhonePalette.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("linkMessage")
+    }
+
+    /// After 20 seconds of looking: how to put the Mac on this iPhone's hotspot.
+    private var hotspotHint: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Still not found?").font(.headline).foregroundStyle(PhonePalette.part("screen"))
+                Spacer()
+                Button { hintClosed = true } label: {
+                    PhoneIcon(name: "iconClose", size: 16).foregroundStyle(.secondary).frame(width: 32, height: 32)
+                }
+                .accessibilityLabel("Close the hint")
+                .accessibilityIdentifier("closeHint")
+            }
+            Text("Away from home Wi-Fi: turn on Personal Hotspot on this iPhone (Settings, Personal Hotspot), then pick this iPhone in the Mac’s Wi-Fi menu.")
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            }
+            .buttonStyle(PhoneMainButton(part: "screen"))
+            .accessibilityIdentifier("openSettings")
+        }
+        .padding(.top, 8)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("hotspotHint")
     }
 
     private var cardTitle: String {
@@ -149,7 +263,9 @@ private struct KeyGrid: View {
                 HStack(spacing: gap) {
                     ForEach(0..<5, id: \.self) { column in
                         let index = row * 5 + column
-                        KeyView(index: index, key: link.keys[index], side: side) { link.press(index) }
+                        KeyView(index: index, key: link.keys[index], side: side, lit: link.lit.contains(index)) {
+                            link.press(index)
+                        }
                     }
                 }
             }
@@ -157,11 +273,12 @@ private struct KeyGrid: View {
     }
 }
 
-/// One key: the picture the Mac drew, or an empty place.
+/// One key: the picture the Mac drew, or an empty place. It lights up when pressed anywhere.
 private struct KeyView: View {
     let index: Int
     let key: PhoneLink.Key?
     let side: CGFloat
+    let lit: Bool
     let press: () -> Void
     @State private var pressed = false
 
@@ -169,20 +286,21 @@ private struct KeyView: View {
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: side * 0.16, style: .continuous)
+        let down = pressed || lit
         ZStack {
             if let image {
                 Image(uiImage: image).resizable().scaledToFill()
                     .frame(width: side, height: side)
                     .clipShape(shape)
-                    .overlay(shape.fill(Color.black.opacity(pressed ? 0.35 : 0)))
+                    .overlay(shape.fill(Color.black.opacity(down ? 0.35 : 0)))
             } else {
-                shape.fill(Color.black)
-                    .overlay(shape.strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
+                shape.fill(PhonePalette.emptyKey)
+                    .overlay(shape.strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
             }
         }
         .frame(width: side, height: side)
-        .scaleEffect(pressed ? 0.95 : 1)
-        .animation(.easeOut(duration: 0.08), value: pressed)
+        .scaleEffect(down ? 0.95 : 1)
+        .animation(.easeOut(duration: 0.08), value: down)
         .contentShape(shape)
         .onTapGesture {
             guard image != nil else { return }   // empty places do nothing

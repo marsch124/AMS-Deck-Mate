@@ -15,7 +15,9 @@ enum Guide {
         ]),
         Section(id: "menu", title: "The menu bar", part: "settings", lines: [
             "Click the small icon to open the menu: \"Show keys on screen\", \"Set up keys…\", \"Profile\", \"Settings…\" and \"Quit AMS Deck Mate\".",
-            "Under \"Profile\" you choose \"Automatic\" or pin one profile by hand."
+            "Under \"Profile\" you choose \"Automatic\" or pin one profile by hand.",
+            "The top of the menu tells you what is going on: \"Profile: <name>\" with \"(automatic)\" or \"(held)\", \"iPhone: connected – <name>\" or \"iPhone: none connected\", and a line about the box.",
+            "\"Profile for <the app in front>\" is a small list of your profiles and \"None – use the default\". Pick one and that profile shows by itself whenever that app is in front. The app is taken off any other profile, so it belongs to only one."
         ]),
         Section(id: "screen", title: "Keys on screen", part: "screen", lines: [
             "\"Show keys on screen\" opens a small floating window with the same 15 keys as the box. The shortcut is Control-Option-D.",
@@ -27,7 +29,11 @@ enum Guide {
             "At the mouse pointer, the keys appear under the pointer each time. Near the edge of the screen they move in until they are whole. The place you drag them to is not remembered then.",
             "\"Hide after a key is pressed\" hides the keys after a click on a key that does something on the Mac. A key that only moves around leaves them open.",
             "\"Size\": Small, Normal or Large. The window changes size at once.",
-            "Together: press Control-Option-D, the keys appear under the mouse, click one, and they are gone."
+            "Together: press Control-Option-D, the keys appear under the mouse, click one, and they are gone.",
+            "You can also use the keyboard. Right after the keys appear, 1 to 5 press the top row, Q W E R T the middle row and A S D F G the bottom row. These are the same places on every keyboard.",
+            "The left and right arrow keys, or Tab and Shift-Tab, change page. Escape hides the keys.",
+            "After a key that does something on the Mac, the keyboard goes back to the app you were in.",
+            "A key whose app, file, folder, Raycast command, folder page or profile is gone shows a small red mark in its corner."
         ]),
         Section(id: "look", title: "The look of a key", part: "keys", lines: [
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
@@ -41,7 +47,17 @@ enum Guide {
             "In the middle are the 15 keys, with the pages and folders of the profile above them. You can add and delete pages.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\".",
             "Every edit has Cancel and Save. Escape is Cancel.",
-            "\"Clear key\" empties a key. \"Try it\" runs the key."
+            "\"Clear key\" empties a key. \"Try it\" runs the key.",
+            "Move keys by dragging: drop a key on another place to move it there, or to swap with the key that is there. Drop a key on a page chip at the top to send it to that page, to the same place. A key already there swaps. A folder key takes its folder along.",
+            "Copy and paste: with a key picked, Command-C copies it and Command-V pastes it. The pasted key replaces the picked one. This works when you are not typing in a text field.",
+            "\"Duplicate page\" (beside Delete page) copies the page and its folders. The copy is named \"… copy\". \"Duplicate profile\" (beside Make default) copies the profile. The copy belongs to no app yet.",
+            "Undo and Redo: Command-Z and Shift-Command-Z, or the two buttons in Set up keys. They go back through the last 30 changes for as long as the app runs. The safety copies on disk stay as before.",
+            "A broken key has a red mark in its corner, on the screen and in Set up keys. Pick it and one line tells you what is missing."
+        ]),
+        Section(id: "broken", title: "Broken keys and \"Check keys\"", part: "keys", lines: [
+            "A key is broken when its app, file or folder, Raycast extension, folder page or profile is gone. It gets a red mark in its corner.",
+            "In Settings, \"Check keys\" has the button \"Check all keys\". It lists every broken key as \"Profile · Page · key: reason\".",
+            "Fix a broken key in Set up keys: pick it and choose again what it does."
         ]),
         Section(id: "actions", title: "What a key can do", part: "keys", lines: [
             "Open an app. Open a link or a file: web pages, folders and files.",
@@ -54,6 +70,8 @@ enum Guide {
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
             "Pick a command from a list. It holds the commands of the Raycast extensions on this Mac, found by itself, and 16 of Raycast's own.",
+            "A command from an extension now shows that extension's own icon, taken from the extension installed on this Mac. Raycast's own commands keep the hand-drawn drawings.",
+            "Two of Raycast's own links were corrected: AI Chat and Search Quicklinks. The other built-in links could not be checked from this Mac. If one does not work, use \"Copy Deeplink\" in Raycast and paste it.",
             "Or paste any Raycast link: in Raycast select a command, press Command-K and choose \"Copy Deeplink\".",
             "A script command goes on a key by its name, and an AI command by its name.",
             "\"Run quietly\" runs a command without bringing Raycast forward.",
@@ -77,12 +95,23 @@ enum Guide {
             "Settings warns you when Elgato's app is running and has a \"Quit Elgato's app\" button.",
             "When Deck Mate quits, the box goes back to the Elgato logo."
         ]),
+        Section(id: "firsttime", title: "First time with the box", part: "box", lines: [
+            "This part of Settings is for the first day with the real box, which is not yet tried.",
+            "Step 1: quit Elgato's app. Step 2: plug the box in. Step 3: if the Mac asks for Input Monitoring, allow it.",
+            "It shows the box's answer in plain words, and a button to show the box diary (the box log), in case something does not work."
+        ]),
         Section(id: "iphone", title: "On your iPhone", part: "settings", lines: [
             "Deck Mate for the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the profile and page the Mac shows, so it changes when the app in front changes.",
             "Tap a key on the iPhone and the Mac does it, exactly as if you had pressed it on the box. The keys on the Mac screen do not hide because of a tap on the iPhone.",
             "The iPhone finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
             "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" Choose Allow. After that the Mac remembers the iPhone. If you choose Don't Allow, the iPhone shows \"Ask again\".",
             "The pictures are drawn by the Mac, so keys that open an app show the real app icon.",
+            "New in 0.4 (the Mac must be at 0.4 too): the keys sit low on the iPhone, near your thumb, with the place line on top. Swipe left or right on the keys to change page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
+            "Tap the top line (the profile name) for a menu: \"Automatic\", or hold one of the profiles, the same as the Mac's menu.",
+            "A key you press lights up on the iPhone, whether you pressed it on the box, on the keys on the Mac screen or on the iPhone.",
+            "After a tap, a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
+            "The iPhone screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
+            "After 20 seconds of \"Looking for your Mac…\" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. It has the button \"Open Settings\" and a close (x) button that hides the hint.",
             "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network."
         ]),
         Section(id: "iphonecard", title: "The iPhone card in Settings", part: "settings", lines: [
@@ -97,7 +126,8 @@ enum Guide {
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
-            "\"Settings\" holds the box, brightness, change profile with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions and bring over again.",
+            "Since 0.4 \"Settings\" is a short list on the left with one part at a time on the right, instead of one long page. The parts are: The box, First time with the box, Keys on screen, iPhone, Profiles, Check keys, This Mac, From Elgato and Where it is kept.",
+            "They hold the box and brightness, change profile with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions, bring over again and the check for broken keys.",
             "The version number, Quit and Done stay at the bottom."
         ]),
         Section(id: "kept", title: "Where things are kept", part: "settings", lines: [
@@ -108,6 +138,35 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.4", date: "16 Nov 2026", new: [
+            "iPhone: the keys sit low on the screen, near the thumb. The 15 keys are at the bottom and the place line is on top.",
+            "iPhone: swipe left or right on the keys to go to the next or previous page. Small page dots under the keys show which page you are on. There are no dots inside a folder or when there is only one page.",
+            "iPhone: tap the top line (the profile name) for a menu: \"Automatic\", or hold one of the profiles. It is the same as the Mac's menu.",
+            "iPhone: pressed keys light up. A key pressed on the box, on the keys on the Mac screen or on the iPhone shows as pressed on the iPhone.",
+            "iPhone: a short note at the bottom says what ran after a tap, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". When the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
+            "iPhone: a hint after 20 seconds of \"Looking for your Mac…\". It says to turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu, with a button \"Open Settings\" and a close (x) button.",
+            "The iPhone needs the Mac at 0.4 for the new parts (lighting up, the notes, the profile menu).",
+            "Keys on screen: a keyboard. Right after showing them (Control-Option-D or the menu), the keys 1 to 5, Q to T and A to G press the 15 keys, in the same places on every keyboard. Left and right arrows, or Tab and Shift-Tab, change page. Escape hides them. After a key that does something on the Mac, the keyboard goes back to the app you were in.",
+            "Menu: it now shows what is going on: \"Profile: <name> (automatic)\" or \"(held)\", \"iPhone: connected – <name>\" or \"iPhone: none connected\", and the box line.",
+            "Menu: \"Profile for <the app in front>\" lists the profiles and \"None – use the default\". Pick one and that profile shows by itself whenever that app is in front. The app is taken off any other profile.",
+            "Set up keys: drag keys to move or swap them. Drop a key on a page chip at the top to move it to that page, to the same place; a key already there swaps. A folder key takes its folder along.",
+            "Set up keys: copy and paste keys with Command-C and Command-V when a key is picked and no text is being edited. The pasted key replaces the picked one.",
+            "Set up keys: \"Duplicate page\" beside Delete page copies the page and its folders, named \"… copy\". \"Duplicate profile\" beside Make default copies the profile; the copy belongs to no app.",
+            "Set up keys: Undo and Redo (Command-Z and Shift-Command-Z, also two buttons) for the last 30 changes, for as long as the app runs. The safety copies on disk stay as before.",
+            "Broken keys show red: a key whose app, file or folder, Raycast extension, folder page or profile is gone gets a small red mark in its corner, on the screen and in Set up keys. The picked key shows the reason in one line.",
+            "Settings, \"Check keys\": the button \"Check all keys\" lists every broken key as \"Profile · Page · key: reason\".",
+            "Settings, \"First time with the box\": the steps for the first day with the real box (quit Elgato's app, plug the box in, allow Input Monitoring if the Mac asks), the box's answer in plain words, and a button to show the box diary.",
+            "Raycast: commands from an extension now show that extension's own icon, taken from the installed extension. Raycast's own commands keep the hand-drawn drawings.",
+            "The 22 hand-drawn deck drawings are now also in the AMS Icon Library, as app marks."
+        ], changed: [
+            "iPhone: the screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
+            "iPhone: the \"could not do it\" note and the hotspot hint use the app's own warning and close drawings.",
+            "Settings is shorter: a list on the left (The box, First time with the box, Keys on screen, iPhone, Profiles, Check keys, This Mac, From Elgato, Where it is kept) and one part at a time on the right, instead of one long scroll.",
+            "Pictures for checks never show real data: the sample Settings picture shows a made-up iPhone."
+        ], fixed: [
+            "Raycast: two of Raycast's own links were wrong and are corrected. AI Chat is now raycast://extensions/raycast/ai/ai-chat and Search Quicklinks is now raycast://extensions/raycast/quicklinks/search-quicklinks.",
+            "The other built-in Raycast links could not be checked from this Mac. If one does not work, use \"Copy Deeplink\" in Raycast and paste it."
+        ]),
         Release(id: "0.3", date: "16 Nov 2026", new: [
             "Deck Mate on the iPhone: a new iPhone app, on TestFlight. It shows the same 15 keys as the box, in the same places and with the same pictures.",
             "The iPhone follows the profile and page the Mac shows. When the app in front on the Mac changes and the profile changes with it, the iPhone changes too.",

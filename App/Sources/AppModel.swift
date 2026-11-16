@@ -16,6 +16,20 @@ final class AppModel: ObservableObject {
     /// What the last take-over from Elgato left out, in plain words.
     @Published private(set) var importNotes: [String] = []
     @Published private(set) var importedKeys: Int?
+    /// The last time a key on the box was pressed (for "First time with the box").
+    @Published private(set) var lastBoxPress: Date?
+    /// The setup as it was before each of the last changes (Undo), and the ones taken back (Redo).
+    @Published private(set) var undoStack: [Deck] = []
+    @Published private(set) var redoStack: [Deck] = []
+    /// A key copied in "Set up keys" (Copy), ready to paste.
+    @Published var copiedKey: DeckKey?
+
+    /// Every press, wherever it came from (the iPhone lights the key up).
+    let pressedEvents = PassthroughSubject<Int, Never>()
+    /// What a press did on the Mac, in a few words; false = it could not be done.
+    let ranEvents = PassthroughSubject<(String, Bool), Never>()
+    /// Copy, paste, undo and redo from the Edit keys go to the window in front.
+    let edit = EditCommands()
 
     let store: Store
     let device = DeckDevice()
@@ -25,7 +39,7 @@ final class AppModel: ObservableObject {
     /// A click on screen did something on the Mac and the keys are set to hide after that.
     var onScreenKeyActed: (() -> Void)?
 
-    private var frontApp: String?
+    private(set) var frontApp: String?
     private var shown: [DeckKey?] = []
     private var saveTimer: Timer?
     private var statusTimer: Timer?
@@ -111,6 +125,12 @@ final class AppModel: ObservableObject {
     }
 
     /// Hold one profile by hand, or (nil) let the profile follow the app in front again.
+    /// A swipe on the iPhone, or an arrow key on the keys on screen: the next (+1) or previous (-1) page.
+    func stepPage(_ step: Int) {
+        guard let position else { return }
+        move(to: Navigator.step(step, at: position, in: deck))
+    }
+
     func pin(_ id: UUID?) {
         pinned = id
         UserDefaults.standard.set(id?.uuidString, forKey: AppModel.pinnedKey)
@@ -124,12 +144,56 @@ final class AppModel: ObservableObject {
     func press(_ index: Int) -> Navigator.Outcome? {
         guard let position else { return nil }
         let outcome = Navigator.press(index, at: position, in: deck)
+        pressedEvents.send(index)
+        tell(outcome.run)
         move(to: outcome.position)
         ActionRunner.run(outcome.run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
         }
         return outcome
+    }
+
+    /// Says what a press did, or why it could not be done.
+    private func tell(_ run: [DeckAction]) {
+        guard !run.isEmpty, let profile else { return }
+        for action in run {
+            if let why = KeyCheck.problem(DeckKey(action: action), in: profile, deck: deck, world: KeyWorldOnMac.world) {
+                ranEvents.send((why, false))
+                return
+            }
+        }
+        if run.contains(where: ActionRunner.needsKeys), !ActionRunner.mayPressKeys {
+            ranEvents.send(("The Mac has not allowed key presses yet", false))
+            return
+        }
+        if let words = ActionWords.done(run, appName: { KeyArt.appName($0) }) { ranEvents.send((words, true)) }
+    }
+
+    /// The broken keys of a page, with the reason.
+    func problems(on page: DeckPage?, of profile: DeckProfile?) -> [Int: String] {
+        guard let page, let profile else { return [:] }
+        var found: [Int: String] = [:]
+        for (slot, key) in page.keys {
+            if let why = KeyCheck.problem(key, in: profile, deck: deck, world: KeyWorldOnMac.world) { found[slot] = why }
+        }
+        return found
+    }
+
+    /// A key pressed on the keyboard while the keys on screen hold it. `release` first gives the
+    /// keyboard back to the app in front, so a shortcut or typed text lands there.
+    func pressFromKeyboard(_ index: Int, release: @escaping () -> Void) {
+        guard let position else { return }
+        let outcome = Navigator.press(index, at: position, in: deck)
+        pressed.insert(index)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
+        guard !outcome.run.isEmpty else { press(index); return }
+        release()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            guard let self else { return }
+            self.press(index)
+            if ScreenDeckRules.hides(after: outcome, setting: self.deck.screenHidesAfterKey) { self.onScreenKeyActed?() }
+        }
     }
 
     /// A click on screen: the key looks pressed for a moment, then acts. With "hide after a key is
@@ -151,6 +215,7 @@ final class AppModel: ObservableObject {
 
     private func boxKey(_ index: Int, _ isDown: Bool) {
         if isDown {
+            lastBoxPress = Date()
             pressed.insert(index)
             press(index)
         } else {
@@ -208,7 +273,30 @@ final class AppModel: ObservableObject {
         var copy = deck
         edit(&copy)
         guard copy != deck else { return }
+        undoStack.append(deck)
+        if undoStack.count > 30 { undoStack.removeFirst() }
+        redoStack = []
         deck = copy
+        settle()
+    }
+
+    /// Takes the last change back.
+    func undo() {
+        guard let last = undoStack.popLast() else { return }
+        redoStack.append(deck)
+        deck = last
+        settle()
+    }
+
+    /// Does the change that was taken back again.
+    func redo() {
+        guard let next = redoStack.popLast() else { return }
+        undoStack.append(deck)
+        deck = next
+        settle()
+    }
+
+    private func settle() {
         if let pinned, deck.profile(pinned) == nil { pin(nil) }
         let fixed = Navigator.repair(position, in: deck)
         if fixed != position { position = fixed }
@@ -288,7 +376,7 @@ enum Sample {
             5: key("Clipboard", DeckAction(type: .raycast, target: RaycastLink.builtIn[0].link)),
             6: key("Left half", DeckAction(type: .raycast, target: "raycast://extensions/raycast/window-management/left-half", quiet: true)),
             7: key("Right half", DeckAction(type: .raycast, target: "raycast://extensions/raycast/window-management/right-half", quiet: true)),
-            8: key("AI Chat", DeckAction(type: .raycast, target: "raycast://extensions/raycast/raycast-ai/ai-chat")),
+            8: key("AI Chat", DeckAction(type: .raycast, target: "raycast://extensions/raycast/ai/ai-chat")),
             9: key("Copy", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 8, command: true, keyName: "C"))),
             10: key("Greeting", DeckAction(type: .text, target: "Kind regards")),
             11: key("Play", DeckAction(type: .media, target: MediaKey.playPause.rawValue)),
@@ -307,4 +395,21 @@ enum Sample {
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]
         return Deck(profiles: [main, writing], defaultProfile: main.id)
     }
+}
+
+/// Copy, paste, undo and redo, as the window in front wants them (set by "Set up keys").
+final class EditCommands {
+    var copy: (() -> Void)?
+    var paste: (() -> Void)?
+}
+
+/// What this Mac has, for checking keys.
+enum KeyWorldOnMac {
+    static let world = KeyWorld(
+        appExists: { target in
+            guard let url = KeyArt.appURL(target) else { return false }
+            return FileManager.default.fileExists(atPath: url.path)
+        },
+        fileExists: { FileManager.default.fileExists(atPath: $0) },
+        raycastExtension: { owner, name in RaycastIcons.installed(owner: owner, extensionName: name) })
 }

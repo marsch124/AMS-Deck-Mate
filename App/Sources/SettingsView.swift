@@ -24,6 +24,10 @@ struct SettingsView: View {
     @State private var picked: Tab?
     @State private var openAtLogin = SMAppService.mainApp.status == .enabled
     @State private var brightness = 70.0
+    @State private var pickedPart: Part?
+    var startPart: Part = .box
+    private var part: Part { pickedPart ?? startPart }
+    @State private var checked: [String]?
     @Environment(\.colorScheme) private var scheme
 
     private var tab: Tab { picked ?? startTab }
@@ -79,7 +83,7 @@ struct SettingsView: View {
             }
         }
         .padding(14)
-        .frame(width: 470, height: 600)
+        .frame(width: 660, height: 600)
         .onAppear {
             brightness = Double(model.deck.brightness)
             model.refreshStatus()
@@ -128,8 +132,52 @@ struct SettingsView: View {
         }
     }
 
+    enum Part: String, CaseIterable, Identifiable {
+        case box = "The box", firstTime = "First time with the box", screen = "Keys on screen", phone = "iPhone",
+             profiles = "Profiles", check = "Check keys", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
+        var id: String { rawValue }
+        var colour: String {
+            switch self {
+            case .box, .firstTime: return "box"
+            case .screen, .kept: return "screen"
+            case .phone: return "raycast"
+            case .profiles: return "profiles"
+            case .check, .elgato: return "keys"
+            case .mac: return "settings"
+            }
+        }
+    }
+
+    /// A list of the parts on the left, one part at a time on the right.
     private var settingsPage: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Part.allCases) { item in
+                    Button { pickedPart = item } label: {
+                        Text(item.rawValue)
+                            .font(.callout.weight(item == part ? .semibold : .regular))
+                            .foregroundStyle(item == part ? Color.white : Palette.part(item.colour, scheme))
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(item == part ? Palette.fill(item.colour) : Color.clear,
+                                        in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("part-\(item.rawValue)")
+                }
+            }
+            .frame(width: 175)
+            partView
+        }
+    }
+
+    @ViewBuilder
+    private var partView: some View {
+        switch part {
+        case .box:
             card("The box", "box") {
                 Text(boxLine).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("boxLine")
                 HStack {
@@ -155,6 +203,9 @@ struct SettingsView: View {
                 }
                 note("Not yet tried on the real box: this version was built while the box was away. The keys on screen work without it.")
             }
+        case .firstTime:
+            card("First time with the box", "box") { firstTimeBody }
+        case .screen:
             card("Keys on screen", "screen") {
                 HStack(spacing: 6) {
                     Text("Show them")
@@ -172,8 +223,9 @@ struct SettingsView: View {
                     set: { on in model.change { $0.screenHidesAfterKey = on } }))
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("hideAfterKey")
-                note("Control-Option-D shows or hides them. A folder, Back or a page key never hides them: you are not done yet.")
+                note("Control-Option-D shows or hides them. Right after, 1–5, Q–T and A–G press the keys, the arrows or Tab change the page and Escape hides them. A folder, Back or a page key never hides them: you are not done yet.")
             }
+        case .phone:
             card("iPhone", "raycast") {
                 Toggle("Let an iPhone use these keys", isOn: Binding(get: { phone.isOn }, set: { phone.setOn($0) }))
                     .toggleStyle(.checkbox)
@@ -193,6 +245,7 @@ struct SettingsView: View {
                 }
                 note("Open Deck Mate on the iPhone close to this Mac; on the same Wi-Fi it finds the Mac by itself. The first time, this Mac asks whether to allow it.")
             }
+        case .profiles:
             card("Profiles", "profiles") {
                 Toggle("Change profile with the app in front", isOn: Binding(
                     get: { model.deck.autoSwitch },
@@ -203,6 +256,9 @@ struct SettingsView: View {
                      ? "Each profile lists its apps in “Set up keys”. Any other app shows the default profile."
                      : "A profile is held by hand right now. Choose Automatic in the menu to let it follow the app again.")
             }
+        case .check:
+            card("Check keys", "keys") { checkBody }
+        case .mac:
             card("This Mac", "settings") {
                 Toggle("Open at login", isOn: Binding(
                     get: { openAtLogin },
@@ -226,6 +282,7 @@ struct SettingsView: View {
                 }
                 note("The Mac asks once, under Privacy & Security, Accessibility. Opening apps, links and Raycast needs no permission.")
             }
+        case .elgato:
             card("Keys from Elgato", "keys") {
                 if let count = model.importedKeys {
                     Text("\(count) keys were brought over.").accessibilityIdentifier("importedCount")
@@ -239,6 +296,7 @@ struct SettingsView: View {
                 }
                 note("Reads the keys of the 15-key box from Elgato’s app. Elgato’s files are only read, never changed.")
             }
+        case .kept:
             card("Where your setup is kept", "screen") {
                 note("One file on this Mac, with the last \(Store.keptCopies) earlier states beside it as safety copies. Nothing leaves the Mac.")
                 HStack {
@@ -247,6 +305,100 @@ struct SettingsView: View {
                     Spacer()
                 }
             }
+        }
+    }
+
+    // MARK: First time with the box
+
+    private var boxAnswer: String {
+        switch model.box {
+        case .absent:
+            return model.elgatoRunning ? "No box seen yet — and Elgato’s app is still running. Quit it first (step 1)."
+                                       : "No box seen yet. Plug it in (step 2)."
+        case let .connected(name, _):
+            if let last = model.lastBoxPress {
+                return "The box answered (\(name)) and its keys arrive: last press at \(last.formatted(date: .omitted, time: .shortened)). All is well."
+            }
+            return "The box answered (\(name)). Now press any key on it: this line then says the keys arrive."
+        case let .blocked(why):
+            return "The Mac stopped the app from using the box: \(why) Allow it (step 3), then plug the box out and in."
+        case let .unsupported(name):
+            return "\(name) is plugged in, but it is the first model from 2017, which this app does not drive."
+        }
+    }
+
+    private var firstTimeBody: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            step(1, "Quit Elgato’s app: only one app can hold the box.", done: !model.elgatoRunning) {
+                if model.elgatoRunning {
+                    Button("Quit Elgato’s app") { model.quitElgato() }
+                        .buttonStyle(MainButton(part: "box"))
+                        .accessibilityIdentifier("firstQuitElgato")
+                }
+            }
+            step(2, "Plug the box into this Mac.", done: model.box != .absent) { EmptyView() }
+            step(3, "If the Mac asks about “Input Monitoring”, allow AMS Deck Mate there (Privacy & Security).",
+                 done: { if case .connected = model.box { return true } else { return false } }()) {
+                Button("Open Privacy & Security") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .buttonStyle(PlainButton())
+            }
+            step(4, "Press a key on the box.", done: model.lastBoxPress != nil) { EmptyView() }
+            Text("What the box says").font(.subheadline.weight(.semibold)).foregroundStyle(Palette.part("box", scheme))
+                .padding(.top, 4)
+            Text(boxAnswer).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("boxAnswer")
+            HStack {
+                Button("Show the box diary") { NSWorkspace.shared.activateFileViewerSelecting([BoxLog.url]) }
+                    .buttonStyle(PlainButton())
+                    .accessibilityIdentifier("showBoxLog")
+                Spacer()
+            }
+            note("The diary notes every step with the box. If something does not work, it shows what happened.")
+        }
+    }
+
+    private func step<Extra: View>(_ number: Int, _ text: String, done: Bool, @ViewBuilder extra: () -> Extra) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 7) {
+            Text(done ? "✓" : "\(number)")
+                .font(.callout.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 20, height: 20)
+                .background(done ? Palette.fill("settings") : Palette.fill("box"), in: Circle())
+            VStack(alignment: .leading, spacing: 4) {
+                Text(text).fixedSize(horizontal: false, vertical: true)
+                extra()
+            }
+        }
+    }
+
+    // MARK: Check keys
+
+    private var checkBody: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Button("Check all keys") { checked = KeyCheck.all(in: model.deck, world: KeyWorldOnMac.world) }
+                    .buttonStyle(MainButton(part: "keys"))
+                    .accessibilityIdentifier("checkKeys")
+                Spacer()
+            }
+            if let checked {
+                if checked.isEmpty {
+                    Text("Every key can do its work.").accessibilityIdentifier("checkResult")
+                } else {
+                    Text(checked.count == 1 ? "1 key cannot work:" : "\(checked.count) keys cannot work:")
+                        .accessibilityIdentifier("checkResult")
+                    ForEach(checked, id: \.self) { line in
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                            Circle().fill(Color(red: 0.86, green: 0.16, blue: 0.14)).frame(width: 6, height: 6)
+                            Text(line).font(.callout).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+            note("A key whose app, file, folder, profile or Raycast extension is gone gets a red corner on screen and in “Set up keys”.")
         }
     }
 
