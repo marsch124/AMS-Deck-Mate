@@ -38,7 +38,16 @@ final class LinkClient: ObservableObject {
     @Published private(set) var litFavourites: Set<Int> = []
 
     /// True with a Mac that knows the new parts.
-    var newMac: Bool { macVersion >= PhoneLink.currentVersion }
+    var newMac: Bool { macVersion >= 3 }
+    /// The navigation picture: every page group with its pages (from a Mac at 0.6 or later).
+    @Published private(set) var map: [PhoneLink.MapGroup] = []
+
+    /// A page of the navigation picture was tapped. With "My own keys" its page group is remembered.
+    func go(group: String, page: String) {
+        if ownOn { ownProfile = group }
+        guard case .connected = state, macVersion >= 4, !isSample else { return }
+        send(.go(profile: group, page: page))
+    }
     var hasFavourites: Bool { favourites.values.contains { $0.picture != nil } }
 
     /// "My own keys": this device moves through one page group on its own place.
@@ -94,6 +103,7 @@ final class LinkClient: ObservableObject {
                 client.macVersion = PhoneLink.currentVersion
                 client.favourites = SampleLink.favourites()
                 client.mac = SampleLink.mac
+                client.map = SampleLink.map()
             }
             client.lookingSince = nil
             if CommandLine.arguments.contains("-looking") {
@@ -219,6 +229,7 @@ final class LinkClient: ObservableObject {
             remembered = talkingTo
             macVersion = version ?? 2
             if !newMac { favourites = [:]; mac = nil }
+            if macVersion < 4 { map = [] }
             state = .connected(talkingTo)
             if ownOn { sendOwn() }
         case .refused:
@@ -239,7 +250,9 @@ final class LinkClient: ObservableObject {
             favourites = Dictionary(list.map { ($0.index, $0) }, uniquingKeysWith: { $1 })
         case let .mac(now):
             mac = now
-        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music:
+        case let .map(groups):
+            map = groups
+        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go:
             break
         }
     }

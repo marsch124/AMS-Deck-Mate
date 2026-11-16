@@ -40,6 +40,17 @@ final class DeckScreenTests: XCTestCase {
         app.buttons["doneButton"].tap()
     }
 
+    /// The navigation picture (on an iPad held on its side; forced here): every page, the one showing marked.
+    func testNavigationPicture() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-forceMap"]
+        app.launch()
+
+        XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 10), "the navigation picture shows every page")
+        XCTAssertTrue(app.buttons["mapPage-p1"].isSelected, "the page showing now is marked")
+        XCTAssertTrue(app.buttons["mapPage-w1"].exists)
+    }
+
     /// Still looking after 20 seconds: the hotspot hint shows and can be closed.
     func testHotspotHint() {
         let app = XCUIApplication()

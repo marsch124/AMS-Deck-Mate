@@ -13,6 +13,7 @@ enum PhoneGuide {
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings. Since 0.7 the first part is \"Keys\".",
             "Keys (since 0.7, at the top): \"Follow the Mac\" (as before) or \"My own keys\", and then, in the row \"Page group\", you pick a page group. See \"My own keys\" below. With an older Mac this card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the new parts stay hidden.",
+            "Keys (since 0.8): a switch \"Navigation picture\" (on at first). It shows the page groups and pages as small pictures on the left of an iPad held on its side. It needs a Mac at 0.6.",
             "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest, Plum, Rust or Slate. The colours are deep, calm shades and the words turn light on them.",
             "Look, A colour for each page group (under Background): every page group from your Mac is listed with its own choice, \"Same as background\" (at first) or one of the colours. When that group shows, the background takes its colour, so you see at a glance which one is up. It needs a Mac at 0.4 or later, because the list comes from the Mac. Before a Mac is connected the list says so.",
             "Look, Key shape: Rounded (as before), Square or Pillow (very round corners).",
@@ -70,6 +71,14 @@ enum PhoneGuide {
             "The Mac keeps one place for each connected device, for as long as it is connected. After it connects again, the device starts at the first page of its group.",
             "Needs the AMS Deck Mate app at 0.5 on the Mac. With an older Mac, the Keys card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the app follows the Mac as before."
         ]),
+        Section(id: "navmap", title: "The navigation picture", part: "keys", lines: [
+            "On an iPad held on its side (wider than tall), the keys sit on the right and, on the left, a picture shows every page group with every one of its pages and folders as a small picture of its 15 keys, with the page's name under it.",
+            "The page showing now has a coloured frame, and its page group's name is highlighted. The list scrolls when it is long.",
+            "Tap a small page and the keys go there. When the iPad follows the Mac, the Mac goes there too and that page group is locked until you choose \"Automatic\" in the top line. With \"My own keys\", only the iPad's own place moves, and the page group you picked is remembered.",
+            "An iPad held upright and the iPhone show no picture, because there is no room.",
+            "In Settings, the switch \"Navigation picture\" in the Keys card (on at first) turns it off.",
+            "Needs the AMS Deck Mate app at 0.6 on the Mac. With an older Mac the picture stays hidden. Not yet tried on the real iPad."
+        ]),
         Section(id: "longpress", title: "Long press", part: "keys", lines: [
             "A key with a small white dot in its top right corner has a second action. Hold the key for half a second and the second action runs. You feel a stronger buzz.",
             "A long press on a key without a dot does the usual thing, as if you had tapped.",
@@ -112,6 +121,19 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.8", date: "16 Nov 2026", new: [
+            "Navigation picture on the iPad. When the iPad is held on its side (wider than tall), the keys now sit on the right and, on the left, a picture shows everything you have set up: every page group, with every one of its pages and folders as a small picture of its 15 keys and the page's name under it.",
+            "The page showing now has a coloured frame, and the name of its page group is highlighted. When the list is long, it scrolls.",
+            "It is live. Tap a small page and the keys go there. When this iPad follows the Mac, the Mac goes there too and that page group is locked, just as if you had picked it in the top-line menu. \"Automatic\" in that menu lets it follow the app in front again.",
+            "With \"My own keys\", only this iPad's own place moves, and the page group you picked is remembered.",
+            "An iPad held upright and the iPhone look and work as before, because there is no room on the left.",
+            "In Settings, the Keys card has a new switch \"Navigation picture\" (on at first), with the note that it shows on an iPad held on its side.",
+            "The Mac draws the small pictures and sends them when your setup changes. This needs the AMS Deck Mate app at 0.6 on the Mac (now 0.6, build 8).",
+            "Not yet tried: the navigation picture on the real iPad."
+        ], changed: [
+            "With an older Mac, the picture stays hidden and everything else works as before.",
+            "How it works has a new part, \"The navigation picture\", and Settings has the new line."
+        ], fixed: []),
         Release(id: "0.7", date: "16 Nov 2026", new: [
             "My own keys. In Settings there is a new card \"Keys\" at the top. \"Follow the Mac\" is as before: it shows the page group and page the Mac shows. \"My own keys\": pick a page group, and this iPhone or iPad then moves through that group on its own: pages, folders and Back, at its own place.",
             "With own keys, the Mac's keys on screen and the box stay where they are, and the Mac still does what the tapped key says. Swipe up or down, or the menu in the top line, changes your own page group, and it is remembered on the device. There is no lock and no \"Automatic\" then. If the group is gone, the default group shows. Keys pressed elsewhere do not light up here.",

@@ -155,7 +155,8 @@ enum Guide {
             "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs no permission.",
             "The Mac looks at its battery and volume every 5 seconds, but only while such a device is connected.",
             "Older versions. These new parts need the Mac at 0.5 and the iPhone or iPad app at 0.7. An iPhone or iPad at 0.7 with an older Mac works as before: its Settings say \"Needs AMS Deck Mate 0.5 on the Mac\" in the Keys card, and the new parts stay hidden. A Mac at 0.5 with an older iPhone app works as before, and the white dot still shows on the key pictures.",
-            "Not yet tried: long press on the real box, long press on the real iPhone and iPad, and play or pause from the strip."
+            "Not yet tried: long press on the real box, long press on the real iPhone and iPad, and play or pause from the strip.",
+            "New in 0.6 (the Mac at 0.6 and the iPad app at 0.8): on an iPad held on its side, the keys sit on the right and a navigation picture on the left shows every page group with every page and folder as a small picture of its 15 keys. Tap one and the keys go there. When the iPad follows the Mac, the Mac goes there too and that page group is locked until you choose \"Automatic\". With own keys only the iPad's own place moves. A switch \"Navigation picture\" in the Keys card in Settings turns it off. The Mac draws the pictures. With an older Mac it stays hidden."
         ]),
         Section(id: "iphonecard", title: "The iPhone card in Settings", part: "settings", lines: [
             "In the Mac's Settings there is a card \"iPhone\".",
@@ -181,6 +182,20 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.6", date: "16 Nov 2026", new: [
+            "Navigation picture on the iPad. When an iPad is held on its side (wider than tall), the key screen now has the keys on the right and, on the left, a picture of everything you have set up: every page group, with every one of its pages and folders as a small picture of its 15 keys and the page's name under it.",
+            "The page showing now has a coloured frame, and the name of its page group is highlighted. When the list is long, it scrolls.",
+            "It is live. Tap a small page and the keys go there. When the iPad follows the Mac, the Mac goes there too, and that page group is locked, just as if you had picked it in the top-line menu. \"Automatic\" in that menu lets it follow the app in front again.",
+            "With \"My own keys\", only the iPad's own place moves, and the page group you picked is remembered.",
+            "An iPad held upright and the iPhone look and work as before, because there is no room on the left.",
+            "In Settings on the iPhone and iPad, the Keys card has a new switch \"Navigation picture\" (on at first), with the note that it shows on an iPad held on its side.",
+            "The Mac draws the small pictures and sends them to the iPad whenever your setup changes.",
+            "Version rule: the navigation picture needs the Mac at 0.6 and the iPhone and iPad app at 0.8. With an older Mac app the picture stays hidden and everything else works as before.",
+            "Not yet tried: the navigation picture on the real iPad."
+        ], changed: [
+            "The iPhone and iPad app is now 0.8 (build 11).",
+            "How it works has a new line in the part about the iPhone and iPad."
+        ], fixed: []),
         Release(id: "0.5", date: "16 Nov 2026", new: [
             "Long press: every key can have a second action that runs when you hold the key. In Set up keys, under \"What it does\", there is a new picker \"Long press\": Nothing, or anything a key can do except \"Folder of keys\", filled in like the normal action.",
             "A key with a long-press action shows a small white dot in its top right corner: on the box, on the keys on screen and on the iPhone and iPad.",

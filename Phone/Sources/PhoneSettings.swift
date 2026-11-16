@@ -37,6 +37,7 @@ struct PhoneSettings: View {
     @AppStorage("showFavourites") private var showFavourites = true
     @AppStorage("showMusic") private var showMusic = true
     @AppStorage("showGlance") private var showGlance = true
+    @AppStorage("showMap") private var showMap = true
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -131,6 +132,8 @@ struct PhoneSettings: View {
                 note("What is playing on the Mac (Spotify or Music), with play, next and volume, above the keys.")
                 Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
                 note("The Mac’s battery and the app in front, in the top line.")
+                Toggle("Navigation picture", isOn: $showMap).accessibilityIdentifier("showMap")
+                note("On an iPad held on its side: every page group and page as a small picture on the left. Tap one to go there.")
                 note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
                 if link.macName != nil, !link.newMac {
                     Text("Needs AMS Deck Mate 0.5 on the Mac")

@@ -63,6 +63,10 @@ public enum PhoneLink {
         case favourites(keys: [Key])
         /// Mac → iPhone (version 3): the Mac at a glance and what is playing.
         case mac(MacNow)
+        /// Mac → iPhone (version 4): every page group with its pages as small pictures, for the navigation picture.
+        case map(groups: [MapGroup])
+        /// iPhone → Mac (version 4): a page of the navigation picture was tapped: go there.
+        case go(profile: String, page: String)
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -71,13 +75,34 @@ public enum PhoneLink {
             case .hello, .waiting, .welcome, .refused, .keys, .press: return 1
             case .status, .pressed, .ran, .page, .profile: return 2
             case .own, .hold, .favourite, .music, .favourites, .mac: return 3
+            case .map, .go: return 4
             }
         }
     }
 
     /// The version that understands everything above: 2 = status, pressed, ran, page and profile;
     /// 3 = own keys, long press, favourites, the Mac at a glance and the music strip.
-    public static let currentVersion = 3
+    /// 4 = the navigation picture.
+    public static let currentVersion = 4
+
+    /// One page group of the navigation picture.
+    public struct MapGroup: Codable, Equatable, Sendable {
+        public struct Page: Codable, Equatable, Sendable {
+            public var id: String
+            public var name: String
+            /// True for a folder of keys.
+            public var folder: Bool
+            /// The page's 15 keys as one small PNG picture.
+            public var picture: Data?
+            public init(id: String, name: String, folder: Bool, picture: Data?) {
+                self.id = id; self.name = name; self.folder = folder; self.picture = picture
+            }
+        }
+        public var id: String
+        public var name: String
+        public var pages: [Page]
+        public init(id: String, name: String, pages: [Page]) { self.id = id; self.name = name; self.pages = pages }
+    }
     /// How many keys the favourites row has.
     public static let favouriteCount = 5
 
@@ -137,6 +162,8 @@ public enum PhoneLink {
         /// The page showing now among the profile's pages (0 = first); nil inside a folder.
         public var page: Int?
         public var pages: Int
+        /// The page showing now, by its id (from Mac 0.6; also set inside a folder).
+        public var pageID: String?
 
         /// The profile a swipe up (+1) or down (-1) goes to, round the end; nil with fewer than two profiles.
         public func profile(after step: Int) -> String? {
@@ -145,7 +172,8 @@ public enum PhoneLink {
             return profiles[((at + step) % profiles.count + profiles.count) % profiles.count].id
         }
 
-        public init(profiles: [Choice], current: String, held: Bool, page: Int?, pages: Int) {
+        public init(profiles: [Choice], current: String, held: Bool, page: Int?, pages: Int, pageID: String? = nil) {
+            self.pageID = pageID
             self.profiles = profiles
             self.current = current
             self.held = held

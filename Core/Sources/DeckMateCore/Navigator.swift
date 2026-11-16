@@ -61,6 +61,19 @@ public enum Navigator {
         return outcome
     }
 
+    /// A page of the navigation picture was tapped: that page of that page group. An unknown page
+    /// group or page changes nothing (nil).
+    public static func go(profile: String, page: String, in deck: Deck) -> DeckPosition? {
+        guard let group = UUID(uuidString: profile).flatMap({ deck.profile($0) }),
+              let target = UUID(uuidString: page).flatMap({ group.page($0) }) else { return nil }
+        // A folder is entered from the page it opens from, so Back leads there.
+        var trail: [UUID] = []
+        var at = target.parent
+        var steps = 0
+        while let id = at, let parent = group.page(id), steps < 50 { trail.insert(parent.id, at: 0); at = parent.parent; steps += 1 }
+        return DeckPosition(profile: group.id, page: target.id, trail: trail)
+    }
+
     /// Half a second: from then on a press is a long press.
     public static let longPress = 0.5
 

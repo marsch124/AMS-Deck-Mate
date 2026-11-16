@@ -140,7 +140,46 @@ enum KeyArt {
         return png
     }
 
+    private static var mapPictures: [Int: Data] = [:]
+
+    /// A whole page as one small picture (166 x 98), for the iPad's navigation picture.
+    static func pngForMap(_ page: DeckPage) -> Data? {
+        var hasher = Hasher()
+        for slot in page.keys.keys.sorted() {
+            hasher.combine(slot)
+            hasher.combine(title(page.keys[slot]))
+            hasher.combine(page.keys[slot])
+        }
+        let cacheKey = hasher.finalize()
+        if let hit = mapPictures[cacheKey] { return hit }
+        let side = 30, gap = 4
+        let width = side * 5 + gap * 4, height = side * 3 + gap * 2
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.interpolationQuality = .high
+        for index in 0..<StreamDeckProtocol.keyCount {
+            let box = CGRect(x: (index % 5) * (side + gap), y: height - side - (index / 5) * (side + gap), width: side, height: side)
+            context.saveGState()
+            context.addPath(CGPath(roundedRect: box, cornerWidth: 5, cornerHeight: 5, transform: nil))
+            context.clip()
+            if let picture = image(for: page.keys[index], pixels: 72) {
+                context.draw(picture, in: box)
+            } else {
+                context.setFillColor(NSColor.white.withAlphaComponent(0.08).cgColor)
+                context.fill(box)
+            }
+            context.restoreGState()
+        }
+        guard let picture = context.makeImage() else { return nil }
+        let png = NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
+        if mapPictures.count > 200 { mapPictures.removeAll() }
+        mapPictures[cacheKey] = png
+        return png
+    }
+
     static func forgetAppIcons() {
+        mapPictures.removeAll()
         appIcons.removeAll()
         pictures.removeAll()
         phonePictures.removeAll()

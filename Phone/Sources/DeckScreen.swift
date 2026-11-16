@@ -43,6 +43,13 @@ struct DeckScreen: View {
     @AppStorage("showMusic") private var showMusic = true
     @AppStorage("showGlance") private var showGlance = true
     @AppStorage("ownKeys") private var ownKeys = false
+    @AppStorage("showMap") private var showMap = true
+    @State private var onItsSide = false
+    /// The navigation picture shows on an iPad held on its side ("-forceMap" shows it anywhere, for checks).
+    private var mapShows: Bool {
+        showMap && connected && !link.map.isEmpty
+            && ((isPad && onItsSide) || CommandLine.arguments.contains("-forceMap"))
+    }
     private var favouritesShow: Bool { showFavourites && link.newMac && link.hasFavourites }
     /// The last touch, for the resting clock.
     @State private var lastTouch = Date()
@@ -53,6 +60,9 @@ struct DeckScreen: View {
             (ground.colour ?? PhonePalette.ground).ignoresSafeArea()
             VStack(spacing: 8) {
                 topBar.padding(.leading, inWindow ? 76 : 0)
+                HStack(spacing: 14) {
+                if mapShows { navigationPicture }
+                VStack(spacing: 8) {
                 if keysPlace == .top { keysBlock }
                 GeometryReader { room in
                     // The free room: the message while there is no Mac, else the clock when it fits.
@@ -70,6 +80,8 @@ struct DeckScreen: View {
                 if keysPlace != .top {
                     keysBlock
                     if keysPlace == .middle { Color.clear.layoutPriority(-1) }
+                }
+                }
                 }
             }
             .padding(.horizontal, isPad ? 20 : 12)
@@ -91,8 +103,8 @@ struct DeckScreen: View {
         .preferredColorScheme(ground == .auto ? nil : .dark)
         .background(GeometryReader { box in
             // In a floating window on the iPad its three round buttons sit top left: the top line steps aside.
-            Color.clear.onAppear { windowWidth = box.size.width }
-                .onChange(of: box.size.width) { _, new in windowWidth = new }
+            Color.clear.onAppear { windowWidth = box.size.width; onItsSide = box.size.width > box.size.height }
+                .onChange(of: box.size) { _, new in windowWidth = new.width; onItsSide = new.width > new.height }
         }.ignoresSafeArea())
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .accessibilityElement(children: .contain)
@@ -169,6 +181,60 @@ struct DeckScreen: View {
 
     /// The extra room between the 15 keys and the favourites row.
     static let favouritesGap: CGFloat = 8
+
+    // MARK: Navigation picture
+
+    /// Every page group with its pages as small pictures; the page showing has a frame; a tap goes there.
+    private var navigationPicture: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(link.map, id: \.id) { group in
+                    let here = group.id == link.status?.current
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(group.name)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(here ? PhonePalette.part("profiles") : Color.secondary)
+                            .lineLimit(1)
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 78, maximum: 110), spacing: 8, alignment: .top)],
+                                  alignment: .leading, spacing: 8) {
+                            ForEach(group.pages, id: \.id) { page in
+                                let current = here && page.id == link.status?.pageID
+                                Button { link.go(group: group.id, page: page.id) } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Group {
+                                            if let image = page.picture.flatMap({ UIImage(data: $0) }) {
+                                                Image(uiImage: image).resizable().scaledToFit()
+                                            } else {
+                                                Color.primary.opacity(0.08).aspectRatio(166.0 / 98.0, contentMode: .fit)
+                                            }
+                                        }
+                                        .padding(4)
+                                        .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                                        .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                            .strokeBorder(PhonePalette.part("screen"), lineWidth: current ? 2.5 : 0))
+                                        Text(page.folder ? "▸ " + page.name : page.name)
+                                            .font(.caption2)
+                                            .foregroundStyle(current ? Color.primary : Color.secondary)
+                                            .lineLimit(1)
+                                    }
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("\(group.name), \(page.name)")
+                                .accessibilityAddTraits(current ? .isSelected : [])
+                                .accessibilityIdentifier("mapPage-\(page.id)")
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(10)
+        }
+        .frame(width: 230)
+        .background(PhonePalette.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("navigationPicture")
+    }
 
     // MARK: Music strip
 

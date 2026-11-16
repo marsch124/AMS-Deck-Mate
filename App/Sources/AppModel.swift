@@ -368,6 +368,12 @@ final class AppModel: ObservableObject {
         move(to: DeckPosition(profile: profile, page: page))
     }
 
+    /// Shows a place as it is (a tap on the iPad's navigation picture).
+    func show(_ place: DeckPosition) {
+        guard deck.profile(place.profile)?.page(place.page) != nil else { return }
+        move(to: place)
+    }
+
     private func saveSoon() {
         guard !isSample else { return }
         saveTimer?.invalidate()

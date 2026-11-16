@@ -114,7 +114,7 @@ final class RoundBTests: XCTestCase {
 
     /// New messages only go to a side that said it knows them, and the Mac's version rides in welcome.
     func testNewMessagesNeedVersionThree() throws {
-        XCTAssertEqual(PhoneLink.currentVersion, 3)
+        XCTAssertEqual(PhoneLink.currentVersion, 4)
         XCTAssertEqual(PhoneLink.Message.press(index: 1).since, 1)
         XCTAssertEqual(PhoneLink.Message.page(step: 1).since, 2)
         let new: [PhoneLink.Message] = [.own(profile: "a"), .hold(index: 1), .favourite(index: 0, long: true),
@@ -125,6 +125,20 @@ final class RoundBTests: XCTestCase {
         // A welcome from a Mac before 0.5 has no version.
         let old = try JSONDecoder().decode(PhoneLink.Message.self, from: Data(#"{"welcome":{"token":"t","mac":"Mac"}}"#.utf8))
         XCTAssertEqual(old, .welcome(token: "t", mac: "Mac", version: nil))
+    }
+
+    /// A tap on the navigation picture goes to that page; into a folder, Back leads to its page; unknown = nothing.
+    func testNavigationPictureGoesToAPage() {
+        let deck = deck()
+        let main = deck.profiles[0]
+        let second = Navigator.go(profile: main.id.uuidString, page: main.pages[1].id.uuidString, in: deck)
+        XCTAssertEqual(second, DeckPosition(profile: main.id, page: main.pages[1].id))
+        let folder = Navigator.go(profile: main.id.uuidString, page: main.pages[2].id.uuidString, in: deck)!
+        XCTAssertEqual(Navigator.press(0, at: folder, in: deck).position.page, main.pages[0].id, "Back leads to the folder's page")
+        XCTAssertNil(Navigator.go(profile: deck.profiles[1].id.uuidString, page: main.pages[1].id.uuidString, in: deck))
+        XCTAssertNil(Navigator.go(profile: "gone", page: "gone", in: deck))
+        XCTAssertEqual(PhoneLink.Message.go(profile: "a", page: "b").since, 4)
+        XCTAssertEqual(PhoneLink.Message.map(groups: []).since, 4)
     }
 
     /// The top line: battery and the app in front; the volume steps by 6 and stays within 0–100.

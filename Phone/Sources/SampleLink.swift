@@ -5,7 +5,30 @@ import DeckMateCore
 enum SampleLink {
     static let place = "Default · Page 1"
     static let status = PhoneLink.Status(profiles: [.init(id: "1", name: "Default"), .init(id: "2", name: "Writing")],
-                                         current: "1", held: CommandLine.arguments.contains("-locked"), page: 0, pages: 3)
+                                         current: "1", held: CommandLine.arguments.contains("-locked"), page: 0, pages: 3,
+                                         pageID: "p1")
+
+    /// Two page groups with five pages, for the navigation picture.
+    static func map() -> [PhoneLink.MapGroup] {
+        func page(_ id: String, _ name: String, _ filled: Int, folder: Bool = false) -> PhoneLink.MapGroup.Page {
+            .init(id: id, name: name, folder: folder, picture: mapPicture(filled))
+        }
+        return [PhoneLink.MapGroup(id: "1", name: "Default", pages: [page("p1", "Page 1", 12), page("p2", "Page 2", 4),
+                                                                      page("p3", "Page 3", 7), page("f1", "Sound", 5, folder: true)]),
+                PhoneLink.MapGroup(id: "2", name: "Writing", pages: [page("w1", "Page 1", 2)])]
+    }
+
+    private static func mapPicture(_ filled: Int) -> Data? {
+        let colours = [blue, blue, raycast, teal, green, grey]
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: 166, height: 98), format: format).image { _ in
+            for index in 0..<15 {
+                (index < filled ? colours[index % colours.count] : UIColor(white: 1, alpha: 0.08)).setFill()
+                UIBezierPath(roundedRect: CGRect(x: (index % 5) * 34, y: (index / 5) * 34, width: 30, height: 30), cornerRadius: 5).fill()
+            }
+        }.pngData()
+    }
 
     static let mac = PhoneLink.MacNow(battery: 82, charging: false, app: "Safari", song: "Morning Light",
                                       artist: "The Sample Band", playing: true, volume: 44)

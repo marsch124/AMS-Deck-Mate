@@ -21,6 +21,9 @@ final class PhoneServer: ObservableObject {
     private var events: [AnyCancellable] = []
     private var restart: DispatchWorkItem?
     private let watch2 = MacWatch()
+    /// The navigation picture as last drawn, and the setup it was drawn from.
+    private var mapFrame: Data?
+    private var mapDeck: Deck?
 
     private static let allowedKey = "allowedPhones"
     private static let offKey = "phoneOff"
@@ -40,6 +43,7 @@ final class PhoneServer: ObservableObject {
         var own: DeckPosition?
         var lastFavourites: Data?
         var lastMac: Data?
+        var lastMap: Data?
         init(_ connection: NWConnection) { self.connection = connection }
     }
 
@@ -239,6 +243,16 @@ final class PhoneServer: ObservableObject {
             guard phone.trusted else { return }
             phone.own = Navigator.own(profile: profile, was: phone.own, in: model.deck)
             sendKeys(to: phone)
+        case let .go(profile, page):
+            guard phone.trusted, let place = Navigator.go(profile: profile, page: page, in: model.deck) else { return }
+            if phone.own != nil {
+                phone.own = place
+                sendKeys(to: phone)
+            } else {
+                // Like picking the page group by hand: it is locked, then the page shows.
+                if model.position?.profile != place.profile || model.pinned == nil { model.pin(place.profile) }
+                model.show(place)
+            }
         case let .music(command):
             guard phone.trusted else { return }
             switch command {
@@ -348,11 +362,28 @@ final class PhoneServer: ObservableObject {
                 phone.connection.send(content: frame, completion: .contentProcessed { _ in })
             }
         }
+        if phone.version >= 4 {
+            if mapDeck != model.deck || mapFrame == nil {
+                mapDeck = model.deck
+                mapFrame = PhoneLink.frame(.map(groups: model.deck.profiles.map { group in
+                    PhoneLink.MapGroup(id: group.id.uuidString, name: group.name.isEmpty ? "No name" : group.name,
+                                       pages: group.pages.map {
+                        .init(id: $0.id.uuidString, name: $0.name.isEmpty ? "Page" : $0.name, folder: $0.parent != nil,
+                              picture: KeyArt.pngForMap($0))
+                    })
+                }))
+            }
+            if let mapFrame, mapFrame != phone.lastMap {
+                phone.lastMap = mapFrame
+                phone.connection.send(content: mapFrame, completion: .contentProcessed { _ in })
+            }
+        }
         guard phone.version >= 2, let position = place else { return }
         let numbers = Navigator.pageNumber(at: position, in: model.deck)
         let status = PhoneLink.Status(
             profiles: model.deck.profiles.map { .init(id: $0.id.uuidString, name: $0.name.isEmpty ? "No name" : $0.name) },
-            current: position.profile.uuidString, held: phone.own == nil && model.pinned != nil, page: numbers.page, pages: numbers.pages)
+            current: position.profile.uuidString, held: phone.own == nil && model.pinned != nil, page: numbers.page, pages: numbers.pages,
+            pageID: phone.version >= 4 ? position.page.uuidString : nil)
         let frame = PhoneLink.frame(.status(status))
         guard frame != phone.lastStatus else { return }
         phone.lastStatus = frame

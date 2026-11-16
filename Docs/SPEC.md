@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.5 (build 7), 16 Nov 2026; iPhone and iPad app 0.7 (build 10)
+# AMS Deck Mate, specification, version 0.6 (build 8), 16 Nov 2026; iPhone and iPad app 0.8 (build 11)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -8,6 +8,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Give the 15-key Stream Deck (2019) and MK.2 their keys without Elgato's app.
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
+- Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29).
 - Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music strip, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
@@ -168,7 +169,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 
 ## 14. Tests
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
-- New in 0.5 (round B): `Core` has 36 data tests, 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
+- New in 0.5 (round B): `Core` has 36 data tests (37 since 0.6, see below), 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
+- New in 0.6: one new data test (37 in all) for the rule `Navigator.go`: an unknown page group or page changes nothing. The iPhone app's screen test now also finds the navigation picture by identifier.
 - New in 0.4: one small data test per new rule: the new `PhoneLink` messages (round trip), the broken-key reasons, duplicate page and page group, copy and paste, moving and swapping keys between pages, undo and redo (30 steps), the keyboard places, and the "Page group for <app>" rule (an app belongs to one page group only). The iPhone app has one more screen test that finds the page group menu and page dots by identifier.
 - New in 0.3: `PhoneLink` framing: round trip (encode then decode gives the same message), split (a message arriving in pieces is put together; a half message waits), broken (a length over 4 MB or text that is not a message is refused, not crashed on). And `shownTitle`: own title wins; empty title on an app key gives the app's name; empty title and no app name stays empty; other kinds are unchanged.
 - The iPhone app has one screen test that finds its keys by identifier.
@@ -179,6 +181,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.8 (build 11). Not proven yet: the navigation picture on the real iPad.
 
 **0.5 (Mac, build 7, 16 Nov 2026).** The features of sections 24 to 28, and "All pages" in Set up keys. The iPhone and iPad app is 0.7 (build 10). Not proven yet: long press on the real box, long press on a real iPhone or iPad, play or pause from the strip.
 
@@ -208,7 +212,9 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - `keys(place, keys[index, title, PNG])`: `place` is the position (the line on top of the keys, as the Mac shows it: the group's name, plus " · " and the page's name when the page group has more than one page (e.g. "OmniFocus · Page 2") as shown on the Mac); each key has its place 0 to 14, the title shown (see `shownTitle`) and its picture as PNG, drawn by the Mac (so app keys have the real app icon). The Mac sends `keys` first when the iPhone is allowed, then again whenever the position or the setup changes.
 - `press(index)`: the iPhone tapped a key.
 
-**Version rule (0.5).** `PhoneLink.currentVersion` is 3. The Mac's version rides in `welcome`. The new parts need the Mac at 0.5 and the iPhone and iPad app at 0.7. An iPhone or iPad at 0.7 with an older Mac (which sends no version) works as before: Settings says "Needs AMS Deck Mate 0.5 on the Mac" in the Keys card and the new parts stay hidden. A Mac at 0.5 with an older iPhone app works as before; the white dot is part of the key pictures, so it still shows.
+**Version rule (0.6).** `PhoneLink.currentVersion` is 4 (it was 3 in 0.5). The navigation picture (section 29) needs the Mac at 0.6 and the iPhone and iPad app at 0.8; its new messages go only to a side that announced version 4. With an older Mac the picture stays hidden and everything else works as before.
+
+**Version rule (0.5).** `PhoneLink.currentVersion` was 3. The Mac's version rides in `welcome`. The new parts need the Mac at 0.5 and the iPhone and iPad app at 0.7. An iPhone or iPad at 0.7 with an older Mac (which sends no version) works as before: Settings says "Needs AMS Deck Mate 0.5 on the Mac" in the Keys card and the new parts stay hidden. A Mac at 0.5 with an older iPhone app works as before; the white dot is part of the key pictures, so it still shows.
 
 **New messages (0.5).**
 - iPhone to Mac: `own(profile:)` (use my own keys with this page group; nil means "Follow the Mac"), `hold(index:)` (the key at this place was held for 0.5 s: run its `held` action, or the normal action if it has none), `favourite(index:, long:)` (a favourite 0 to 4 was tapped; `long` true for a hold), `music(command:)` with `playPause`, `next`, `volumeUp`, `volumeDown`.
@@ -229,7 +235,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.7 (10). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.8 (11). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -354,7 +360,21 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
 - Not yet tried: play or pause from the strip.
 
-## Not proven yet (0.5 and 0.7)
+## 29. The navigation picture (Mac 0.6, iPad 0.8)
+- Where: only on an iPad held on its side (wider than tall). The keys sit on the right and the navigation picture on the left. An iPad held upright and the iPhone are unchanged, because there is no room on the left.
+- What it shows: every page group, with every one of its pages and folders, each as a small picture of its 15 keys with the page's name under it. A folder shows its folder mark. The page showing now has a coloured frame and the name of its page group is highlighted. The list scrolls when it is long.
+- Pictures: drawn by the Mac, PNG, 166 x 98 px each, and sent when the setup changes (and when a device that announced version 4 connects).
+- Messages (only to a side that announced version 4): Mac to iPhone `map(groups:)`; each group has id, name and pages; each page has id, name, folder (yes or no) and its PNG picture. iPhone to Mac `go(profile:page:)`.
+- `Status` has a new optional field `pageID`: the page showing now. The iPad uses it to draw the coloured frame and the highlighted name.
+- Tap on a small page: the iPad sends `go(profile:page:)`. The rule `Navigator.go`: an unknown page group or page changes nothing.
+- Follow the Mac: the Mac goes to that page and that page group is locked, as when it is picked in the top-line menu. "Automatic" in that menu lets it follow the app in front again.
+- My own keys (section 26): only the iPad's own place moves, and the picked page group is remembered on the device.
+- Settings, Keys card: new switch "Navigation picture" (setting key `showMap`, default on, stored on that device), with the note that it shows on an iPad held on its side.
+- Older versions: the picture needs the Mac at 0.6 and the iPad app at 0.8. With an older Mac (no `map`) the picture stays hidden and everything else works as before.
+- Not proven yet: on the real iPad.
+
+## Not proven yet (0.5, 0.6, 0.7 and 0.8)
+- The navigation picture on the real iPad.
 - Long press on the real box (away until January 2027).
 - Long press on a real iPhone or iPad.
 - Play or pause from the music strip.
