@@ -42,6 +42,13 @@ final class AppModel: ObservableObject {
     var onScreenKeyActed: (() -> Void)?
 
     private(set) var frontApp: String?
+    /// The apps used last, newest first, for the "Recent app" keys (kept when the Mac restarts).
+    @Published private(set) var recentApps: [String] = [] {
+        didSet {
+            ActionRunner.recentApps = recentApps
+            if !isSample { UserDefaults.standard.set(recentApps, forKey: "recentApps") }
+        }
+    }
     private var shown: [DeckKey?] = []
     private var saveTimer: Timer?
     private var statusTimer: Timer?
@@ -58,6 +65,7 @@ final class AppModel: ObservableObject {
         if let sample {
             deck = sample
             position = Navigator.start(in: sample)
+            recentApps = ["com.apple.Safari", "com.apple.Notes"]
             return
         }
         var firstStart = false
@@ -84,6 +92,8 @@ final class AppModel: ObservableObject {
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         frontApp = front == AppInfo.bundleID ? nil : front
         position = Navigator.start(in: deck, profile: pinned ?? Navigator.profile(forApp: frontApp, in: deck))
+        recentApps = RecentApps.after(UserDefaults.standard.stringArray(forKey: "recentApps") ?? [], front: frontApp,
+                                      skip: AppInfo.bundleID)
 
         watcher = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
@@ -103,7 +113,11 @@ final class AppModel: ObservableObject {
 
     var profile: DeckProfile? { position.flatMap { deck.profile($0.profile) } }
     var page: DeckPage? { position.flatMap { profile?.page($0.page) } }
-    var keys: [Int: DeckKey] { position.map { Navigator.keys(at: $0, in: deck) } ?? [:] }
+    var keys: [Int: DeckKey] { live(position.map { Navigator.keys(at: $0, in: deck) } ?? [:]) }
+
+    /// Keys as they show now: a "Recent app" key turns into the app it stands for.
+    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] { keys.mapValues { $0.resolvingRecent(recentApps) } }
+    func live(_ key: DeckKey?) -> DeckKey? { key?.resolvingRecent(recentApps) }
 
     /// "OmniFocus · Page 2", for the top line of the keys on screen.
     var placeLine: String { placeLine(at: position) }
@@ -120,6 +134,8 @@ final class AppModel: ObservableObject {
         guard id != AppInfo.bundleID else { return }       // our own windows never change the profile
         let before = frontApp
         frontApp = id
+        let recent = RecentApps.after(recentApps, front: id, skip: AppInfo.bundleID)
+        if recent != recentApps { recentApps = recent; refreshBox() }
         guard pinned == nil else { return }
         move(to: Navigator.follow(app: id, previousApp: before, at: position, in: deck))
     }
@@ -161,8 +177,9 @@ final class AppModel: ObservableObject {
     func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false) -> Navigator.Outcome {
         let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long)
                                 : Navigator.press(index, at: position, in: deck, long: long)
-        tell(outcome.run, in: deck.profile(position.profile))
-        ActionRunner.run(outcome.run)
+        let run = outcome.run.map { $0.resolvingRecent(recentApps) }
+        tell(run, in: deck.profile(position.profile))
+        ActionRunner.run(run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
         }
@@ -441,9 +458,9 @@ enum Sample {
             5: key("Clipboard", DeckAction(type: .raycast, target: RaycastLink.builtIn[0].link)),
             6: key("Left half", DeckAction(type: .raycast, target: "raycast://extensions/raycast/window-management/left-half", quiet: true)),
             7: key("Right half", DeckAction(type: .raycast, target: "raycast://extensions/raycast/window-management/right-half", quiet: true)),
-            8: key("AI Chat", DeckAction(type: .raycast, target: "raycast://extensions/raycast/ai/ai-chat")),
+            8: key("Ask AI", DeckAction(type: .askAI)),
             9: key("Copy", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 8, command: true, keyName: "C"))),
-            10: key("Greeting", DeckAction(type: .text, target: "Kind regards")),
+            10: DeckKey(action: DeckAction(type: .recent, target: "1")),
             11: key("Play", DeckAction(type: .media, target: MediaKey.playPause.rawValue)),
             12: key("Sound", DeckAction(type: .folder, target: folder.id.uuidString)),
             13: key("Morning", DeckAction(type: .multi, steps: [DeckAction(type: .app, target: "com.apple.mail"),

@@ -31,8 +31,18 @@ enum ActionRunner {
         }
     }
 
+    /// The apps used last, newest first (the app in front first); kept up to date by AppModel.
+    static var recentApps: [String] = []
+
     static func run(_ action: DeckAction) {
         switch action.type {
+        case .recent:
+            let now = action.resolvingRecent(recentApps)
+            if now.type == .app { run(now) }
+        case .askAI:
+            let copied = NSPasteboard.general.string(forType: .string)
+            guard let url = URL(string: RaycastLink.ask(copied, link: action.target)) else { return }
+            NSWorkspace.shared.open(url)
         case .app:
             guard let url = KeyArt.appURL(action.target) else { return }
             NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())

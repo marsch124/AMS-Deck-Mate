@@ -61,6 +61,17 @@ final class DeckScreenTests: XCTestCase {
     }
 
     /// Still looking after 20 seconds: the hotspot hint shows and can be closed.
+    /// The Mac sleeps: the screen goes black with "Mac asleep"; a tap brings the keys back.
+    func testDarkWhileMacSleeps() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-macAsleep"]
+        app.launch()
+        let dark = app.descendants(matching: .any)["macAsleep"]
+        XCTAssertTrue(dark.waitForExistence(timeout: 5))
+        dark.tap()
+        XCTAssertFalse(dark.waitForExistence(timeout: 1))
+    }
+
     func testHotspotHint() {
         let app = XCUIApplication()
         app.launchArguments = ["-sample", "-looking"]

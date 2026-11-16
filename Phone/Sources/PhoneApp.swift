@@ -6,9 +6,11 @@ import UIKit
 struct DeckMatePhoneApp: App {
     @StateObject private var link = LinkClient.make()
     @AppStorage("stayAwake") private var stayAwake = true
+    @AppStorage("darkWhenMacSleeps") private var darkWhenMacSleeps = true
 
     private func keepAwake() {
-        if case .connected = link.state { UIApplication.shared.isIdleTimerDisabled = stayAwake } else {
+        // While the Mac sleeps (and the screen goes dark with it) the iPhone or iPad may lock itself.
+        if case .connected = link.state { UIApplication.shared.isIdleTimerDisabled = stayAwake && !(darkWhenMacSleeps && link.macAsleep) } else {
             UIApplication.shared.isIdleTimerDisabled = false
         }
     }
@@ -20,6 +22,8 @@ struct DeckMatePhoneApp: App {
                 // Keep the screen awake while the keys are in use, and let it sleep otherwise.
                 .onChange(of: link.state, initial: true) { _, _ in keepAwake() }
                 .onChange(of: stayAwake) { _, _ in keepAwake() }
+                .onChange(of: link.macAsleep) { _, _ in keepAwake() }
+                .onChange(of: darkWhenMacSleeps) { _, _ in keepAwake() }
         }
     }
 }

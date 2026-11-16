@@ -123,3 +123,27 @@ final class TidyTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(PhoneLink.Message.self, from: old), .hello(phone: "P", token: nil, version: nil))
     }
 }
+
+final class ReleaseNineTests: XCTestCase {
+    func testRecentAppsList() {
+        var list: [String] = []
+        for app in ["a", "b", "deckmate", "c", "a", "d", "e"] { list = RecentApps.after(list, front: app, skip: "deckmate") }
+        XCTAssertEqual(list, ["e", "d", "a", "c"])
+        XCTAssertEqual(RecentApps.app(number: 1, in: list), "d")
+        XCTAssertEqual(RecentApps.app(number: 3, in: list), "c")
+        XCTAssertNil(RecentApps.app(number: 1, in: ["only"]))
+        let key = DeckKey(title: "", action: DeckAction(type: .recent, target: "2"))
+        XCTAssertEqual(key.resolvingRecent(list).action, DeckAction(type: .app, target: "a"))
+        XCTAssertEqual(key.resolvingRecent([]).title, "Recent")
+        XCTAssertEqual(key.action.kind, .app)
+    }
+
+    func testAskAILink() {
+        XCTAssertEqual(RaycastLink.ask(nil), RaycastLink.aiChat)
+        XCTAssertEqual(RaycastLink.ask("  "), RaycastLink.aiChat)
+        XCTAssertEqual(RaycastLink.ask("a & b?"), RaycastLink.aiChat + "?fallbackText=a%20%26%20b%3F")
+        let long = RaycastLink.ask(String(repeating: "x", count: 5000))
+        XCTAssertEqual(long.count, RaycastLink.aiChat.count + "?fallbackText=".count + 4000)
+        XCTAssertEqual(PhoneLink.Message.asleep(true).since, 5)
+    }
+}

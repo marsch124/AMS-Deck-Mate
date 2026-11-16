@@ -20,15 +20,17 @@ extension ActionType {
         case .previousPage: return "Previous page"
         case .profile: return "Switch page group"
         case .multi: return "Several things in a row"
+        case .recent: return "Recent app"
+        case .askAI: return "Ask AI (copied text)"
         }
     }
 
-    static let forKeys: [ActionType] = [.app, .link, .raycast, .shortcut, .text, .media, .multi,
+    static let forKeys: [ActionType] = [.app, .recent, .link, .raycast, .askAI, .shortcut, .text, .media, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder.
-    static let forLongPress: [ActionType] = [.none, .app, .link, .raycast, .shortcut, .text, .media, .multi,
+    static let forLongPress: [ActionType] = [.none, .app, .recent, .link, .raycast, .askAI, .shortcut, .text, .media, .multi,
                                              .back, .nextPage, .previousPage, .profile]
-    static let forSteps: [ActionType] = [.app, .link, .raycast, .shortcut, .text, .media]
+    static let forSteps: [ActionType] = [.app, .recent, .link, .raycast, .askAI, .shortcut, .text, .media]
 }
 
 extension KeyCombo {
@@ -115,6 +117,17 @@ struct ActionFields: View {
                 }
                 .labelsHidden()
                 .accessibilityIdentifier("mediaPicker")
+            case .recent:
+                Picker("", selection: $action.target) {
+                    Text("1st – the app used just before").tag("1")
+                    Text("2nd").tag("2")
+                    Text("3rd").tag("3")
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("recentPicker")
+                note("Shows and opens an app used before the one in front. Three keys (1st, 2nd, 3rd) = your last three apps. Deck Mate's own windows never count.")
+            case .askAI:
+                note("Opens Raycast AI Chat with the text you copied last already filled in. Nothing copied = AI Chat just opens.")
             case .folder: folderFields
             case .profile: profileFields
             case .multi: StepsEditor(action: $action, deck: deck, profile: profile)

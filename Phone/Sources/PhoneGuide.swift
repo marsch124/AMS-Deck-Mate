@@ -28,6 +28,7 @@ enum PhoneGuide {
             "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap.",
             "Showing, Page dots (on at first): the small dots under the keys.",
             "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
+            "Showing, Dark while the Mac sleeps (on at first, since 0.9): when the Mac's screen goes to sleep, this screen goes black with a small moon and \"Mac asleep\". See \"Dark while the Mac sleeps\" below. Needs a Mac at 0.7.",
             "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows centred under the heading, and also under the resting clock. It goes away when charging or above 20 %.",
             "Showing, Favourites row (on at first): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
             "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, as one very small line at the very bottom, under the page dots. Needs a Mac at 0.5.",
@@ -49,7 +50,7 @@ enum PhoneGuide {
             "A tap on a key makes the Mac do it. The keys on the Mac's own screen do not hide because of your tap.",
             "A key that opens a folder, goes back or moves to another page changes the keys on the iPhone and on the Mac together.",
             "A key that opens an app shows the real app icon, and its name when it has no words of its own. The Mac draws all the pictures.",
-            "The iPhone keeps its screen on while it is connected. It works upright and sideways.",
+            "The iPhone keeps its screen on while it is connected, except while the Mac sleeps (since 0.9, see \"Dark while the Mac sleeps\"). It works upright and sideways.",
             "On an iPad (since 0.5) the keys are large, low and centred, in all four ways round; since 0.5.1 they grow as far as the screen or window allows. On a newer iPad the app can open as a floating window: make it large once with the window's green button (or drag its corner) and the iPad remembers it. Everything else works the same.",
             "Since 0.4 the 15 keys sit low on the screen, near your thumb, with the place line on top.",
             "Swipe left or right on the keys for the next or previous page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
@@ -95,11 +96,23 @@ enum PhoneGuide {
         ]),
         Section(id: "macnow", title: "The Mac at a glance and the music button", part: "settings", lines: [
             "Mac at a glance: one very small line at the very bottom of the screen, under the page dots, shows a small battery drawing and the Mac's battery in percent, with the app in front, for example \"82 % · Safari\", or \"82 % charging · Safari\" while it charges. A Mac without a battery shows only the app.",
-            "Music button: a small round button at the top right, beside the settings button. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
+            "Music button: a small round button at the top right, beside the settings button. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. The plate has a solid background. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
             "Until the next change of song or pause after the Mac app has started, the plate says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
             "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs none. Play or pause is not yet tried.",
             "The Mac looks at its battery and volume every 5 seconds, but only while such a device is connected.",
             "Both have a switch in Settings (\"Mac at a glance\" and \"Music button\", on at first). Both need the AMS Deck Mate app at 0.5 on the Mac."
+        ]),
+        Section(id: "dark", title: "Dark while the Mac sleeps", part: "settings", lines: [
+            "New in 0.9. When the Mac's screen goes to sleep, or the Mac sleeps, this iPhone or iPad goes black with a small moon drawing and the words \"Mac asleep\".",
+            "While it is dark the screen is allowed to lock itself like normal. It no longer keeps itself awake.",
+            "When the Mac wakes, the screen brightens by itself. One tap on it shows the keys again.",
+            "A switch \"Dark while the Mac sleeps\" in Settings, under Showing (on at first), turns it off. Then nothing changes: the keys stay and the screen stays awake as before.",
+            "It needs the AMS Deck Mate app at 0.7 on the Mac. With an older Mac nothing changes."
+        ]),
+        Section(id: "newkeys", title: "Recent app and Ask AI keys", part: "keys", lines: [
+            "Two new kinds of key, set up on the Mac (0.7), show and work here too. The Mac draws them.",
+            "\"Recent app\" shows the icon and name of an app you used before the one in front on the Mac: 1st, 2nd or 3rd. The picture changes by itself as you switch apps on the Mac. Tap it and the Mac brings that app forward. Until enough apps have been used it shows a clock and \"Recent\".",
+            "\"Ask AI\" opens Raycast AI Chat on the Mac with the text you last copied there already filled in. Not yet tried against the real Raycast."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -121,6 +134,20 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.8.2", date: "16 Nov 2026", new: [], changed: [], fixed: [
+            "The music plate (opened by the small music button) and the connection card (opened by the coloured dot) now have a solid background. Before, they were see-through, so the colours of the keys behind shone through and the buttons were hard to read."
+        ]),
+        Release(id: "0.9", date: "16 Nov 2026", new: [
+            "New switch \"Dark while the Mac sleeps\" in Settings, under Showing (on at first). When the Mac's screen goes to sleep, or the Mac sleeps, the iPhone or iPad goes black with a small moon drawing and the words \"Mac asleep\".",
+            "While it is dark, the screen is allowed to lock itself like normal. It no longer keeps itself awake.",
+            "It brightens by itself when the Mac wakes. One tap shows the keys again.",
+            "The new \"Recent app\" and \"Ask AI\" keys of the Mac (0.7) show and work here too. They are drawn by the Mac. \"Recent app\" shows an app you used before the one in front, and a tap brings it forward on the Mac. \"Ask AI\" opens Raycast AI Chat with the text you last copied on the Mac.",
+            "Not yet tried: the dark screen on the real iPad, and \"Ask AI\" against the real Raycast."
+        ], changed: [
+            "Version rule: the dark screen needs the AMS Deck Mate app at 0.7 on the Mac (now 0.7, build 9). With an older Mac nothing changes.",
+            "With the switch off, the app works as in 0.8.1.",
+            "How it works has two new parts, \"Dark while the Mac sleeps\" and \"Recent app and Ask AI keys\", and Settings has the new line."
+        ], fixed: []),
         Release(id: "0.8.1", date: "16 Nov 2026", new: [], changed: [
             "The top of the key screen is less crowded. Everything below is on the key screen of the iPhone and iPad.",
             "The heading is larger and centred. The place, for example \"OmniFocus · OF Main\", now sits in the middle at the top: bold large title size on the iPad, title size on the iPhone. A tap on it still opens the menu of page groups, and the lock still shows beside it.",

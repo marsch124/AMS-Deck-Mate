@@ -91,8 +91,25 @@ enum Guide {
             "Type text. Music and sound: play or pause, next, previous, volume up, volume down, mute.",
             "Folder of keys opens another page of keys, and Back returns. Next page and Previous page move between pages.",
             "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart.",
+            "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
             "Nothing leaves the key empty.",
             "Since 0.5, every key can have a second action on a long press, and 5 favourite keys stay on every page for the iPhone and iPad."
+        ]),
+        Section(id: "recentapp", title: "Recent app key", part: "keys", lines: [
+            "New in 0.7. In Set up keys, under \"What it does\", choose \"Recent app\" and then 1st, 2nd or 3rd.",
+            "The key shows the icon and name of an app you used before the one in front. 1st is the app you used just before this one, 2nd is the one before that, 3rd the one before that.",
+            "The picture changes by itself as you switch apps, on the box, on the keys on screen and on the iPhone and iPad. Press the key and that app comes forward.",
+            "Deck Mate's own windows never count as an app you used.",
+            "The list is remembered when the Mac restarts.",
+            "Until enough apps have been used, the key shows a clock drawing and the word \"Recent\" in blue, the app colour.",
+            "Put three of them side by side, set to 1st, 2nd and 3rd, and you have your last three apps."
+        ]),
+        Section(id: "askai", title: "Ask AI about copied text", part: "raycast", lines: [
+            "New in 0.7. In Set up keys, under \"What it does\", choose \"Ask AI (copied text)\".",
+            "Press the key and Raycast AI Chat opens with the text you copied last already filled in. The key is Raycast red-orange, with an AI drawing and the title \"Ask AI\".",
+            "If nothing is copied, or you copied a picture, AI Chat just opens.",
+            "Very long text is cut at 4,000 characters.",
+            "Not yet tried against the real Raycast. This is a first version: if the text does not arrive in AI Chat, tell me."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
@@ -140,6 +157,7 @@ enum Guide {
             "The iPhone screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
             "After 20 seconds of \"Looking for your Mac…\" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. It has the button \"Open Settings\" and a close (x) button that hides the hint.",
             "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network.",
+            "New in 0.7 (the Mac at 0.7 and the iPhone or iPad app at 0.9): the Mac tells a connected iPhone or iPad when its screen goes to sleep and when it wakes. With the switch \"Dark while the Mac sleeps\" in the iPhone's or iPad's Settings (on at first), the device goes black with a small moon and \"Mac asleep\", may lock itself, and brightens when the Mac wakes. One tap shows the keys again. The \"Recent app\" and \"Ask AI\" keys show and work on the iPhone and iPad too, drawn by the Mac.",
             "New in 0.5 (the Mac at 0.5 and the iPhone or iPad app at 0.7 together): own keys, the favourites row, the Mac at a glance and the music strip. See the next part."
         ]),
         Section(id: "iphonenew", title: "On your iPhone and iPad, 0.5", part: "settings", lines: [
@@ -182,6 +200,20 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.7", date: "16 Nov 2026", new: [
+            "New key \"Recent app\". In Set up keys, under \"What it does\", choose \"Recent app\" and pick 1st, 2nd or 3rd. It shows the icon and name of an app you used before the one in front: 1st is the app just before, 2nd the one before that, 3rd the one before that.",
+            "The picture changes by itself as you switch apps, on the box, on the keys on screen and on the iPhone and iPad. Press the key and that app comes forward.",
+            "Deck Mate's own windows never count. The list of recent apps is remembered when the Mac restarts.",
+            "Until enough apps have been used, the key shows a clock drawing and the word \"Recent\" in blue, the app colour.",
+            "Three of them side by side, set to 1st, 2nd and 3rd, show your last three apps.",
+            "New key \"Ask AI about copied text\". In Set up keys, under \"What it does\", choose \"Ask AI (copied text)\". It opens Raycast AI Chat with the text you last copied already filled in. The key is Raycast red-orange with an AI drawing and the title \"Ask AI\".",
+            "If nothing is copied, or you copied a picture, AI Chat just opens. Very long text is cut at 4,000 characters.",
+            "Not yet tried against the real Raycast. This is a first version: if the text does not show up in AI Chat, tell me.",
+            "The Mac now tells a connected iPhone or iPad when its screen goes to sleep and when it wakes. The iPad and iPhone app at 0.9 uses this for its new dark screen."
+        ], changed: [
+            "The iPhone and iPad app is now 0.9 (build 13).",
+            "How it works has two new parts, \"Recent app key\" and \"Ask AI about copied text\", and new lines in \"What a key can do\" and in the part about the iPhone and iPad."
+        ], fixed: []),
         Release(id: "0.6", date: "16 Nov 2026", new: [
             "Navigation picture on the iPad. When an iPad is held on its side (wider than tall), the key screen now has the keys on the right and, on the left, a picture of everything you have set up: every page group, with every one of its pages and folders as a small picture of its 15 keys and the page's name under it.",
             "The page showing now has a coloured frame, and the name of its page group is highlighted. When the list is long, it scrolls.",

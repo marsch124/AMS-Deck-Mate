@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.6 (build 8), 16 Nov 2026; iPhone and iPad app 0.8.1 (build 12)
+# AMS Deck Mate, specification, version 0.7 (build 9), 16 Nov 2026; iPhone and iPad app 0.9 (build 13)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29).
+- Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music button, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
@@ -86,6 +87,8 @@ The icon opens a menu:
 | Next / previous page | none | moves between the top pages, wrapping round; clears the trail. With one page: nothing |
 | Switch page group | the group's id | goes to that group's first page. Unknown id: nothing |
 | Several things in a row | (uses `steps`) | steps run in order, a third of a second apart. Steps may nest to depth 4 |
+| Recent app (0.7) | "1", "2" or "3" (1st, 2nd, 3rd) | brings that recent app forward; see 31 |
+| Ask AI (copied text) (0.7) | none | opens Raycast AI Chat with the copied text; see 32 |
 | Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
@@ -170,6 +173,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 ## 14. Tests
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
 - New in 0.5 (round B): `Core` has 36 data tests (37 since 0.6, see below), 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
+- New in 0.7: two new data tests (39 in all): the recent-apps list and "Recent app" key (`RecentApps`, `resolvingRecent`), and the Ask AI link (`RaycastLink.ask`, `fallbackText`, cut at 4,000) plus `asleep` needing version 5. The iPhone app has one more screen test, `testDarkWhileMacSleeps` (launch argument `-macAsleep`). `PhoneLink.currentVersion` is 5; message `asleep(Bool)` goes only to a side at version 5.
 - New in 0.6: one new data test (37 in all) for the rule `Navigator.go`: an unknown page group or page changes nothing. The iPhone app's screen test now also finds the navigation picture by identifier.
 - New in 0.4: one small data test per new rule: the new `PhoneLink` messages (round trip), the broken-key reasons, duplicate page and page group, copy and paste, moving and swapping keys between pages, undo and redo (30 steps), the keyboard places, and the "Page group for <app>" rule (an app belongs to one page group only). The iPhone app has one more screen test that finds the page group menu and page dots by identifier.
 - New in 0.3: `PhoneLink` framing: round trip (encode then decode gives the same message), split (a message arriving in pieces is put together; a half message waits), broken (a length over 4 MB or text that is not a message is refused, not crashed on). And `shownTitle`: own title wins; empty title on an app key gives the app's name; empty title and no app name stays empty; other kinds are unchanged.
@@ -182,7 +186,9 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.8.1 (build 12). Not proven yet: the navigation picture on the real iPad.
+**0.7 (Mac, build 9, 16 Nov 2026).** The keys "Recent app" and "Ask AI (copied text)" (sections 31, 32), and the Mac's sleep and wake news for the iPhone and iPad (section 33). The iPhone and iPad app is 0.9 (build 13). Not proven yet: "Ask AI" against the real Raycast, the dark screen on the real iPad.
+
+**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.8.2 (build 13). Not proven yet: the navigation picture on the real iPad.
 
 **0.5 (Mac, build 7, 16 Nov 2026).** The features of sections 24 to 28, and "All pages" in Set up keys. The iPhone and iPad app is 0.7 (build 10). Not proven yet: long press on the real box, long press on a real iPhone or iPad, play or pause from the strip.
 
@@ -235,7 +241,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.8.1 (12). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.8.2 (13). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -355,7 +361,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Settings, Showing: switch "Mac at a glance" (default on, stored on that device).
 
 ## 28. The music button and plate (Mac 0.5, iPhone and iPad 0.7; button since 0.8.1)
-- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button, shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. It is filled green while something is playing. A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it.
+- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button, shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. It is filled green while something is playing. A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it. Since 0.8.2 the plate has a solid background (the card colour), not see-through glass.
 - Spotify and Apple Music. The Mac listens for the change notices both send when the song or the play state changes, so the plate says "Nothing playing yet" until the next change of song or pause after the Mac app has started.
 - Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
 - Not yet tried: play or pause from the plate.
@@ -376,14 +382,40 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 ## 30. The key screen's top (iPhone and iPad 0.8.1)
 Made after 0.7 on a real iPad, where the top was too crowded. Only the key screen changes; the Mac app is unchanged (0.6, build 8).
 - Heading: the place (for example "OmniFocus · OF Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. A tap opens the menu of page groups (section 21). The lock shows beside it for a page group picked by hand.
-- Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected. Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to MS MBP 2021") and what the colours mean. The big message card in the middle while there is no Mac is unchanged.
+- Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected. Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to MS MBP 2021") and what the colours mean. Since 0.8.2 the card has a solid background (the card colour), not see-through glass. The big message card in the middle while there is no Mac is unchanged.
 - Music: one small round button at the top right, beside the settings button; the plate it opens is in section 28. The Settings switch is called "Music button".
 - The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27). Same switch.
 - The iPad's own low battery warning ("Battery 18 % – plug in") sits centred under the heading.
 - Test: the phone screen test now also opens the music plate and the connection card (found by their identifiers).
 - Proven on the real iPad with 0.7: the Mac's battery, the app in front and the lock showed correctly.
 
-## Not proven yet (0.5, 0.6, 0.7 and 0.8.1)
+## 31. The "Recent app" key (Mac 0.7)
+- Set up keys, "What it does", "Recent app", with a choice 1st, 2nd or 3rd. New action types `recent` (the number "1"–"3" in `target`) and `askAI`; an older Mac reads an unknown type as none.
+- Meaning: 1st is the app used just before the one in front, 2nd the one before that, 3rd the one before that. The key shows that app's icon and name.
+- The list: the apps used last, newest first, kept by watching which app comes to the front. Deck Mate's own windows never count. The list is saved and is remembered when the Mac restarts.
+- The picture changes by itself as the app in front changes, on the box, the keys on screen and the iPhone and iPad (the Mac redraws and sends the pictures).
+- Press: the chosen app comes forward. If the place has no app yet, nothing happens.
+- Until enough apps have been used: a clock drawing and the title "Recent", in blue (the app kind colour). Three keys side by side set to 1st, 2nd and 3rd show the last three apps.
+- Colour: blue (kind app). Broken-key check: never broken.
+
+## 32. The "Ask AI (copied text)" key (Mac 0.7)
+- Set up keys, "What it does", "Ask AI (copied text)". Raycast colour (red-orange), an AI drawing, title "Ask AI".
+- Press: the Mac reads the text last copied (the clipboard) and opens Raycast AI Chat with it filled in. Nothing copied, or a picture copied: AI Chat just opens. Text over 4,000 characters is cut at 4,000.
+- The link used is the corrected AI Chat link of section 7, with the text added to it.
+- Not proven yet: against the real Raycast. If the text does not arrive in AI Chat, this is a first version and needs a second look.
+
+## 33. Dark while the Mac sleeps (Mac 0.7, iPhone and iPad 0.9)
+- The Mac tells a connected iPhone or iPad when its screen goes to sleep and when it wakes (the Mac sleeping counts as the screen going to sleep). New `PhoneLink` message, sent only to a side that announced the new version.
+- Settings, Showing: new switch "Dark while the Mac sleeps" (default on, stored on that device).
+- When the Mac sleeps and the switch is on: the iPhone or iPad shows a black screen with a small moon drawing and the words "Mac asleep", and stops keeping itself awake, so it may lock itself like normal.
+- When the Mac wakes: the screen brightens by itself and the keys come back. One tap during the dark screen shows the keys again.
+- With the switch off, or with an older Mac, nothing changes: the keys stay and "Keep the screen awake while connected" works as before.
+- Needs the Mac at 0.7 or later.
+- Not proven yet: on the real iPad.
+
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1 and 0.9)
+- "Ask AI (copied text)" against the real Raycast.
+- The dark screen on the real iPad.
 - The navigation picture on the real iPad.
 - Long press on the real box (away until January 2027).
 - Long press on a real iPhone or iPad.

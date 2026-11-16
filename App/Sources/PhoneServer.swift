@@ -24,6 +24,8 @@ final class PhoneServer: ObservableObject {
     /// The navigation picture as last drawn, and the setup it was drawn from.
     private var mapFrame: Data?
     private var mapDeck: Deck?
+    private var sleepWatch: [NSObjectProtocol] = []
+    private var macAsleep = false
 
     private static let allowedKey = "allowedPhones"
     private static let offKey = "phoneOff"
@@ -64,9 +66,18 @@ final class PhoneServer: ObservableObject {
     func start() {
         guard isOn, listeners.isEmpty else { return }
         // The keys go out again whenever the deck moves or the setup changes.
-        watch = model.$position.combineLatest(model.$deck, model.$pinned)
+        watch = model.$position.combineLatest(model.$deck, model.$pinned, model.$recentApps)
             .debounce(for: .milliseconds(60), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.sendKeysToAll() }
+        // The Mac's screen sleeping or waking: a v5 iPhone or iPad can go dark with it.
+        let center = NSWorkspace.shared.notificationCenter
+        for (name, asleep) in [(NSWorkspace.screensDidSleepNotification, true), (NSWorkspace.willSleepNotification, true),
+                               (NSWorkspace.screensDidWakeNotification, false), (NSWorkspace.didWakeNotification, false)] {
+            sleepWatch.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.macAsleep = asleep
+                self?.toPhones(since: 5, .asleep(asleep))
+            })
+        }
         events = [
             model.pressedEvents.sink { [weak self] index in
                 // An iPhone with its own keys shows other keys: it lights only its own taps.
@@ -342,7 +353,7 @@ final class PhoneServer: ObservableObject {
 
     private func sendKeys(to phone: Phone) {
         let place = ownPlace(of: phone) ?? model.position
-        let keys = place.map { Navigator.keys(at: $0, in: model.deck) } ?? [:]
+        let keys = model.live(place.map { Navigator.keys(at: $0, in: model.deck) } ?? [:])
         let list = (0..<StreamDeckProtocol.keyCount).map { index in
             PhoneLink.Key(index: index, title: KeyArt.title(keys[index]), picture: KeyArt.pngForPhone(keys[index]))
         }
@@ -353,8 +364,8 @@ final class PhoneServer: ObservableObject {
         }
         if phone.version >= 3 {
             let row = (0..<PhoneLink.favouriteCount).map { index in
-                PhoneLink.Key(index: index, title: KeyArt.title(model.deck.favourites[index]),
-                              picture: KeyArt.pngForPhone(model.deck.favourites[index]))
+                PhoneLink.Key(index: index, title: KeyArt.title(model.live(model.deck.favourites[index])),
+                              picture: KeyArt.pngForPhone(model.live(model.deck.favourites[index])))
             }
             let frame = PhoneLink.frame(.favourites(keys: row))
             if frame != phone.lastFavourites {
@@ -388,6 +399,10 @@ final class PhoneServer: ObservableObject {
         guard frame != phone.lastStatus else { return }
         phone.lastStatus = frame
         phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+    }
+
+    private func toPhones(since version: Int, _ message: PhoneLink.Message) {
+        for phone in phones.values where phone.trusted && phone.version >= version { send(message, to: phone) }
     }
 
     /// Only iPhone apps that know the message get it (the first iPhone app would close the line).

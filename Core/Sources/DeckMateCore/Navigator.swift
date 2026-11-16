@@ -120,7 +120,7 @@ public enum Navigator {
         case .multi:
             guard depth < 4 else { return }
             for step in action.steps { apply(step, to: &outcome, in: deck, depth: depth + 1) }
-        case .app, .link, .raycast, .shortcut, .text, .media:
+        case .app, .link, .raycast, .shortcut, .text, .media, .recent, .askAI:
             outcome.run.append(action)
         }
     }

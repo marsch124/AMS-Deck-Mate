@@ -12,6 +12,8 @@ extension KeyedDecodingContainer {
 /// What a key does.
 public enum ActionType: String, Codable, CaseIterable, Sendable {
     case none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, profile, multi
+    /// recent = an app used before the one in front (target "1"–"3"); askAI = Raycast AI Chat with the copied text.
+    case recent, askAI
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -120,7 +122,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .none: return .empty
         case .app: return .app
         case .link: return .web
-        case .raycast: return .raycast
+        case .raycast, .askAI: return .raycast
+        case .recent: return .app
         case .shortcut: return .shortcut
         case .text: return .text
         case .media: return .media
@@ -135,6 +138,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .none, .app: return ""
         case .link: return target.lowercased().hasPrefix("http") ? "globe" : "app-openLink"
         case .raycast: return RaycastLink.icon(forLink: target)
+        case .recent: return "app-recent"
+        case .askAI: return "deck-ai"
         case .shortcut: return "deck-keyboard"
         case .text: return "deck-text"
         case .media:

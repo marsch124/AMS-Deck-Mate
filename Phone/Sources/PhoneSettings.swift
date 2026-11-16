@@ -20,6 +20,7 @@ struct PhoneSettings: View {
     @AppStorage("ground") private var ground = PhonePrefs.Ground.auto
     @AppStorage("profileGrounds") private var profileGrounds = ""
     @AppStorage("batteryWarning") private var warnBattery = true
+    @AppStorage("darkWhenMacSleeps") private var darkWhenMacSleeps = true
     @AppStorage("keyShape") private var keyShape = PhonePrefs.Shape.rounded
     @AppStorage("keyGap") private var keyGap = PhonePrefs.Gap.normal
     @AppStorage("keySize") private var keySize = PhonePrefs.Size.largest
@@ -186,6 +187,8 @@ struct PhoneSettings: View {
                 Toggle("Keep the screen awake while connected", isOn: $stayAwake).accessibilityIdentifier("stayAwake")
                 Toggle("Warn when the battery is low", isOn: $warnBattery).accessibilityIdentifier("batteryWarningSwitch")
                 note("At 20 % or less, and not charging, a small amber line says so, also on the resting clock.")
+                Toggle("Dark while the Mac sleeps", isOn: $darkWhenMacSleeps).accessibilityIdentifier("darkWhenMacSleeps")
+                note("When the Mac's screen goes to sleep, this screen goes black and may lock itself. A tap shows the keys. Needs Mac 0.7.")
             }
             Text(version)
                 .font(.caption)

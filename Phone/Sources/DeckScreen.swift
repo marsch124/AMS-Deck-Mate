@@ -25,6 +25,9 @@ struct DeckScreen: View {
     @AppStorage("ground") private var baseGround = PhonePrefs.Ground.auto
     @AppStorage("profileGrounds") private var profileGrounds = ""
     @AppStorage("batteryWarning") private var warnBattery = true
+    @AppStorage("darkWhenMacSleeps") private var darkWhenMacSleeps = true
+    /// A tap on the dark screen shows the keys until the Mac wakes and sleeps again.
+    @State private var keysWhileAsleep = false
     @State private var battery: String?
     /// The background now: the showing profile's own colour, else the chosen background.
     private var ground: PhonePrefs.Ground {
@@ -89,8 +92,8 @@ struct DeckScreen: View {
             }
             .padding(.horizontal, isPad ? 20 : 12)
             .padding(.vertical, isPad ? 14 : 8)
-            .opacity(resting ? 0 : 1)
-            if resting { restingClock }
+            .opacity(resting || dark ? 0 : 1)
+            if dark { asleepScreen } else if resting { restingClock }
         }
         // Every touch counts as "still here" for the resting clock (and never gets in the way of the keys).
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastTouch = Date() })
@@ -103,6 +106,7 @@ struct DeckScreen: View {
             let due = PhonePrefs.rests(afterMinutes: restAfter, idle: now.timeIntervalSince(lastTouch))
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
         }
+        .onChange(of: link.macAsleep) { _, _ in keysWhileAsleep = false }
         .preferredColorScheme(ground == .auto ? nil : .dark)
         .background(GeometryReader { box in
             // In a floating window on the iPad its three round buttons sit top left: the top line steps aside.
@@ -153,6 +157,28 @@ struct DeckScreen: View {
             .aspectRatio(favouritesShow ? 5.0 / 4.1 : 5.0 / 3.0, contentMode: .fit)
             if showDots { pageDots }
         }
+    }
+
+    /// The Mac's screen sleeps: this one goes black too.
+    private var dark: Bool { darkWhenMacSleeps && link.macAsleep && !keysWhileAsleep }
+
+    /// Black with a small moon while the Mac sleeps; one tap shows the keys.
+    private var asleepScreen: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 10) {
+                PhoneIcon(name: "iconMoon", size: isPad ? 34 : 26).foregroundStyle(.white.opacity(0.45))
+                Text("Mac asleep").font(isPad ? .title3 : .callout).foregroundStyle(.white.opacity(0.45))
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            lastTouch = Date()
+            withAnimation(.easeOut(duration: 0.25)) { keysWhileAsleep = true }
+        }
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("macAsleep")
     }
 
     /// Nothing but a big dimmed clock, like a desk clock; one tap brings the keys back.
@@ -254,7 +280,9 @@ struct DeckScreen: View {
         .accessibilityLabel("Music")
         .accessibilityIdentifier("musicButton")
         .popover(isPresented: $showMusicPlate) {
-            musicPlate(link.mac ?? now).presentationCompactAdaptation(.popover)
+            musicPlate(link.mac ?? now)
+                .presentationCompactAdaptation(.popover)
+                .presentationBackground(PhonePalette.card)
         }
     }
 
@@ -352,6 +380,7 @@ struct DeckScreen: View {
             .padding(14)
             .frame(width: 280, alignment: .leading)
             .presentationCompactAdaptation(.popover)
+            .presentationBackground(PhonePalette.card)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("linkStatusCard")
         }

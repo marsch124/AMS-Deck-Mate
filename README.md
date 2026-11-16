@@ -19,7 +19,7 @@ The installed app is at `~/Applications/AMS Deck Mate.app`. The written specific
 
 ## Folders
 - `App/` the Mac app
-- `Phone/` the iPhone and iPad app (Deck Mate 0.8.1; 0.5 added the iPad, 0.6 added settings)
+- `Phone/` the iPhone and iPad app (Deck Mate 0.8.2; 0.5 added the iPad, 0.6 added settings)
 - `Core/` the rules (moving around, Raycast links, how the box is spoken to, the link to the iPhone) and their tests
 - `Docs/` the specification
 

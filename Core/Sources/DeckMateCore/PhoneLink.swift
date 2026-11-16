@@ -67,6 +67,8 @@ public enum PhoneLink {
         case map(groups: [MapGroup])
         /// iPhone → Mac (version 4): a page of the navigation picture was tapped: go there.
         case go(profile: String, page: String)
+        /// Mac → iPhone (version 5): the Mac's screen went to sleep (true) or woke (false).
+        case asleep(Bool)
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -76,14 +78,15 @@ public enum PhoneLink {
             case .status, .pressed, .ran, .page, .profile: return 2
             case .own, .hold, .favourite, .music, .favourites, .mac: return 3
             case .map, .go: return 4
+            case .asleep: return 5
             }
         }
     }
 
     /// The version that understands everything above: 2 = status, pressed, ran, page and profile;
     /// 3 = own keys, long press, favourites, the Mac at a glance and the music strip.
-    /// 4 = the navigation picture.
-    public static let currentVersion = 4
+    /// 4 = the navigation picture; 5 = the Mac says when it sleeps.
+    public static let currentVersion = 5
 
     /// One page group of the navigation picture.
     public struct MapGroup: Codable, Equatable, Sendable {

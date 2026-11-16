@@ -178,7 +178,7 @@ public enum KeyCheck {
                 if let found = problem(step, in: profile, deck: deck, world: world) { return found }
             }
             return action.steps.isEmpty ? "No steps" : nil
-        case .none, .back, .nextPage, .previousPage, .media:
+        case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI:
             return nil
         }
     }
@@ -237,6 +237,8 @@ public enum ActionWords {
         case .shortcut: return "Pressed \(action.combo?.label ?? "the shortcut")"
         case .text: return "Typed the text"
         case .media: return (MediaKey(rawValue: action.target) ?? .playPause).title
+        case .recent: return "No recent app yet"
+        case .askAI: return "Raycast: Ask AI"
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi: return "Done"
         }
     }

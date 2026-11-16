@@ -41,6 +41,8 @@ final class LinkClient: ObservableObject {
     var newMac: Bool { macVersion >= 3 }
     /// The navigation picture: every page group with its pages (from a Mac at 0.6 or later).
     @Published private(set) var map: [PhoneLink.MapGroup] = []
+    /// The Mac said its screen went to sleep (Mac 0.7 or later); a welcome or its wake clears it.
+    @Published private(set) var macAsleep = false
 
     /// A page of the navigation picture was tapped. With "My own keys" its page group is remembered.
     func go(group: String, page: String) {
@@ -104,6 +106,7 @@ final class LinkClient: ObservableObject {
                 client.favourites = SampleLink.favourites()
                 client.mac = SampleLink.mac
                 client.map = SampleLink.map()
+                client.macAsleep = CommandLine.arguments.contains("-macAsleep")
             }
             client.lookingSince = nil
             if CommandLine.arguments.contains("-looking") {
@@ -228,6 +231,7 @@ final class LinkClient: ObservableObject {
             tokens[talkingTo] = token
             remembered = talkingTo
             macVersion = version ?? 2
+            macAsleep = false
             if !newMac { favourites = [:]; mac = nil }
             if macVersion < 4 { map = [] }
             state = .connected(talkingTo)
@@ -252,6 +256,8 @@ final class LinkClient: ObservableObject {
             mac = now
         case let .map(groups):
             map = groups
+        case let .asleep(asleep):
+            macAsleep = asleep
         case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go:
             break
         }
