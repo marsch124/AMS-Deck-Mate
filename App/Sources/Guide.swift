@@ -170,6 +170,7 @@ enum Guide {
             "Tap a key on the iPhone and the Mac does it, exactly as if you had pressed it on the box. The keys on the Mac screen do not hide because of a tap on the iPhone.",
             "The iPhone finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
             "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" and shows a 4-digit number. The iPhone shows the same number. Choose Allow only if both numbers are the same. After that the Mac remembers the iPhone. If you choose Don't Allow, the iPhone shows \"Ask again\".",
+            "Allow takes a click with the mouse: Return and Escape both mean \"Don’t Allow\".",
             "Since 0.8 the link between the Mac and the iPhone or iPad is private: everything is scrambled from the first moment, so on a shared Wi-Fi nobody can listen in or press your keys. Mac 0.8 needs the iPhone and iPad app at 0.11 or later.",
             "The pictures are drawn by the Mac, so keys that open an app show the real app icon.",
             "New in 0.4 (the Mac must be at 0.4 too): the keys sit low on the iPhone, near your thumb, with the place line on top. Swipe left or right on the keys to change page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
@@ -234,6 +235,7 @@ enum Guide {
             "New button \"Bring back an earlier state…\" in Settings, \"Where your setup is kept\". It opens a list of the safety copies, newest first, each with its date and time and for example \"3 page groups · 47 keys\". Pick one and choose \"Bring back\" (or Cancel; Escape is Cancel). Your setup as it is now is first kept as a safety copy, and Undo (Command-Z) also takes it back.",
             "The link to the iPhone and iPad is now private. Every message is scrambled from the first moment. Before, key pictures, taps and the permission code travelled readable on the Wi-Fi, so on a shared Wi-Fi (hotel, café) someone could listen in and press your keys. Now nobody can.",
             "The first time an iPhone or iPad asks, the Mac's question and the device both show the same 4-digit number. The Mac says: \"Allow only if your iPhone shows the same number.\" The number comes from both sides, so nobody can sit in between and fake it.",
+            "Allow always takes a click with the mouse. The Return key and Escape both mean \"Don’t Allow\", so a key you press while typing somewhere else can never let a stranger in.",
             "After you allow, the device proves who it is every time without ever sending its secret, and the Mac proves itself to the device the same way.",
             "The Mac closes a connection that has not finished starting within 10 seconds, and accepts at most 8 connections at once.",
             "Works with the iPhone and iPad app 0.11 (new \"Mac is back\" note)."

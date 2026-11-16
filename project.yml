@@ -100,7 +100,9 @@ schemes:
       targets:
         AMSDeckMatePhone: all
     test:
-      targets: [AMSDeckMatePhoneUITests]
+      targets:
+        - AMSDeckMatePhoneUITests
+        - package: DeckMateCore/DeckMateCoreTests
     archive:
       config: Release
   AMS Deck Mate:

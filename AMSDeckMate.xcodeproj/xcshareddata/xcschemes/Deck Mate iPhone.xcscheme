@@ -50,6 +50,17 @@
                ReferencedContainer = "container:AMSDeckMate.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DeckMateCoreTests"
+               BuildableName = "DeckMateCoreTests"
+               BlueprintName = "DeckMateCoreTests"
+               ReferencedContainer = "container:Core">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
