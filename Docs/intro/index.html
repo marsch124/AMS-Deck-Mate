@@ -1,0 +1,630 @@
+<meta charset="utf-8">
+<title>Deck Mate Tour</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: chapter rail on the left, coach + a pretend Mac desktop on the right. Reusable tour engine: LESSONS + a small simulator. */
+:root {
+  --bg: #F6F5F9; --panel: #FFFFFF; --fg: #1E1B2E; --muted: #6A6680; --line: #E3E0EC;
+  --accent: #534AB7; --accent-soft: #EEEDFE; --good: #3B6D11; --good-soft: #EAF3DE; --warn: #993C1D;
+  --desk-a: #C9D6E3; --desk-b: #E8DCCB; --menubar: rgba(255,255,255,.72); --menubar-fg: #1E1B2E;
+  --win: #FFFFFF; --win-bar: #F2F1F5; --win-fg: #1E1B2E; --shadow: 0 18px 40px rgba(30,27,46,.18);
+  --purple-fill:#EEEDFE; --purple-title:#3C3489; --purple-text:#26215C; --purple-mark:#534AB7;
+  --coral-fill:#FAECE7; --coral-title:#712B13; --coral-text:#4A1B0C; --coral-mark:#993C1D;
+  --blue-fill:#E6F1FB; --blue-title:#0C447C; --blue-text:#042C53; --blue-mark:#185FA5;
+  --green-fill:#EAF3DE; --green-title:#27500A; --green-text:#173404; --green-mark:#3B6D11;
+  --key-bg:#FFFFFF;
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "Figtree", -apple-system, "Segoe UI", sans-serif;
+  --f-mac: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#15131F; --panel:#1F1C2C; --fg:#EEEDF5; --muted:#A29EB8; --line:#322E44;
+  --accent:#AFA9EC; --accent-soft:#2B2650; --good:#97C459; --good-soft:#22331A; --warn:#F0997B;
+  --desk-a:#1F2C3D; --desk-b:#3A2F3A; --menubar: rgba(30,28,40,.75); --menubar-fg:#EEEDF5;
+  --win:#26232F; --win-bar:#2F2C39; --win-fg:#EEEDF5; --shadow: 0 18px 40px rgba(0,0,0,.5);
+  --purple-fill:#3C3489; --purple-title:#CECBF6; --purple-text:#EEEDFE; --purple-mark:#AFA9EC;
+  --coral-fill:#712B13; --coral-title:#F5C4B3; --coral-text:#FAECE7; --coral-mark:#F0997B;
+  --blue-fill:#0C447C; --blue-title:#B5D4F4; --blue-text:#E6F1FB; --blue-mark:#85B7EB;
+  --green-fill:#27500A; --green-title:#C0DD97; --green-text:#EAF3DE; --green-mark:#97C459;
+  --key-bg: rgba(0,0,0,.28); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg:#15131F; --panel:#1F1C2C; --fg:#EEEDF5; --muted:#A29EB8; --line:#322E44;
+  --accent:#AFA9EC; --accent-soft:#2B2650; --good:#97C459; --good-soft:#22331A; --warn:#F0997B;
+  --desk-a:#1F2C3D; --desk-b:#3A2F3A; --menubar: rgba(30,28,40,.75); --menubar-fg:#EEEDF5;
+  --win:#26232F; --win-bar:#2F2C39; --win-fg:#EEEDF5; --shadow: 0 18px 40px rgba(0,0,0,.5);
+  --purple-fill:#3C3489; --purple-title:#CECBF6; --purple-text:#EEEDFE; --purple-mark:#AFA9EC;
+  --coral-fill:#712B13; --coral-title:#F5C4B3; --coral-text:#FAECE7; --coral-mark:#F0997B;
+  --blue-fill:#0C447C; --blue-title:#B5D4F4; --blue-text:#E6F1FB; --blue-mark:#85B7EB;
+  --green-fill:#27500A; --green-title:#C0DD97; --green-text:#EAF3DE; --green-mark:#97C459;
+  --key-bg: rgba(0,0,0,.28); color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 230px minmax(0,1fr); gap: 22px; }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none }
+
+/* Rail */
+.rail { display: flex; flex-direction: column; gap: 4px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); align-self: start; }
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.brand .tile { width: 40px; height: 40px; border-radius: 10px; background: #534AB7; color: #fff; display: grid; place-items: center; }
+.brand .tile svg { width: 26px; height: 26px }
+.brand h1 { font-family: var(--f-display); font-size: 19px; line-height: 1.1; margin: 0; text-wrap: balance }
+.brand small { color: var(--muted); font-size: 12px }
+.chap { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 9px; border: 0; background: none; color: var(--fg); font: inherit; text-align: left; cursor: pointer; }
+.chap:hover { background: var(--accent-soft) }
+.chap:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.chap .n { color: var(--muted); font-size: 12px; margin-left: auto; font-variant-numeric: tabular-nums }
+.chap.cur { background: var(--accent-soft); color: var(--accent); font-weight: 600 }
+.chap.done .n { color: var(--good) }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin: 10px 2px 2px }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .4s }
+.railnote { color: var(--muted); font-size: 12px; margin: 4px 2px }
+
+/* Coach */
+.main { display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.coach { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px 16px; align-items: center; }
+.coach .eyebrow { grid-column: 1 / -1; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); font-weight: 600; display: flex; gap: 8px; align-items: center }
+.coach .eyebrow .kind { color: var(--muted); font-weight: 500 }
+.coach h2 { font-family: var(--f-display); font-size: 23px; line-height: 1.2; margin: 0; text-wrap: balance }
+.coach p { margin: 4px 0 0; color: var(--fg); max-width: 62ch }
+.coach .btns { display: flex; gap: 8px; align-items: center }
+.btn { font: inherit; font-weight: 600; border-radius: 9px; padding: 8px 16px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer }
+.btn.main-b { background: #534AB7; border-color: #534AB7; color: #fff }
+.btn.main-b:disabled { opacity: .45; cursor: default }
+.btn.ghost { border-color: transparent; color: var(--muted) }
+.answers { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px }
+.ans { font: inherit; padding: 8px 14px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer }
+.ans:hover { border-color: var(--accent) }
+.ans.right { border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 600 }
+.ans.wrong { border-color: var(--warn); color: var(--warn); text-decoration: line-through }
+.feedback { grid-column: 1 / -1; font-weight: 600; color: var(--good); min-height: 1.4em; margin: 0 }
+.feedback.no { color: var(--warn) }
+.legend { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px }
+.legend button { font: inherit; display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 9px; padding: 5px 12px 5px 6px; cursor: pointer }
+.legend button.seen { border-color: var(--good) }
+.legend .kc { font-family: var(--f-mac); font-size: 16px; min-width: 28px; height: 28px; display: grid; place-items: center; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-weight: 600 }
+.legend span.nm { color: var(--muted); min-width: 4.5em }
+.legend .seen span.nm { color: var(--good); font-weight: 600 }
+
+/* Stage = pretend Mac */
+.stagebox { position: relative; width: 100%; aspect-ratio: 960 / 560; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); max-width: 100% }
+.stage { position: absolute; left: 0; top: 0; width: 960px; height: 560px; transform-origin: 0 0; font-family: var(--f-mac); font-size: 13px; color: var(--win-fg);
+  background: radial-gradient(120% 90% at 15% 10%, var(--desk-b), transparent 60%), linear-gradient(160deg, var(--desk-a), var(--desk-b)); }
+.mbar { position: absolute; inset: 0 0 auto; height: 26px; background: var(--menubar); backdrop-filter: blur(10px); display: flex; align-items: center; gap: 18px; padding: 0 14px; color: var(--menubar-fg); font-size: 13px; z-index: 30 }
+.mbar b { font-weight: 700 }
+.mbar .sp { flex: 1 }
+.mbar .kicon { width: 30px; height: 22px; display: grid; place-items: center; border-radius: 5px; border: 0; background: none; color: inherit; cursor: pointer; padding: 0 }
+.mbar .kicon.open, .mbar .kicon:hover { background: rgba(127,127,127,.25) }
+.mbar .kicon svg { width: 17px; height: 17px }
+.menu { position: absolute; top: 28px; right: 108px; width: 250px; background: var(--win); border-radius: 9px; box-shadow: var(--shadow); padding: 5px; z-index: 40; border: 1px solid var(--line) }
+.menu button, .menu .info { display: flex; width: 100%; align-items: center; gap: 6px; border: 0; background: none; color: var(--win-fg); font: inherit; text-align: left; padding: 4px 8px; border-radius: 5px; cursor: pointer }
+.menu button:hover { background: #534AB7; color: #fff }
+.menu .chk { width: 14px; text-align: center }
+.menu .sc { margin-left: auto; opacity: .55 }
+.menu .info { color: var(--muted); cursor: default }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px }
+
+.strip { position: absolute; left: 0; right: 0; bottom: 18px; display: flex; justify-content: center; align-items: flex-end; gap: 10px; z-index: 5 }
+.win { position: absolute; background: var(--win); border-radius: 11px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; z-index: 20 }
+.win .tb { height: 30px; background: var(--win-bar); display: flex; align-items: center; gap: 7px; padding: 0 11px; font-weight: 600; font-size: 12.5px }
+.win .tb .dots { display: flex; gap: 6px; margin-right: 8px }
+.win .tb .dots i { width: 11px; height: 11px; border-radius: 50%; background: #E0605A; display: block }
+.win .tb .dots i:nth-child(2) { background: #E6B53F } .win .tb .dots i:nth-child(3) { background: #5DBB5A }
+.win .tb .ttl { flex: 1; text-align: center; margin-right: 50px; color: var(--muted) }
+.cover { left: 80px; top: 60px; width: 800px; height: 470px; transition: transform .6s cubic-bezier(.3,.7,.2,1); cursor: grab }
+/* Deck Mate pretend screen */
+:root, .stage { --k-app:#2F6FD6; --k-web:#14908F; --k-raycast:#E2512F; --k-shortcut:#7A55C9; --k-text:#C98208; --k-media:#2E9A4F; --k-move:#5C7388; }
+.mbar .front { font-weight: 700 }
+.menu { right: 108px; width: 270px }
+.menu .hd { color: var(--muted); padding: 4px 8px 0; cursor: default; font-size: 12px }
+.menu .ind { padding-left: 22px }
+.appwin { position: absolute; left: 24px; width: 176px; height: 104px; border-radius: 10px; background: var(--win); border: 1px solid var(--line); box-shadow: var(--shadow); overflow: hidden; cursor: pointer; z-index: 2 }
+.appwin.front { border: 2px solid var(--accent); z-index: 3 }
+.appwin .tb { height: 24px; font-size: 11.5px }
+.appwin .tb .dots i { width: 9px; height: 9px }
+.appwin .ln { height: 8px; border-radius: 4px; background: var(--line); margin: 11px 14px }
+.appwin .nm { position: absolute; right: 8px; bottom: 6px; font-size: 11px; color: var(--muted) }
+.keys-win { position: absolute; background: var(--win); border-radius: 13px; box-shadow: var(--shadow); border: 1px solid var(--line); z-index: 12; padding: 8px 12px 12px }
+.keys-win .top { display: flex; align-items: center; gap: 6px; height: 24px; font-weight: 600; font-size: 12.5px }
+.keys-win .top .held { font-weight: 500; font-size: 11px; color: var(--accent) }
+.keys-win .top .sp { flex: 1 }
+.keys-win .top button { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 2px; display: grid; place-items: center; border-radius: 5px }
+.keys-win .top button:hover { background: var(--accent-soft) }
+.keys-win .top svg { width: 16px; height: 16px }
+.kgrid { display: grid }
+.kt { border: 0; padding: 0; border-radius: 12px; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; font-family: var(--f-mac); font-weight: 600; text-align: center; line-height: 1.1; overflow: hidden }
+.kt svg { fill: none; stroke: #fff; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round }
+.kt.app { background: var(--k-app) } .kt.web { background: var(--k-web) } .kt.raycast { background: var(--k-raycast) } .kt.shortcut { background: var(--k-shortcut) }
+.kt.text { background: var(--k-text) } .kt.media { background: var(--k-media) } .kt.move { background: var(--k-move) }
+.kt.empty { background: transparent; border: 1.5px dashed var(--line); cursor: default }
+.kt:hover:not(.empty) { filter: brightness(1.08) }
+.dock-hint { position: absolute; right: 16px; bottom: 14px; z-index: 6; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted) }
+.dock-hint button { font: 600 13px var(--f-mac); border: 1px solid var(--line); background: var(--win); color: var(--win-fg); border-radius: 8px; padding: 5px 10px; cursor: pointer; letter-spacing: .08em }
+.phone { position: absolute; right: 26px; top: 40px; width: 200px; height: 440px; border-radius: 30px; border: 6px solid #1E1B2E; background: var(--win); box-shadow: var(--shadow); z-index: 8; padding: 22px 8px 10px; display: flex; flex-direction: column; align-items: center; overflow: hidden }
+:root[data-theme="dark"] .phone { border-color: #55506B }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .phone { border-color: #55506B } }
+.phone .pl { font-size: 12px; font-weight: 600; margin-bottom: 8px; text-align: center }
+.phone .msg { margin: auto 0; text-align: center; padding: 0 8px; font-size: 12px; color: var(--muted) }
+.phone .msg b { display: block; color: var(--win-fg); font-size: 14px; margin-bottom: 6px }
+.phone .msg button { margin-top: 10px; font: 600 13px var(--f-body); background: var(--accent); color: var(--bg); border: 0; border-radius: 9px; padding: 7px 14px; cursor: pointer }
+.pgrid { margin: auto 0 }
+.win.setup { left: 40px; top: 40px; width: 880px; height: 470px; z-index: 20; display: flex; flex-direction: column }
+.setup .cols { flex: 1; display: grid; grid-template-columns: 190px minmax(0,1fr) 270px; gap: 0; min-height: 0 }
+.setup .col { padding: 10px 12px; border-right: 1px solid var(--line); overflow: hidden }
+.setup .col:last-child { border-right: 0 }
+.setup h4 { margin: 0 0 6px; font-size: 14px }
+.setup .pr { padding: 3px 8px; border-radius: 6px; font-size: 12.5px; cursor: default }
+.setup .pr small { display: block; color: var(--muted); font-size: 10.5px }
+.setup .pr.on { background: var(--green-fill); color: var(--green-title) }
+.setup .tabsrow { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap }
+.setup .tabsrow span { padding: 2px 9px; border-radius: 12px; font-size: 11.5px; background: var(--accent-soft) }
+.setup .tabsrow span.on { background: var(--accent); color: var(--bg); font-weight: 600 }
+.setup .lab { display: block; color: var(--muted); font-size: 11px; margin: 8px 0 2px }
+.setup input, .setup select { font: inherit; font-size: 12.5px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--win-bar); color: var(--win-fg); width: 100%; min-width: 0 }
+.setup .prob { color: #C0392B; min-height: 1.2em; font-size: 11.5px; margin: 6px 0 }
+.setup .bt { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap }
+.setup .sfoot { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted) }
+.setup .sfoot .sp { flex: 1 }
+.mbtn.prim { background: #534AB7; border-color: #534AB7; color: #fff }
+.mbtn { font: inherit; font-size: 12.5px; padding: 4px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--win-bar); color: var(--win-fg); cursor: pointer }
+.win.settings { left: 28px; top: 36px; width: 470px; height: 490px; z-index: 20; display: flex; flex-direction: column }
+.settings .pane { flex: 1; overflow: hidden; padding: 8px 16px }
+.settings .card2 { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; margin-bottom: 7px }
+.settings .card2 h5 { margin: 0 0 5px; font-size: 13px; color: var(--green-mark) }
+.settings .row2 { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12.5px; flex-wrap: wrap }
+.settings .row2 .lb { width: 70px; color: var(--muted) }
+.settings .ch { border: 1px solid var(--line); background: var(--win-bar); color: var(--win-fg); font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 12px; cursor: pointer }
+.settings .ch.on { background: var(--green-mark); border-color: var(--green-mark); color: var(--bg); font-weight: 600 }
+.settings .cb { display: flex; gap: 7px; align-items: center; border: 0; background: none; color: var(--win-fg); font: inherit; font-size: 12.5px; cursor: pointer; padding: 2px 0; text-align: left }
+.settings .cb i { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--muted); display: grid; place-items: center; font-style: normal; font-size: 11px; line-height: 1; flex: none }
+.settings .cb.on i { background: var(--green-mark); border-color: var(--green-mark); color: var(--bg) }
+.settings .nt { color: var(--muted); font-size: 11px; margin: 2px 0 0 }
+.settings .sfoot { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted) }
+.settings .sfoot .sp { flex: 1 }
+.settings .tabs2 { display: flex; justify-content: center; gap: 2px; padding: 8px }
+.settings .tabs2 span { font-size: 12.5px; padding: 3px 10px; border-radius: 6px }
+.settings .tabs2 span.on { background: #E6B53F; color: #1E1B2E; font-weight: 600 }
+.alert { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); width: 320px; background: var(--win); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 16px; z-index: 45; text-align: center }
+.alert b { display: block; margin-bottom: 4px; font-size: 13.5px }
+.alert p { margin: 0 0 12px; color: var(--muted); font-size: 12px }
+.alert .r { display: flex; gap: 8px; justify-content: center }
+.swatches { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px }
+.swatches span { display: flex; align-items: center; gap: 7px; border: 1.5px solid var(--line); border-radius: 9px; padding: 4px 11px 4px 5px; font-size: 13.5px }
+.swatches i { width: 22px; height: 22px; border-radius: 6px; display: block }
+.target { position: relative; z-index: 2; animation: ring 1.6s ease-in-out infinite; border-radius: 7px }
+@keyframes ring { 0%,100% { box-shadow: 0 0 0 2px #E6B53F, 0 0 0 6px rgba(230,181,63,.35) } 50% { box-shadow: 0 0 0 2px #E6B53F, 0 0 0 11px rgba(230,181,63,0) } }
+@keyframes pop { from { transform: translateY(8px); opacity: .3 } to { transform: none; opacity: 1 } }
+.toast { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); background: var(--good); color: #fff; font: 600 14px var(--f-body); padding: 7px 14px; border-radius: 20px; z-index: 50; animation: pop .3s }
+:root[data-theme="dark"] .toast { color: #15131F }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .toast { color: #15131F } }
+
+/* Finish */
+.finish { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px }
+.finish h3 { font-family: var(--f-display); margin: 0 0 8px; font-size: 19px }
+.finish label { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; border-top: 1px solid var(--line); cursor: pointer }
+.finish input { width: 18px; height: 18px; accent-color: #534AB7; margin-top: 2px; flex: none }
+
+@media (max-width: 820px) {
+  .wrap { grid-template-columns: minmax(0,1fr) }
+  .rail { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px }
+  .brand { width: 100% }
+  .chap .n { display: none }
+  .railnote, .bar { width: 100% }
+  .coach { grid-template-columns: minmax(0,1fr) }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important } }
+</style>
+
+<div class="wrap">
+  <nav class="rail" id="rail" aria-label="Chapters"></nav>
+  <main class="main">
+    <section class="coach" id="coach" aria-live="polite"></section>
+    <div class="stagebox" id="stagebox"><div class="stage" id="stage"></div></div>
+    <section class="finish" id="finish" hidden></section>
+  </main>
+</div>
+
+
+<script>
+/* ---------- Icons (AMS Icon Library shapes, 24-pt grid; the key glyphs are drawn in the same style) ---------- */
+const ICON = {
+  laptop: 'M5 5.5h14v10H5Z M3 18.5h18',
+  keycap: 'M7 4.5h10a3.5 3.5 0 0 1 3.5 3.5v8a3.5 3.5 0 0 1-3.5 3.5H7A3.5 3.5 0 0 1 3.5 16V8A3.5 3.5 0 0 1 7 4.5Z M9 8h6a2 2 0 0 1 2 2v2.5a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2Z',
+  notebook: 'M6 3.5h11.5c.6 0 1 .4 1 1v15c0 .6-.4 1-1 1H6Z M4.5 7h3 M4.5 12h3 M4.5 17h3 M10 8h5.5 M10 12h5.5',
+  map: 'M3.5 6.5 9 4.5l6 2 5.5-2v13l-5.5 2-6-2-5.5 2Z M9 4.5v13 M15 6.5v13',
+  trophy: 'M7.5 3.5h9v5a4.5 4.5 0 0 1-9 0Z M7.5 5H4.5v1.5a3 3 0 0 0 3.3 3 M16.5 5h3v1.5a3 3 0 0 1-3.3 3 M12 13v3.5 M9.5 16.5h5l1 4h-7Z',
+  phone: 'M8 3h8c.8 0 1.5.7 1.5 1.5v15c0 .8-.7 1.5-1.5 1.5H8c-.8 0-1.5-.7-1.5-1.5v-15C6.5 3.7 7.2 3 8 3Z M10.5 18h3',
+  globe: 'M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0 M12 3.5c-2.4 2.3-3.6 5.1-3.6 8.5s1.2 6.2 3.6 8.5 M12 3.5c2.4 2.3 3.6 5.1 3.6 8.5s-1.2 6.2-3.6 8.5 M3.5 12h17 M5 7.5h14 M5 16.5h14',
+  keys: 'M3.5 8.5a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0 M11.2 11.7 20 20.5 M17.5 18l2-2 M15 15.5l1.7-1.7',
+  compass: 'M3.5 12a8.5 8.5 0 1 0 17.0 0a8.5 8.5 0 1 0 -17.0 0 M15.2 8.8l-1.9 4.5-4.5 1.9 1.9-4.5Z',
+  folder: 'M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2.2h8a1.5 1.5 0 0 1 1.5 1.5v7.8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5Z',
+  back: 'M10 6 4.5 11.5 10 17 M4.5 11.5H15a4.5 4.5 0 0 1 4.5 4.5v1',
+  play: 'M8 5v14l11-7Z',
+  next: 'M6 6v12l9-6Z M18 6v12',
+  mute: 'M4 9.5h3.5l5-4v13l-5-4H4Z M16 9.5l5 5 M21 9.5l-5 5',
+  voldown: 'M4 9.5h3.5l5-4v13l-5-4H4Z M16 10.5a3 3 0 0 1 0 3',
+  volup: 'M4 9.5h3.5l5-4v13l-5-4H4Z M16 10.5a3 3 0 0 1 0 3 M18.5 8a6.5 6.5 0 0 1 0 8',
+  shot: 'M4 8V5h3 M17 5h3v3 M20 16v3h-3 M7 19H4v-3 M9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0',
+  text: 'M5 6h14 M12 6v13 M9 19h6',
+  mail: 'M4 6.5h16v11H4Z M4.5 7l7.5 6 7.5-6',
+  calc: 'M6.5 3.5h11v17h-11Z M9 7h6v3H9Z M9.5 14h.01 M12 14h.01 M14.5 14h.01 M9.5 17h.01 M12 17h.01 M14.5 17h.01',
+  cal: 'M4.5 6h15v14h-15Z M4.5 10.5h15 M8.5 3.5v4 M15.5 3.5v4',
+  clip: 'M8.5 5H6.5v15h11V5h-2 M9 3.5h6v3H9Z',
+  chat: 'M4.5 5.5h15v10h-7l-4 3.5v-3.5h-4Z',
+  bell: 'M7 17v-6a5 5 0 0 1 10 0v6l1.5 1.5h-13Z M10.5 20.5h3',
+  eyeoff: 'M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z M9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0 M4 20 20 4',
+  plus: 'M12 5v14 M5 12h14',
+  search: 'M4.5 11a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0 -13 0 M16 15.5 20 19.5',
+  bolt: 'M13 3.5 6.5 13H12l-1 7.5 6.5-9.5H12Z',
+  fwd: 'M14 6l5.5 5.5L14 17 M19.5 11.5H9a4.5 4.5 0 0 0-4.5 4.5v1',
+  list: 'M9 7h10 M9 12h10 M9 17h10 M5 7h.01 M5 12h.01 M5 17h.01',
+  close: 'M6 6l12 12 M18 6 6 18',
+  gear: 'M8.5 12a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0 M12 3.5v2.5 M12 18v2.5 M3.5 12H6 M18 12h2.5 M6 6l1.8 1.8 M16.2 16.2 18 18 M6 18l1.8-1.8 M16.2 7.8 18 6',
+};
+const icon = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[n]}"/></svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- The pretend deck: his three profiles, pages and folders ---------- */
+const K = (t, kind, ic, say, to) => ({ t, kind, ic, say, to });
+const backKey = () => K('Back', 'move', 'back', '', 'back');
+const app = (t, ic) => K(t, 'app', ic, 'Opens ' + t);
+const ray = (t, ic) => K(t, 'raycast', ic, 'Runs ' + t + ' in Raycast');
+const sc = (t, ic, keys) => K(t, 'shortcut', ic, 'Presses ' + keys);
+const med = (t, ic) => K(t, 'media', ic, t);
+const fill = a => a.concat(Array(15).fill(null)).slice(0, 15);
+const DECK = {
+  Default: {
+    p1: { name: 'Page 1', keys: fill([K('Apps', 'move', 'folder', '', 'apps'), K('Raycast', 'move', 'bolt', '', 'raycast'), med('Play or pause', 'play'), med('Next track', 'next'), med('Mute sound', 'mute'),
+      med('Volume down', 'voldown'), med('Volume up', 'volup'), sc('Screenshot', 'shot', '⌘ ⇧ 4'), K('Weather', 'web', 'globe', 'Opens a web page'), K('Thanks', 'text', 'text', 'Types your text')]) },
+    apps: { name: 'Apps', parent: 'p1', keys: fill([backKey(), app('Mail', 'mail'), app('Safari', 'compass'), app('Calculator', 'calc'), app('Notes', 'notebook'), app('Calendar', 'cal')]) },
+    raycast: { name: 'Raycast', parent: 'p1', keys: fill([backKey(), ray('Clipboard', 'clip'), ray('AI Chat', 'chat'), ray('Reminders', 'bell'), ray('Hide apps', 'eyeoff'), ray('New reminder', 'plus'),
+      ray('Notion note', 'notebook'), ray('Find in Notion', 'search'), ray('Daily plan', 'cal')]) },
+  },
+  Notion: { p1: { name: 'Page 1', keys: fill([sc('New page', 'plus', '⌘ N'), sc('Search', 'search', '⌘ P'), sc('Go back', 'back', '⌘ ['), sc('Go forward', 'fwd', '⌘ ]'), ray('Notion note', 'notebook'),
+      ray('Find in Notion', 'search')]) } },
+  OmniFocus: { p1: { name: 'Page 1', keys: fill([sc('New task', 'plus', '⌘ N'), sc('Inbox', 'list', '⌘ 1'), sc('Projects', 'folder', '⌘ 2'), sc('Forecast', 'cal', '⌘ 3'), ray('Reminders', 'bell')]) } },
+};
+const PROFILES = ['Default', 'Notion', 'OmniFocus'];
+const KIND_NAME = { app: 'Open an app', web: 'Open a link or a file', raycast: 'Raycast', shortcut: 'Keyboard shortcut', text: 'Type text', media: 'Music and sound', move: 'Folder of keys' };
+
+const START = () => ({
+  keysShown: false, menu: false, front: 'Finder', held: null, page: 'p1', setup: false, su: null, suProfile: 'Default',
+  settings: false, place: 'left', size: 'normal', hide: false, pointer: { x: 480, y: 300 },
+  phone: 'off', alert: false, toast: '', deck: JSON.parse(JSON.stringify(DECK)),
+});
+let S = START();
+const SIZES = { small: [48, 6, 9, 15], normal: [64, 8, 11, 20], large: [80, 10, 12.5, 26] };
+const prof = () => S.held || (S.front === 'Notion' ? 'Notion' : S.front === 'OmniFocus' ? 'OmniFocus' : 'Default');
+const pages = () => S.deck[prof()];
+const curPage = () => pages()[S.page] || pages().p1;
+const placeLine = () => prof() + (Object.keys(pages()).length > 1 ? ' · ' + curPage().name : '');
+
+function keyTile(k, i, kw, fs, gl, pre) {
+  if (!k) return pre === 'su-key' ? `<button class="kt empty" style="width:${kw}px;height:${kw}px;cursor:pointer" data-act="su-key" data-i="${i}" data-t="su-slot-${i}" aria-label="Empty key ${i + 1}"></button>`
+    : `<span class="kt empty" style="width:${kw}px;height:${kw}px" aria-label="Empty key"></span>`;
+  return `<button class="kt ${k.kind}" style="width:${kw}px;height:${kw}px;font-size:${fs}px" data-act="${pre}" data-i="${i}" data-t="${pre === 'pkey' ? 'pkey' : 'key'}-${esc(k.t)}" aria-label="${esc(k.t)}">
+    <svg viewBox="0 0 24 24" style="width:${gl}px;height:${gl}px"><path d="${ICON[k.ic]}"/></svg><span>${esc(k.t)}</span></button>`;
+}
+function grid(keys, kw, gap, fs, gl, pre) {
+  return `<div class="kgrid" style="grid-template-columns:repeat(5,${kw}px);gap:${gap}px">${keys.map((k, i) => keyTile(k, i, kw, fs, gl, pre)).join('')}</div>`;
+}
+
+function renderStage() {
+  const st = document.getElementById('stage');
+  const apps = ['Finder', 'Notion', 'OmniFocus'].map((n, i) => `<div class="appwin ${S.front === n ? 'front' : ''}" style="top:${48 + i * 118}px" data-act="front" data-app="${n}" data-t="win-${n}">
+      <div class="tb"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">${n}</span></div><div class="ln" style="width:70%"></div><div class="ln" style="width:50%"></div><span class="nm">Click to bring forward</span></div>`).join('');
+
+  const [kw, gap, fs, gl] = SIZES[S.size];
+  let keysWin = '';
+  if (S.keysShown && !S.setup) {
+    const w = 5 * kw + 4 * gap + 24, h = 3 * kw + 2 * gap + 24 + 28;
+    let x = 250, y = 96;
+    if (S.place === 'pointer') { x = Math.max(8, Math.min(960 - w - 8, S.pointer.x - w / 2)); y = Math.max(34, Math.min(560 - h - 8, S.pointer.y - h / 2)); }
+    keysWin = `<div class="keys-win" style="left:${x}px;top:${y}px" data-t="keyswin">
+      <div class="top"><span>${esc(placeLine())}</span>${S.held ? '<span class="held">held</span>' : ''}<span class="sp"></span>
+        <button data-act="open-setup" data-t="open-setup" aria-label="Set up keys">${icon('gear')}</button><button data-act="hide-keys" aria-label="Hide the keys">${icon('close')}</button></div>
+      ${grid(curPage().keys, kw, gap, fs, gl, 'kkey')}</div>`;
+  }
+
+  const m = S.menu ? `<div class="menu" role="menu">
+      <button data-act="m-show" data-t="m-show"><span class="chk"></span>${S.keysShown ? 'Hide keys on screen' : 'Show keys on screen'}<span class="sc">⌃⌥D</span></button>
+      <button data-act="m-setup" data-t="m-setup"><span class="chk"></span>Set up keys…</button><hr>
+      <span class="hd">Profile</span>
+      <button class="ind" data-act="m-auto" data-t="m-auto"><span class="chk">${S.held ? '' : '✓'}</span>Automatic</button>
+      ${PROFILES.map(p => `<button class="ind" data-act="m-prof" data-p="${p}" data-t="m-prof-${p}"><span class="chk">${S.held === p ? '✓' : (!S.held && prof() === p ? '–' : '')}</span>${p}</button>`).join('')}<hr>
+      <span class="info"><span class="chk"></span>Box: not plugged in</span>
+      <button data-act="m-settings" data-t="m-settings"><span class="chk"></span>Settings…<span class="sc">⌘,</span></button><hr>
+      <button data-act="m-none"><span class="chk"></span>Quit AMS Deck Mate<span class="sc">⌘Q</span></button></div>` : '';
+
+  let setup = '';
+  if (S.setup) {
+    const pf = S.deck[S.suProfile], ids = Object.keys(pf), pg = pf[S.suPage in pf ? S.suPage : 'p1'];
+    const note = p => p === 'Default' ? 'Default' : p;
+    const e = S.su && S.su.slot !== null ? S.su : null;
+    const cur = e ? pg.keys[e.slot] : null;
+    setup = `<div class="win setup" data-t="setup"><div class="tb"><span class="dots"><i></i><i></i><i></i></span><span class="ttl">Set up keys</span></div>
+      <div class="cols">
+        <div class="col"><h4 style="color:var(--green-mark)">Profiles</h4>${PROFILES.map(p => `<div class="pr ${S.suProfile === p ? 'on' : ''}" data-act="su-prof" data-p="${p}">${p}<small>${note(p)}</small></div>`).join('')}
+          <span class="lab">Use with apps</span><div style="font-size:12px">${S.suProfile === 'Default' ? 'The default: it shows for every app without a profile of its own.' : esc(S.suProfile) + ' shows by itself when it is in front.'}</div></div>
+        <div class="col"><h4 style="color:var(--purple-mark)">Keys</h4>
+          <div class="tabsrow">${ids.map(id => `<span class="${id === (S.suPage in pf ? S.suPage : 'p1') ? 'on' : ''}">${esc(pf[id].name)}</span>`).join('')}</div>
+          ${grid(pg.keys, 64, 8, 11, 22, 'su-key').replace(/data-t="key-/g, 'data-t="su-key-')}
+          <p style="color:var(--muted);font-size:11.5px;margin:8px 0 0">Click a key to change it.</p></div>
+        <div class="col">${e ? `<h4 style="color:var(--purple-mark)">Key ${e.slot + 1}</h4><div style="color:var(--muted);font-size:11px;margin-top:-4px">row ${Math.floor(e.slot / 5) + 1}, place ${e.slot % 5 + 1}</div>
+          <span class="lab">Title</span><input id="su-title" value="${esc(e.title)}" placeholder="Title" aria-label="Title" data-t="su-title">
+          <span class="lab">Icon</span><div style="font-size:12.5px">Automatic</div>
+          <span class="lab">What it does</span><select id="su-kind" aria-label="What it does" data-t="su-kind">${[['none', 'Nothing'], ['app', 'Open an app'], ['web', 'Open a link or a file'], ['raycast', 'Raycast'], ['shortcut', 'Keyboard shortcut'], ['text', 'Type text'], ['media', 'Music and sound']].map(([v, l]) => `<option value="${v}" ${e.kind === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+          <div class="prob">${esc(e.problem || '')}</div>
+          <div class="bt"><button class="mbtn">Try it</button><button class="mbtn">Clear key</button></div>
+          <div class="bt"><button class="mbtn" data-act="su-cancel" data-t="su-cancel">Cancel</button><button class="mbtn prim" data-act="su-save" data-t="su-save">Save</button></div>`
+          : `<h4 style="color:var(--purple-mark)">Key</h4><div style="color:var(--muted);font-size:12.5px">Click one of the 15 keys to give it a title, an icon and something to do.</div>`}</div>
+      </div>
+      <div class="sfoot"><span>Changes are kept as you make them. Every earlier state stays as a safety copy.</span><span class="sp"></span><button class="mbtn prim" data-act="su-done" data-t="su-done">Done</button></div></div>`;
+  }
+
+  let settings = '';
+  if (S.settings) {
+    const ch = (a, label, on, t) => `<button class="ch ${on ? 'on' : ''}" data-act="${a}" data-t="${t}">${label}</button>`;
+    settings = `<div class="win settings" data-t="settings"><div class="tb"><span class="dots"><i data-act="settings-done"></i><i></i><i></i></span><span class="ttl">AMS Deck Mate</span></div>
+      <div class="tabs2"><span class="on">Settings</span><span>How it works</span><span>What’s new</span></div>
+      <div class="pane">
+        <div class="card2"><h5>The box</h5><div class="row2">Not plugged in</div><div class="nt">Not yet tried on the real box. The keys on screen work without it.</div></div>
+        <div class="card2"><h5>Keys on screen</h5>
+          <div class="row2"><span class="lb">Show them</span>${ch('place-left', 'Where I left them', S.place === 'left', 'placeLeft')}${ch('place-pointer', 'At the mouse pointer', S.place === 'pointer', 'placePointer')}</div>
+          <div class="row2"><span class="lb">Size</span>${ch('size-small', 'Small', S.size === 'small', 'size-small')}${ch('size-normal', 'Normal', S.size === 'normal', 'size-normal')}${ch('size-large', 'Large', S.size === 'large', 'size-large')}</div>
+          <button class="cb ${S.hide ? 'on' : ''}" data-act="hide-toggle" data-t="hideAfter"><i>${S.hide ? '✓' : ''}</i>Hide after a key is pressed</button>
+          <div class="nt">Control-Option-D shows or hides them. A folder, Back or a page key never hides them: you are not done yet.</div></div>
+        <div class="card2"><h5>iPhone</h5><div class="cb on"><i>✓</i>Let an iPhone use these keys</div><div class="nt">On the same Wi-Fi it finds the Mac by itself. The first time, this Mac asks whether to allow it.</div></div>
+      </div>
+      <div class="sfoot">Version 0.3 (3)<span class="sp"></span><button class="mbtn">Quit AMS Deck Mate</button><button class="mbtn prim" data-act="settings-done" data-t="settings-done">Done</button></div></div>`;
+  }
+
+  let phone = '';
+  if (S.phone !== 'off') {
+    let inner;
+    if (S.phone === 'on') inner = `<div class="pl">${esc(placeLine())}</div><div class="pgrid">${grid(curPage().keys, 30, 3, 6.5, 13, 'pkey')}</div>`;
+    else if (S.phone === 'denied') inner = `<div class="msg"><b>Your Mac said no</b>Tap Ask again and the Mac asks once more.<button data-act="ask-again" data-t="ask-again">Ask again</button></div>`;
+    else if (S.phone === 'ask') inner = `<div class="msg"><b>Allow this iPhone on your Mac</b>Your Mac is asking whether this iPhone may use the keys. Click Allow there.</div>`;
+    else inner = `<div class="msg"><b>Looking for your Mac…</b>Open AMS Deck Mate on the Mac and put both on the same Wi-Fi, or the Mac on this iPhone’s hotspot.</div>`;
+    phone = `<div class="phone" data-t="phone" aria-label="iPhone">${inner}</div>`;
+  }
+  const alert = S.alert ? `<div class="alert" data-t="alert"><b>“iPhone” wants to use your keys. Allow?</b><p>After Allow, the Mac remembers this iPhone.</p>
+      <div class="r"><button class="mbtn" data-act="deny" data-t="deny">Don’t Allow</button><button class="mbtn prim" data-act="allow" data-t="allow">Allow</button></div></div>` : '';
+
+  st.innerHTML = `<div class="mbar"><b class="front">${S.front}</b><span>File</span><span>Edit</span><span>View</span><span class="sp"></span>
+      <button class="kicon ${S.menu ? 'open' : ''}" data-act="kicon" data-t="kicon" aria-label="Deck Mate menu">${icon('keycap')}</button><span>Mon 16 Nov&nbsp; 09:41</span></div>
+    ${apps}${m}${keysWin}${setup}${settings}${phone}${alert}
+    <div class="dock-hint">Keyboard: <button data-act="kbd" data-t="kbd" aria-label="Control Option D">⌃ ⌥ D</button></div>
+    ${S.toast ? `<div class="toast">${esc(S.toast)}</div>` : ''}`;
+  markTarget();
+}
+function toast(t) { S.toast = t; renderStage(); clearTimeout(toast.h); toast.h = setTimeout(() => { S.toast = ''; renderStage(); }, 1500); }
+
+function showKeys(on) { S.keysShown = on; S.menu = false; renderStage(); if (on) emit('shown'); }
+function toggleKeys() { showKeys(!S.keysShown); }
+function setFront(n) {
+  S.front = n; S.menu = false;
+  if (!S.held) { S.page = 'p1'; renderStage(); emit('front', n); } else { renderStage(); emit('stayed', n); }
+}
+function pressKey(k, src) {
+  if (!k) return;
+  if (k.kind === 'move') {
+    if (k.to === 'back') { S.page = curPage().parent || 'p1'; renderStage(); emit('back'); }
+    else { S.page = k.to; renderStage(); emit('open', k.t); }
+    return;
+  }
+  if (src === 'phone') { emit('tap', k.t); toast('Mac: ' + k.say); return; }
+  emit('press', k.t); toast(k.say);
+  if (S.hide) { S.keysShown = false; renderStage(); emit('hid'); }
+}
+
+/* Clicks inside the pretend Mac and iPhone */
+document.getElementById('stage').addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) { if (S.menu) { S.menu = false; renderStage(); } return; }
+  const a = el.dataset.act;
+  if (a !== 'kicon' && !a.startsWith('m-') && S.menu) S.menu = false;
+  switch (a) {
+    case 'kicon': S.menu = !S.menu; renderStage(); if (S.menu) emit('menu'); break;
+    case 'm-show': toggleKeys(); break;
+    case 'm-setup': case 'open-setup': S.menu = false; S.setup = true; S.suProfile = prof(); S.suPage = S.page; S.su = { slot: null }; renderStage(); emit('setup'); break;
+    case 'm-settings': S.menu = false; S.settings = true; renderStage(); emit('settings'); break;
+    case 'm-auto': S.held = null; S.page = 'p1'; S.menu = false; renderStage(); emit('auto'); break;
+    case 'm-prof': S.held = el.dataset.p; S.page = 'p1'; S.menu = false; renderStage(); emit('pin', el.dataset.p); break;
+    case 'm-none': S.menu = false; renderStage(); break;
+    case 'hide-keys': S.keysShown = false; renderStage(); break;
+    case 'kkey': pressKey(curPage().keys[+el.dataset.i], 'mac'); break;
+    case 'pkey': pressKey(curPage().keys[+el.dataset.i], 'phone'); break;
+    case 'front': setFront(el.dataset.app); break;
+    case 'kbd': toggleKeys(); break;
+    case 'place-left': S.place = 'left'; renderStage(); break;
+    case 'place-pointer': S.place = 'pointer'; renderStage(); emit('pointer'); break;
+    case 'size-small': case 'size-normal': case 'size-large': S.size = a.slice(5); renderStage(); emit('size', S.size); break;
+    case 'hide-toggle': S.hide = !S.hide; renderStage(); if (S.hide) emit('hideon'); break;
+    case 'settings-done': S.settings = false; renderStage(); break;
+    case 'allow': S.alert = false; S.phone = 'on'; renderStage(); emit('allow'); break;
+    case 'deny': S.alert = false; S.phone = 'denied'; renderStage(); break;
+    case 'ask-again': S.phone = 'ask'; S.alert = true; renderStage(); break;
+    case 'su-prof': S.suProfile = el.dataset.p; S.suPage = 'p1'; S.su = { slot: null }; renderStage(); break;
+    case 'su-key': { const pg = S.deck[S.suProfile][S.suPage in S.deck[S.suProfile] ? S.suPage : 'p1'], i = +el.dataset.i, k = pg.keys[i];
+      S.su = { slot: i, title: k ? k.t : '', kind: k ? k.kind : 'none', problem: '' }; renderStage(); emit('pickkey'); break; }
+    case 'su-cancel': S.su = { slot: null }; renderStage(); break;
+    case 'su-save': saveKey(); break;
+    case 'su-done': S.setup = false; S.su = null; renderStage(); break;
+  }
+});
+document.getElementById('stage').addEventListener('mousemove', ev => {
+  const r = document.getElementById('stagebox').getBoundingClientRect(), sc = r.width / 960;
+  S.pointer = { x: (ev.clientX - r.left) / sc, y: (ev.clientY - r.top) / sc };
+});
+document.getElementById('stage').addEventListener('input', ev => { if (S.su && ev.target.id === 'su-title') S.su.title = ev.target.value; });
+document.getElementById('stage').addEventListener('change', ev => { if (S.su && ev.target.id === 'su-kind') S.su.kind = ev.target.value; });
+document.getElementById('stage').addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && S.su && S.su.slot !== null) { S.su = { slot: null }; renderStage(); }
+  if (ev.key === 'Enter' && S.su && S.su.slot !== null) { ev.preventDefault(); saveKey(); }
+});
+document.addEventListener('keydown', ev => { if (ev.ctrlKey && ev.altKey && (ev.code === 'KeyD' || ev.key.toLowerCase() === 'd')) { ev.preventDefault(); toggleKeys(); } });
+
+function saveKey() {
+  const e = S.su, title = (e.title || '').trim();
+  if (!title) e.problem = 'Give the key a title.';
+  else if (e.kind !== 'text') e.problem = 'Pick “Type text” under “What it does”.';
+  if (e.problem) { renderStage(); emit('problem'); return; }
+  const pf = S.deck[S.suProfile], id = S.suPage in pf ? S.suPage : 'p1';
+  pf[id].keys[e.slot] = K(title, 'text', 'text', 'Types your text');
+  S.su = { slot: null }; renderStage(); emit('saved', title);
+}
+
+/* ---------- Lessons (see → try → check) ---------- */
+const SWATCH = [['app', 'Apps', 'blue'], ['web', 'Links', 'teal'], ['raycast', 'Raycast', 'red-orange'], ['shortcut', 'Keyboard shortcuts', 'purple'], ['text', 'Typed text', 'amber'], ['media', 'Music and sound', 'green'], ['move', 'Moving around', 'grey-blue']];
+const LESSONS = [
+  { title: 'Keys on screen', icon: 'laptop', steps: [
+    { kind: 'look', head: 'A menu bar app', text: 'AMS Deck Mate lives in the menu bar at the top of the screen and has no Dock icon. Its keys float on your screen.', target: 'kicon' },
+    { kind: 'try', head: 'Show the keys', text: 'Click the key icon, then "Show keys on screen".', target: 'kicon', menuTarget: 'm-show', wait: 'shown', ok: 'The same 15 keys as the box, in a small window above your other windows.' },
+    { kind: 'try', head: 'Press a key', text: 'Click "Play or pause". A click does what pressing the box key does.', target: 'key-Play or pause', wait: 'press', ok: 'Done. The window never takes the keyboard from the app you work in.' },
+    { kind: 'check', head: 'Quick check', text: 'Do the keys on screen need the Stream Deck box?', answers: ['No, they work without it', 'Yes, always', 'Only with an iPhone'], right: 0, ok: 'Right. When you plug in your Stream Deck, the box shows the same keys.' },
+  ]},
+  { title: 'The look of a key', icon: 'keycap', steps: [
+    { kind: 'look', head: 'A flat coloured tile', text: 'Each key is a flat coloured tile with a white hand-drawn icon and a short title.', target: 'key-Screenshot' },
+    { kind: 'look', head: 'One colour per kind', text: 'The colour tells you what the key does.', swatches: true },
+    { kind: 'try', head: 'Press the purple key', text: 'Screenshot is a keyboard shortcut key, so it is purple. Click it.', target: 'key-Screenshot', wait: 'press', match: 'Screenshot', ok: 'It presses ⌘ ⇧ 4 for you.' },
+    { kind: 'check', head: 'Quick check', text: 'A key opens Mail and has no words of its own. What does it show?', answers: ['Nothing', 'The app\'s name: Mail', 'The word App'], right: 1, ok: 'Right. Words you write on a key always win.' },
+  ]},
+  { title: 'Folders and Raycast', icon: 'map', steps: [
+    { kind: 'try', head: 'Open a folder', text: 'Click Apps. A folder key opens another page of keys.', target: 'key-Apps', wait: 'open', match: 'Apps', ok: 'Mail, Safari, Calculator: app keys with no words show the app\'s name.' },
+    { kind: 'try', head: 'Go back', text: 'Click Back.', target: 'key-Back', wait: 'back', setup: () => { S.page = 'apps'; }, ok: 'Back returns to the page you came from.' },
+    { kind: 'try', head: 'A Raycast folder', text: 'Click the Raycast key.', target: 'key-Raycast', wait: 'open', match: 'Raycast', setup: () => { S.page = 'p1'; }, ok: 'A page of Raycast commands, in red-orange.' },
+    { kind: 'look', head: 'Raycast keys', text: 'The first time a key runs a command, Raycast asks once. Choose "Always open command".', hint: 'In Set up keys you pick a command from a list. "Run quietly" keeps Raycast from coming forward.', setup: () => { S.page = 'raycast'; }, target: 'key-Clipboard' },
+    { kind: 'check', head: 'Quick check', text: 'What does Back do?', answers: ['Goes back to the page the folder was opened from', 'Quits the app', 'Deletes the folder'], right: 0, ok: 'Right.' },
+  ]},
+  { title: 'Profiles by themselves', icon: 'keys', steps: [
+    { kind: 'look', head: 'Keys follow the app in front', text: 'Three profiles: Default, Notion and OmniFocus. The bold name at the top left is the app in front.', target: 'win-Notion', setup: () => { S.front = 'Finder'; S.held = null; S.page = 'p1'; } },
+    { kind: 'try', head: 'Bring Notion forward', text: 'Click the Notion window.', target: 'win-Notion', wait: 'front', match: 'Notion', setup: () => { S.front = 'Finder'; S.held = null; S.page = 'p1'; }, ok: 'The keys changed to the Notion profile by themselves. Any other app shows Default.' },
+    { kind: 'try', head: 'Hold a profile', text: 'Menu bar icon, then Profile, then Notion.', target: 'kicon', menuTarget: 'm-prof-Notion', wait: 'pin', match: 'Notion', setup: () => { S.front = 'Finder'; S.held = null; S.page = 'p1'; }, ok: 'The top line says "held". The keys stay while you move between apps.' },
+    { kind: 'try', head: 'Change app', text: 'Click the OmniFocus window. Watch the keys.', target: 'win-OmniFocus', wait: 'stayed', setup: () => { S.front = 'Finder'; S.held = 'Notion'; S.page = 'p1'; }, ok: 'Still Notion: a held profile does not change.' },
+    { kind: 'try', head: 'Follow the app again', text: 'Menu bar icon, then "Automatic".', target: 'kicon', menuTarget: 'm-auto', wait: 'auto', setup: () => { S.front = 'OmniFocus'; S.held = 'Notion'; S.page = 'p1'; }, ok: 'Automatic again: the keys follow the app in front.' },
+  ]},
+  { title: 'Set up keys', icon: 'notebook', steps: [
+    { kind: 'try', head: 'Open Set up keys', text: 'Menu bar icon, then "Set up keys…".', target: 'kicon', menuTarget: 'm-setup', wait: 'setup', setup: () => { S.setup = false; S.su = null; }, ok: 'The floating keys step aside while this window is open.' },
+    { kind: 'look', head: 'Three columns', text: 'Profiles on the left, the 15 keys in the middle, the key you picked on the right.', target: 'setup', setup: () => { S.setup = true; S.suProfile = 'Default'; S.suPage = 'p1'; S.su = { slot: null }; } },
+    { kind: 'try', head: 'Pick an empty key', text: 'Click the empty key in the middle of the bottom row.', target: 'su-slot-12', wait: 'pickkey', setup: () => { S.setup = true; S.suProfile = 'Default'; S.suPage = 'p1'; S.su = { slot: null }; }, ok: 'On the right you set its Title, Icon and "What it does".' },
+    { kind: 'try', head: 'Title, kind, Save', text: 'Title: Greeting. "What it does": Type text. Then Save.', target: 'su-title', wait: 'saved', setup: () => { S.setup = true; S.suProfile = 'Default'; S.suPage = 'p1'; if (!S.su || S.su.slot === null) S.su = { slot: 12, title: '', kind: 'none', problem: '' }; }, ok: 'Saved. The key is amber, the colour of typed text.', hint: 'Cancel leaves the key as it was.' },
+    { kind: 'check', head: 'Quick check', text: 'What does Escape do while you edit a key?', answers: ['Cancel', 'Save', 'Clear the key'], right: 0, ok: 'Right: every edit has Cancel and Save, and Escape is Cancel.' },
+  ]},
+  { title: 'Keys at the pointer', icon: 'compass', steps: [
+    { kind: 'try', head: 'Open Settings', text: 'Menu bar icon, then "Settings…".', target: 'kicon', menuTarget: 'm-settings', wait: 'settings', setup: () => { S.setup = false; S.su = null; S.settings = false; S.keysShown = false; S.place = 'left'; S.hide = false; }, ok: 'The card "Keys on screen" holds the choices.' },
+    { kind: 'try', head: 'Show them at the pointer', text: 'Click "At the mouse pointer".', target: 'placePointer', wait: 'pointer', setup: () => { S.settings = true; S.keysShown = false; S.place = 'left'; S.hide = false; }, ok: 'Now the keys appear under the mouse pointer each time.' },
+    { kind: 'try', head: 'Hide after a key', text: 'Tick "Hide after a key is pressed".', target: 'hideAfter', wait: 'hideon', hint: 'Size has Small, Normal and Large. The window changes size at once.', setup: () => { S.settings = true; S.keysShown = false; S.place = 'pointer'; S.hide = false; }, ok: 'On. A key that does something now hides the keys.' },
+    { kind: 'try', head: 'Press Control-Option-D', text: 'Press ⌃ ⌥ D on your keyboard, or click the button at the bottom right.', target: 'kbd', wait: 'shown', setup: () => { S.settings = false; S.keysShown = false; S.place = 'pointer'; S.hide = true; S.front = 'Finder'; S.held = null; S.page = 'p1'; }, ok: 'The keys appeared at the pointer. Near an edge they move in until they are whole.' },
+    { kind: 'try', head: 'Click a key', text: 'Click "Play or pause".', target: 'key-Play or pause', wait: 'hid', setup: () => { S.settings = false; S.keysShown = true; S.place = 'pointer'; S.hide = true; S.front = 'Finder'; S.held = null; S.page = 'p1'; }, ok: 'Pressed, and the keys are gone. A folder or Back would have kept them open.' },
+  ]},
+  { title: 'On your iPhone', icon: 'phone', steps: [
+    { kind: 'look', head: 'The same keys on the iPhone', text: 'Deck Mate on the iPhone needs the Mac app open and the same Wi-Fi, or the Mac on your iPhone\'s hotspot.', target: 'phone', setup: () => { S.settings = false; S.keysShown = true; S.hide = false; S.place = 'left'; S.phone = 'looking'; S.alert = false; } },
+    { kind: 'try', head: 'Allow it, once', text: 'The Mac asks the first time. Click Allow.', target: 'allow', wait: 'allow', setup: () => { S.keysShown = true; S.phone = 'ask'; S.alert = true; }, ok: 'Allowed. The Mac remembers this iPhone.', hint: 'Don\'t Allow shows "Ask again" on the iPhone.' },
+    { kind: 'try', head: 'Tap a key', text: 'Tap "Play or pause" on the iPhone.', target: 'pkey-Play or pause', wait: 'tap', setup: () => { S.keysShown = true; S.phone = 'on'; S.alert = false; S.hide = false; S.front = 'Finder'; S.held = null; S.page = 'p1'; }, ok: 'The Mac does it. The keys on the Mac screen do not hide.' },
+    { kind: 'try', head: 'It follows the Mac', text: 'Click the Notion window on the Mac.', target: 'win-Notion', wait: 'front', match: 'Notion', setup: () => { S.keysShown = true; S.phone = 'on'; S.alert = false; S.front = 'Finder'; S.held = null; S.page = 'p1'; }, ok: 'The iPhone changed to the Notion profile with the Mac.' },
+    { kind: 'check', head: 'Quick check', text: 'The iPhone says "Looking for your Mac…". What do you check first?', answers: ['The Mac app is open and Wi-Fi is on', 'Delete the iPhone app', 'Plug in the Stream Deck'], right: 0, ok: 'Right. Also: Local Network allowed for Deck Mate in the iPhone\'s Settings.' },
+  ]},
+];
+
+/* ---------- Tour engine (reusable) ---------- */
+let ci = 0, si = 0, solved = false, targetOff = false;
+const store = { get(k) { try { return localStorage.getItem(k) } catch { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
+let doneChapters = new Set(JSON.parse(store.get('deckmate-done') || '[]'));
+
+function emit(name, data) {
+  const st = LESSONS[ci]?.steps[si]; if (!st || solved || st.kind !== 'try') return;
+  if (name === 'menu' && st.menuTarget) { markTarget(st.menuTarget); return; }
+  if ((st.wait === name || st.alt === name) && (st.match === undefined || st.match === data)) succeed(st.ok);
+  else if (name === 'menu' && st.reopenMenu) markTarget(st.target);
+}
+function succeed(msg) {
+  solved = true; targetOff = true; const fb = document.getElementById('fb'); if (fb) { fb.textContent = '✓ ' + msg; fb.className = 'feedback'; }
+  const nx = document.getElementById('next'); if (nx) { nx.disabled = false; nx.focus({ preventScroll: true }); }
+}
+let curTarget = null;
+function markTarget(t) {
+  if (t !== undefined) curTarget = t;
+  document.querySelectorAll('.target').forEach(e => e.classList.remove('target'));
+  if (!curTarget || targetOff) return;
+  let el = document.querySelector(`#stage [data-t="${CSS.escape(curTarget)}"]`);
+  if (!el && curTarget.startsWith('m-')) el = document.querySelector('#stage [data-t="kicon"]');
+  if (el) el.classList.add('target');
+}
+function renderRail() {
+  const total = LESSONS.reduce((n, l) => n + l.steps.length, 0);
+  const before = LESSONS.slice(0, ci).reduce((n, l) => n + l.steps.length, 0) + si;
+  document.getElementById('rail').innerHTML = `<div class="brand"><span class="tile">${icon('keycap')}</span><div><h1>Deck Mate Tour</h1><small>Learn the app in about 8 minutes</small></div></div>
+    ${LESSONS.map((l, i) => `<button class="chap ${i === ci ? 'cur' : ''} ${doneChapters.has(i) ? 'done' : ''}" data-ch="${i}">${icon(l.icon)}<span>${l.title}</span><span class="n">${doneChapters.has(i) ? '✓' : l.steps.length + ' steps'}</span></button>`).join('')}
+    <button class="chap ${ci === LESSONS.length ? 'cur' : ''}" data-ch="${LESSONS.length}">${icon('trophy')}<span>On your Mac</span></button>
+    <div class="bar"><i style="width:${Math.round(100 * Math.min(before, total) / total)}%"></i></div>
+    <p class="railnote">Everything here is a practice copy. Nothing changes on your Mac.</p>`;
+}
+document.getElementById('rail').addEventListener('click', e => { const b = e.target.closest('[data-ch]'); if (b) goChapter(+b.dataset.ch); });
+
+function goChapter(i) {
+  ci = i; si = 0; S = START();
+  // Bring the pretend Mac to where that chapter starts.
+  S.keysShown = i >= 1 && i !== 5;
+  renderStep();
+}
+
+function renderStep() {
+  renderRail();
+  const coach = document.getElementById('coach'), fin = document.getElementById('finish');
+  if (ci >= LESSONS.length) { renderFinish(); coach.hidden = true; return; }
+  coach.hidden = false; fin.hidden = true;
+  const L = LESSONS[ci], st = L.steps[si];
+  solved = st.kind === 'look'; targetOff = false;
+  S.menu = false;
+  if (st.setup) st.setup();
+  S.toast = '';
+  const kindName = { look: 'Look', try: 'Try it', check: 'Check' }[st.kind];
+  coach.innerHTML = `<div class="eyebrow">${icon(L.icon)} ${esc(L.title)} <span class="kind">· ${kindName} · step ${si + 1} of ${L.steps.length}</span></div>
+    <div><h2>${esc(st.head)}</h2><p>${esc(st.text)}</p>${st.hint ? `<p style="color:var(--muted);font-size:13px">${esc(st.hint)}</p>` : ''}</div>
+    <div class="btns">${ci + si > 0 ? '<button class="btn ghost" id="back">Back</button>' : ''}<button class="btn main-b" id="next" ${solved ? '' : 'disabled'}>${si === L.steps.length - 1 ? 'Finish chapter' : 'Next'}</button></div>
+    ${st.swatches ? `<div class="swatches">${SWATCH.map(([k, n, c]) => `<span><i style="background:var(--k-${k})"></i>${n} · ${c}</span>`).join('')}</div>` : ''}
+    ${st.kind === 'check' ? `<div class="answers">${st.answers.map((a, i) => `<button class="ans" data-a="${i}">${esc(a)}</button>`).join('')}</div>` : ''}
+    <p class="feedback" id="fb"></p>`;
+  curTarget = st.target || null;
+  renderStage();
+  if (st.kind === 'check') coach.querySelectorAll('.ans').forEach(b => b.onclick = () => {
+    const fb = document.getElementById('fb');
+    if (+b.dataset.a === st.right) { coach.querySelectorAll('.ans').forEach(x => x.disabled = true); b.classList.add('right'); succeed(st.ok); }
+    else { b.classList.add('wrong'); fb.textContent = 'Not quite. Try another answer.'; fb.className = 'feedback no'; }
+  });
+  document.getElementById('next').onclick = next;
+  const bk = document.getElementById('back'); if (bk) bk.onclick = back;
+}
+function next() {
+  const L = LESSONS[ci];
+  if (si < L.steps.length - 1) { si++; renderStep(); return; }
+  doneChapters.add(ci); store.set('deckmate-done', JSON.stringify([...doneChapters]));
+  ci++; si = 0; renderStep();
+}
+function back() { if (si > 0) { si--; solved = true; renderStep(); } else if (ci > 0) { goChapter(ci - 1); } }
+
+function renderFinish() {
+  const fin = document.getElementById('finish'); fin.hidden = false;
+  S = START(); S.keysShown = true; curTarget = null; renderStage();
+  const items = ['Click the key icon in your menu bar and choose "Show keys on screen". (If you cannot see the icon, Tidy Bar may have tucked it away.)',
+    'Open "Set up keys…" and click one key to see its Title, Icon and "What it does".',
+    'Pick a profile in the menu, then choose "Automatic" so the keys follow the app in front.',
+    'Open Deck Mate on your iPhone on the same Wi-Fi, and click Allow on your Mac when it asks.'];
+  let ticks = JSON.parse(store.get('deckmate-real') || '[]');
+  fin.innerHTML = `<h3>Now try it on your real Mac</h3>${items.map((t, i) => `<label><input type="checkbox" id="real-${i}" ${ticks.includes(i) ? 'checked' : ''}><span>${esc(t)}</span></label>`).join('')}
+    <p style="color:var(--muted);font-size:13px;margin:10px 0 0">When you plug in your Stream Deck, quit Elgato's app first. Settings then shows "Connected".</p>
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="btn main-b" id="again">Start the tour again</button></div>`;
+  fin.querySelectorAll('input').forEach((c, i) => c.onchange = () => { ticks = ticks.filter(x => x !== i); if (c.checked) ticks.push(i); store.set('deckmate-real', JSON.stringify(ticks)); });
+  document.getElementById('again').onclick = () => goChapter(0);
+}
+
+/* Fit the 960×560 pretend Mac into its box */
+function fit() { const box = document.getElementById('stagebox'); document.getElementById('stage').style.transform = `scale(${box.clientWidth / 960})`; }
+new ResizeObserver(fit).observe(document.getElementById('stagebox'));
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && !(S.su && S.su.slot !== null) && e.target.tagName !== 'INPUT') { const n = document.getElementById('next'); if (n && !n.disabled && document.activeElement !== n) n.click(); } });
+renderStep(); fit();
+</script>
