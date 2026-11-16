@@ -128,10 +128,10 @@ struct PhoneSettings: View {
                 }
                 Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")
                 note("Five keys under the others that stay in place on every page and in every page group. You fill them on the Mac, in Set up keys.")
-                Toggle("Music strip", isOn: $showMusic).accessibilityIdentifier("showMusic")
-                note("What is playing on the Mac (Spotify or Music), with play, next and volume, above the keys.")
+                Toggle("Music button", isOn: $showMusic).accessibilityIdentifier("showMusic")
+                note("A small round button at the top right. Tap it for what is playing on the Mac (Spotify or Music), with play, next and volume.")
                 Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
-                note("The Mac’s battery and the app in front, in the top line.")
+                note("The Mac’s battery and the app in front, in one small line at the very bottom.")
                 Toggle("Navigation picture", isOn: $showMap).accessibilityIdentifier("showMap")
                 note("On an iPad held on its side: every page group and page as a small picture on the left. Tap one to go there.")
                 note("Hold a key for half a second for its long-press action (keys with a small dot have one).")

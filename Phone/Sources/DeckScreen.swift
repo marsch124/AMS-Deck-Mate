@@ -45,6 +45,8 @@ struct DeckScreen: View {
     @AppStorage("ownKeys") private var ownKeys = false
     @AppStorage("showMap") private var showMap = true
     @State private var onItsSide = false
+    @State private var showStatus = false
+    @State private var showMusicPlate = false
     /// The navigation picture shows on an iPad held on its side ("-forceMap" shows it anywhere, for checks).
     private var mapShows: Bool {
         showMap && connected && !link.map.isEmpty
@@ -83,6 +85,7 @@ struct DeckScreen: View {
                 }
                 }
                 }
+                glanceLine
             }
             .padding(.horizontal, isPad ? 20 : 12)
             .padding(.vertical, isPad ? 14 : 8)
@@ -115,7 +118,6 @@ struct DeckScreen: View {
     private var keysBlock: some View {
         VStack(spacing: 8) {
             if showNote { noteLine }
-            if showMusic, connected, link.newMac, let now = link.mac { musicStrip(now) }
             GeometryReader { box in
                 let side = Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow) * keySize.scale
                 VStack(spacing: keyGap.points + Self.favouritesGap) {
@@ -236,45 +238,61 @@ struct DeckScreen: View {
         .accessibilityIdentifier("navigationPicture")
     }
 
-    // MARK: Music strip
+    // MARK: Music
+
+    /// One small round button (filled while something plays); a tap opens the music plate.
+    private func musicButton(_ now: PhoneLink.MacNow) -> some View {
+        Button { showMusicPlate = true } label: {
+            PhoneIcon(name: "iconMusic", size: isPad ? 22 : 19)
+                .foregroundStyle(now.playing ? Color.white : PhonePalette.part("settings"))
+                .frame(width: isPad ? 38 : 34, height: isPad ? 38 : 34)
+                .background(now.playing ? PhonePalette.fill("settings") : PhonePalette.part("settings").opacity(0.14), in: Circle())
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Music")
+        .accessibilityIdentifier("musicButton")
+        .popover(isPresented: $showMusicPlate) {
+            musicPlate(link.mac ?? now).presentationCompactAdaptation(.popover)
+        }
+    }
 
     /// What is playing on the Mac, with play or pause, next, quieter and louder.
-    private func musicStrip(_ now: PhoneLink.MacNow) -> some View {
-        HStack(spacing: isPad ? 12 : 6) {
-            PhoneIcon(name: "iconMusic", size: isPad ? 22 : 18).foregroundStyle(PhonePalette.part("settings"))
-            VStack(alignment: .leading, spacing: 0) {
-                Text(now.song.isEmpty ? "Nothing playing yet" : now.song)
-                    .font((isPad ? Font.callout : Font.subheadline).weight(.semibold)).lineLimit(1)
+    private func musicPlate(_ now: PhoneLink.MacNow) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(now.song.isEmpty ? "Nothing playing yet" : now.song).font(.headline).lineLimit(2)
                 if !now.artist.isEmpty {
-                    Text(now.artist).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(now.artist).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier("musicSong")
-            Spacer(minLength: 4)
-            musicButton("iconPlay", now.playing ? "Pause" : "Play", "musicPlay") { link.music(.playPause) }
-            musicButton("iconNext", "Next track", "musicNext") { link.music(.next) }
-            musicButton("iconQuieter", "Quieter", "musicQuieter") { link.music(.volumeDown) }
-            if let volume = now.volume {
-                Text("\(volume) %").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                    .frame(minWidth: 38)
-                    .accessibilityIdentifier("musicVolume")
+            HStack(spacing: 4) {
+                musicKey("iconPlay", now.playing ? "Pause" : "Play", "musicPlay") { link.music(.playPause) }
+                musicKey("iconNext", "Next track", "musicNext") { link.music(.next) }
+                Spacer(minLength: 6)
+                musicKey("iconQuieter", "Quieter", "musicQuieter") { link.music(.volumeDown) }
+                if let volume = now.volume {
+                    Text("\(volume) %").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                        .frame(minWidth: 44)
+                        .accessibilityIdentifier("musicVolume")
+                }
+                musicKey("iconLouder", "Louder", "musicLouder") { link.music(.volumeUp) }
             }
-            musicButton("iconLouder", "Louder", "musicLouder") { link.music(.volumeUp) }
         }
-        .padding(.leading, 12)
-        .padding(.trailing, 6)
-        .padding(.vertical, 3)
-        .background(PhonePalette.card, in: Capsule())
+        .padding(14)
+        .frame(width: 290, alignment: .leading)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("musicStrip")
+        .accessibilityIdentifier("musicPlate")
     }
 
-    private func musicButton(_ icon: String, _ label: String, _ id: String, _ action: @escaping () -> Void) -> some View {
+    private func musicKey(_ icon: String, _ label: String, _ id: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             PhoneIcon(name: icon, size: isPad ? 24 : 20)
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(width: isPad ? 44 : 36, height: 38)
+                .frame(width: 44, height: 40)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -285,40 +303,73 @@ struct DeckScreen: View {
     // MARK: Top line
 
     private var topBar: some View {
-        HStack(alignment: .center, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                placeLine
-                HStack(spacing: 6) {
-                    Circle().fill(statusColour).frame(width: isPad ? 10 : 8, height: isPad ? 10 : 8)
-                    Text(statusText)
-                        .font(isPad ? .callout : .caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityIdentifier("linkStatus")
-                if showGlance, connected, link.newMac, let glance = link.mac?.glance, !glance.isEmpty {
-                    // The Mac at a glance: its battery and the app in front.
-                    HStack(spacing: 5) {
-                        if link.mac?.battery != nil { PhoneIcon(name: "iconBattery", size: isPad ? 18 : 14) }
-                        Text(glance).font(isPad ? .callout : .caption).lineLimit(1)
+        VStack(spacing: 2) {
+            ZStack {
+                // The heading: large and in the middle.
+                placeLine.padding(.horizontal, isPad ? 110 : 84)
+                HStack(spacing: 2) {
+                    statusDot
+                    Spacer(minLength: 8)
+                    if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
+                    Button { showSettings = true } label: {
+                        PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
+                            .foregroundStyle(PhonePalette.part("settings"))
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
-                    .foregroundStyle(.secondary)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Mac: \(glance)")
-                    .accessibilityIdentifier("macGlance")
+                    .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("settingsButton")
                 }
-                if let battery { batteryLine(battery) }
             }
-            Spacer(minLength: 8)
-            Button { showSettings = true } label: {
-                PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
-                    .foregroundStyle(PhonePalette.part("settings"))
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+            if let battery { batteryLine(battery) }
+        }
+    }
+
+    /// The link to the Mac as one small coloured dot; a tap says it in words.
+    private var statusDot: some View {
+        Button { showStatus = true } label: {
+            Circle().fill(statusColour)
+                .frame(width: isPad ? 16 : 13, height: isPad ? 16 : 13)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(statusText)
+        .accessibilityIdentifier("linkStatus")
+        .popover(isPresented: $showStatus) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(statusText).font(.headline)
+                ForEach([("Green", "connected to your Mac", Color(red: 0.25, green: 0.70, blue: 0.36)),
+                         ("Amber", "looking for the Mac, or waiting for it to allow this \(Self.device)", Color(red: 0.93, green: 0.62, blue: 0.14)),
+                         ("Red", "the Mac said no", Color(red: 0.90, green: 0.33, blue: 0.24))], id: \.0) { row in
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        Circle().fill(row.2).frame(width: 9, height: 9)
+                        Text("\(row.0): \(row.1)").font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
-            .accessibilityLabel("Settings")
-            .accessibilityIdentifier("settingsButton")
+            .padding(14)
+            .frame(width: 280, alignment: .leading)
+            .presentationCompactAdaptation(.popover)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("linkStatusCard")
+        }
+    }
+
+    /// The Mac at a glance, very small at the very bottom: its battery and the app in front.
+    @ViewBuilder
+    private var glanceLine: some View {
+        if showGlance, connected, link.newMac, let glance = link.mac?.glance, !glance.isEmpty {
+            HStack(spacing: 4) {
+                if link.mac?.battery != nil { PhoneIcon(name: "iconBattery", size: 12) }
+                Text(glance).font(.caption2).lineLimit(1)
+            }
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Mac: \(glance)")
+            .accessibilityIdentifier("macGlance")
         }
     }
 
@@ -326,9 +377,10 @@ struct DeckScreen: View {
     @ViewBuilder
     private var placeLine: some View {
         let title = Text(link.place.isEmpty ? "Deck Mate" : link.place)
-            .font(isPad ? .title2.weight(.bold) : .headline)
+            .font(isPad ? .largeTitle.weight(.bold) : .title2.weight(.bold))
             .foregroundStyle(.primary)
             .lineLimit(1)
+            .minimumScaleFactor(0.6)
         if let status = link.status, connected {
             let own = ownKeys && link.newMac
             Menu {

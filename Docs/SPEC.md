@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.6 (build 8), 16 Nov 2026; iPhone and iPad app 0.8 (build 11)
+# AMS Deck Mate, specification, version 0.6 (build 8), 16 Nov 2026; iPhone and iPad app 0.8.1 (build 12)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,7 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29).
-- Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music strip, and "All pages" in Set up keys (sections 24 to 28, and 5).
+- Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music button, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
 The icon opens a menu:
@@ -182,7 +182,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.8 (build 11). Not proven yet: the navigation picture on the real iPad.
+**0.6 (Mac, build 8, 16 Nov 2026).** The navigation picture (section 29). The iPhone and iPad app is 0.8.1 (build 12). Not proven yet: the navigation picture on the real iPad.
 
 **0.5 (Mac, build 7, 16 Nov 2026).** The features of sections 24 to 28, and "All pages" in Set up keys. The iPhone and iPad app is 0.7 (build 10). Not proven yet: long press on the real box, long press on a real iPhone or iPad, play or pause from the strip.
 
@@ -235,7 +235,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.8 (11). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.8.1 (12). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -262,7 +262,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 
 ## 21. The iPhone app, 0.4
 The iPhone needs the Mac at 0.4 for the new parts (marked *).
-- Layout: the 15 keys sit at the bottom of the screen, near the thumb; the place line is on top.
+- Layout: the 15 keys sit at the bottom of the screen, near the thumb; the heading is on top (see section 30).
 - Page groups by swipe (0.5.1): a swipe up on the keys locks the next page group, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one page group. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
 - Page group menu: a tap on the top line (the name of the page group) opens a menu: "Automatic", or "Lock one" of the page groups (as the Mac's menu). A hand-picked page group shows the lock beside its name (0.5.2). *
@@ -290,7 +290,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - The word "held" is gone from every text; it now says "locked".
 - A page group picked by hand (the top line's menu, a swipe up or down on the iPhone and iPad, or the Mac's menu) shows a small hand-drawn lock beside the name of the page group: on the iPhone and iPad top line and on the Mac's keys on screen. Locked: the page group stays until "Automatic" is chosen (tap the top line on the iPhone and iPad; the menu bar menu on the Mac). No lock: on the Mac the page group follows the app in front.
 - Mac menu line: "Page group: <name> (locked)" or "(automatic)". iPhone and iPad menu section: "Lock one".
-- iPad only: the top line is larger: the name of the page group is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged.
+- iPad only: the top line is larger: the name of the page group is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged. (Changed in 0.8.1, see section 30: the heading is centred, there is no "Connected to …" line any more, and the iPhone heading is title size.)
 - Nothing else changes. The Mac and the iPhone and iPad app work with each other in any mix of these versions.
 
 ## 23. iPhone and iPad settings, 0.6 and 0.6.1 (iPhone and iPad app, build 9, 16 Nov 2026)
@@ -316,9 +316,9 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 **Showing**
 - "What ran" note (default on), Page dots (default on).
 - Keep the screen awake while connected (default on). Off: the screen sleeps as usual.
-- Warn when the battery is low (0.6.1, default on): at 20 % or less and not charging, a small amber line "Battery 18 % – plug in" shows in the top line and also under the resting clock. It goes away when charging or above 20 %.
+- Warn when the battery is low (0.6.1, default on): at 20 % or less and not charging, a small amber line "Battery 18 % – plug in" shows centred under the heading and also under the resting clock. It goes away when charging or above 20 %.
 
-**Planned, not in 0.6:** done in 0.7, see sections 24 to 28. In 0.7 the Settings list gets a new first part "Keys" (section 26) and three new switches under "Showing": Favourites row, Mac at a glance, Music strip (all default on, stored on that device). With an older Mac the new parts say "Needs AMS Deck Mate 0.5 on the Mac".
+**Planned, not in 0.6:** done in 0.7, see sections 24 to 28. In 0.7 the Settings list gets a new first part "Keys" (section 26) and three new switches under "Showing": Favourites row, Mac at a glance, Music strip (called "Music button" since 0.8.1) (all default on, stored on that device). With an older Mac the new parts say "Needs AMS Deck Mate 0.5 on the Mac".
 
 ## 24. Long press (Mac 0.5, iPhone and iPad 0.7)
 - Stored in `deck.json` as `held` on the key: an Action like the normal one (`type`, `target`, `combo`, `steps`, `quiet`). Missing or type "none": no long press.
@@ -348,17 +348,17 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - `own(profile: nil)` means "Follow the Mac".
 - With an older Mac the card says "Needs AMS Deck Mate 0.5 on the Mac" and the app follows the Mac.
 
-## 27. The Mac at a glance (Mac 0.5, iPhone and iPad 0.7)
+## 27. The Mac at a glance (Mac 0.5, iPhone and iPad 0.7; moved in 0.8.1)
 - Message `mac(MacNow)` from the Mac with the fields `battery`, `charging`, `app`, `song`, `artist`, `playing`, `volume`. It is sent when the iPhone is allowed and again when something changes.
 - The Mac looks at battery and volume every 5 seconds, only while such a device is connected.
-- Top line on the iPhone and iPad: a small battery drawing and "82 % · Safari", or "82 % charging · Safari" while charging. A Mac without a battery shows only the app.
+- Since 0.8.1: one very small centred line at the very bottom of the screen, under the page dots (before, in the top line): a small battery drawing and "73 % charging · Claude", or "82 % · Safari" when not charging. A Mac without a battery shows only the app.
 - Settings, Showing: switch "Mac at a glance" (default on, stored on that device).
 
-## 28. The music strip (Mac 0.5, iPhone and iPad 0.7)
-- A strip above the keys on the iPhone and iPad, shown when the switch "Music strip" is on (default on, stored on that device) and the Mac is at 0.5: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder.
-- Spotify and Apple Music. The Mac listens for the change notices both send when the song or the play state changes, so the strip says "Nothing playing yet" until the next change of song or pause after the Mac app has started.
+## 28. The music button and plate (Mac 0.5, iPhone and iPad 0.7; button since 0.8.1)
+- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button, shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. It is filled green while something is playing. A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it.
+- Spotify and Apple Music. The Mac listens for the change notices both send when the song or the play state changes, so the plate says "Nothing playing yet" until the next change of song or pause after the Mac app has started.
 - Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
-- Not yet tried: play or pause from the strip.
+- Not yet tried: play or pause from the plate.
 
 ## 29. The navigation picture (Mac 0.6, iPad 0.8)
 - Where: only on an iPad held on its side (wider than tall). The keys sit on the right and the navigation picture on the left. An iPad held upright and the iPhone are unchanged, because there is no room on the left.
@@ -373,8 +373,18 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Older versions: the picture needs the Mac at 0.6 and the iPad app at 0.8. With an older Mac (no `map`) the picture stays hidden and everything else works as before.
 - Not proven yet: on the real iPad.
 
-## Not proven yet (0.5, 0.6, 0.7 and 0.8)
+## 30. The key screen's top (iPhone and iPad 0.8.1)
+Made after 0.7 on a real iPad, where the top was too crowded. Only the key screen changes; the Mac app is unchanged (0.6, build 8).
+- Heading: the place (for example "OmniFocus · OF Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. A tap opens the menu of page groups (section 21). The lock shows beside it for a page group picked by hand.
+- Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected. Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to MS MBP 2021") and what the colours mean. The big message card in the middle while there is no Mac is unchanged.
+- Music: one small round button at the top right, beside the settings button; the plate it opens is in section 28. The Settings switch is called "Music button".
+- The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27). Same switch.
+- The iPad's own low battery warning ("Battery 18 % – plug in") sits centred under the heading.
+- Test: the phone screen test now also opens the music plate and the connection card (found by their identifiers).
+- Proven on the real iPad with 0.7: the Mac's battery, the app in front and the lock showed correctly.
+
+## Not proven yet (0.5, 0.6, 0.7 and 0.8.1)
 - The navigation picture on the real iPad.
 - Long press on the real box (away until January 2027).
 - Long press on a real iPhone or iPad.
-- Play or pause from the music strip.
+- Play or pause from the music plate.

@@ -28,10 +28,10 @@ enum PhoneGuide {
             "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap.",
             "Showing, Page dots (on at first): the small dots under the keys.",
             "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
-            "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows in the top line, and also under the resting clock. It goes away when charging or above 20 %.",
+            "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows centred under the heading, and also under the resting clock. It goes away when charging or above 20 %.",
             "Showing, Favourites row (on at first): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
-            "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, in the top line. Needs a Mac at 0.5.",
-            "Showing, Music strip (on at first): what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
+            "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, as one very small line at the very bottom, under the page dots. Needs a Mac at 0.5.",
+            "Showing, Music button (on at first): one small round button at the top right, beside the settings button. Tap it for a small plate that shows what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
             "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
@@ -56,7 +56,7 @@ enum PhoneGuide {
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
             "After a tap a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
             "The screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
-            "These new parts need the AMS Deck Mate app at 0.4 on your Mac. The parts new in 0.7 (own keys, long press, favourites, Mac at a glance, music strip) need it at 0.5."
+            "These new parts need the AMS Deck Mate app at 0.4 on your Mac. The parts new in 0.7 (own keys, long press, favourites, Mac at a glance, music button) need it at 0.5."
         ]),
         Section(id: "profiles", title: "Page groups follow the Mac", part: "profiles", lines: [
             "The iPhone shows the page group and page the Mac shows. When the app in front on the Mac changes and the page group changes with it, the iPhone changes too.",
@@ -93,13 +93,13 @@ enum PhoneGuide {
             "The row only shows when at least one favourite is set. In Settings, the switch \"Favourites row\" (on at first) turns it off.",
             "Needs the AMS Deck Mate app at 0.5 on the Mac."
         ]),
-        Section(id: "macnow", title: "The Mac at a glance and the music strip", part: "settings", lines: [
-            "Mac at a glance: the top line shows a small battery drawing and the Mac's battery in percent, with the app in front, for example \"82 % · Safari\", or \"82 % charging · Safari\" while it charges. A Mac without a battery shows only the app.",
-            "Music strip: above the keys. It shows the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. One tap on quieter or louder moves the volume by 6 points.",
-            "Until the next change of song or pause after the Mac app has started, the strip says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
+        Section(id: "macnow", title: "The Mac at a glance and the music button", part: "settings", lines: [
+            "Mac at a glance: one very small line at the very bottom of the screen, under the page dots, shows a small battery drawing and the Mac's battery in percent, with the app in front, for example \"82 % · Safari\", or \"82 % charging · Safari\" while it charges. A Mac without a battery shows only the app.",
+            "Music button: a small round button at the top right, beside the settings button. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
+            "Until the next change of song or pause after the Mac app has started, the plate says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
             "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs none. Play or pause is not yet tried.",
             "The Mac looks at its battery and volume every 5 seconds, but only while such a device is connected.",
-            "Both have a switch in Settings (\"Mac at a glance\" and \"Music strip\", on at first). Both need the AMS Deck Mate app at 0.5 on the Mac."
+            "Both have a switch in Settings (\"Mac at a glance\" and \"Music button\", on at first). Both need the AMS Deck Mate app at 0.5 on the Mac."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -121,6 +121,15 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.8.1", date: "16 Nov 2026", new: [], changed: [
+            "The top of the key screen is less crowded. Everything below is on the key screen of the iPhone and iPad.",
+            "The heading is larger and centred. The place, for example \"OmniFocus · OF Main\", now sits in the middle at the top: bold large title size on the iPad, title size on the iPhone. A tap on it still opens the menu of page groups, and the lock still shows beside it.",
+            "The connection is one small coloured dot at the top left, instead of the line \"Connected to …\". Green means connected. Amber means looking, connecting or waiting for the Mac to allow it. Red means the Mac said no. Tap the dot for a small card that says it in words, for example \"Connected to MS MBP 2021\", and what the colours mean. The big message card in the middle while there is no Mac is unchanged.",
+            "Music is one small round button at the top right, beside the settings button, instead of the strip across the screen. Tap it and a small plate opens with the song and artist, play or pause, next, quieter, the volume in percent and louder. Tap outside the plate to close it. The button is filled green while something is playing. The switch in Settings is now called \"Music button\" (it was \"Music strip\"); your choice is kept.",
+            "The Mac at a glance moved to the bottom. The Mac's battery and the app in front, for example \"73 % charging · Claude\", is now one very small centred line at the very bottom of the screen, under the page dots, and no longer in the top line. It has the same switch \"Mac at a glance\".",
+            "The iPad's own low battery warning, \"Battery 18 % – plug in\", now sits centred under the heading.",
+            "How it works has the new places for all of these. The Mac app is unchanged (0.6, build 8)."
+        ], fixed: []),
         Release(id: "0.8", date: "16 Nov 2026", new: [
             "Navigation picture on the iPad. When the iPad is held on its side (wider than tall), the keys now sit on the right and, on the left, a picture shows everything you have set up: every page group, with every one of its pages and folders as a small picture of its 15 keys and the page's name under it.",
             "The page showing now has a coloured frame, and the name of its page group is highlighted. When the list is long, it scrolls.",

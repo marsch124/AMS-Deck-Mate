@@ -15,8 +15,17 @@ final class DeckScreenTests: XCTestCase {
         // Round B: the favourites row, the Mac at a glance and the music strip show with a Mac at 0.5.
         XCTAssertTrue(app.descendants(matching: .any)["favourite0"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["macGlance"].exists)
-        XCTAssertTrue(app.buttons["musicPlay"].exists)
+        // Music is one small button; its plate opens on a tap and closes again.
+        app.buttons["musicButton"].tap()
+        XCTAssertTrue(app.buttons["musicPlay"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["musicLouder"].exists)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+        XCTAssertTrue(app.buttons["musicPlay"].waitForNonExistence(timeout: 5))
+        // The link is one small dot; a tap says it in words.
+        app.buttons["linkStatus"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["linkStatusCard"].waitForExistence(timeout: 5))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+        XCTAssertTrue(app.descendants(matching: .any)["linkStatusCard"].waitForNonExistence(timeout: 5))
 
         app.buttons["settingsButton"].tap()
         XCTAssertTrue(app.buttons["own-My own keys"].waitForExistence(timeout: 5))
