@@ -96,4 +96,17 @@ final class DeckScreenTests: XCTestCase {
         app.buttons["closeHint"].tap()
         XCTAssertFalse(hint.waitForExistence(timeout: 2))
     }
+
+    /// While the Mac asks, the screen shows the four digits to compare; with an older Mac it says to update it.
+    func testPairingNumberAndOldMac() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-waiting"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["pairCode"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["pairCode"].label, "4821")
+        app.terminate()
+        app.launchArguments = ["-sample", "-macTooOld"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Update AMS Deck Mate on your Mac"].waitForExistence(timeout: 5))
+    }
 }

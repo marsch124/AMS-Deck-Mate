@@ -642,7 +642,7 @@ struct SetupView: View {
         Binding(get: { draft.action.type },
                 set: { new in
                     guard new != draft.action.type else { return }
-                    draft.action = DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : (new == .recent ? "1" : ""))
+                    draft.action = DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : ([.recent, .copied, .recentFile].contains(new) ? "1" : ""))
                 })
     }
 
@@ -652,7 +652,7 @@ struct SetupView: View {
                 set: { new in
                     guard new != (draft.held?.type ?? .none) else { return }
                     draft.held = new == .none ? nil
-                        : DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : (new == .recent ? "1" : ""))
+                        : DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : ([.recent, .copied, .recentFile].contains(new) ? "1" : ""))
                 })
     }
 

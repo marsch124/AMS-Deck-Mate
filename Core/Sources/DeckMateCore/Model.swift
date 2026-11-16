@@ -14,6 +14,8 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     case none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, profile, multi
     /// recent = an app used before the one in front (target "1"–"3"); askAI = Raycast AI Chat with the copied text.
     case recent, askAI
+    /// copied = a text copied before the current one (target "1"–"3"); recentFile = a file opened lately (target "1"–"3").
+    case copied, recentFile
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -124,8 +126,9 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .link: return .web
         case .raycast, .askAI: return .raycast
         case .recent: return .app
+        case .recentFile: return .web
         case .shortcut: return .shortcut
-        case .text: return .text
+        case .text, .copied: return .text
         case .media: return .media
         case .folder, .back, .nextPage, .previousPage, .profile: return .move
         case .multi: return steps.first(where: { $0.type != .none })?.kind ?? .shortcut
@@ -140,6 +143,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .raycast: return RaycastLink.icon(forLink: target)
         case .recent: return "app-recent"
         case .askAI: return "deck-ai"
+        case .copied: return "deck-clipboard"
+        case .recentFile: return "app-page"
         case .shortcut: return "deck-keyboard"
         case .text: return "deck-text"
         case .media:

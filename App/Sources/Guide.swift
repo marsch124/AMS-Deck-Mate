@@ -92,6 +92,7 @@ enum Guide {
             "Folder of keys opens another page of keys, and Back returns. Next page and Previous page move between pages.",
             "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart.",
             "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
+            "Since 0.8, two more: \"Last copied text\" and \"Recent file\". See the two parts after \"Ask AI about copied text\".",
             "Nothing leaves the key empty.",
             "Since 0.5, every key can have a second action on a long press, and 5 favourite keys stay on every page for the iPhone and iPad."
         ]),
@@ -110,6 +111,25 @@ enum Guide {
             "If nothing is copied, or you copied a picture, AI Chat just opens.",
             "Very long text is cut at 4,000 characters.",
             "Not yet tried against the real Raycast. This is a first version: if the text does not arrive in AI Chat, tell me."
+        ]),
+        Section(id: "copiedkey", title: "Last copied text key", part: "keys", lines: [
+            "New in 0.8. In Set up keys, under \"What it does\", choose \"Last copied text\" and then 1st, 2nd or 3rd.",
+            "1st is the text copied just before the current one, 2nd the one before that, 3rd the one before that. The key shows the first words of that text, up to 18 letters.",
+            "Press the key and that text is pasted where your cursor is. It also becomes the text you copied last, so pressing Command-V does the same.",
+            "Deck Mate remembers your last 4 copied texts: the current one and three before it. They are kept in memory only. They are never written to a file and are gone when the app quits.",
+            "A copy that a password manager marks as secret is skipped, so passwords never show on a key.",
+            "Deck Mate only watches what you copy while at least one such key exists in your setup.",
+            "It needs the same one-time Accessibility yes as \"Type text\".",
+            "The key is amber, like the other keys that type text.",
+            "On the iPhone and iPad the key shows too, drawn by the Mac. The first words of a copied text are visible on the key."
+        ]),
+        Section(id: "recentfilekey", title: "Recent file key", part: "keys", lines: [
+            "New in 0.8. In Set up keys, under \"What it does\", choose \"Recent file\" and then 1st, 2nd or 3rd.",
+            "1st is the file you opened last, 2nd the one before that, 3rd the one before that. The key shows the name of the file. Press it and the file opens.",
+            "The list comes from the Mac's own record of opened files. Only the last 7 days count, and only files in your home folder. Folders, apps, hidden files and anything in the Library folder are left out.",
+            "Deck Mate only looks this up while at least one such key exists in your setup.",
+            "The key is teal, like the other keys that open files and links. Until there is a file for its place, it shows \"Recent file\".",
+            "On the iPhone and iPad the key shows too, drawn by the Mac."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
@@ -149,7 +169,8 @@ enum Guide {
             "Deck Mate for the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the page group and page the Mac shows, so it changes when the app in front changes.",
             "Tap a key on the iPhone and the Mac does it, exactly as if you had pressed it on the box. The keys on the Mac screen do not hide because of a tap on the iPhone.",
             "The iPhone finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
-            "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" Choose Allow. After that the Mac remembers the iPhone. If you choose Don't Allow, the iPhone shows \"Ask again\".",
+            "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" and shows a 4-digit number. The iPhone shows the same number. Choose Allow only if both numbers are the same. After that the Mac remembers the iPhone. If you choose Don't Allow, the iPhone shows \"Ask again\".",
+            "Since 0.8 the link between the Mac and the iPhone or iPad is private: everything is scrambled from the first moment, so on a shared Wi-Fi nobody can listen in or press your keys. Mac 0.8 needs the iPhone and iPad app at 0.11 or later.",
             "The pictures are drawn by the Mac, so keys that open an app show the real app icon.",
             "New in 0.4 (the Mac must be at 0.4 too): the keys sit low on the iPhone, near your thumb, with the place line on top. Swipe left or right on the keys to change page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "Tap the top line (the name of the page group) for a menu: \"Automatic\", or hold one of the page groups, the same as the Mac's menu.",
@@ -181,10 +202,11 @@ enum Guide {
             "In the Mac's Settings there is a card \"iPhone\".",
             "The checkbox \"Let an iPhone use these keys\" is on to start with. Switch it off and no iPhone can use your keys.",
             "Under it you see the iPhone that is connected right now, and the list of allowed iPhones. \"Forget\" next to one takes the permission back. That iPhone has to ask again.",
+            "Since 0.8, every iPhone and iPad that used the Mac before has to be allowed once more, with one click on the Mac. After that it is as before.",
             "The first time, the Mac may ask to \"find devices on local networks\". That is this feature. Answer Allow."
         ]),
         Section(id: "permissions", title: "What the Mac asks for", part: "settings", lines: [
-            "Accessibility, once, for keys that press a keyboard shortcut, type text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
+            "Accessibility, once, for keys that press a keyboard shortcut, type text, paste a last copied text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
             "The Mac may also ask for Input Monitoring when the box is first plugged in."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
@@ -196,11 +218,35 @@ enum Guide {
         Section(id: "kept", title: "Where things are kept", part: "settings", lines: [
             "Your setup is one file on this Mac, in the folder \"AMS Deck Mate\" inside Application Support.",
             "Each save first keeps the previous file as a safety copy. The last 20 are kept in a \"Backups\" folder beside it.",
+            "Since 0.8, Settings, \"Where your setup is kept\", has a button \"Bring back an earlier state…\". It opens a list of the safety copies, newest first, each with its date and time and for example \"3 page groups · 47 keys\". Pick one and choose \"Bring back\", or Cancel (Escape is Cancel).",
+            "Before it brings one back, your setup as it is now is kept as a safety copy, and Undo (Command-Z) also takes it back.",
+            "If your keys file is damaged, Deck Mate now repairs itself at start. It brings back the newest safety copy that can be read, keeps the damaged file in the Backups folder as \"damaged <date>.json\", and shows a message saying which copy (date and time) it brought back. If no copy can be read, it starts with empty keys and says so.",
+            "The box diary in \"~/Library/Logs/AMS Deck Mate\" is trimmed at each start: when it has more than 1,000 lines, only the last 500 are kept.",
             "Nothing leaves your Mac."
         ])
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.8", date: "16 Nov 2026", new: [
+            "New key \"Last copied text\". In Set up keys, under \"What it does\", choose \"Last copied text\" and pick 1st, 2nd or 3rd: 1st is the text copied just before the current one, 2nd the one before that, 3rd the one before that. The key shows the first words of that text (18 letters). Press it and the text is pasted where your cursor is, and it becomes the text you copied last.",
+            "Deck Mate remembers your last 4 copied texts (the current one and three before it) in memory only. They are never written to a file and are gone when the app quits. Copies that a password manager marks as secret are skipped. Deck Mate only watches what you copy while at least one such key exists. It needs the same Accessibility yes as \"Type text\". The key is amber.",
+            "New key \"Recent file\". Pick 1st, 2nd or 3rd: the file you opened last, the one before, the one before that. The key shows the file's name and a press opens it. The list comes from the Mac's own record of opened files: the last 7 days, inside your home folder, without the Library folder, hidden files, folders and apps. It is only looked up while such a key exists. The key is teal. Before there is a file it shows \"Recent file\".",
+            "New button \"Bring back an earlier state…\" in Settings, \"Where your setup is kept\". It opens a list of the safety copies, newest first, each with its date and time and for example \"3 page groups · 47 keys\". Pick one and choose \"Bring back\" (or Cancel; Escape is Cancel). Your setup as it is now is first kept as a safety copy, and Undo (Command-Z) also takes it back.",
+            "The link to the iPhone and iPad is now private. Every message is scrambled from the first moment. Before, key pictures, taps and the permission code travelled readable on the Wi-Fi, so on a shared Wi-Fi (hotel, café) someone could listen in and press your keys. Now nobody can.",
+            "The first time an iPhone or iPad asks, the Mac's question and the device both show the same 4-digit number. The Mac says: \"Allow only if your iPhone shows the same number.\" The number comes from both sides, so nobody can sit in between and fake it.",
+            "After you allow, the device proves who it is every time without ever sending its secret, and the Mac proves itself to the device the same way.",
+            "The Mac closes a connection that has not finished starting within 10 seconds, and accepts at most 8 connections at once.",
+            "Works with the iPhone and iPad app 0.11 (new \"Mac is back\" note)."
+        ], changed: [
+            "Every iPhone and iPad has to be allowed once more, with one click on the Mac. The old permissions are removed.",
+            "Mac 0.8 only talks to the iPhone and iPad app 0.11 or later, and the app 0.11 only to Mac 0.8 or later. An older iPhone or iPad app sees \"said no\". With an older Mac, the new app says \"Update AMS Deck Mate on your Mac\".",
+            "Before, a damaged keys file made the app start silently with empty starter keys. Now it brings back the newest safety copy that can be read, keeps the damaged file in the Backups folder as \"damaged <date>.json\", and tells you which copy (date and time) it used. If no copy can be read, it starts with empty keys and says so.",
+            "The box diary used to only grow. Now, at each start, a diary over 1,000 lines is cut to its last 500.",
+            "The iPhone and iPad app is now 0.11 (build 16). The Mac app is 0.8 (build 11).",
+            "How it works has two new parts, \"Last copied text key\" and \"Recent file key\", and new lines in \"What a key can do\", the iPhone parts and \"Where things are kept\"."
+        ], fixed: [
+            "A damaged keys file no longer means silently losing your keys: the Mac now repairs it from a safety copy (see above)."
+        ]),
         Release(id: "0.7.1", date: "16 Nov 2026", new: [
             "Works with the iPhone and iPad app 0.10.1: a swipe up or down on the keys there now shows the next or previous page group without locking it."
         ], changed: [

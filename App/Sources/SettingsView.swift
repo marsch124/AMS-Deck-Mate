@@ -28,6 +28,9 @@ struct SettingsView: View {
     var startPart: Part = .box
     private var part: Part { pickedPart ?? startPart }
     @State private var checked: [String]?
+    @State private var restoring = false
+    @State private var copies: [Store.Copy] = []
+    @State private var restoredNote: String?
     @Environment(\.colorScheme) private var scheme
 
     private var tab: Tab { picked ?? startTab }
@@ -302,8 +305,24 @@ struct SettingsView: View {
                 HStack {
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.store.file]) }
                         .buttonStyle(PlainButton())
+                    Button("Bring back an earlier state…") {
+                        model.saveNow()
+                        copies = model.store.copies()
+                        restoring = true
+                    }
+                    .buttonStyle(PlainButton())
+                    .accessibilityIdentifier("restoreCopies")
                     Spacer()
                 }
+                if let restoredNote { note(restoredNote) }
+            }
+            .sheet(isPresented: $restoring) {
+                RestoreView(copies: copies, bringBack: { copy in
+                    restoring = false
+                    restoredNote = model.restore(copy)
+                        ? "Brought back the state from \(copy.date.formatted(date: .abbreviated, time: .shortened)). Undo (⌘Z) in Set up keys takes it back."
+                        : "That safety copy could not be read."
+                }, cancel: { restoring = false })
             }
         }
     }

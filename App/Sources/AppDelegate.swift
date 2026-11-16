@@ -105,6 +105,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             store = Store(folder: URL(fileURLWithPath: arguments[index + 1]))
         }
         model = AppModel(store: store)
+        if let words = model.startNote {
+            // The keys file was damaged: say once what was done about it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                NSApp.activate(ignoringOtherApps: true)
+                let alert = NSAlert()
+                alert.messageText = "Your keys were looked after"
+                alert.informativeText = words
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
+        }
         makeEditMenu()
         phone = PhoneServer(model: model)
         phone.start()
@@ -426,6 +437,9 @@ enum Snapshots {
             shot(SettingsView(model: model, phone: phone, startTab: .guide), "guide-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .news), "news-\(name)", look, folder)
             shot(IconPicker(current: "", pick: { _ in }), "icons-\(name)", look, folder)
+            let day = Date(timeIntervalSince1970: 1_794_800_000)
+            shot(RestoreView(copies: (0..<6).map { Store.Copy(name: "deck \($0)", date: day.addingTimeInterval(Double($0) * -4000), groups: 3, keys: 47 - $0) },
+                             bringBack: { _ in }, cancel: {}), "restore-\(name)", look, folder)
         }
         for size in [ScreenSize.small, .large] {
             var deck = Sample.deck()

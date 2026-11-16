@@ -49,6 +49,16 @@ final class AppModel: ObservableObject {
             if !isSample { UserDefaults.standard.set(recentApps, forKey: "recentApps") }
         }
     }
+    /// The texts copied last, newest first, for the "Last copied text" keys. In memory only.
+    @Published private(set) var copiedTexts: [String] = [] {
+        didSet { ActionRunner.copiedTexts = copiedTexts }
+    }
+    /// The files opened last, newest first, for the "Recent file" keys.
+    @Published private(set) var recentFiles: [String] = []
+    /// What happened to the keys file at start, when it was damaged (for one message); nil = all well.
+    private(set) var startNote: String?
+    private let clipboard = ClipboardWatch()
+    private let filesWatch = RecentFilesWatch()
     private var shown: [DeckKey?] = []
     private var saveTimer: Timer?
     private var statusTimer: Timer?
@@ -66,14 +76,23 @@ final class AppModel: ObservableObject {
             deck = sample
             position = Navigator.start(in: sample)
             recentApps = ["com.apple.Safari", "com.apple.Notes"]
+            copiedTexts = ["current", "Meeting notes for Monday"]
+            recentFiles = ["/Users/sample/Documents/Plan.pdf"]
             return
         }
-        var firstStart = false
-        if let saved = store.load() {
-            deck = saved
-        } else {
-            firstStart = !store.hasFile
-            deck = Deck.starter()
+        let start = store.start()
+        let firstStart = start.how == .first
+        deck = start.deck ?? Deck.starter()
+        switch start.how {
+        case let .recovered(date):
+            let when = date.formatted(date: .abbreviated, time: .shortened)
+            startNote = "The file with your keys was damaged. Deck Mate brought back the safety copy from \(when). The damaged file is kept in the Backups folder."
+            BoxLog.note("keys file damaged: brought back the copy from \(when)")
+        case .lost:
+            startNote = "The file with your keys was damaged and no safety copy could be read. Deck Mate starts with empty keys. The damaged file is kept in the Backups folder; “Bring over again” in Settings reads the keys from Elgato’s app."
+            BoxLog.note("keys file damaged: no safety copy could be read")
+        case .first, .loaded:
+            break
         }
         if firstStart {
             // First start: bring over the keys from Elgato's app, when it has any for the 15-key box.
@@ -100,6 +119,17 @@ final class AppModel: ObservableObject {
             let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
             self?.appCameForward(app?.bundleIdentifier)
         }
+        clipboard.onChange = { [weak self] texts in
+            guard let self, texts != self.copiedTexts else { return }
+            self.copiedTexts = texts
+            self.refreshBox()
+        }
+        filesWatch.onChange = { [weak self] files in
+            guard let self, files != self.recentFiles else { return }
+            self.recentFiles = files
+            self.refreshBox()
+        }
+        watchLive()
         device.onState = { [weak self] state in self?.boxChanged(state) }
         device.onKey = { [weak self] index, isDown in self?.boxKey(index, isDown) }
         device.start()
@@ -115,9 +145,22 @@ final class AppModel: ObservableObject {
     var page: DeckPage? { position.flatMap { profile?.page($0.page) } }
     var keys: [Int: DeckKey] { live(position.map { Navigator.keys(at: $0, in: deck) } ?? [:]) }
 
-    /// Keys as they show now: a "Recent app" key turns into the app it stands for.
-    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] { keys.mapValues { $0.resolvingRecent(recentApps) } }
-    func live(_ key: DeckKey?) -> DeckKey? { key?.resolvingRecent(recentApps) }
+    /// What the keys that change by themselves stand for right now.
+    var liveNow: LiveKeys { LiveKeys(apps: recentApps, copied: copiedTexts, files: recentFiles) }
+
+    /// Keys as they show now: a "Recent app" key turns into its app, a "Recent file" key into its
+    /// file, a "Last copied text" key shows the first words of its text.
+    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] { let now = liveNow; return keys.mapValues { $0.resolving(now) } }
+    func live(_ key: DeckKey?) -> DeckKey? { key?.resolving(liveNow) }
+
+    /// The clipboard and the list of opened files are only looked at while a key needs them.
+    private func watchLive() {
+        guard !isSample else { return }
+        clipboard.isOn = deck.uses(.copied)
+        filesWatch.isOn = deck.uses(.recentFile)
+        if !clipboard.isOn, !copiedTexts.isEmpty { copiedTexts = [] }
+        if !filesWatch.isOn, !recentFiles.isEmpty { recentFiles = [] }
+    }
 
     /// "OmniFocus · Page 2", for the top line of the keys on screen.
     var placeLine: String { placeLine(at: position) }
@@ -188,7 +231,8 @@ final class AppModel: ObservableObject {
     func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false) -> Navigator.Outcome {
         let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long)
                                 : Navigator.press(index, at: position, in: deck, long: long)
-        let run = outcome.run.map { $0.resolvingRecent(recentApps) }
+        let now = liveNow
+        let run = outcome.run.map { $0.resolving(now) }
         tell(run, in: deck.profile(position.profile))
         ActionRunner.run(run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
@@ -386,6 +430,7 @@ final class AppModel: ObservableObject {
         if let pinned, deck.profile(pinned) == nil { pin(nil) }
         let fixed = Navigator.repair(position, in: deck)
         if fixed != position { position = fixed }
+        watchLive()
         refreshBox()
         saveSoon()
     }
@@ -436,6 +481,18 @@ final class AppModel: ObservableObject {
         return true
     }
 
+    /// Puts a safety copy in place of the setup. The setup as it is now is first kept as a safety
+    /// copy, and Undo takes it back too. False when the copy cannot be read any more.
+    @discardableResult
+    func restore(_ copy: Store.Copy) -> Bool {
+        guard let old = store.deck(of: copy) else { return false }
+        saveNow()
+        change { $0 = old }
+        pin(nil)
+        saveNow()
+        return true
+    }
+
     func willQuit() {
         saveNow()
         device.giveBack()
@@ -472,7 +529,7 @@ enum Sample {
             8: key("Ask AI", DeckAction(type: .askAI)),
             9: key("Copy", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 8, command: true, keyName: "C"))),
             10: DeckKey(action: DeckAction(type: .recent, target: "1")),
-            11: key("Play", DeckAction(type: .media, target: MediaKey.playPause.rawValue)),
+            11: DeckKey(action: DeckAction(type: .copied, target: "1")),
             12: key("Sound", DeckAction(type: .folder, target: folder.id.uuidString)),
             13: key("Morning", DeckAction(type: .multi, steps: [DeckAction(type: .app, target: "com.apple.mail"),
                                                                  DeckAction(type: .app, target: "com.apple.iCal")])),
@@ -481,6 +538,7 @@ enum Sample {
         var second = more
         second.name = "Page 2"
         second.keys = [0: key("Projects", DeckAction(type: .link, target: "~/Documents")),
+                       1: DeckKey(action: DeckAction(type: .recentFile, target: "1")),
                        14: key("Back a page", DeckAction(type: .previousPage))]
         let main = DeckProfile(name: "Default", pages: [first, second, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])

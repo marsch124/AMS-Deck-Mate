@@ -74,17 +74,32 @@ final class LinkClient: ObservableObject {
         }
     }
 
+    /// The four digits to compare with the Mac while it asks whether to allow this device.
+    @Published private(set) var pairCode: String?
+    /// The Mac did not answer the start of a private line: its AMS Deck Mate is older than 0.8.
+    @Published private(set) var macTooOld = false
+
     private var browsers: [NWBrowser] = []
     private var connection: NWConnection?
     private var reader = PhoneLink.Reader()
+    /// This line's one-time keys and, once the Mac's key is known, the sealed line.
+    private var lineKeys = SecureLine.Keys()
+    private var session: SecureLine.Session?
+    /// Lines in a row that ended before the Mac answered the start.
+    private var unanswered = 0
     private var talkingTo = ""
     private var isSample = false
     private var wake: NSObjectProtocol?
 
-    /// Tokens the Macs gave: Mac's name → token.
+    /// What the Macs gave when they allowed this device: Mac's name → "id:secret". The secret never
+    /// travels again: it only proves this device to the Mac, and the Mac to this device.
     private var tokens: [String: String] {
-        get { UserDefaults.standard.dictionary(forKey: "macTokens") as? [String: String] ?? [:] }
-        set { UserDefaults.standard.set(newValue, forKey: "macTokens") }
+        get { UserDefaults.standard.dictionary(forKey: "macKeys") as? [String: String] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: "macKeys") }
+    }
+    private func idAndSecret(for mac: String) -> (id: String, secret: String)? {
+        guard let parts = tokens[mac]?.split(separator: ":", maxSplits: 1), parts.count == 2 else { return nil }
+        return (String(parts[0]), String(parts[1]))
     }
     /// The Mac it talked to last: it is picked first when several are close by.
     private var remembered: String? {
@@ -113,12 +128,21 @@ final class LinkClient: ObservableObject {
                 client.state = .looking
                 client.lookingSince = .distantPast
             }
+            if CommandLine.arguments.contains("-waiting") {
+                client.state = .waiting("Sample Mac")
+                client.pairCode = "4821"
+            }
+            if CommandLine.arguments.contains("-macTooOld") {
+                client.state = .looking
+                client.macTooOld = true
+            }
         }
         return client
     }
 
     func start() {
         guard !isSample, browsers.isEmpty else { return }
+        UserDefaults.standard.removeObject(forKey: "macTokens")      // permissions from before 0.11 travelled readable
         // The Mac offers its keys on the shared network and, where it can, directly (like AirDrop).
         for type in [PhoneLink.service, PhoneLink.directService] {
             let parameters = NWParameters()
@@ -173,6 +197,9 @@ final class LinkClient: ObservableObject {
         let line = NWConnection(to: endpoint, using: parameters)
         connection = line
         reader = PhoneLink.Reader()
+        lineKeys = SecureLine.Keys()
+        session = nil
+        pairCode = nil
         talkingTo = mac
         state = .connecting(mac)
         line.stateUpdateHandler = { [weak self, weak line] state in
@@ -180,7 +207,8 @@ final class LinkClient: ObservableObject {
                 guard let self, let line, self.connection === line else { return }
                 switch state {
                 case .ready:
-                    self.send(.hello(phone: UIDevice.current.name, token: self.tokens[mac], version: PhoneLink.currentVersion))
+                    // The start of a private line: first only a promise of this line's key.
+                    self.sendReadable(.secure(promise: self.lineKeys.promise.base64EncodedString(), key: nil))
                 case .failed, .cancelled:
                     self.lost(line)
                 default:
@@ -203,7 +231,10 @@ final class LinkClient: ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.connection === line else { return }
                 if let data, !data.isEmpty {
-                    for message in self.reader.add(data) { self.handle(message) }
+                    self.reader.feed(data)
+                    while self.connection === line, let message = self.reader.next(&self.session) {
+                        self.handle(message)
+                    }
                 }
                 if self.reader.broken || done || error != nil {
                     line.cancel()
@@ -218,17 +249,64 @@ final class LinkClient: ObservableObject {
     private func lost(_ line: NWConnection) {
         guard connection === line else { return }
         connection = nil
+        pairCode = nil
+        if session == nil {
+            // The Mac never answered the start: after two tries in a row, say that it needs an update.
+            unanswered += 1
+            if unanswered >= 2 { macTooOld = true }
+        }
+        session = nil
         if case .refused = state { return }
         state = .looking
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.lookAgain() }
     }
 
+    /// The Mac's key arrived: from here on the line is sealed. This device shows its own key
+    /// (the Mac checks it against the promise), then says hello and proves who it is.
+    private func turnPrivate(with macKey: String?) {
+        guard session == nil, let macKey, let key = Data(base64Encoded: macKey),
+              let made = SecureLine.session(lineKeys, role: .phone, other: key) else { return dropLine() }
+        sendReadable(.secure(promise: nil, key: lineKeys.publicKey.base64EncodedString()))
+        session = made
+        unanswered = 0
+        macTooOld = false
+        let known = idAndSecret(for: talkingTo)
+        send(.hello(phone: UIDevice.current.name, token: known?.id, version: PhoneLink.currentVersion,
+                    proof: known.map { made.proof(secret: $0.secret, by: .phone) }))
+    }
+
+    private func dropLine() {
+        guard let line = connection else { return }
+        line.cancel()
+        lost(line)
+    }
+
     private func handle(_ message: PhoneLink.Message) {
+        // Before the line is sealed only the Mac's key is listened to; after that it never comes again.
+        if case let .secure(_, key) = message { return turnPrivate(with: key) }
+        guard let session else { return dropLine() }
         switch message {
+        case .secure:
+            break
         case .waiting:
+            pairCode = session.code
             state = .waiting(talkingTo)
-        case let .welcome(token, _, version):
-            tokens[talkingTo] = token
+        case let .welcome(token, _, version, proof):
+            if token.contains(":") {
+                // Allowed just now: the Mac's id and secret for this device, to keep.
+                guard case .waiting = state else { return dropLine() }
+                tokens[talkingTo] = token
+            } else {
+                // Known already: the Mac must prove that it knows the secret too.
+                guard let known = idAndSecret(for: talkingTo), known.id == token,
+                      session.checks(proof, secret: known.secret, by: .mac) else {
+                    state = .refused(talkingTo)
+                    connection?.cancel()
+                    connection = nil
+                    return
+                }
+            }
+            pairCode = nil
             remembered = talkingTo
             macVersion = version ?? 2
             macAsleep = false
@@ -257,13 +335,21 @@ final class LinkClient: ObservableObject {
         case let .map(groups):
             map = groups
         case let .asleep(asleep):
+            if let words = PhoneLink.wakeNote(wasAsleep: macAsleep, asleep: asleep) { show(words, ok: true) }
             macAsleep = asleep
         case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit:
             break
         }
     }
 
+    /// Everything goes out sealed; without a private line nothing goes out at all.
     private func send(_ message: PhoneLink.Message) {
+        guard let sealed = PhoneLink.sealed(PhoneLink.frame(message), by: &session) else { return }
+        connection?.send(content: sealed, completion: .contentProcessed { _ in })
+    }
+
+    /// Only the two steps that start a private line go out readable.
+    private func sendReadable(_ message: PhoneLink.Message) {
         connection?.send(content: PhoneLink.frame(message), completion: .contentProcessed { _ in })
     }
 

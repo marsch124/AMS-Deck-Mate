@@ -541,6 +541,12 @@ struct DeckScreen: View {
     private var messageCard: some View {
         VStack(spacing: 8) {
             Text(cardTitle).font(.title3.weight(.semibold)).multilineTextAlignment(.center)
+            if case .waiting = link.state, let code = link.pairCode {
+                Text(code)
+                    .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(PhonePalette.part("screen"))
+                    .accessibilityIdentifier("pairCode")
+            }
             if let text = cardText {
                 Text(text).font(.callout).multilineTextAlignment(.center).foregroundStyle(.secondary)
             }
@@ -592,8 +598,10 @@ struct DeckScreen: View {
 
     private var cardTitle: String {
         switch link.state {
-        case .looking: return "Looking for your Mac…"
-        case let .connecting(mac): return "Connecting to \(mac)…"
+        case .looking, .connecting:
+            if link.macTooOld { return "Update AMS Deck Mate on your Mac" }
+            if case let .connecting(mac) = link.state { return "Connecting to \(mac)…" }
+            return "Looking for your Mac…"
         case let .waiting(mac): return "Allow this \(Self.device) on \(mac)"
         case let .refused(mac): return "\(mac) said no"
         case .connected: return ""
@@ -602,9 +610,17 @@ struct DeckScreen: View {
 
     private var cardText: String? {
         switch link.state {
-        case .looking: return isPad ? "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi."
-                             : "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi — or the Mac on this iPhone’s hotspot."
-        case .waiting: return "Your Mac is asking whether this \(Self.device) may use the keys. Click Allow there."
+        case .looking, .connecting:
+            if link.macTooOld {
+                return "This app keeps the line to your Mac private. For that the Mac needs AMS Deck Mate 0.8 or later."
+            }
+            if case .connecting = link.state { return nil }
+            return isPad ? "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi."
+                         : "Open AMS Deck Mate on the Mac and put both on the same Wi-Fi — or the Mac on this iPhone’s hotspot."
+        case .waiting:
+            return link.pairCode == nil
+                ? "Your Mac is asking whether this \(Self.device) may use the keys. Click Allow there."
+                : "Your Mac is asking whether this \(Self.device) may use the keys. Click Allow there if it shows the same number."
         default: return nil
         }
     }

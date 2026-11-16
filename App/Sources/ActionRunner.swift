@@ -19,7 +19,7 @@ enum ActionRunner {
 
     static func needsKeys(_ action: DeckAction) -> Bool {
         switch action.type {
-        case .shortcut, .text, .media: return true
+        case .shortcut, .text, .media, .copied: return true
         case .multi: return action.steps.contains(where: needsKeys)
         default: return false
         }
@@ -34,8 +34,22 @@ enum ActionRunner {
     /// The apps used last, newest first (the app in front first); kept up to date by AppModel.
     static var recentApps: [String] = []
 
+    /// The texts copied last, newest first (the current one first); kept up to date by AppModel.
+    static var copiedTexts: [String] = []
+
     static func run(_ action: DeckAction) {
         switch action.type {
+        case .copied:
+            // The earlier text becomes the copied text again and is pasted where the cursor is.
+            guard let text = CopiedTexts.text(number: RecentApps.number(action.target), in: copiedTexts) else { return }
+            guard mayPressKeys else { askToPressKeys(); return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                press(KeyCombo(keyCode: 9, command: true, keyName: "V"))
+            }
+        case .recentFile:
+            break       // AppModel turns it into "open this file" before it gets here; none yet = nothing
         case .recent:
             let now = action.resolvingRecent(recentApps)
             if now.type == .app { run(now) }

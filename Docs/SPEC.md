@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.7.1 (build 10), 16 Nov 2026; iPhone and iPad app 0.10.1 (build 15)
+# AMS Deck Mate, specification, version 0.8 (build 11), 16 Nov 2026; iPhone and iPad app 0.11 (build 16)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -10,6 +10,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
+- Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music button, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
@@ -89,6 +90,8 @@ The icon opens a menu:
 | Several things in a row | (uses `steps`) | steps run in order, a third of a second apart. Steps may nest to depth 4 |
 | Recent app (0.7) | "1", "2" or "3" (1st, 2nd, 3rd) | brings that recent app forward; see 31 |
 | Ask AI (copied text) (0.7) | none | opens Raycast AI Chat with the copied text; see 32 |
+| Last copied text (0.8) | `copied`; "1", "2" or "3" (1st, 2nd, 3rd) | pastes that copied text; see 36 |
+| Recent file (0.8) | `recentFile`; "1", "2" or "3" (1st, 2nd, 3rd) | opens that file; see 36 |
 | Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
@@ -157,6 +160,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 
 ## 13. Storage
 - One file: `~/Library/Application Support/AMS Deck Mate/deck.json`. Each save first keeps the previous file as a safety copy (the last 20) in `Backups` beside it.
+- Since 0.8 `Store` lives in `Core/Sources/DeckMateCore/Store.swift` (before: `App/Sources/Store.swift`), so it has data tests. Copies, restore and repair of a damaged file: section 37.
 - Nothing leaves the Mac.
 - Decoding is tolerant: a missing or odd field gets its default, never an error. A missing `held` means no long press; a missing `favourites` means 5 empty places. A favourite whose action is a folder or Back is treated as empty (refused in Set up keys, ignored if found in the file).
 - An older Mac app (before 0.5) that opens a file with `held` or `favourites` ignores them, and its next save drops them.
@@ -173,6 +177,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 ## 14. Tests
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
 - New in 0.5 (round B): `Core` has 36 data tests (37 since 0.6, see below), 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
+- New in 0.8 (data tests, seconds each): `Store` recovery (`start()` gives `.first`, `.loaded`, `.recovered` or `.lost`; a damaged file is kept as "damaged <date>.json") and `copies()` / `deck(of:)`; `Diary.trimmed` (over 1,000 lines keeps the last 500); `SecureLine` (both sides agree on the keys, a tampered message is refused, a repeated or reordered message is refused, the proof checks out and a wrong secret fails); `CopiedTexts` (the last 4, secret copies skipped, press makes it current); `RecentFiles` (the last 7 days, home folder, exclusions); `PhoneLink.wakeNote(wasAsleep:asleep:)`.
 - New in 0.7: two new data tests (39 in all): the recent-apps list and "Recent app" key (`RecentApps`, `resolvingRecent`), and the Ask AI link (`RaycastLink.ask`, `fallbackText`, cut at 4,000) plus `asleep` needing version 5. The iPhone app has one more screen test, `testDarkWhileMacSleeps` (launch argument `-macAsleep`). `PhoneLink.currentVersion` is 5; message `asleep(Bool)` goes only to a side at version 5.
 - New in 0.6: one new data test (37 in all) for the rule `Navigator.go`: an unknown page group or page changes nothing. The iPhone app's screen test now also finds the navigation picture by identifier.
 - New in 0.4: one small data test per new rule: the new `PhoneLink` messages (round trip), the broken-key reasons, duplicate page and page group, copy and paste, moving and swapping keys between pages, undo and redo (30 steps), the keyboard places, and the "Page group for <app>" rule (an app belongs to one page group only). The iPhone app has one more screen test that finds the page group menu and page dots by identifier.
@@ -185,6 +190,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.8 (Mac, build 11, 16 Nov 2026).** The keys "Last copied text" and "Recent file" (section 36), "Bring back an earlier state…" and the self-repairing keys file (section 37), the private link `secure(promise:key:)`, link version 7 (section 38), the trimmed box diary and the "Mac is back" note (section 39). `Store` moved into `Core`. The iPhone and iPad app is 0.11 (build 16). Mac 0.8 and app 0.11 only talk to each other. Not proven yet: "Recent file" and "Last copied text" on the real Mac in daily use; the number check on a real iPhone and iPad.
 
 **0.7.1 (Mac, build 10, 16 Nov 2026).** Understands the new link message `visit(profile:)` (link version 6): a swipe on the iPhone or iPad shows a page group without locking it (section 35). The iPhone and iPad app is 0.10.1 (build 15).
 
@@ -230,6 +237,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - Framing, the 4 MB limit and tolerant decoding are unchanged.
 
 **Allowing.**
+- Since 0.8 (link version 7) this whole exchange is replaced by the private link and the paired-device secret of section 38; the plain `hello` token below is the 0.3 to 0.7.1 behaviour. `PhoneLink.currentVersion` is 7.
 - First contact: `hello` with no token. The Mac asks "“<iPhone name>” wants to use your keys. Allow?" with Allow and Don't Allow. Allow gives a random token and the iPhone is remembered; Don't Allow sends `refused`.
 - Tokens are random. The Mac keeps them in its preferences with the iPhone's name; the iPhone keeps the token per Mac name. A `hello` with a known token is welcomed at once, with no question.
 - The iPhone's "Ask again" sends a new `hello` with no token.
@@ -436,6 +444,8 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Long press on the real box (away until January 2027).
 - Long press on a real iPhone or iPad.
 - Play or pause from the music plate.
+- "Recent file" and "Last copied text" on the real Mac over days of use (Spotlight's "last used" date, the clipboard watcher).
+- The 4-digit check number on a real iPhone and iPad against the Mac.
 
 ## 35. Swipe no longer locks (Mac 0.7.1, iPhone and iPad 0.10.1)
 - Before (0.5.1 to 0.10): a swipe up or down on the iPhone or iPad keys changed the page group and locked it (`profile(id:)`). Unlocking needed Settings, Keys, Page group, Automatic.
@@ -443,3 +453,32 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Still locking: picking a page group in Settings (`lockGroup-<name>`, section 34), a tap on a page in the navigation picture, and the Mac's menu.
 - With "My own keys": unchanged; a swipe changes the own page group, no lock.
 - Versions: needs the Mac at 0.7.1 or later. `visit(profile:)` goes only to a side at link version 6; with an older Mac the iPhone and iPad app sends `profile(id:)` and a swipe still locks. An older iPhone or iPad app with the new Mac works as before.
+
+## 36. "Last copied text" and "Recent file" keys (Mac 0.8)
+- Set up keys, "What it does": two new action types. `copied` (ActionType, `target` "1" to "3") is shown as "Last copied text" with the choices "1st – the text copied just before the current one", "2nd", "3rd". `recentFile` (`target` "1" to "3") is shown as "Recent file" with "1st – the file opened last", "2nd", "3rd". An older Mac reads an unknown type as none. Code: `CopiedTexts` and `RecentFiles` in `Core/Sources/DeckMateCore/Live.swift`.
+- Last copied text, key: shows the first words of that text (18 letters). Press: pastes it where the cursor is (needs Accessibility, like "Type text") and makes it the current copied text. Colour: amber (kind text).
+- Last copied text, list: the current copied text plus the three before it (4 in all), newest first, in memory only: never written to disk, gone when the app quits. Copies that a password manager marks as secret (concealed pasteboard type) are skipped. The clipboard is only watched while at least one such key exists in the setup.
+- Recent file, key: shows the file's name; press opens it. Before a file exists for the place it shows "Recent file". Colour: teal (kind link). Broken-key check: never broken.
+- Recent file, list: taken from the Mac's own record of opened files (Spotlight, the "last used" date). Only the last 7 days, only inside the home folder, without the Library folder, hidden files, folders and apps. Newest first. Only looked up while at least one such key exists.
+- iPhone and iPad: both keys show and work there, drawn by the Mac (first words of a copied text are therefore visible on the iPhone and iPad key; noted in their How it works).
+
+## 37. Bringing back an earlier state, and the self-repairing keys file (Mac 0.8)
+- `Store` (now in `Core/Sources/DeckMateCore/Store.swift`) gains `copies()` (the safety copies in `Backups`, newest first, with date, time, number of page groups and keys) and `deck(of:)` (reads one copy). `AppModel.restore(_:)` brings one back.
+- Settings, "Where your setup is kept": new button "Bring back an earlier state…". It opens a list of the safety copies, newest first, each with its date and time and "3 page groups · 47 keys". Pick one, then "Bring back", or Cancel (Escape is Cancel).
+- Restoring first keeps the current setup as a safety copy. Undo (⌘Z) also takes it back, the same as any other change.
+- `Store.start()` returns `.first` (no file yet: starter keys), `.loaded`, `.recovered` or `.lost`. If `deck.json` cannot be read (before: silent empty starter keys), the newest safety copy that can be read is brought back and the damaged file is kept in `Backups` as "damaged <date>.json"; the app shows a message with the date and time of the copy used (`.recovered`). If no copy can be read, it starts with empty keys and says so (`.lost`).
+
+## 38. The private link (Mac 0.8, iPhone and iPad 0.11; link version 7)
+- Why: up to 0.7.1 every message (key pictures, taps, the permission token) travelled readable on the Wi-Fi, so on a shared Wi-Fi someone could listen in and press keys. Now every message is encrypted from the first moment. Code: `Core/Sources/DeckMateCore/SecureLine.swift`.
+- `PhoneLink.currentVersion` is 7. New message `secure(promise:key:)`: the only message ever sent readable. After it, every frame is a sealed box.
+- Start in three steps: (1) the iPhone sends a promise, the SHA-256 of its one-time public key; (2) the Mac answers with its own one-time public key; (3) the iPhone then shows its key, and the Mac checks it against the promise. The promise stops either side choosing its key after seeing the other's.
+- Keys: Curve25519 key agreement; HKDF-SHA256 gives one key for each direction; each message is sealed with ChaCha20-Poly1305. A message counter per direction is part of the sealing; a repeated, dropped or reordered message fails and closes the line.
+- First-time permission: the Mac's question and the iPhone both show the same 4-digit number, derived from both one-time keys ("Allow only if your iPhone shows the same number."). Nobody sitting in between can make both numbers equal.
+- After Allow the Mac gives the device an id and a secret. Later the device proves itself with a proof (HMAC-SHA256 of the secret over this connection's keys) instead of sending the secret, and the Mac proves itself to the device the same way. Stored on the Mac under `pairedPhones` and on the device under `macKeys`; the old `allowedPhones` and `macTokens` are deleted. So every iPhone and iPad must be allowed once more (one click on the Mac). "Forget" on the Mac and "Forget this Mac" on the device remove the pairing as before.
+- Limits on the Mac: a line that has not finished the start within 10 seconds is closed; at most 8 lines at once.
+- Versions: Mac 0.8 only talks to app 0.11 or later, and app 0.11 only to Mac 0.8 or later. An older iPhone or iPad app sees "said no" (refused). With an older Mac the new app shows "Update AMS Deck Mate on your Mac". The framing, the 4 MB limit and tolerant decoding of section 17 are unchanged inside the sealed box.
+- Tests: SecureLine data tests (both sides agree; tamper and replay are refused; the proof checks out and a wrong secret fails).
+
+## 39. "Mac is back" note and the box diary (Mac 0.8, iPhone and iPad 0.11)
+- iPhone and iPad: when the Mac wakes from sleep (the sleep message of section 33), a short note "Mac is back" shows on the key screen. `PhoneLink.wakeNote(wasAsleep:asleep:)` decides (a note only on the step from asleep to awake). It shows together with the "what ran" note, so the Settings switch "What ran" note hides it too. Works with a Mac at 0.7 or later (no new message).
+- Mac: the box diary, `~/Library/Logs/AMS Deck Mate/box.log`, is trimmed at each start by `Diary.trimmed`: over 1,000 lines keeps the last 500. Before, it only ever grew.

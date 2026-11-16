@@ -178,7 +178,7 @@ public enum KeyCheck {
                 if let found = problem(step, in: profile, deck: deck, world: world) { return found }
             }
             return action.steps.isEmpty ? "No steps" : nil
-        case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI:
+        case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile:
             return nil
         }
     }
@@ -239,6 +239,8 @@ public enum ActionWords {
         case .media: return (MediaKey(rawValue: action.target) ?? .playPause).title
         case .recent: return "No recent app yet"
         case .askAI: return "Raycast: Ask AI"
+        case .copied: return "Pasted the copied text"
+        case .recentFile: return "No recent file yet"
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi: return "Done"
         }
     }

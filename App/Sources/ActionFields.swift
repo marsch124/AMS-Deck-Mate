@@ -22,15 +22,17 @@ extension ActionType {
         case .multi: return "Several things in a row"
         case .recent: return "Recent app"
         case .askAI: return "Ask AI (copied text)"
+        case .copied: return "Last copied text"
+        case .recentFile: return "Recent file"
         }
     }
 
-    static let forKeys: [ActionType] = [.app, .recent, .link, .raycast, .askAI, .shortcut, .text, .media, .multi,
+    static let forKeys: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .text, .copied, .media, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder.
-    static let forLongPress: [ActionType] = [.none, .app, .recent, .link, .raycast, .askAI, .shortcut, .text, .media, .multi,
+    static let forLongPress: [ActionType] = [.none, .app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .text, .copied, .media, .multi,
                                              .back, .nextPage, .previousPage, .profile]
-    static let forSteps: [ActionType] = [.app, .recent, .link, .raycast, .askAI, .shortcut, .text, .media]
+    static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .text, .copied, .media]
 }
 
 extension KeyCombo {
@@ -126,6 +128,24 @@ struct ActionFields: View {
                 .labelsHidden()
                 .accessibilityIdentifier("recentPicker")
                 note("Shows and opens an app used before the one in front. Three keys (1st, 2nd, 3rd) = your last three apps. Deck Mate's own windows never count.")
+            case .copied:
+                Picker("", selection: $action.target) {
+                    Text("1st – the text copied just before the current one").tag("1")
+                    Text("2nd").tag("2")
+                    Text("3rd").tag("3")
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("copiedPicker")
+                note("Shows the first words of a text you copied earlier and pastes it where the cursor is. Deck Mate remembers your last four copied texts in memory only, never in a file, and skips what a password manager marks as secret.")
+            case .recentFile:
+                Picker("", selection: $action.target) {
+                    Text("1st – the file opened last").tag("1")
+                    Text("2nd").tag("2")
+                    Text("3rd").tag("3")
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("recentFilePicker")
+                note("Shows and opens a file you opened lately, by its name. The list is the Mac’s own record of opened files in your home folder, from the last seven days.")
             case .askAI:
                 note("Opens Raycast AI Chat with the text you copied last already filled in. Nothing copied = AI Chat just opens.")
             case .folder: folderFields

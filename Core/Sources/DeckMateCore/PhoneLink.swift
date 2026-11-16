@@ -29,12 +29,12 @@ public enum PhoneLink {
     public enum Message: Codable, Equatable, Sendable {
         /// iPhone → Mac, the first thing it says: its name, and the token it was given before (if any).
         /// `version` 2 = the iPhone understands the messages below `press` (left out by the first iPhone app).
-        case hello(phone: String, token: String?, version: Int? = nil)
+        case hello(phone: String, token: String?, version: Int? = nil, proof: String? = nil)
         /// Mac → iPhone: the Mac is asking its owner whether this iPhone may use the keys.
         case waiting
         /// Mac → iPhone: allowed. Keep the token and bring it next time.
         /// `version` 3 = the Mac understands `own`, `hold`, `favourite` and `music` (left out by Mac apps before 0.5).
-        case welcome(token: String, mac: String, version: Int? = nil)
+        case welcome(token: String, mac: String, version: Int? = nil, proof: String? = nil)
         /// Mac → iPhone: not allowed.
         case refused
         /// Mac → iPhone: the keys as they are now, with the line on top ("OmniFocus · Page 2").
@@ -72,6 +72,9 @@ public enum PhoneLink {
         /// iPhone → Mac (version 6): a swipe up or down: show this page group WITHOUT locking it
         /// (it follows the app in front again at the next app change).
         case visit(profile: String)
+        /// Both ways (version 7), the start of a private line and the only message ever sent readable:
+        /// first the iPhone's `promise`, then the Mac's `key`, then the iPhone's `key` (see `SecureLine`).
+        case secure(promise: String?, key: String?)
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -83,6 +86,7 @@ public enum PhoneLink {
             case .map, .go: return 4
             case .asleep: return 5
             case .visit: return 6
+            case .secure: return 7
             }
         }
     }
@@ -90,7 +94,8 @@ public enum PhoneLink {
     /// The version that understands everything above: 2 = status, pressed, ran, page and profile;
     /// 3 = own keys, long press, favourites, the Mac at a glance and the music strip.
     /// 4 = the navigation picture; 5 = the Mac says when it sleeps; 6 = a swipe shows a page group without locking it.
-    public static let currentVersion = 6
+    /// 7 = the line is private: sealed from its first moment (`SecureLine`); older versions are no longer answered.
+    public static let currentVersion = 7
 
     /// One page group of the navigation picture.
     public struct MapGroup: Codable, Equatable, Sendable {
@@ -207,24 +212,50 @@ public enum PhoneLink {
 
         public init() {}
 
-        public mutating func add(_ data: Data) -> [Message] {
-            guard !broken else { return [] }
+        /// Takes in bytes as they arrive.
+        public mutating func feed(_ data: Data) {
+            guard !broken else { return }
             waiting.append(data)
-            var found: [Message] = []
-            while waiting.count >= 4 {
-                let head = waiting.prefix(4).reduce(0) { ($0 << 8) | Int($1) }
-                guard head <= PhoneLink.largest else { broken = true; return found }
-                guard waiting.count >= 4 + head else { break }
-                let body = waiting.dropFirst(4).prefix(head)
-                waiting = Data(waiting.dropFirst(4 + head))
-                guard let message = try? JSONDecoder().decode(Message.self, from: Data(body)) else {
-                    broken = true
-                    return found
-                }
-                found.append(message)
+        }
+
+        /// The next whole message, or nil when none is complete yet. With a `session` every message
+        /// must be sealed by it; without one only readable messages are understood. One at a time,
+        /// because the message that starts the private line changes how the next one is read.
+        public mutating func next(_ session: inout SecureLine.Session?) -> Message? {
+            guard !broken, waiting.count >= 4 else { return nil }
+            let head = waiting.prefix(4).reduce(0) { ($0 << 8) | Int($1) }
+            guard head <= PhoneLink.largest else { broken = true; return nil }
+            guard waiting.count >= 4 + head else { return nil }
+            var body = Data(waiting.dropFirst(4).prefix(head))
+            waiting = Data(waiting.dropFirst(4 + head))
+            if session != nil {
+                guard let opened = session?.open(body) else { broken = true; return nil }
+                body = opened
             }
+            guard let message = try? JSONDecoder().decode(Message.self, from: body) else {
+                broken = true
+                return nil
+            }
+            return message
+        }
+
+        /// Every whole readable message in `data` (a line that is not sealed).
+        public mutating func add(_ data: Data) -> [Message] {
+            feed(data)
+            var found: [Message] = []
+            var none: SecureLine.Session?
+            while let message = next(&none) { found.append(message) }
             return found
         }
+    }
+
+    /// A framed message sealed for a private line: its length, then the sealed JSON. nil without a line.
+    public static func sealed(_ frame: Data, by session: inout SecureLine.Session?) -> Data? {
+        guard session != nil, frame.count >= 4, let body = session?.seal(Data(frame.dropFirst(4))) else { return nil }
+        var length = UInt32(body.count).bigEndian
+        var data = Data(bytes: &length, count: 4)
+        data.append(body)
+        return data
     }
 }
 

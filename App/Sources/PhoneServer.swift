@@ -8,8 +8,10 @@ import Network
 final class PhoneServer: ObservableObject {
     /// The iPhone connected right now, by its name.
     @Published private(set) var connected: String?
-    /// The iPhones he allowed: token → the iPhone's name.
+    /// The iPhones he allowed: the id the Mac gave it → the iPhone's name.
     @Published private(set) var allowed: [String: String]
+    /// The secret each allowed iPhone proves itself with (it never travels again after the first time).
+    private var secrets: [String: String]
     @Published private(set) var isOn: Bool
 
     private let model: AppModel
@@ -27,13 +29,22 @@ final class PhoneServer: ObservableObject {
     private var sleepWatch: [NSObjectProtocol] = []
     private var macAsleep = false
 
-    private static let allowedKey = "allowedPhones"
+    /// Before 0.8 (permissions that travelled readable): dropped, each iPhone is allowed once more.
+    private static let oldAllowedKey = "allowedPhones"
+    private static let pairedKey = "pairedPhones"
+    /// No more lines than this at once, and a line must turn private within this many seconds.
+    private static let mostLines = 8
+    private static let startTime = 10.0
     private static let offKey = "phoneOff"
     static var macName: String { Host.current().localizedName ?? "Mac" }
 
     private final class Phone {
         let connection: NWConnection
         var reader = PhoneLink.Reader()
+        /// This line's one-time keys, the iPhone's promise, and the sealed line once both keys are known.
+        let keys = SecureLine.Keys()
+        var promise: Data?
+        var session: SecureLine.Session?
         var name = "iPhone"
         var token: String?
         var trusted = false
@@ -51,7 +62,10 @@ final class PhoneServer: ObservableObject {
 
     init(model: AppModel) {
         self.model = model
-        allowed = UserDefaults.standard.dictionary(forKey: PhoneServer.allowedKey) as? [String: String] ?? [:]
+        UserDefaults.standard.removeObject(forKey: PhoneServer.oldAllowedKey)
+        let paired = UserDefaults.standard.dictionary(forKey: PhoneServer.pairedKey) as? [String: [String: String]] ?? [:]
+        allowed = paired.compactMapValues { $0["name"] }
+        secrets = paired.compactMapValues { $0["secret"] }
         isOn = !UserDefaults.standard.bool(forKey: PhoneServer.offKey)
     }
 
@@ -59,6 +73,7 @@ final class PhoneServer: ObservableObject {
     init(sampleFor model: AppModel) {
         self.model = model
         allowed = ["sample": "Sample iPhone"]
+        secrets = [:]
         connected = "Sample iPhone"
         isOn = true
     }
@@ -79,6 +94,10 @@ final class PhoneServer: ObservableObject {
             })
         }
         events = [
+            model.$copiedTexts.dropFirst().debounce(for: .milliseconds(60), scheduler: RunLoop.main)
+                .sink { [weak self] _ in self?.sendKeysToAll() },
+            model.$recentFiles.dropFirst().debounce(for: .milliseconds(60), scheduler: RunLoop.main)
+                .sink { [weak self] _ in self?.sendKeysToAll() },
             model.pressedEvents.sink { [weak self] index in
                 // An iPhone with its own keys shows other keys: it lights only its own taps.
                 guard let self else { return }
@@ -142,7 +161,11 @@ final class PhoneServer: ObservableObject {
         listeners.forEach { $0.cancel() }
         listeners = []
         watch = nil
-        events = []
+        events = [
+            model.$copiedTexts.dropFirst().debounce(for: .milliseconds(60), scheduler: RunLoop.main)
+                .sink { [weak self] _ in self?.sendKeysToAll() },
+            model.$recentFiles.dropFirst().debounce(for: .milliseconds(60), scheduler: RunLoop.main)
+                .sink { [weak self] _ in self?.sendKeysToAll() },]
         phones.values.forEach { $0.connection.cancel() }
         phones = [:]
         waitingToAsk = []
@@ -159,7 +182,8 @@ final class PhoneServer: ObservableObject {
     /// Takes the permission back: the iPhone has to be allowed again.
     func forget(_ token: String) {
         allowed[token] = nil
-        UserDefaults.standard.set(allowed, forKey: PhoneServer.allowedKey)
+        secrets[token] = nil
+        keepPaired()
         for (id, phone) in phones where phone.token == token {
             phone.connection.cancel()
             drop(id)
@@ -168,7 +192,14 @@ final class PhoneServer: ObservableObject {
 
     // MARK: One iPhone
 
+    private func keepPaired() {
+        var paired: [String: [String: String]] = [:]
+        for (id, name) in allowed { if let secret = secrets[id] { paired[id] = ["name": name, "secret": secret] } }
+        UserDefaults.standard.set(paired, forKey: PhoneServer.pairedKey)
+    }
+
     private func accept(_ connection: NWConnection) {
+        guard phones.count < PhoneServer.mostLines else { connection.cancel(); return }
         let phone = Phone(connection)
         let id = ObjectIdentifier(phone)
         phones[id] = phone
@@ -180,13 +211,31 @@ final class PhoneServer: ObservableObject {
         }
         connection.start(queue: .main)
         receive(phone, id)
+        // A line that has not turned private in time is closed.
+        DispatchQueue.main.asyncAfter(deadline: .now() + PhoneServer.startTime) { [weak self, weak phone] in
+            guard let self, let phone, phone.session == nil, self.phones[id] != nil else { return }
+            phone.connection.cancel()
+            self.drop(id)
+        }
     }
 
     private func receive(_ phone: Phone, _ id: ObjectIdentifier) {
         phone.connection.receive(minimumIncompleteLength: 1, maximumLength: 65_536) { [weak self] data, _, done, error in
             guard let self, self.phones[id] != nil else { return }
+            var open = true
             if let data, !data.isEmpty {
-                for message in phone.reader.add(data) { self.handle(message, from: phone) }
+                phone.reader.feed(data)
+                while open, let message = phone.reader.next(&phone.session) {
+                    open = self.begin(message, from: phone)
+                }
+            }
+            if !open {
+                // Let the last word ("not allowed") go out before the line closes.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                    phone.connection.cancel()
+                    self?.drop(id)
+                }
+                return
             }
             if phone.reader.broken || done || error != nil {
                 phone.connection.cancel()
@@ -213,17 +262,50 @@ final class PhoneServer: ObservableObject {
         let frame = PhoneLink.frame(.mac(now))
         for phone in phones.values where phone.trusted && phone.version >= 3 && phone.lastMac != frame {
             phone.lastMac = frame
-            phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+            post(frame, to: phone)
+        }
+    }
+
+    /// The start of a line: nothing but the three steps that make it private is ever answered
+    /// readable. False = close the line.
+    private func begin(_ message: PhoneLink.Message, from phone: Phone) -> Bool {
+        if phone.session != nil {
+            if case .secure = message { return false }
+            handle(message, from: phone)
+            return true
+        }
+        switch message {
+        case let .secure(promise?, nil) where phone.promise == nil:
+            guard let promise = Data(base64Encoded: promise), promise.count == 32 else { return false }
+            phone.promise = promise
+            let reply = PhoneLink.frame(.secure(promise: nil, key: phone.keys.publicKey.base64EncodedString()))
+            phone.connection.send(content: reply, completion: .contentProcessed { _ in })
+            return true
+        case let .secure(nil, key?):
+            guard let promise = phone.promise, let key = Data(base64Encoded: key),
+                  SecureLine.promise(for: key) == promise,
+                  let session = SecureLine.session(phone.keys, role: .mac, other: key) else { return false }
+            phone.session = session
+            return true
+        case .hello:
+            // An iPhone app from before 0.11: it cannot keep the line private, so it is not answered.
+            BoxLog.note("iPhone link: an older Deck Mate app asked (needs 0.11 or later)")
+            phone.connection.send(content: PhoneLink.frame(.refused), completion: .contentProcessed { _ in })
+            return false
+        default:
+            return false
         }
     }
 
     private func handle(_ message: PhoneLink.Message, from phone: Phone) {
         switch message {
-        case let .hello(name, token, version):
+        case let .hello(name, token, version, proof):
+            guard !phone.trusted else { return }
             phone.version = version ?? 1
-            phone.name = name.isEmpty ? "iPhone" : name
-            if let token, allowed[token] != nil {
-                welcome(phone, token: token)
+            phone.name = name.isEmpty ? "iPhone" : String(name.prefix(60))
+            if let token, allowed[token] != nil, let secret = secrets[token],
+               phone.session?.checks(proof, secret: secret, by: .phone) == true {
+                welcome(phone, token: token, secret: secret, first: false)
             } else {
                 send(.waiting, to: phone)
                 waitingToAsk.append(phone)
@@ -311,15 +393,17 @@ final class PhoneServer: ObservableObject {
             NSApp.activate(ignoringOtherApps: true)
             let alert = NSAlert()
             alert.messageText = "“\(phone.name)” wants to use your keys"
-            alert.informativeText = "It shows the same keys as your Stream Deck, and this Mac does what you tap there. Allow it only for your own iPhone."
-            alert.addButton(withTitle: "Allow")
+            alert.informativeText = "It shows the number \(phone.session?.code ?? "")\n\nAllow it only if your own iPhone or iPad shows the same number. It then shows the same keys as your Stream Deck, and this Mac does what you tap there."
+            // Return and Escape both say no: Allow takes a click, so a key pressed while typing
+            // in another app can never let a stranger in.
             alert.addButton(withTitle: "Don’t Allow")
-            let yes = alert.runModal() == .alertFirstButtonReturn
+            alert.addButton(withTitle: "Allow")
+            alert.buttons[1].keyEquivalent = ""
+            let yes = alert.runModal() == .alertSecondButtonReturn
             self.asking = false
             if self.phones[ObjectIdentifier(phone)] != nil {
                 if yes {
-                    let token = UUID().uuidString + UUID().uuidString
-                    self.welcome(phone, token: token)
+                    self.welcome(phone, token: UUID().uuidString, secret: SecureLine.newSecret(), first: true)
                 } else {
                     self.send(.refused, to: phone)
                 }
@@ -328,27 +412,37 @@ final class PhoneServer: ObservableObject {
         }
     }
 
-    private func welcome(_ phone: Phone, token: String) {
+    /// Allowed. The first time the iPhone gets its id and its secret ("id:secret", over the private
+    /// line); later only the id, and the Mac proves that it knows the secret too.
+    private func welcome(_ phone: Phone, token: String, secret: String, first: Bool) {
         phone.token = token
         phone.trusted = true
         allowed[token] = phone.name
-        UserDefaults.standard.set(allowed, forKey: PhoneServer.allowedKey)
+        secrets[token] = secret
+        keepPaired()
         connected = phone.name
-        send(.welcome(token: token, mac: PhoneServer.macName,
-                      version: phone.version >= 3 ? PhoneLink.currentVersion : nil), to: phone)
+        send(.welcome(token: first ? token + ":" + secret : token, mac: PhoneServer.macName,
+                      version: PhoneLink.currentVersion,
+                      proof: phone.session?.proof(secret: secret, by: .mac)), to: phone)
         sendKeys(to: phone)
         lookAtMacIfAsked()
         if phone.version >= 3 {
             let frame = PhoneLink.frame(.mac(watch2.now))
             phone.lastMac = frame
-            phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+            post(frame, to: phone)
         }
     }
 
     // MARK: Sending
 
     private func send(_ message: PhoneLink.Message, to phone: Phone) {
-        phone.connection.send(content: PhoneLink.frame(message), completion: .contentProcessed { _ in })
+        post(PhoneLink.frame(message), to: phone)
+    }
+
+    /// Everything goes out sealed; without a private line nothing goes out at all.
+    private func post(_ frame: Data, to phone: Phone) {
+        guard let sealed = PhoneLink.sealed(frame, by: &phone.session) else { return }
+        phone.connection.send(content: sealed, completion: .contentProcessed { _ in })
     }
 
     private func sendKeysToAll() {
@@ -364,7 +458,7 @@ final class PhoneServer: ObservableObject {
         let data = PhoneLink.frame(.keys(place: model.placeLine(at: place), keys: list))
         if data != phone.lastSent {
             phone.lastSent = data
-            phone.connection.send(content: data, completion: .contentProcessed { _ in })
+            post(data, to: phone)
         }
         if phone.version >= 3 {
             let row = (0..<PhoneLink.favouriteCount).map { index in
@@ -374,7 +468,7 @@ final class PhoneServer: ObservableObject {
             let frame = PhoneLink.frame(.favourites(keys: row))
             if frame != phone.lastFavourites {
                 phone.lastFavourites = frame
-                phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+                post(frame, to: phone)
             }
         }
         if phone.version >= 4 {
@@ -390,7 +484,7 @@ final class PhoneServer: ObservableObject {
             }
             if let mapFrame, mapFrame != phone.lastMap {
                 phone.lastMap = mapFrame
-                phone.connection.send(content: mapFrame, completion: .contentProcessed { _ in })
+                post(mapFrame, to: phone)
             }
         }
         guard phone.version >= 2, let position = place else { return }
@@ -402,7 +496,7 @@ final class PhoneServer: ObservableObject {
         let frame = PhoneLink.frame(.status(status))
         guard frame != phone.lastStatus else { return }
         phone.lastStatus = frame
-        phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+        post(frame, to: phone)
     }
 
     private func toPhones(since version: Int, _ message: PhoneLink.Message) {

@@ -8,7 +8,12 @@ enum BoxLog {
         let folder = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Logs/AMS Deck Mate", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        return folder.appendingPathComponent("box.log")
+        let file = folder.appendingPathComponent("box.log")
+        // At each start the diary is cut back, so it never grows without end.
+        if let text = try? String(contentsOf: file, encoding: .utf8), let short = Diary.trimmed(text) {
+            try? short.write(to: file, atomically: true, encoding: .utf8)
+        }
+        return file
     }()
     private static let queue = DispatchQueue(label: "box.log")
     private static var written = 0

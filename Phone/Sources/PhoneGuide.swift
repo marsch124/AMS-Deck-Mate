@@ -25,7 +25,7 @@ enum PhoneGuide {
             "Touch, Tap buzz (on at first): the small buzz when a key is tapped. An iPad has no buzz.",
             "Touch, Click sound (off at first): a soft click when a key is tapped. It follows the silent switch and the volume of the device.",
             "Touch, Swipe up or down changes page group (on at first). When it is off, a swipe up or down does nothing. Swiping left or right for pages always works.",
-            "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap.",
+            "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap. Since 0.11 it also shows the short note \"Mac is back\" when the Mac wakes from sleep, so the same switch hides both.",
             "Showing, Page dots (on at first): the small dots under the keys.",
             "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
             "Showing, Dark while the Mac sleeps (on at first, since 0.9): when the Mac's screen goes to sleep, this screen goes black with a small moon and \"Mac asleep\". See \"Dark while the Mac sleeps\" below. Needs a Mac at 0.7.",
@@ -42,8 +42,10 @@ enum PhoneGuide {
             "On an iPad: put the iPad and the Mac on the same Wi-Fi, for example both on your iPhone's hotspot (an iPad without mobile data has no hotspot of its own)."
         ]),
         Section(id: "allowing", title: "Allowing the iPhone", part: "settings", lines: [
-            "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" Choose Allow on the Mac.",
+            "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" and shows a 4-digit number. This iPhone or iPad shows the same number. Choose Allow on the Mac only if both numbers are the same.",
             "After that the Mac remembers your iPhone and the keys appear by themselves. An iPad is asked the same way, once, and appears in the Mac's \"iPhone\" part in Settings by its name.",
+            "Since 0.11 the link to the Mac is private: everything is scrambled from the first moment, so on a shared Wi-Fi (hotel, café) nobody can listen in or press your keys. The number is there so nobody can sit in between.",
+            "Every iPhone and iPad has to be allowed once more after the update (one click on the Mac). The app 0.11 only talks to a Mac at 0.8 or later. With an older Mac it says \"Update AMS Deck Mate on your Mac\". An older app with the new Mac sees \"said no\".",
             "If the Mac was told Don't Allow, the iPhone shows \"Ask again\". Tap it and the Mac asks once more."
         ]),
         Section(id: "tapping", title: "Tapping keys", part: "keys", lines: [
@@ -108,12 +110,16 @@ enum PhoneGuide {
             "While it is dark the screen is allowed to lock itself like normal. It no longer keeps itself awake.",
             "When the Mac wakes, the screen brightens by itself. One tap on it shows the keys again.",
             "A switch \"Dark while the Mac sleeps\" in Settings, under Showing (on at first), turns it off. Then nothing changes: the keys stay and the screen stays awake as before.",
-            "It needs the AMS Deck Mate app at 0.7 on the Mac. With an older Mac nothing changes."
+            "It needs the AMS Deck Mate app at 0.7 on the Mac. With an older Mac nothing changes.",
+            "New in 0.11: when the Mac wakes from sleep, a short note \"Mac is back\" shows on the key screen. It uses the same switch as the \"what ran\" note, so hiding that note hides this one too. It works with a Mac at 0.7 or later."
         ]),
         Section(id: "newkeys", title: "Recent app and Ask AI keys", part: "keys", lines: [
             "Two new kinds of key, set up on the Mac (0.7), show and work here too. The Mac draws them.",
             "\"Recent app\" shows the icon and name of an app you used before the one in front on the Mac: 1st, 2nd or 3rd. The picture changes by itself as you switch apps on the Mac. Tap it and the Mac brings that app forward. Until enough apps have been used it shows a clock and \"Recent\".",
-            "\"Ask AI\" opens Raycast AI Chat on the Mac with the text you last copied there already filled in. Not yet tried against the real Raycast."
+            "\"Ask AI\" opens Raycast AI Chat on the Mac with the text you last copied there already filled in. Not yet tried against the real Raycast.",
+            "Since Mac 0.8, two more kinds of key show and work here too, drawn by the Mac.",
+            "\"Last copied text\" (1st, 2nd or 3rd) shows the first words of a text you copied on the Mac, up to 18 letters. Those first words are visible on the key, so take care when others can see your screen. Tap it and the Mac pastes that text where its cursor is.",
+            "\"Recent file\" (1st, 2nd or 3rd) shows the name of a file you opened lately on the Mac. Tap it and the Mac opens the file."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -135,6 +141,18 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.11", date: "16 Nov 2026", new: [
+            "The link between this iPhone or iPad and the Mac is now private. Every message is scrambled from the first moment. Before, key pictures, taps and the permission code travelled readable on the Wi-Fi, so on a shared Wi-Fi (hotel, café) someone could listen in and press your keys. Now nobody can.",
+            "The first time, the Mac asks and shows a 4-digit number, and this device shows the same number. Allow on the Mac only if both numbers are the same. The number comes from both sides, so nobody can sit in between.",
+            "After you allow, this device proves who it is every time without sending its secret, and the Mac proves itself the same way.",
+            "New short note \"Mac is back\" on the key screen when the Mac wakes from sleep. It is shown with the \"what ran\" note, so the same switch in Settings hides it. It works with a Mac at 0.7 or later.",
+            "The keys \"Last copied text\" and \"Recent file\", new in Mac 0.8, show and work here too, drawn by the Mac. \"Last copied text\" shows the first words of the copied text on the key, up to 18 letters, so they are visible to anyone looking at the screen.",
+            "Needs the Mac app at 0.8 or later."
+        ], changed: [
+            "Every iPhone and iPad has to be allowed once more, with one click on the Mac. The old permissions are removed.",
+            "The app 0.11 only talks to a Mac at 0.8 or later. With an older Mac it says \"Update AMS Deck Mate on your Mac\". An older iPhone or iPad app with the new Mac sees \"said no\".",
+            "How it works has new lines in \"Allowing the iPhone\", \"Dark while the Mac sleeps\" and \"Recent app and Ask AI keys\", and a new line in Settings about the note. The Mac app is now 0.8 (build 11)."
+        ], fixed: []),
         Release(id: "0.10.1", date: "16 Nov 2026", new: [
             "Needs the Mac app at 0.7.1 or later. With an older Mac app a swipe still locks, as before."
         ], changed: [
