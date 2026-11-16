@@ -26,7 +26,7 @@ enum PhoneGuide {
             "A key that opens a folder, goes back or moves to another page changes the keys on the iPhone and on the Mac together.",
             "A key that opens an app shows the real app icon, and its name when it has no words of its own. The Mac draws all the pictures.",
             "The iPhone keeps its screen on while it is connected. It works upright and sideways.",
-            "On an iPad (since 0.5) the keys fill the screen, larger, low and centred, in all four ways round. Everything else works the same.",
+            "On an iPad (since 0.5) the keys are large, low and centred, in all four ways round; since 0.5.1 they grow as far as the screen or window allows. On a newer iPad the app can open as a floating window: make it large once with the window's green button (or drag its corner) and the iPad remembers it. Everything else works the same.",
             "Since 0.4 the 15 keys sit low on the screen, near your thumb, with the place line on top.",
             "Swipe left or right on the keys for the next or previous page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
@@ -36,7 +36,8 @@ enum PhoneGuide {
         ]),
         Section(id: "profiles", title: "Profiles follow the Mac", part: "profiles", lines: [
             "The iPhone shows the profile and page the Mac shows. When the app in front on the Mac changes and the profile changes with it, the iPhone changes too.",
-            "To use a different profile, tap the top line (the profile name). A menu offers \"Automatic\" or holding one of the profiles, the same as the Mac's menu. You can also change it on the Mac, or tap a key that switches profile."
+            "To use a different profile, tap the top line (the profile name). A menu offers \"Automatic\" or holding one of the profiles, the same as the Mac's menu. You can also change it on the Mac, or tap a key that switches profile.",
+            "Since 0.5.1: swipe up or down on the keys for the next or previous profile. It is then held until you choose \"Automatic\" in the top line."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -58,6 +59,16 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.5.1", date: "16 Nov 2026", new: [
+            "On a newer iPad the app can open as a floating window. Make it large once with the window's green button (or drag its corner) and the iPad remembers it.",
+            "The keys on the iPad are larger: they now grow as far as the screen or window allows (before they stopped at a fixed width). On its side the iPad mini shows keys about a fifth larger.",
+            "Swipe up or down on the keys to change profile: up for the next one, down for the one before, round the end. The profile is then held, like picking it from the top line; choose \"Automatic\" there to let it follow the Mac again. This works on the iPhone and the iPad.",
+            "The Mac app stays at 0.4.1 and needs no update."
+        ], changed: [
+            "Swiping left or right for pages is unchanged."
+        ], fixed: [
+            "In a floating window the window's three round buttons lay over the profile name in the top line. The top line now steps aside for them if the app ever is in a window."
+        ]),
         Release(id: "0.5", date: "16 Nov 2026", new: [
             "Deck Mate is now also a proper iPad app, made for the iPad mini. It fills the whole screen, upright and on its side (all four ways round), instead of a phone-sized window.",
             "On the iPad the 15 keys are larger and sit low and centred. The top line, page dots, swiping for pages, the profile menu, the lit keys and the \"what ran\" note work the same as on the iPhone.",

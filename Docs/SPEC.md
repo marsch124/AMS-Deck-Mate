@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.4.1 (build 5), 16 Nov 2026; iPhone and iPad app 0.5 (build 5)
+# AMS Deck Mate, specification, version 0.4.1 (build 5), 16 Nov 2026; iPhone and iPad app 0.5.1 (build 6)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -171,7 +171,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app was then at 0.4 (4); it is now 0.5 (5), see section 22.
+**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app was then at 0.4 (4); it is now 0.5.1 (6), see section 22.
 
 ## 16. Not in 0.4
 - The first Stream Deck from 2017.
@@ -211,7 +211,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.5 (5). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.5.1 (6). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -239,6 +239,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 ## 21. The iPhone app, 0.4
 The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Layout: the 15 keys sit at the bottom of the screen, near the thumb; the place line is on top.
+- Profiles by swipe (0.5.1): a swipe up on the keys holds the next profile, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one profile. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
 - Profile menu: a tap on the top line (the profile name) opens a menu: "Automatic", or hold one of the profiles (as the Mac's menu). *
 - Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
@@ -247,7 +248,7 @@ The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Hotspot hint: after 20 seconds of "Looking for your Mac…" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. Button "Open Settings"; the close (x) button hides the hint.
 - The app uses its own warning and close drawings; the 22 hand-drawn deck drawings are also in the AMS Icon Library as app marks.
 
-## 22. The iPad, 0.5 (iPhone and iPad app, build 5, 16 Nov 2026)
+## 22. The iPad, 0.5 and 0.5.1 (iPhone and iPad app, build 6, 16 Nov 2026)
 The Mac app stays 0.4.1 (5) and is unchanged. On the iPhone only the version number changes.
 - Deck Mate is now also an iPad app, made for the iPad mini. It fills the whole screen, upright and on its side (all four ways round), instead of a phone-sized window.
 - The 15 keys are larger and sit low and centred. The top line, page dots, swipe for pages, profile menu, lit keys and the "what ran" note work the same as on the iPhone.
@@ -255,3 +256,8 @@ The Mac app stays 0.4.1 (5) and is unchanged. On the iPhone only the version num
 - Hint after 20 seconds of "Looking for your Mac…" on an iPad: put the iPad and the Mac on the same Wi-Fi, for example both on the iPhone's hotspot (an iPad without mobile data has no hotspot of its own).
 - The Mac asks once whether to allow the iPad, exactly like for an iPhone; in the Mac's Settings it appears in the "iPhone" part by its name.
 - Installed from TestFlight on the iPad like on the iPhone.
+
+**0.5.1 (build 6, 16 Nov 2026), iPad only; the iPhone changes only in its number.**
+- On a newer iPad the app can open as a floating window. Make it large once with the window's green button (or drag its corner) and the iPad remembers it.
+- The keys are larger: they grow as far as the screen or window allows (before they stopped at a fixed width). On its side the iPad mini shows keys about a fifth larger.
+- Fixed: in a floating window the window's three round buttons lay over the profile name in the top line. The top line now steps aside for them if the app ever is in a window.

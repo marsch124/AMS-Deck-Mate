@@ -8,6 +8,10 @@ struct DeckScreen: View {
     @ObservedObject var link: LinkClient
     @State private var showSettings = false
     @State private var hintClosed = false
+    @State private var windowWidth: CGFloat = 0
+    private var inWindow: Bool {
+        isPad && windowWidth > 0 && windowWidth < min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) - 1
+    }
 
     /// "iPad" on an iPad, "iPhone" on an iPhone, for the words on screen.
     static let device = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
@@ -22,7 +26,7 @@ struct DeckScreen: View {
         ZStack {
             PhonePalette.ground.ignoresSafeArea()
             VStack(spacing: 8) {
-                topBar
+                topBar.padding(.leading, inWindow ? 76 : 0)
                 Spacer(minLength: 0)
                 if !connected { messageCard }
                 Spacer(minLength: 0)
@@ -34,18 +38,28 @@ struct DeckScreen: View {
                         .opacity(connected ? 1 : 0.35)
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
+                            // Sideways = pages; up or down = the next or previous profile (it is then held).
                             let across = drag.translation.width
-                            guard abs(across) > 60, abs(across) > abs(drag.translation.height) * 1.5 else { return }
-                            link.page(across < 0 ? 1 : -1)
+                            let along = drag.translation.height
+                            if abs(across) > 60, abs(across) > abs(along) * 1.5 {
+                                link.page(across < 0 ? 1 : -1)
+                            } else if abs(along) > 60, abs(along) > abs(across) * 1.5,
+                                      let next = link.status?.profile(after: along < 0 ? 1 : -1) {
+                                link.pickProfile(next)
+                            }
                         })
                 }
                 .aspectRatio(5.0 / 3.0, contentMode: .fit)
-                .frame(maxWidth: isPad ? 860 : .infinity)
                 pageDots
             }
             .padding(.horizontal, isPad ? 20 : 12)
             .padding(.vertical, isPad ? 14 : 8)
         }
+        .background(GeometryReader { box in
+            // In a floating window on the iPad its three round buttons sit top left: the top line steps aside.
+            Color.clear.onAppear { windowWidth = box.size.width }
+                .onChange(of: box.size.width) { _, new in windowWidth = new }
+        }.ignoresSafeArea())
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("deckScreen")

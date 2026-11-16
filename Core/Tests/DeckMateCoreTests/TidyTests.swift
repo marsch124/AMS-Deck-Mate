@@ -114,6 +114,11 @@ final class TidyTests: XCTestCase {
                                          .page(step: -1), .profile(id: nil), .hello(phone: "P", token: "t", version: 2)]
         var reader = PhoneLink.Reader()
         XCTAssertEqual(reader.add(sent.map(PhoneLink.frame).reduce(Data(), +)), sent)
+        XCTAssertNil(status.profile(after: 1), "one profile: a swipe changes nothing")
+        let three = PhoneLink.Status(profiles: [.init(id: "a", name: "A"), .init(id: "b", name: "B"), .init(id: "c", name: "C")],
+                                     current: "c", held: false, page: 0, pages: 1)
+        XCTAssertEqual(three.profile(after: 1), "a", "round the end")
+        XCTAssertEqual(three.profile(after: -1), "b")
         let old = #"{"hello":{"phone":"P","token":null}}"#.data(using: .utf8)!
         XCTAssertEqual(try JSONDecoder().decode(PhoneLink.Message.self, from: old), .hello(phone: "P", token: nil, version: nil))
     }

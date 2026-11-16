@@ -71,6 +71,13 @@ public enum PhoneLink {
         public var page: Int?
         public var pages: Int
 
+        /// The profile a swipe up (+1) or down (-1) goes to, round the end; nil with fewer than two profiles.
+        public func profile(after step: Int) -> String? {
+            guard profiles.count > 1 else { return nil }
+            let at = profiles.firstIndex { $0.id == current } ?? 0
+            return profiles[((at + step) % profiles.count + profiles.count) % profiles.count].id
+        }
+
         public init(profiles: [Choice], current: String, held: Bool, page: Int?, pages: Int) {
             self.profiles = profiles
             self.current = current
