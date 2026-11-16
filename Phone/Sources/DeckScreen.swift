@@ -50,6 +50,12 @@ struct DeckScreen: View {
     @State private var onItsSide = false
     @State private var showStatus = false
     @State private var showMusicPlate = false
+    /// Where the keys sit in the row they share with the navigation picture, so the plate lines up with them.
+    @State private var keysFrame = CGRect.zero
+    /// On its side, Settings and music sit at the bottom left (upright: top right, as ever).
+    private var lowButtons: Bool {
+        phoneSideways || (isPad && onItsSide) || CommandLine.arguments.contains("-forceMap")
+    }
     /// The navigation picture shows on an iPad held on its side ("-forceMap" shows it anywhere, for checks).
     private var mapShows: Bool {
         showMap && connected && !link.map.isEmpty
@@ -74,10 +80,12 @@ struct DeckScreen: View {
                     VStack(spacing: 8) {
                         topBar.padding(.leading, inWindow ? 76 : 0)
                         HStack(spacing: 14) {
-                            if mapShows { navigationPicture(width: 230) }
+                            if mapShows { mapColumn }
                             keysColumn(note: showNote)
                         }
-                        glanceLine
+                        .coordinateSpace(.named("keysRow"))
+                        .onPreferenceChange(KeysFrameKey.self) { keysFrame = $0 }
+                        bottomBar
                     }
                 }
             }
@@ -119,12 +127,9 @@ struct DeckScreen: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 0) {
                 statusDot
-                Spacer(minLength: 4)
-                if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
-                settingsButton
+                placeLine.frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, -10)
-            placeLine.frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, -10)
             if let battery { batteryLine(battery) }
             if showNote, link.note != nil { noteLine }
             if mapShows {
@@ -133,12 +138,51 @@ struct DeckScreen: View {
                 Spacer(minLength: 0)
             }
             glanceLine
+            lowButtonRow.padding(.leading, -10)
         }
         .frame(width: Self.sidePanelWidth)
         .frame(maxHeight: .infinity, alignment: .top)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sidePanel")
     }
+
+    /// Settings in the corner and music beside it, at the bottom left.
+    private var lowButtonRow: some View {
+        HStack(spacing: 2) {
+            settingsButton
+            if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
+            Spacer(minLength: 8)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("lowButtons")
+    }
+
+    /// Under the keys: the Mac at a glance in the middle and, on its side, Settings and music at the bottom left.
+    @ViewBuilder
+    private var bottomBar: some View {
+        if lowButtons {
+            ZStack {
+                glanceLine
+                lowButtonRow
+            }
+        } else {
+            glanceLine
+        }
+    }
+
+    /// The navigation picture beside the keys: its top and bottom in line with the top and bottom keys.
+    private var mapColumn: some View {
+        VStack(spacing: 0) {
+            Color.clear.frame(height: max(0, keysFrame.minY))
+            navigationPicture(width: Self.mapWidth)
+                .frame(height: keysFrame.height > 0 ? keysFrame.height : nil)
+            Spacer(minLength: 0)
+        }
+        .frame(width: Self.mapWidth)
+    }
+
+    /// The width of the navigation picture beside the keys.
+    static let mapWidth: CGFloat = 230
 
     /// The width of the left panel on an iPhone held on its side.
     static let sidePanelWidth: CGFloat = 200
@@ -187,6 +231,9 @@ struct DeckScreen: View {
                         .accessibilityIdentifier("favouritesRow")
                     }
                 }
+                    .background(GeometryReader { keys in
+                        Color.clear.preference(key: KeysFrameKey.self, value: keys.frame(in: .named("keysRow")))
+                    })
                     .frame(width: box.size.width, height: box.size.height,
                            alignment: keysPlace == .bottom ? .bottom : (keysPlace == .top ? .top : .center))
                     .opacity(connected ? 1 : 0.35)
@@ -387,8 +434,10 @@ struct DeckScreen: View {
                 HStack(spacing: 2) {
                     statusDot
                     Spacer(minLength: 8)
-                    if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
-                    settingsButton
+                    if !lowButtons {
+                        if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
+                        settingsButton
+                    }
                 }
             }
             if let battery { batteryLine(battery) }
@@ -455,20 +504,34 @@ struct DeckScreen: View {
         }
     }
 
-    /// The Mac at a glance, very small at the very bottom: its battery and the app in front.
+    /// The Mac at a glance at the very bottom, as two small pills: its battery (green) and the app in front (blue).
     @ViewBuilder
     private var glanceLine: some View {
-        if showGlance, connected, link.newMac, let glance = link.mac?.glance, !glance.isEmpty {
-            HStack(spacing: 4) {
-                if link.mac?.battery != nil { PhoneIcon(name: "iconBattery", size: 12) }
-                Text(glance).font(.caption2).lineLimit(1)
+        if showGlance, connected, link.newMac, let mac = link.mac, !mac.glance.isEmpty {
+            HStack(spacing: 6) {
+                if let battery = mac.battery {
+                    glancePill(icon: "iconBattery", words: mac.charging ? "\(battery) % charging" : "\(battery) %",
+                               part: "settings")
+                }
+                if !mac.app.isEmpty { glancePill(icon: nil, words: mac.app, part: "screen") }
             }
-            .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Mac: \(glance)")
+            .accessibilityLabel("Mac: \(mac.glance)")
             .accessibilityIdentifier("macGlance")
         }
+    }
+
+    /// One small pill in its part's colour.
+    private func glancePill(icon: String?, words: String, part: String) -> some View {
+        HStack(spacing: 4) {
+            if let icon { PhoneIcon(name: icon, size: isPad ? 15 : 12) }
+            Text(words).font((isPad ? Font.footnote : Font.caption).weight(.semibold)).lineLimit(1)
+        }
+        .foregroundStyle(PhonePalette.part(part))
+        .padding(.horizontal, isPad ? 11 : 8)
+        .padding(.vertical, isPad ? 5 : 3)
+        .background(PhonePalette.part(part).opacity(0.15), in: Capsule())
     }
 
     /// The place, only as a heading (picking or locking a page group is in Settings since 0.10).
@@ -721,5 +784,14 @@ private struct KeyView: View {
         .accessibilityLabel(image == nil ? "Empty \(name)" : (key?.title ?? "Key"))
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("\(name)\(index)")
+    }
+}
+
+/// Where the 15 keys (and the favourites row) sit, handed up to the row they share with the navigation picture.
+private struct KeysFrameKey: PreferenceKey {
+    static let defaultValue = CGRect.zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if next != .zero { value = next }
     }
 }

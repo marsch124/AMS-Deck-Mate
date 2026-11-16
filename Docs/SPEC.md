@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.9 (build 12), 16 Nov 2026; iPhone and iPad app 0.12 (build 17)
+# AMS Deck Mate, specification, version 0.9 (build 12), 16 Nov 2026; iPhone and iPad app 0.13 (build 18)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -12,6 +12,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.9 (Mac) and 0.12 (iPhone and iPad): the weekly copy of the keys in iCloud Drive (section 40), the list choice of "Last copied text" (section 41), and the lock mark for the private line (section 42).
+- Since 0.13 (iPhone and iPad): the navigation picture is as tall as the keys, the music and settings buttons move to the bottom left on its side, and the Mac at a glance is two pills (section 43).
 - Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music button, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
@@ -316,7 +317,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Nothing else changes. The Mac and the iPhone and iPad app work with each other in any mix of these versions.
 
 ## 23. iPhone and iPad settings, 0.6 and 0.6.1 (iPhone and iPad app, build 9, 16 Nov 2026)
-(Mac 0.5 (7) since 0.7 of the iPhone and iPad app.) The Mac app was unchanged at 0.4.2 (6) in 0.6 and 0.6.1. Settings are opened with the gear at the top right. Every choice applies at once and is remembered on that device only. Done closes Settings. With the first (default) choice of everything the app looks and works as in 0.5.2. Four groups, then the unchanged "Your Mac" part with "Forget this Mac".
+(Mac 0.5 (7) since 0.7 of the iPhone and iPad app.) The Mac app was unchanged at 0.4.2 (6) in 0.6 and 0.6.1. Settings are opened with the gear at the top right (since 0.13 at the bottom left with the iPad or iPhone on its side, section 43). Every choice applies at once and is remembered on that device only. Done closes Settings. With the first (default) choice of everything the app looks and works as in 0.5.2. Four groups, then the unchanged "Your Mac" part with "Forget this Mac".
 
 **Look**
 - Background: Day and night (default: light by day, dark by night, as before) / Always dark / Night blue / Forest / Plum / Rust / Slate (Rust and Slate since 0.6.1). The colours are deep, calm shades; the words turn light on them.
@@ -373,11 +374,12 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 ## 27. The Mac at a glance (Mac 0.5, iPhone and iPad 0.7; moved in 0.8.1)
 - Message `mac(MacNow)` from the Mac with the fields `battery`, `charging`, `app`, `song`, `artist`, `playing`, `volume`. It is sent when the iPhone is allowed and again when something changes.
 - The Mac looks at battery and volume every 5 seconds, only while such a device is connected.
-- Since 0.8.1: one very small centred line at the very bottom of the screen, under the page dots (before, in the top line): a small battery drawing and "73 % charging · Claude", or "82 % · Safari" when not charging. A Mac without a battery shows only the app.
+- Since 0.8.1 until 0.12: one very small centred line at the very bottom of the screen, under the page dots (before, in the top line): a small battery drawing and "73 % charging · Claude", or "82 % · Safari" when not charging. A Mac without a battery shows only the app.
+- Since 0.13 (section 43): two small pills at the bottom middle, a green battery pill ("95 %" or "95 % charging") and a blue app pill ("Claude"). A Mac without a battery shows only the app pill.
 - Settings, Showing: switch "Mac at a glance" (default on, stored on that device).
 
 ## 28. The music button and plate (Mac 0.5, iPhone and iPad 0.7; button since 0.8.1)
-- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button, shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. It is filled green while something is playing. A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it. Since 0.8.2 the plate has a solid background (the card colour), not see-through glass.
+- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button (since 0.13, with the iPad or iPhone on its side, at the bottom left, section 43), shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. It is filled green while something is playing. A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it. Since 0.8.2 the plate has a solid background (the card colour), not see-through glass.
 - Spotify and Apple Music. The Mac listens for the change notices both send when the song or the play state changes, so the plate says "Nothing playing yet" until the next change of song or pause after the Mac app has started.
 - Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
 - Not yet tried: play or pause from the plate.
@@ -399,8 +401,8 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 Made after 0.7 on a real iPad, where the top was too crowded. Only the key screen changes; the Mac app is unchanged (0.6, build 8).
 - Heading: the place (for example "OmniFocus · OF Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. Since 0.10 it is only a heading: no menu on a tap and no lock drawing beside it (section 34).
 - Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected. Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to the Mac") and what the colours mean. Since 0.8.2 the card has a solid background (the card colour), not see-through glass. The big message card in the middle while there is no Mac is unchanged.
-- Music: one small round button at the top right, beside the settings button; the plate it opens is in section 28. The Settings switch is called "Music button".
-- The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27). Same switch.
+- Music: one small round button at the top right, beside the settings button (since 0.13 at the bottom left on its side, section 43); the plate it opens is in section 28. The Settings switch is called "Music button".
+- The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27); since 0.13 two small pills (section 43). Same switch.
 - The iPad's own low battery warning ("Battery 18 % – plug in") sits centred under the heading.
 - Test: the phone screen test now also opens the music plate and the connection card (found by their identifiers).
 - Proven on the real iPad with 0.7: the Mac's battery, the app in front and the lock showed correctly.
@@ -432,7 +434,7 @@ Made after 0.7 on a real iPad, where the top was too crowded. Only the key scree
 ## 34. Side panel and lock in Settings (iPhone and iPad 0.10, build 14)
 Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Side panel: when the screen is wider than tall (iPhone or iPad on its side), the key screen has two parts. On the left is the side panel (accessibility identifier `sidePanel`), 200 points wide on the iPhone and 230 on the iPad. On the right the keys get the whole height.
-- In the panel, top to bottom: the top line (status dot, page group name as heading, music button, settings gear), the note on what a key did ("what ran", section 21), and the navigation picture (section 29).
+- In the panel, top to bottom: the top line (status dot, page group name as heading; until 0.12 also music button and settings gear, since 0.13 those two sit at the bottom of the panel, section 43), the note on what a key did ("what ran", section 21), and the navigation picture (section 29).
 - Key size on an iPhone on its side: about 100 to 115 points (before 0.10 about 80, because the top line, note and page dots sat above and below the keys). The iPad's keys grow as far as the space allows, as before.
 - Navigation picture: now also on the iPhone on its side, same as the iPad on its side. Upright (iPhone or iPad): no picture, as before. The Settings switch `showMap` still turns it off.
 - Clock above the keys: still not shown on an iPhone on its side.
@@ -510,3 +512,11 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - While connected, a small lock drawing (identifier `privateMark`, Phone/Sources/DeckScreen.swift) sits beside the status dot at the top left. It shows when `LinkClient.isPrivate` is true (the line is sealed, section 38).
 - The connection card (tap the dot) also says "Private line: nobody else on the Wi-Fi can read your keys or press them."
 - Nothing changes in how the link works. Test: the phone screen test checks the lock mark by its identifier.
+
+## 43. Key screen layout on its side (iPhone and iPad 0.13, build 18)
+Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged at 0.9 (build 12). Code: Phone/Sources/DeckScreen.swift.
+- Navigation picture, iPad on its side: before, the plate started right under the top line, higher than the keys, and ran down past the page dots. Now its top edge is in line with the top row of keys and its bottom edge with the bottom row of keys, so plate and keys are the same height. With more pages than fit, the plate scrolls as before (section 29).
+- Music button and settings gear: before, top right beside the heading on every device. Now, whenever the iPad or iPhone is held on its side (wider than tall), both sit at the bottom left: on the iPad in the bottom-left corner under the plate, on the iPhone at the bottom of the left side panel (section 34). Held upright, nothing changes: both stay top right. Their actions are the same (music opens the music plate, section 28; the gear opens Settings).
+- iPhone on its side, top of the left panel: the connection dot sits in the same line as the page group heading. Before, the dot, the music button and the gear shared a line above the heading.
+- Mac at a glance (section 27): before, one very small grey line at the bottom middle, for example "95 % · Claude". Now two small pills at the bottom middle: a green pill with the battery drawing and the Mac's battery ("95 %", or "95 % charging"), and a blue pill with the name of the app in front ("Claude"). A Mac without a battery shows only the app pill. Same switch in Settings, Showing ("Mac at a glance"). On the iPhone on its side the pills sit in the left panel, just above the two buttons.
+- Not proven yet: on a real iPad and a real iPhone held on its side.

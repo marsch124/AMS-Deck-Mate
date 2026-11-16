@@ -11,7 +11,7 @@ enum PhoneGuide {
             "It needs the AMS Deck Mate app open on your Mac."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
-            "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings. Since 0.7 the first part is \"Keys\".",
+            "Open Settings with the gear. It is at the top right; since 0.13, with the iPad or iPhone held on its side, it is at the bottom left. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings. Since 0.7 the first part is \"Keys\".",
             "Keys (since 0.7, at the top): \"Follow the Mac\" (as before) or \"My own keys\", and then, in the row \"Page group\", you pick a page group. See \"My own keys\" below. With an older Mac this card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the new parts stay hidden.",
             "Keys (since 0.8): a switch \"Navigation picture\" (on at first). It shows the page groups and pages as small pictures on the left of an iPad or iPhone held on its side (iPhone since 0.10). It needs a Mac at 0.6.",
             "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest, Plum, Rust or Slate. The colours are deep, calm shades and the words turn light on them.",
@@ -31,8 +31,8 @@ enum PhoneGuide {
             "Showing, Dark while the Mac sleeps (on at first, since 0.9): when the Mac's screen goes to sleep, this screen goes black with a small moon and \"Mac asleep\". See \"Dark while the Mac sleeps\" below. Needs a Mac at 0.7.",
             "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows centred under the heading, and also under the resting clock. It goes away when charging or above 20 %.",
             "Showing, Favourites row (on at first): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
-            "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, as one very small line at the very bottom, under the page dots. Needs a Mac at 0.5.",
-            "Showing, Music button (on at first): one small round button at the top right, beside the settings button. Tap it for a small plate that shows what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
+            "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, as two small pills at the bottom middle (since 0.13; before, one tiny grey line). Needs a Mac at 0.5.",
+            "Showing, Music button (on at first): one small round button, at the top right beside the settings button (since 0.13, with the iPad or iPhone held on its side, at the bottom left). Tap it for a small plate that shows what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
             "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
@@ -56,7 +56,7 @@ enum PhoneGuide {
             "The iPhone keeps its screen on while it is connected, except while the Mac sleeps (since 0.9, see \"Dark while the Mac sleeps\"). It works upright and sideways.",
             "On an iPad (since 0.5) the keys are large, low and centred, in all four ways round; since 0.5.1 they grow as far as the screen or window allows. On a newer iPad the app can open as a floating window: make it large once with the window's green button (or drag its corner) and the iPad remembers it. Everything else works the same.",
             "Since 0.4 the 15 keys sit low on the screen, near your thumb, with the place line on top.",
-            "Held on its side (since 0.10), the iPhone puts the top line (status dot, page group name, music button, settings gear), the note on what a key did and the navigation picture in a panel on the left, so the keys get the whole height on the right and are much larger.",
+            "Held on its side (since 0.10), the iPhone puts the top line (status dot and page group name), the note on what a key did and the navigation picture in a panel on the left, so the keys get the whole height on the right and are much larger. Since 0.13 the music button and the settings gear sit at the bottom of that panel, with the Mac at a glance pills just above them. Before 0.13 the music button and the gear were in the top line.",
             "Swipe left or right on the keys for the next or previous page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
             "After a tap a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
@@ -82,6 +82,7 @@ enum PhoneGuide {
             "Tap a small page and the keys go there. When the iPad follows the Mac, the Mac goes there too and that page group is locked until you choose \"Automatic\" in Settings, Keys, row \"Page group\". With \"My own keys\", only the iPad's own place moves, and the page group you picked is remembered.",
             "An iPad or iPhone held upright shows no picture, because there is no room.",
             "In Settings, the switch \"Navigation picture\" in the Keys card (on at first) turns it off.",
+            "Since 0.13, on an iPad held on its side, the navigation picture is as tall as the keys: its top edge is in line with the top row of keys and its bottom edge with the bottom row of keys. Before, it started right under the top line, higher than the keys, and ran down past the page dots. When there are more pages than fit, it scrolls as before.",
             "Needs the AMS Deck Mate app at 0.6 on the Mac. With an older Mac the picture stays hidden. Not yet tried on a real iPhone held on its side."
         ]),
         Section(id: "longpress", title: "Long press", part: "keys", lines: [
@@ -99,8 +100,8 @@ enum PhoneGuide {
             "Needs the AMS Deck Mate app at 0.5 on the Mac."
         ]),
         Section(id: "macnow", title: "The Mac at a glance and the music button", part: "settings", lines: [
-            "Mac at a glance: one very small line at the very bottom of the screen, under the page dots, shows a small battery drawing and the Mac's battery in percent, with the app in front, for example \"82 % · Safari\", or \"82 % charging · Safari\" while it charges. A Mac without a battery shows only the app.",
-            "Music button: a small round button at the top right, beside the settings button. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. The plate has a solid background. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
+            "Mac at a glance: since 0.13, two small pills at the bottom middle of the screen. A green pill shows a small battery drawing and the Mac's battery, for example \"82 %\", or \"82 % charging\" while it charges. A blue pill shows the name of the app in front on the Mac, for example \"Safari\". Before 0.13 it was one tiny grey line, for example \"82 % · Safari\". A Mac without a battery shows only the blue app pill. With the iPhone held on its side, the pills sit in the left panel, just above the two buttons.",
+            "Music button: a small round button. Held upright it is at the top right, beside the settings button. Since 0.13, with the iPad or iPhone held on its side, it is at the bottom left: on the iPad in the bottom-left corner under the navigation picture, on the iPhone at the bottom of the left panel. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. The plate has a solid background. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
             "Until the next change of song or pause after the Mac app has started, the plate says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
             "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs none. Play or pause is not yet tried.",
             "The Mac looks at its battery and volume every 5 seconds, but only while such a device is connected.",
@@ -143,6 +144,19 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.13", date: "16 Nov 2026", new: [
+            "Mac at a glance now shows as two small pills at the bottom middle of the screen. A green pill has a small battery drawing and the Mac's battery, for example \"95 %\" or \"95 % charging\". A blue pill has the name of the app in front on the Mac, for example \"Claude\". A Mac without a battery shows only the blue app pill.",
+            "Not yet tried: the new places on a real iPad and a real iPhone held on its side."
+        ], changed: [
+            "The navigation picture on an iPad held on its side is now as tall as the keys. Before, it started right under the top line, higher than the keys, and ran down past the page dots. Now its top edge is in line with the top row of keys and its bottom edge with the bottom row of keys. When there are more pages than fit, it scrolls as before.",
+            "The music button and the settings button (the gear) moved when the iPad or iPhone is held on its side. Before, they were at the top right, beside the heading, on every device. Now both are at the bottom left: on the iPad in the bottom-left corner under the navigation picture, on the iPhone at the bottom of its left panel.",
+            "Held upright, nothing changed: the music button and the gear stay at the top right.",
+            "The two buttons do the same as before. The music button opens the small music plate and the gear opens Settings.",
+            "On an iPhone held on its side, the connection dot now sits in the same line as the page group name at the top of the left panel. Before, the dot, the music button and the gear shared one line above the name.",
+            "Mac at a glance changed its look. Before, it was one tiny grey line at the bottom middle, for example \"95 % · Claude\". Now it is two small pills, one green for the battery and one blue for the app. On an iPhone held on its side, the pills sit in the left panel, just above the two buttons.",
+            "The switch \"Mac at a glance\" in Settings, Showing, works as before and turns both pills off.",
+            "How it works has the new places in \"Settings\", \"The navigation picture\", \"The Mac at a glance and the music button\" and the line about the iPhone on its side. The Mac app is unchanged at 0.9."
+        ], fixed: []),
         Release(id: "0.12", date: "16 Nov 2026", new: [
             "A small lock drawing beside the connection dot at the top left of the key screen, shown while this device is connected. It tells you the line to the Mac is private (scrambled, as since 0.11).",
             "The connection card (tap the dot) now also says: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\"",

@@ -62,7 +62,19 @@ final class DeckScreenTests: XCTestCase {
 
         XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 10), "the navigation picture shows every page")
         XCTAssertTrue(app.buttons["mapPage-p1"].isSelected, "the page showing now is marked")
-        XCTAssertTrue(app.buttons["mapPage-w1"].exists)
+
+        // His placement (0.13): the plate starts in line with the top keys; Settings and music sit bottom left, under it.
+        let plate = app.descendants(matching: .any)["navigationPicture"].frame
+        let topKey = app.descendants(matching: .any)["key0"].frame
+        XCTAssertEqual(plate.minY, topKey.minY, accuracy: 3, "the plate's top is in line with the top keys")
+        let gear = app.buttons["settingsButton"].frame
+        XCTAssertGreaterThan(gear.midY, plate.maxY, "Settings sits under the plate")
+        XCTAssertLessThan(gear.midX, plate.midX, "Settings sits at the left")
+        XCTAssertTrue(app.descendants(matching: .any)["macGlance"].exists)
+
+        // The plate is as tall as the keys (short on an upright iPhone), so the last page group is a scroll away.
+        app.descendants(matching: .any)["navigationPicture"].swipeUp()
+        XCTAssertTrue(app.buttons["mapPage-w1"].waitForExistence(timeout: 5))
     }
 
     /// An iPhone on its side: the side panel on the left holds the heading, settings and the navigation picture.
