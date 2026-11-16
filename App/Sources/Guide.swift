@@ -14,16 +14,16 @@ enum Guide {
             "The first real test is planned for January 2027. The keys on screen work without the box and can be used right away."
         ]),
         Section(id: "menu", title: "The menu bar", part: "settings", lines: [
-            "Click the small icon to open the menu: \"Show keys on screen\", \"Set up keys…\", \"Profile\", \"Settings…\" and \"Quit AMS Deck Mate\".",
-            "Under \"Profile\" you choose \"Automatic\" or pin one profile by hand.",
-            "The top of the menu tells you what is going on: \"Profile: <name>\" with \"(automatic)\" or \"(locked)\", \"iPhone: connected – <name>\" or \"iPhone: none connected\", and a line about the box.",
-            "\"Profile for <the app in front>\" is a small list of your profiles and \"None – use the default\". Pick one and that profile shows by itself whenever that app is in front. The app is taken off any other profile, so it belongs to only one."
+            "Click the small icon to open the menu: \"Show keys on screen\", \"Set up keys…\", \"Page group\", \"Settings…\" and \"Quit AMS Deck Mate\".",
+            "Under \"Page group\" you choose \"Automatic\" or pin one page group by hand.",
+            "The top of the menu tells you what is going on: \"Page group: <name>\" with \"(automatic)\" or \"(locked)\", \"iPhone: connected – <name>\" or \"iPhone: none connected\", and a line about the box.",
+            "\"Page group for <the app in front>\" is a small list of your page groups and \"None – use the default\". Pick one and that page group shows by itself whenever that app is in front. The app is taken off any other page group, so it belongs to only one."
         ]),
         Section(id: "screen", title: "Keys on screen", part: "screen", lines: [
             "\"Show keys on screen\" opens a small floating window with the same 15 keys as the box. The shortcut is Control-Option-D.",
             "A click does what pressing the box key does. The window does not take the keyboard away from the app you are working in.",
             "It stays above other windows, you can drag it anywhere, and it remembers its place.",
-            "The top line shows the profile and page names and a button to set up keys. While \"Set up keys\" is open the floating keys step aside, and come back when you close it.",
+            "The top line shows the page group and page names and a button to set up keys. While \"Set up keys\" is open the floating keys step aside, and come back when you close it.",
             "It works without the box, so you can use the keys on a Mac with no box plugged in.",
             "Three choices in Settings, in the card \"Keys on screen\". \"Show them\": \"Where I left them\" or \"At the mouse pointer\".",
             "At the mouse pointer, the keys appear under the pointer each time. Near the edge of the screen they move in until they are whole. The place you drag them to is not remembered then.",
@@ -36,7 +36,10 @@ enum Guide {
             "Since 0.4.1, while the keys on screen have the keyboard, each key shows its letter in a small round mark in its top-left corner: 1 2 3 4 5 on the top row, Q W E R T in the middle and A S D F G at the bottom.",
             "The letters go away as soon as the keyboard goes back to the app you were in, after a key that does something on the Mac or after a click on the keys. So letters showing means typing works right now.",
             "The letters show only on the keys on screen, not on the box, the iPhone or in Set up keys.",
-            "A key whose app, file, folder, Raycast command, folder page or profile is gone shows a small red mark in its corner."
+            "A key whose app, file, folder, Raycast command, folder page or page group is gone shows a small red mark in its corner.",
+            "Since 0.5, a key with a long-press action shows a small white dot in its top right corner. Hold the mouse button on it for half a second and the second action runs. Let go sooner and the usual action runs.",
+            "A key with a long-press action acts when you let go of the mouse button, so the Mac can tell a short click from a long one. All other keys act at once, as before.",
+            "The favourites row is not shown on the keys on screen. It is for the iPhone and iPad."
         ]),
         Section(id: "look", title: "The look of a key", part: "keys", lines: [
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
@@ -46,20 +49,40 @@ enum Guide {
             "There are 245 hand-drawn icons to pick from."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
-            "Open it from the menu. Profiles are on the left: add, rename, delete, make default, and \"Use with apps\".",
-            "In the middle are the 15 keys, with the pages and folders of the profile above them. You can add and delete pages.",
+            "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
+            "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
+            "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\".",
             "Every edit has Cancel and Save. Escape is Cancel.",
             "\"Clear key\" empties a key. \"Try it\" runs the key.",
             "Move keys by dragging: drop a key on another place to move it there, or to swap with the key that is there. Drop a key on a page chip at the top to send it to that page, to the same place. A key already there swaps. A folder key takes its folder along.",
             "Copy and paste: with a key picked, Command-C copies it and Command-V pastes it. The pasted key replaces the picked one. This works when you are not typing in a text field.",
-            "\"Duplicate page\" (beside Delete page) copies the page and its folders. The copy is named \"… copy\". \"Duplicate profile\" (beside Make default) copies the profile. The copy belongs to no app yet.",
+            "\"Duplicate page\" (beside Delete page) copies the page and its folders. The copy is named \"… copy\". \"Duplicate page group\" (beside Make default) copies the page group. The copy belongs to no app yet.",
             "Undo and Redo: Command-Z and Shift-Command-Z, or the two buttons in Set up keys. They go back through the last 30 changes for as long as the app runs. The safety copies on disk stay as before.",
-            "A broken key has a red mark in its corner, on the screen and in Set up keys. Pick it and one line tells you what is missing."
+            "A broken key has a red mark in its corner, on the screen and in Set up keys. Pick it and one line tells you what is missing.",
+            "Since 0.5, under \"What it does\" there is a second picker, \"Long press\". See \"Long press: a second action\" below. Under the 15 keys there is a row \"Favourites\" of 5 places. See \"The favourites row\" below."
+        ]),
+        Section(id: "longpress", title: "Long press: a second action", part: "keys", lines: [
+            "Every key can have a second action that runs when you hold it. Set it in Set up keys: pick the key, and under \"What it does\" use the picker \"Long press\". Choose Nothing, or anything a key can do except \"Folder of keys\", and fill it in like the normal action.",
+            "A key with a long-press action shows a small white dot in its top right corner: on the box, on the keys on screen and on the iPhone and iPad.",
+            "Hold the key for half a second (0.5 seconds). On the iPhone and iPad a long press gives a stronger buzz. On the Mac's keys on screen, hold the mouse button. On the box, hold the key.",
+            "A long press on a key that has no second action does the usual thing, as if you had tapped.",
+            "On the box and on the Mac's keys on screen, a key with a long-press action acts when you let go: the usual action if you let go early, the second action if you are still holding after half a second. All other keys act at once, as before.",
+            "A long-press action that is broken (for example its app is gone) shows the red corner. In Set up keys the reason starts with \"Long press:\".",
+            "Not yet tried on the real box. The box is away until January 2027."
+        ]),
+        Section(id: "favourites", title: "The favourites row", part: "keys", lines: [
+            "5 keys that stay in place on every page and in every page group. They show only on the iPhone and iPad, as a row under the 15 keys.",
+            "Set them up on the Mac in Set up keys: under the 15 keys there is a row \"Favourites\" of 5 places. Click one and edit it like any key: title, icon, what it does, and a long press too.",
+            "A favourite can be anything except a folder or Back. Copy and Paste work on favourites. Dragging does not.",
+            "A favourite that moves to another page or page group moves the place of the iPhone or iPad when it has its own keys, and otherwise the Mac's place.",
+            "The favourites are not shown on the box, which has 15 keys, nor on the Mac's keys on screen.",
+            "On the iPhone and iPad, Settings has a switch \"Favourites row\" (on at first). The row only shows when at least one favourite is set.",
+            "They need Mac 0.5 and iPhone and iPad 0.7."
         ]),
         Section(id: "broken", title: "Broken keys and \"Check keys\"", part: "keys", lines: [
-            "A key is broken when its app, file or folder, Raycast extension, folder page or profile is gone. It gets a red mark in its corner.",
-            "In Settings, \"Check keys\" has the button \"Check all keys\". It lists every broken key as \"Profile · Page · key: reason\".",
+            "A key is broken when its app, file or folder, Raycast extension, folder page or page group is gone. It gets a red mark in its corner.",
+            "In Settings, \"Check keys\" has the button \"Check all keys\". It lists every broken key as \"Page group · Page · key: reason\".",
             "Fix a broken key in Set up keys: pick it and choose again what it does."
         ]),
         Section(id: "actions", title: "What a key can do", part: "keys", lines: [
@@ -67,8 +90,9 @@ enum Guide {
             "Raycast: run a Raycast command. Keyboard shortcut: press the keys to record them.",
             "Type text. Music and sound: play or pause, next, previous, volume up, volume down, mute.",
             "Folder of keys opens another page of keys, and Back returns. Next page and Previous page move between pages.",
-            "Switch profile changes the profile. Several things in a row runs steps one after another, a third of a second apart.",
-            "Nothing leaves the key empty."
+            "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart.",
+            "Nothing leaves the key empty.",
+            "Since 0.5, every key can have a second action on a long press, and 5 favourite keys stay on every page for the iPhone and iPad."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
@@ -81,13 +105,13 @@ enum Guide {
             "The first time a key runs a command, Raycast asks once. Choose \"Always open command\".",
             "Raycast has no door for quicklinks and snippets from outside. Use \"Open a link\" for a quicklink and \"Type text\" for a snippet."
         ]),
-        Section(id: "profiles", title: "Profiles change by themselves", part: "profiles", lines: [
-            "When an app that belongs to a profile comes to the front, the keys change to that profile. Any other app shows the default profile.",
-            "A profile you pick by hand stays while you move between apps that share a profile. It changes when you go to an app with another profile.",
-            "Picking a profile in the menu locks it: a small lock shows beside its name on the keys on screen (since 0.4.2), and it stays until you choose \"Automatic\". You can switch the automatic change off in Settings."
+        Section(id: "profiles", title: "Page groups change by themselves", part: "profiles", lines: [
+            "When an app that belongs to a page group comes to the front, the keys change to that page group. Any other app shows the default page group.",
+            "A page group you pick by hand stays while you move between apps that share a group. It changes when you go to an app with another group.",
+            "Picking a page group in the menu locks it: a small lock shows beside its name on the keys on screen (since 0.4.2), and it stays until you choose \"Automatic\". You can switch the automatic change off in Settings."
         ]),
         Section(id: "bringover", title: "Bringing over your Elgato keys", part: "profiles", lines: [
-            "At first start the app reads the keys from Elgato's app for the 15-key box: apps, links, shortcuts, typed text, music keys, folders, pages, several-things keys and which app a profile belongs to.",
+            "At first start the app reads the keys from Elgato's app for the 15-key box: apps, links, shortcuts, typed text, music keys, folders, pages, several-things keys and which app a page group belongs to.",
             "Left out are the Zoom profile, the two Final Cut profiles, and keys of kinds Deck Mate does not have. A folder that would be left empty is left out too.",
             "Elgato's files are only read, never changed. Elgato's pictures are not taken over: every key is redrawn in the new look.",
             "\"Bring over again\" in Settings repeats it. It asks first, and your current setup is kept as a safety copy."
@@ -104,18 +128,34 @@ enum Guide {
             "It shows the box's answer in plain words, and a button to show the box diary (the box log), in case something does not work."
         ]),
         Section(id: "iphone", title: "On your iPhone", part: "settings", lines: [
-            "Deck Mate for the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the profile and page the Mac shows, so it changes when the app in front changes.",
+            "Deck Mate for the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the page group and page the Mac shows, so it changes when the app in front changes.",
             "Tap a key on the iPhone and the Mac does it, exactly as if you had pressed it on the box. The keys on the Mac screen do not hide because of a tap on the iPhone.",
             "The iPhone finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
             "The first time, the Mac asks: \"“iPhone name” wants to use your keys. Allow?\" Choose Allow. After that the Mac remembers the iPhone. If you choose Don't Allow, the iPhone shows \"Ask again\".",
             "The pictures are drawn by the Mac, so keys that open an app show the real app icon.",
             "New in 0.4 (the Mac must be at 0.4 too): the keys sit low on the iPhone, near your thumb, with the place line on top. Swipe left or right on the keys to change page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
-            "Tap the top line (the profile name) for a menu: \"Automatic\", or hold one of the profiles, the same as the Mac's menu.",
+            "Tap the top line (the name of the page group) for a menu: \"Automatic\", or hold one of the page groups, the same as the Mac's menu.",
             "A key you press lights up on the iPhone, whether you pressed it on the box, on the keys on the Mac screen or on the iPhone.",
             "After a tap, a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
             "The iPhone screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
             "After 20 seconds of \"Looking for your Mac…\" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. It has the button \"Open Settings\" and a close (x) button that hides the hint.",
-            "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network."
+            "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network.",
+            "New in 0.5 (the Mac at 0.5 and the iPhone or iPad app at 0.7 together): own keys, the favourites row, the Mac at a glance and the music strip. See the next part."
+        ]),
+        Section(id: "iphonenew", title: "On your iPhone and iPad, 0.5", part: "settings", lines: [
+            "My own keys. In Settings on the iPhone or iPad, the new card \"Keys\" is at the top. \"Follow the Mac\" is as before: it shows the page group and page the Mac shows. \"My own keys\": pick a page group, and the iPhone or iPad then moves through that group on its own: pages, folders and Back, at its own place.",
+            "With own keys, the Mac's keys on screen and the box stay where they are. A tap on the iPhone still makes the Mac do what the key says. Keys pressed elsewhere do not light up on a device with its own keys.",
+            "Swipe up or down, or use the menu in the top line, to change your own page group. It is remembered on the device. With own keys there is no lock and no \"Automatic\" in that menu. If the group you picked is gone, the default group shows.",
+            "The Mac keeps one place for each connected device, for as long as it is connected. After it connects again, the device starts at the first page of its group.",
+            "The favourites row: 5 keys under the 15 that stay on every page and every page group. A switch \"Favourites row\" in Settings (on at first). It shows only when at least one favourite is set.",
+            "Long press works on the iPhone and iPad too: hold a key with a white dot for half a second. You feel a stronger buzz.",
+            "Mac at a glance. The top line shows a small battery drawing and the Mac's battery in percent, with the app in front, for example \"82 % · Safari\", or \"82 % charging · Safari\" while it charges. A Mac without a battery shows only the app. A switch \"Mac at a glance\" in Settings (on at first).",
+            "Music strip. Above the keys: song and artist, play or pause, next, quieter, the volume in percent, and louder. One tap on quieter or louder moves the volume by 6 points. It works with Spotify and Apple Music. A switch \"Music strip\" in Settings (on at first).",
+            "It says \"Nothing playing yet\" until the next change of song or pause after the Mac app has started, because the Mac hears about it from the player only when something changes.",
+            "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs no permission.",
+            "The Mac looks at its battery and volume every 5 seconds, but only while such a device is connected.",
+            "Older versions. These new parts need the Mac at 0.5 and the iPhone or iPad app at 0.7. An iPhone or iPad at 0.7 with an older Mac works as before: its Settings say \"Needs AMS Deck Mate 0.5 on the Mac\" in the Keys card, and the new parts stay hidden. A Mac at 0.5 with an older iPhone app works as before, and the white dot still shows on the key pictures.",
+            "Not yet tried: long press on the real box, long press on the real iPhone and iPad, and play or pause from the strip."
         ]),
         Section(id: "iphonecard", title: "The iPhone card in Settings", part: "settings", lines: [
             "In the Mac's Settings there is a card \"iPhone\".",
@@ -129,8 +169,8 @@ enum Guide {
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
-            "Since 0.4 \"Settings\" is a short list on the left with one part at a time on the right, instead of one long page. The parts are: The box, First time with the box, Keys on screen, iPhone, Profiles, Check keys, This Mac, From Elgato and Where it is kept.",
-            "They hold the box and brightness, change profile with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions, bring over again and the check for broken keys.",
+            "Since 0.4 \"Settings\" is a short list on the left with one part at a time on the right, instead of one long page. The parts are: The box, First time with the box, Keys on screen, iPhone, Page groups, Check keys, This Mac, From Elgato and Where it is kept.",
+            "They hold the box and brightness, change page group with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions, bring over again and the check for broken keys.",
             "The version number, Quit and Done stay at the bottom."
         ]),
         Section(id: "kept", title: "Where things are kept", part: "settings", lines: [
@@ -141,6 +181,31 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.5", date: "16 Nov 2026", new: [
+            "Long press: every key can have a second action that runs when you hold the key. In Set up keys, under \"What it does\", there is a new picker \"Long press\": Nothing, or anything a key can do except \"Folder of keys\", filled in like the normal action.",
+            "A key with a long-press action shows a small white dot in its top right corner: on the box, on the keys on screen and on the iPhone and iPad.",
+            "Hold a key for half a second (0.5 seconds): on the iPhone and iPad (with a stronger buzz), on the Mac's keys on screen (hold the mouse button) and on the box. A long press on a key without a second action does the usual thing.",
+            "On the box and on the Mac's keys on screen, a key with a long-press action acts when you let go of it: the usual action if you let go early, the second action after half a second. All other keys act at once, as before.",
+            "A long-press action that is broken (its app, file or folder is gone) shows the red corner, with \"Long press: …\" and the reason in Set up keys. It is saved in deck.json as \"held\" on the key.",
+            "Favourites row: 5 keys that stay in place on every page and in every page group. They show only on the iPhone and iPad, as a row under the 15 keys. Not on the box and not on the Mac's keys on screen.",
+            "Set up keys: a row \"Favourites\" of 5 places under the 15 keys. Click one and edit it like any key: title, icon, what it does and long press. A favourite can be anything except a folder or Back. Copy and Paste work on favourites; dragging does not. It is saved in deck.json as \"favourites\".",
+            "A favourite that moves to another page or page group moves the place of the iPhone or iPad when it has its own keys, and otherwise the Mac's place.",
+            "All pages: Set up keys has a new button \"All pages\" at the top right of the Keys column. It shows every page group with every page and folder as a small picture of its 15 keys, with its name and number of keys under it. Folders have the folder mark, and the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
+            "iPhone and iPad, My own keys: in Settings, a new card \"Keys\" at the top. \"Follow the Mac\" is as before. \"My own keys\": pick a page group, and the iPhone or iPad moves through that group on its own: pages, folders and Back, at its own place.",
+            "With own keys, the Mac's keys on screen and the box stay where they are, and the Mac still does what the tapped key says. Swipe up or down, or the top-line menu, changes the own page group, and it is remembered on the device. There is no lock and no \"Automatic\" then. If the group is gone, the default group shows. Keys pressed elsewhere do not light up on that device.",
+            "The Mac keeps one place for each connected device while it is connected; after connecting again the device starts at the first page of its group.",
+            "iPhone and iPad, Mac at a glance: the top line shows a small battery drawing and the Mac's battery in percent with the app in front, for example \"82 % · Safari\" (\"82 % charging · Safari\" while it charges). A Mac without a battery shows only the app. A switch \"Mac at a glance\" in Settings (on at first).",
+            "iPhone and iPad, Music strip: above the keys, song and artist, play or pause, next, quieter, the Mac's volume in percent and louder (6 points per tap), with Spotify and Apple Music. A switch \"Music strip\" in Settings (on at first). A switch \"Favourites row\" too.",
+            "The strip says \"Nothing playing yet\" until the next change of song or pause after the Mac app has started, because the Mac hears about it from the player when something changes.",
+            "Play or pause and next need the same one-time Accessibility permission as music keys. Volume needs none. The Mac looks at battery and volume every 5 seconds, only while such a device is connected.",
+            "Version rule: the new parts need the Mac at 0.5 and the iPhone and iPad app at 0.7. With an older Mac, the iPhone Settings say \"Needs AMS Deck Mate 0.5 on the Mac\" in the Keys card and the new parts stay hidden. A Mac at 0.5 with an older iPhone app works as before (the dot still shows on the key pictures).",
+            "Not yet tried: long press on the real box (the box is away until January 2027), long press on the real iPhone and iPad, and play or pause from the strip."
+        ], changed: [
+            "The iPhone and iPad app is now 0.7 (build 10). An iPhone or iPad at 0.7 with an older Mac works as before, and Settings says \"Needs AMS Deck Mate 0.5 on the Mac\" on the new parts.",
+            "Keys with a long-press action now act when you let go on the box and on the Mac's keys on screen (all other keys act at once, as before).",
+            "How it works has new parts, \"Long press: a second action\" and \"The favourites row\", and a new part for the iPhone and iPad. The part \"Set up keys\" tells about \"All pages\".",
+            "The word “profile” is now “page group” everywhere."
+        ], fixed: []),
         Release(id: "0.4.2", date: "16 Nov 2026", new: [
             "Keys on screen: a profile picked by hand (from the menu bar menu, or from the iPhone or iPad) now shows a small hand-drawn lock beside the profile name. Locked means the profile stays until you choose \"Automatic\" in the menu bar menu. Without the lock, the profile follows the app in front.",
             "Menu: the first line now reads \"Profile: <name> (locked)\" or \"(automatic)\"."

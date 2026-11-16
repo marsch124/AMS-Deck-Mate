@@ -106,8 +106,12 @@ final class AppModel: ObservableObject {
     var keys: [Int: DeckKey] { position.map { Navigator.keys(at: $0, in: deck) } ?? [:] }
 
     /// "OmniFocus · Page 2", for the top line of the keys on screen.
-    var placeLine: String {
-        guard let profile, let page else { return "No keys yet" }
+    var placeLine: String { placeLine(at: position) }
+
+    /// The same line for any place (an iPhone with its own keys has its own place).
+    func placeLine(at position: DeckPosition?) -> String {
+        guard let position, let profile = deck.profile(position.profile),
+              let page = profile.page(position.page) else { return "No keys yet" }
         let showsPage = profile.pages.count > 1 && !page.name.isEmpty
         return showsPage ? "\(profile.name) · \(page.name)" : profile.name
     }
@@ -142,13 +146,22 @@ final class AppModel: ObservableObject {
     // MARK: Pressing
 
     /// A key was pressed, on screen or on the box. Says what came of it.
+    /// `long` = held for half a second; `favourite` = a key of the favourites row instead of the page.
     @discardableResult
-    func press(_ index: Int) -> Navigator.Outcome? {
+    func press(_ index: Int, long: Bool = false, favourite: Bool = false) -> Navigator.Outcome? {
         guard let position else { return nil }
-        let outcome = Navigator.press(index, at: position, in: deck)
-        pressedEvents.send(index)
-        tell(outcome.run)
+        if !favourite { pressedEvents.send(index) }
+        let outcome = act(index, at: position, long: long, favourite: favourite)
         move(to: outcome.position)
+        return outcome
+    }
+
+    /// Does on the Mac what a key says, seen from any place, and moves nothing: an iPhone with its
+    /// own keys has its own place, and the Mac's keys and the box stay where they are.
+    func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false) -> Navigator.Outcome {
+        let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long)
+                                : Navigator.press(index, at: position, in: deck, long: long)
+        tell(outcome.run, in: deck.profile(position.profile))
         ActionRunner.run(outcome.run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
@@ -156,8 +169,38 @@ final class AppModel: ObservableObject {
         return outcome
     }
 
+    /// A button of the iPhone's music strip: play or pause, next track.
+    func music(_ key: MediaKey) {
+        let action = DeckAction(type: .media, target: key.rawValue)
+        tell([action], in: profile)
+        ActionRunner.run([action])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
+    }
+
+    // MARK: Short and long presses (box and mouse)
+
+    private var holds: [Int: UUID] = [:]
+
+    /// A key went down. A key with a long-press action waits: let go before half a second = the
+    /// usual action, still down after half a second = the long-press action. Every other key acts at once.
+    private func keyDown(_ index: Int, done: @escaping (Navigator.Outcome?) -> Void = { _ in }) {
+        guard keys[index]?.hasHeld == true else { done(press(index)); return }
+        let mark = UUID()
+        holds[index] = mark
+        DispatchQueue.main.asyncAfter(deadline: .now() + Navigator.longPress) { [weak self] in
+            guard let self, self.holds[index] == mark else { return }
+            self.holds[index] = nil
+            done(self.press(index, long: true))
+        }
+    }
+
+    private func keyUp(_ index: Int, done: @escaping (Navigator.Outcome?) -> Void = { _ in }) {
+        guard holds.removeValue(forKey: index) != nil else { return }
+        done(press(index))
+    }
+
     /// Says what a press did, or why it could not be done.
-    private func tell(_ run: [DeckAction]) {
+    private func tell(_ run: [DeckAction], in profile: DeckProfile?) {
         guard !run.isEmpty, let profile else { return }
         for action in run {
             if let why = KeyCheck.problem(DeckKey(action: action), in: profile, deck: deck, world: KeyWorldOnMac.world) {
@@ -200,18 +243,30 @@ final class AppModel: ObservableObject {
 
     /// A click on screen: the key looks pressed for a moment, then acts. With "hide after a key is
     /// pressed" on, the keys then step away (only after a key that did something on the Mac).
+    /// A key with a long-press action stays pressed until the mouse button comes up (`release`).
     func click(_ index: Int) {
         pressed.insert(index)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
-        guard let outcome = press(index),
-              ScreenDeckRules.hides(after: outcome, setting: deck.screenHidesAfterKey) else { return }
+        if keys[index]?.hasHeld != true {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
+        }
+        keyDown(index) { [weak self] outcome in self?.hideAfter(outcome) }
+    }
+
+    /// The mouse button came up over the keys on screen.
+    func release(_ index: Int) {
+        pressed.remove(index)
+        keyUp(index) { [weak self] outcome in self?.hideAfter(outcome) }
+    }
+
+    private func hideAfter(_ outcome: Navigator.Outcome?) {
+        guard let outcome, ScreenDeckRules.hides(after: outcome, setting: deck.screenHidesAfterKey) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in self?.onScreenKeyActed?() }
     }
 
     /// A tap on the iPhone: like a press on the box (the keys on screen show it, and never hide for it).
-    func pressFromPhone(_ index: Int) {
-        pressed.insert(index)
-        press(index)
+    func pressFromPhone(_ index: Int, long: Bool = false, favourite: Bool = false) {
+        if !favourite { pressed.insert(index) }
+        press(index, long: long, favourite: favourite)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
     }
 
@@ -219,9 +274,10 @@ final class AppModel: ObservableObject {
         if isDown {
             lastBoxPress = Date()
             pressed.insert(index)
-            press(index)
+            keyDown(index)
         } else {
             pressed.remove(index)
+            keyUp(index)
         }
     }
 
@@ -370,7 +426,8 @@ enum Sample {
             4: key("Mute", DeckAction(type: .media, target: MediaKey.mute.rawValue)),
         ]
         first.keys = [
-            0: key("Mail", DeckAction(type: .app, target: "com.apple.mail")),
+            0: DeckKey(title: "Mail", action: DeckAction(type: .app, target: "com.apple.mail"),
+                       held: DeckAction(type: .app, target: "com.apple.iCal")),
             1: key("Calendar", DeckAction(type: .app, target: "com.apple.iCal")),
             2: key("Safari", DeckAction(type: .app, target: "com.apple.Safari")),
             3: key("Notes", DeckAction(type: .app, target: "com.apple.Notes"), icon: "notebook"),
@@ -395,7 +452,12 @@ enum Sample {
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])
         writing.pages[0].keys = [0: key("Bold", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 11, command: true, keyName: "B"))),
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]
-        return Deck(profiles: [main, writing], defaultProfile: main.id)
+        return Deck(profiles: [main, writing], defaultProfile: main.id, favourites: [
+            0: key("Play", DeckAction(type: .media, target: MediaKey.playPause.rawValue)),
+            1: key("Safari", DeckAction(type: .app, target: "com.apple.Safari")),
+            2: key("Writing", DeckAction(type: .profile, target: writing.id.uuidString)),
+            4: key("Mute", DeckAction(type: .media, target: MediaKey.mute.rawValue)),
+        ])
     }
 }
 

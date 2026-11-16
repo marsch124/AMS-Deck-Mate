@@ -43,11 +43,37 @@ public enum Navigator {
     }
 
     /// A key was pressed: where the deck is afterwards, and what to do on the Mac.
-    public static func press(_ index: Int, at position: DeckPosition, in deck: Deck) -> Outcome {
+    /// `long` = held for half a second: the key's long-press action, when it has one.
+    public static func press(_ index: Int, at position: DeckPosition, in deck: Deck, long: Bool = false) -> Outcome {
         var outcome = Outcome(position: position, run: [])
         guard let key = keys(at: position, in: deck)[index] else { return outcome }
-        apply(key.action, to: &outcome, in: deck, depth: 0)
+        apply(key.action(long: long), to: &outcome, in: deck, depth: 0)
         return outcome
+    }
+
+    /// A key of the favourites row was pressed. It acts from wherever the deck is.
+    public static func pressFavourite(_ index: Int, at position: DeckPosition, in deck: Deck, long: Bool = false) -> Outcome {
+        var outcome = Outcome(position: position, run: [])
+        guard let key = deck.favourites[index] else { return outcome }
+        let action = key.action(long: long)
+        guard action.type.fitsFavourite else { return outcome }
+        apply(action, to: &outcome, in: deck, depth: 0)
+        return outcome
+    }
+
+    /// Half a second: from then on a press is a long press.
+    public static let longPress = 0.5
+
+    public static func isLong(_ seconds: Double) -> Bool { seconds >= longPress }
+
+    /// "My own keys" on an iPhone: its own place in the profile it picked. It keeps its place while
+    /// it stays in that profile; a profile that is gone gives the default profile. nil = follow the Mac.
+    public static func own(profile id: String?, was: DeckPosition?, in deck: Deck) -> DeckPosition? {
+        guard let id else { return nil }
+        let wanted = UUID(uuidString: id).flatMap { deck.profile($0) } ?? deck.fallbackProfile
+        guard let wanted else { return nil }
+        if let was, was.profile == wanted.id, let kept = repair(was, in: deck), kept.profile == wanted.id { return kept }
+        return start(in: deck, profile: wanted.id)
     }
 
     private static func apply(_ action: DeckAction, to outcome: inout Outcome, in deck: Deck, depth: Int) {

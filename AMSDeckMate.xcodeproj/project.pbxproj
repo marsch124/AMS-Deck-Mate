@@ -18,6 +18,7 @@
 		34E7DE0F68EA4D10AA121D6F /* DeckMateCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1D17AFF0C37A27F8AADFA9A8 /* DeckMateCore */; };
 		3B70ECA8DF91E158674A968C /* DeckMateCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF894429027E7994D6F202BD /* DeckMateCore */; };
 		4A781AC1BFD7A07BC72A82A3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA62F3E5031DFF998CEDD376 /* main.swift */; };
+		500391B2DF457863220FB440 /* MacWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */; };
 		5258AB390D63E2C32EE5A792 /* Look.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10F54CE7221A8B17D5AC8DDE /* Look.swift */; };
 		6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9085CF6126FF6B11B8514D /* SettingsView.swift */; };
 		76DE12C927BB43C6B8E51E11 /* SampleLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EECC7045EF82EDD6111E1DE /* SampleLink.swift */; };
@@ -78,6 +79,7 @@
 		D2A487AF008BC5BB7FFBE6BD /* ActionFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionFields.swift; sourceTree = "<group>"; };
 		D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneServer.swift; sourceTree = "<group>"; };
 		EACD6565181DB47E69CFAA61 /* DeckScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckScreenTests.swift; sourceTree = "<group>"; };
+		EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWatch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +169,7 @@
 				BD91C2A2EE1636B6BA7A5CA3 /* KeyArt.swift */,
 				23E6227D8C44A9DFC3F2FA1A /* KeyGrid.swift */,
 				10F54CE7221A8B17D5AC8DDE /* Look.swift */,
+				EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */,
 				BA62F3E5031DFF998CEDD376 /* main.swift */,
 				D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */,
 				AC9085CF6126FF6B11B8514D /* SettingsView.swift */,
@@ -351,6 +354,7 @@
 				D4957990805AD31915C212CF /* KeyArt.swift in Sources */,
 				26D75374A396705120CCC51C /* KeyGrid.swift in Sources */,
 				5258AB390D63E2C32EE5A792 /* Look.swift in Sources */,
+				500391B2DF457863220FB440 /* MacWatch.swift in Sources */,
 				090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */,
 				6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */,
 				1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */,
@@ -475,7 +479,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -483,7 +487,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.4.2;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;
@@ -497,14 +501,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				INFOPLIST_FILE = Phone/Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.6.1;
+				MARKETING_VERSION = 0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
 				PRODUCT_NAME = "Deck Mate";
 				SDKROOT = iphoneos;
@@ -519,14 +523,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				INFOPLIST_FILE = Phone/Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.6.1;
+				MARKETING_VERSION = 0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
 				PRODUCT_NAME = "Deck Mate";
 				SDKROOT = iphoneos;
@@ -624,7 +628,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -632,7 +636,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.4.2;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;

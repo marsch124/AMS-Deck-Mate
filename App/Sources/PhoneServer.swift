@@ -20,6 +20,7 @@ final class PhoneServer: ObservableObject {
     private var watch: AnyCancellable?
     private var events: [AnyCancellable] = []
     private var restart: DispatchWorkItem?
+    private let watch2 = MacWatch()
 
     private static let allowedKey = "allowedPhones"
     private static let offKey = "phoneOff"
@@ -35,6 +36,10 @@ final class PhoneServer: ObservableObject {
         var lastStatus: Data?
         /// 2 = it understands status, pressed, ran, page and profile.
         var version = 1
+        /// "My own keys": this iPhone's own place; nil = it follows the Mac.
+        var own: DeckPosition?
+        var lastFavourites: Data?
+        var lastMac: Data?
         init(_ connection: NWConnection) { self.connection = connection }
     }
 
@@ -59,8 +64,17 @@ final class PhoneServer: ObservableObject {
             .debounce(for: .milliseconds(60), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.sendKeysToAll() }
         events = [
-            model.pressedEvents.sink { [weak self] index in self?.toNewPhones(.pressed(index: index)) },
+            model.pressedEvents.sink { [weak self] index in
+                // An iPhone with its own keys shows other keys: it lights only its own taps.
+                guard let self else { return }
+                for phone in self.phones.values where phone.trusted && phone.version >= 2 && phone.own == nil {
+                    self.send(.pressed(index: index), to: phone)
+                }
+            },
             model.ranEvents.sink { [weak self] text, ok in self?.toNewPhones(.ran(text: text, ok: ok)) },
+            watch2.$now.dropFirst().sink { [weak self] now in
+                DispatchQueue.main.async { self?.sendMac(now) }
+            },
         ]
         // Two offers: on the shared network, and directly (like AirDrop) where the Mac allows it.
         for (type, direct) in [(PhoneLink.service, false), (PhoneLink.directService, true)] {
@@ -172,6 +186,20 @@ final class PhoneServer: ObservableObject {
         guard let phone = phones.removeValue(forKey: id) else { return }
         waitingToAsk.removeAll { $0 === phone }
         connected = phones.values.first(where: \.trusted)?.name
+        lookAtMacIfAsked()
+    }
+
+    /// The battery and volume are only looked at while an iPhone that shows them is connected.
+    private func lookAtMacIfAsked() {
+        watch2.isWatching = phones.values.contains { $0.trusted && $0.version >= 3 }
+    }
+
+    private func sendMac(_ now: PhoneLink.MacNow) {
+        let frame = PhoneLink.frame(.mac(now))
+        for phone in phones.values where phone.trusted && phone.version >= 3 && phone.lastMac != frame {
+            phone.lastMac = frame
+            phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+        }
     }
 
     private func handle(_ message: PhoneLink.Message, from phone: Phone) {
@@ -188,16 +216,59 @@ final class PhoneServer: ObservableObject {
             }
         case let .press(index):
             guard phone.trusted, (0..<StreamDeckProtocol.keyCount).contains(index) else { return }
-            model.pressFromPhone(index)
+            press(index, long: false, favourite: false, from: phone)
+        case let .hold(index):
+            guard phone.trusted, (0..<StreamDeckProtocol.keyCount).contains(index) else { return }
+            press(index, long: true, favourite: false, from: phone)
+        case let .favourite(index, long):
+            guard phone.trusted, (0..<PhoneLink.favouriteCount).contains(index) else { return }
+            press(index, long: long, favourite: true, from: phone)
         case let .page(step):
             guard phone.trusted, step == 1 || step == -1 else { return }
-            model.stepPage(step)
+            if let own = ownPlace(of: phone) {
+                phone.own = Navigator.step(step, at: own, in: model.deck)
+                sendKeys(to: phone)
+            } else {
+                model.stepPage(step)
+            }
         case let .profile(id):
-            guard phone.trusted else { return }
+            // An iPhone with its own keys changes its profile with `own`; it never holds the Mac's.
+            guard phone.trusted, phone.own == nil else { return }
             model.pin(id.flatMap { UUID(uuidString: $0) })
+        case let .own(profile):
+            guard phone.trusted else { return }
+            phone.own = Navigator.own(profile: profile, was: phone.own, in: model.deck)
+            sendKeys(to: phone)
+        case let .music(command):
+            guard phone.trusted else { return }
+            switch command {
+            case .playPause: model.music(.playPause)
+            case .next: model.music(.next)
+            case .volumeUp: watch2.stepVolume(1)
+            case .volumeDown: watch2.stepVolume(-1)
+            }
         default:
             break
         }
+    }
+
+    /// This iPhone's own place, put right after the setup changed; nil = it follows the Mac.
+    private func ownPlace(of phone: Phone) -> DeckPosition? {
+        guard phone.own != nil else { return nil }
+        phone.own = Navigator.repair(phone.own, in: model.deck)
+        return phone.own
+    }
+
+    /// A tap or long press from an iPhone. With its own keys only its own place moves: the Mac's
+    /// keys on screen and the box stay where they are, and the Mac still does what the key says.
+    private func press(_ index: Int, long: Bool, favourite: Bool, from phone: Phone) {
+        guard let own = ownPlace(of: phone) else {
+            model.pressFromPhone(index, long: long, favourite: favourite)
+            return
+        }
+        if !favourite, phone.version >= 2 { send(.pressed(index: index), to: phone) }
+        phone.own = model.act(index, at: own, long: long, favourite: favourite).position
+        sendKeys(to: phone)
     }
 
     /// Asks him on the Mac, one iPhone at a time.
@@ -234,8 +305,15 @@ final class PhoneServer: ObservableObject {
         allowed[token] = phone.name
         UserDefaults.standard.set(allowed, forKey: PhoneServer.allowedKey)
         connected = phone.name
-        send(.welcome(token: token, mac: PhoneServer.macName), to: phone)
+        send(.welcome(token: token, mac: PhoneServer.macName,
+                      version: phone.version >= 3 ? PhoneLink.currentVersion : nil), to: phone)
         sendKeys(to: phone)
+        lookAtMacIfAsked()
+        if phone.version >= 3 {
+            let frame = PhoneLink.frame(.mac(watch2.now))
+            phone.lastMac = frame
+            phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+        }
     }
 
     // MARK: Sending
@@ -249,20 +327,32 @@ final class PhoneServer: ObservableObject {
     }
 
     private func sendKeys(to phone: Phone) {
-        let keys = model.keys
+        let place = ownPlace(of: phone) ?? model.position
+        let keys = place.map { Navigator.keys(at: $0, in: model.deck) } ?? [:]
         let list = (0..<StreamDeckProtocol.keyCount).map { index in
             PhoneLink.Key(index: index, title: KeyArt.title(keys[index]), picture: KeyArt.pngForPhone(keys[index]))
         }
-        let data = PhoneLink.frame(.keys(place: model.placeLine, keys: list))
+        let data = PhoneLink.frame(.keys(place: model.placeLine(at: place), keys: list))
         if data != phone.lastSent {
             phone.lastSent = data
             phone.connection.send(content: data, completion: .contentProcessed { _ in })
         }
-        guard phone.version >= 2, let position = model.position else { return }
+        if phone.version >= 3 {
+            let row = (0..<PhoneLink.favouriteCount).map { index in
+                PhoneLink.Key(index: index, title: KeyArt.title(model.deck.favourites[index]),
+                              picture: KeyArt.pngForPhone(model.deck.favourites[index]))
+            }
+            let frame = PhoneLink.frame(.favourites(keys: row))
+            if frame != phone.lastFavourites {
+                phone.lastFavourites = frame
+                phone.connection.send(content: frame, completion: .contentProcessed { _ in })
+            }
+        }
+        guard phone.version >= 2, let position = place else { return }
         let numbers = Navigator.pageNumber(at: position, in: model.deck)
         let status = PhoneLink.Status(
             profiles: model.deck.profiles.map { .init(id: $0.id.uuidString, name: $0.name.isEmpty ? "No name" : $0.name) },
-            current: position.profile.uuidString, held: model.pinned != nil, page: numbers.page, pages: numbers.pages)
+            current: position.profile.uuidString, held: phone.own == nil && model.pinned != nil, page: numbers.page, pages: numbers.pages)
         let frame = PhoneLink.frame(.status(status))
         guard frame != phone.lastStatus else { return }
         phone.lastStatus = frame

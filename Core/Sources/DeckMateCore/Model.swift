@@ -19,6 +19,12 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     }
 }
 
+extension ActionType {
+    /// A favourite stays in place on every page and profile, so it cannot be a folder (a folder
+    /// belongs to one profile) or Back.
+    public var fitsFavourite: Bool { self != .folder && self != .back }
+}
+
 /// The kind of a key decides its colour.
 public enum KeyKind: String, CaseIterable, Sendable {
     case app, web, raycast, shortcut, text, media, move, empty
@@ -156,12 +162,16 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     /// A drawing from the icon set by its name; empty = the automatic one for what the key does.
     public var icon: String
     public var action: DeckAction
+    /// What a long press (half a second) does; nil = the same as a short one.
+    public var held: DeckAction?
 
-    public init(id: UUID = UUID(), title: String = "", icon: String = "", action: DeckAction = .none) {
+    public init(id: UUID = UUID(), title: String = "", icon: String = "", action: DeckAction = .none,
+                held: DeckAction? = nil) {
         self.id = id
         self.title = title
         self.icon = icon
         self.action = action
+        self.held = held
     }
 
     public init(from decoder: Decoder) throws {
@@ -170,6 +180,16 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         title = c.value(.title, "")
         icon = c.value(.icon, "")
         action = c.value(.action, .none)
+        held = try? c.decodeIfPresent(DeckAction.self, forKey: .held)
+    }
+
+    /// True when a long press does something of its own (the key then shows a small dot).
+    public var hasHeld: Bool { held.map { $0.type != .none } ?? false }
+
+    /// What a press does: the long-press action for a long press on a key that has one, else the usual one.
+    public func action(long: Bool) -> DeckAction {
+        if long, hasHeld, let held { return held }
+        return action
     }
 
     public var shownIcon: String { icon.isEmpty ? action.autoIcon : icon }
@@ -243,10 +263,14 @@ public struct Deck: Codable, Equatable, Sendable {
     public var screenHidesAfterKey: Bool
     /// Keys on screen: small, normal or large.
     public var screenSize: ScreenSize
+    /// The favourites row of the iPhone and iPad: up to five keys (places 0–4) that belong to no
+    /// page and no profile, so they stay in place everywhere.
+    public var favourites: [Int: DeckKey]
 
     public init(version: Int = 1, profiles: [DeckProfile] = [], defaultProfile: UUID? = nil,
                 brightness: Int = 70, autoSwitch: Bool = true, screenAtPointer: Bool = false,
-                screenHidesAfterKey: Bool = false, screenSize: ScreenSize = .normal) {
+                screenHidesAfterKey: Bool = false, screenSize: ScreenSize = .normal,
+                favourites: [Int: DeckKey] = [:]) {
         self.version = version
         self.profiles = profiles
         self.defaultProfile = defaultProfile
@@ -255,6 +279,7 @@ public struct Deck: Codable, Equatable, Sendable {
         self.screenAtPointer = screenAtPointer
         self.screenHidesAfterKey = screenHidesAfterKey
         self.screenSize = screenSize
+        self.favourites = favourites
     }
 
     public init(from decoder: Decoder) throws {
@@ -267,6 +292,9 @@ public struct Deck: Codable, Equatable, Sendable {
         screenAtPointer = c.value(.screenAtPointer, false)
         screenHidesAfterKey = c.value(.screenHidesAfterKey, false)
         screenSize = c.value(.screenSize, .normal)
+        favourites = c.value(.favourites, [:]).filter {
+            (0..<PhoneLink.favouriteCount).contains($0.key) && $0.value.action.type.fitsFavourite
+        }
     }
 
     public func profile(_ id: UUID) -> DeckProfile? { profiles.first { $0.id == id } }

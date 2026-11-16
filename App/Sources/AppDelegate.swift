@@ -190,7 +190,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         _ = add("Set up keys…", #selector(openSetup))
         menu.addItem(.separator())
         let place = model.profile?.name ?? "none"
-        _ = add("Profile: \(place)" + (model.pinned == nil ? " (automatic)" : " (locked)"), nil)
+        _ = add("Page group: \(place)" + (model.pinned == nil ? " (automatic)" : " (locked)"), nil)
         let automatic = add("Automatic", #selector(pickProfile(_:)))
         automatic.state = model.pinned == nil ? .on : .off
         automatic.indentationLevel = 1
@@ -202,7 +202,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         }
         if let app = model.frontApp, let url = KeyArt.appURL(app) {
             let name = FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
-            let entry = add("Profile for \(name)", nil)
+            let entry = add("Page group for \(name)", nil)
             let sub = NSMenu()
             let owner = model.deck.profileNaming(app: app)?.id
             for profile in model.deck.profiles {
@@ -418,6 +418,8 @@ enum Snapshots {
             model.keyboardOn = false
             shot(SetupView(model: model, startSlot: 5), "setup-\(name)", look, folder)
             shot(SetupView(model: model, startSlot: 13), "setup-steps-\(name)", look, folder)
+            shot(SetupView(model: model, startSlot: 0), "setup-long-\(name)", look, folder)
+            shot(SetupView(model: model, overview: true), "setup-overview-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings), "settings-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .phone), "settings-phone-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .firstTime), "settings-first-\(name)", look, folder)

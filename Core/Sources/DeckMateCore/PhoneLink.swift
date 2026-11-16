@@ -33,7 +33,8 @@ public enum PhoneLink {
         /// Mac → iPhone: the Mac is asking its owner whether this iPhone may use the keys.
         case waiting
         /// Mac → iPhone: allowed. Keep the token and bring it next time.
-        case welcome(token: String, mac: String)
+        /// `version` 3 = the Mac understands `own`, `hold`, `favourite` and `music` (left out by Mac apps before 0.5).
+        case welcome(token: String, mac: String, version: Int? = nil)
         /// Mac → iPhone: not allowed.
         case refused
         /// Mac → iPhone: the keys as they are now, with the line on top ("OmniFocus · Page 2").
@@ -50,10 +51,76 @@ public enum PhoneLink {
         case page(step: Int)
         /// iPhone → Mac (version 2): hold this profile (its id), or nil = Automatic.
         case profile(id: String?)
+        /// iPhone → Mac (version 3): "My own keys" in this profile (its id); nil = follow the Mac again.
+        case own(profile: String?)
+        /// iPhone → Mac (version 3): a key was held for half a second: its long-press action.
+        case hold(index: Int)
+        /// iPhone → Mac (version 3): a key of the favourites row (0–4) was tapped, or held (`long`).
+        case favourite(index: Int, long: Bool)
+        /// iPhone → Mac (version 3): a button of the music strip.
+        case music(command: MusicCommand)
+        /// Mac → iPhone (version 3): the favourites row, five places.
+        case favourites(keys: [Key])
+        /// Mac → iPhone (version 3): the Mac at a glance and what is playing.
+        case mac(MacNow)
+
+        /// The oldest version of the other side that understands this message. Anything newer than
+        /// the other side knows must not be sent: it would close the line.
+        public var since: Int {
+            switch self {
+            case .hello, .waiting, .welcome, .refused, .keys, .press: return 1
+            case .status, .pressed, .ran, .page, .profile: return 2
+            case .own, .hold, .favourite, .music, .favourites, .mac: return 3
+            }
+        }
     }
 
-    /// The iPhone app version that understands status, pressed, ran, page and profile.
-    public static let currentVersion = 2
+    /// The version that understands everything above: 2 = status, pressed, ran, page and profile;
+    /// 3 = own keys, long press, favourites, the Mac at a glance and the music strip.
+    public static let currentVersion = 3
+    /// How many keys the favourites row has.
+    public static let favouriteCount = 5
+
+    public enum MusicCommand: String, Codable, Sendable {
+        case playPause, next, volumeUp, volumeDown
+    }
+
+    /// The Mac at a glance, for the iPhone's top line and music strip.
+    public struct MacNow: Codable, Equatable, Sendable {
+        /// The battery in percent; nil = a Mac without a battery.
+        public var battery: Int?
+        public var charging: Bool
+        /// The name of the app in front on the Mac; empty = not known.
+        public var app: String
+        /// What is playing; empty = nothing heard of yet.
+        public var song: String
+        public var artist: String
+        public var playing: Bool
+        /// The Mac's sound volume in percent; nil = not known.
+        public var volume: Int?
+
+        public init(battery: Int? = nil, charging: Bool = false, app: String = "", song: String = "",
+                    artist: String = "", playing: Bool = false, volume: Int? = nil) {
+            self.battery = battery
+            self.charging = charging
+            self.app = app
+            self.song = song
+            self.artist = artist
+            self.playing = playing
+            self.volume = volume
+        }
+
+        /// The words for the top line: "82 % · Safari", "82 % charging · Safari", or only the app.
+        public var glance: String {
+            var bits: [String] = []
+            if let battery { bits.append(charging ? "\(battery) % charging" : "\(battery) %") }
+            if !app.isEmpty { bits.append(app) }
+            return bits.joined(separator: " · ")
+        }
+
+        /// The volume after a step louder (+1) or quieter (-1): 6 points a step, kept within 0–100.
+        public static func volume(_ now: Int, step: Int) -> Int { min(100, max(0, now + step * 6)) }
+    }
 
     /// The profiles and pages, for the iPhone's top line and page dots.
     public struct Status: Codable, Equatable, Sendable {

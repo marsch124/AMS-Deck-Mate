@@ -134,7 +134,7 @@ struct SettingsView: View {
 
     enum Part: String, CaseIterable, Identifiable {
         case box = "The box", firstTime = "First time with the box", screen = "Keys on screen", phone = "iPhone",
-             profiles = "Profiles", check = "Check keys", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
+             profiles = "Page groups", check = "Check keys", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
         var id: String { rawValue }
         var colour: String {
             switch self {
@@ -246,15 +246,15 @@ struct SettingsView: View {
                 note("Open Deck Mate on the iPhone close to this Mac; on the same Wi-Fi it finds the Mac by itself. The first time, this Mac asks whether to allow it.")
             }
         case .profiles:
-            card("Profiles", "profiles") {
-                Toggle("Change profile with the app in front", isOn: Binding(
+            card("Page groups", "profiles") {
+                Toggle("Change page group with the app in front", isOn: Binding(
                     get: { model.deck.autoSwitch },
                     set: { on in model.change { $0.autoSwitch = on } }))
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("autoSwitch")
                 note(model.pinned == nil
-                     ? "Each profile lists its apps in “Set up keys”. Any other app shows the default profile."
-                     : "A profile is locked by hand right now. Choose Automatic in the menu to let it follow the app again.")
+                     ? "Each page group lists its apps in “Set up keys”. Any other app shows the default page group."
+                     : "A page group is locked by hand right now. Choose Automatic in the menu to let it follow the app again.")
             }
         case .check:
             card("Check keys", "keys") { checkBody }
@@ -398,14 +398,14 @@ struct SettingsView: View {
                     }
                 }
             }
-            note("A key whose app, file, folder, profile or Raycast extension is gone gets a red corner on screen and in “Set up keys”.")
+            note("A key whose app, file, folder, page group or Raycast extension is gone gets a red corner on screen and in “Set up keys”.")
         }
     }
 
     private func bringOver() {
         let alert = NSAlert()
         alert.messageText = "Bring over the keys from Elgato again?"
-        alert.informativeText = "They take the place of all your profiles here. The setup as it is now stays as a safety copy."
+        alert.informativeText = "They take the place of all your page groups here. The setup as it is now stays as a safety copy."
         alert.addButton(withTitle: "Bring over")
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }

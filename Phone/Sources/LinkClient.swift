@@ -27,6 +27,33 @@ final class LinkClient: ObservableObject {
     /// Since when it has been looking for the Mac (for the hotspot hint).
     @Published private(set) var lookingSince: Date? = Date()
     private var noteID = 0
+    /// What the Mac app understands: 3 = own keys, long press, favourites, the Mac at a glance, music
+    /// (AMS Deck Mate 0.5 or later on the Mac).
+    @Published private(set) var macVersion = 0
+    /// The favourites row, five places.
+    @Published private(set) var favourites: [Int: PhoneLink.Key] = [:]
+    /// The Mac at a glance and what is playing.
+    @Published private(set) var mac: PhoneLink.MacNow?
+    /// Favourites pressed a moment ago.
+    @Published private(set) var litFavourites: Set<Int> = []
+
+    /// True with a Mac that knows the new parts.
+    var newMac: Bool { macVersion >= PhoneLink.currentVersion }
+    var hasFavourites: Bool { favourites.values.contains { $0.picture != nil } }
+
+    /// "My own keys": this device moves through one page group on its own place.
+    var ownOn: Bool { UserDefaults.standard.bool(forKey: "ownKeys") }
+    private var ownProfile: String? {
+        get { UserDefaults.standard.string(forKey: "ownProfile") }
+        set { UserDefaults.standard.set(newValue, forKey: "ownProfile") }
+    }
+
+    /// Tells the Mac whether this device follows it or has its own keys (after connecting, and when
+    /// the setting changes). A Mac before 0.5 is never told: it would close the line.
+    func sendOwn() {
+        guard case .connected = state, newMac, !isSample else { return }
+        send(.own(profile: ownOn ? (ownProfile ?? status?.current ?? "") : nil))
+    }
 
     /// The Mac it is connected to, or the one it remembers.
     var macName: String? {
@@ -63,6 +90,11 @@ final class LinkClient: ObservableObject {
             client.place = SampleLink.place
             client.keys = SampleLink.keys()
             client.status = SampleLink.status
+            if !CommandLine.arguments.contains("-oldMac") {
+                client.macVersion = PhoneLink.currentVersion
+                client.favourites = SampleLink.favourites()
+                client.mac = SampleLink.mac
+            }
             client.lookingSince = nil
             if CommandLine.arguments.contains("-looking") {
                 client.state = .looking
@@ -182,10 +214,13 @@ final class LinkClient: ObservableObject {
         switch message {
         case .waiting:
             state = .waiting(talkingTo)
-        case let .welcome(token, _):
+        case let .welcome(token, _, version):
             tokens[talkingTo] = token
             remembered = talkingTo
+            macVersion = version ?? 2
+            if !newMac { favourites = [:]; mac = nil }
             state = .connected(talkingTo)
+            if ownOn { sendOwn() }
         case .refused:
             state = .refused(talkingTo)
             connection?.cancel()
@@ -200,7 +235,11 @@ final class LinkClient: ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in self?.lit.remove(index) }
         case let .ran(text, ok):
             show(text, ok: ok)
-        case .hello, .press, .page, .profile:
+        case let .favourites(list):
+            favourites = Dictionary(list.map { ($0.index, $0) }, uniquingKeysWith: { $1 })
+        case let .mac(now):
+            mac = now
+        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music:
             break
         }
     }
@@ -227,7 +266,14 @@ final class LinkClient: ObservableObject {
     }
 
     /// Hold a profile (its id), or nil = Automatic.
+    /// With "My own keys" it changes this device's own group instead, and remembers it.
     func pickProfile(_ id: String?) {
+        if ownOn, newMac {
+            guard let id else { return }
+            ownProfile = id
+            sendOwn()
+            return
+        }
         guard case .connected = state, !isSample else { return }
         send(.profile(id: id))
     }
@@ -235,6 +281,26 @@ final class LinkClient: ObservableObject {
     func press(_ index: Int) {
         guard case .connected = state, !isSample else { return }
         send(.press(index: index))
+    }
+
+    /// A key held for half a second: its long-press action (only a Mac at 0.5 or later knows it).
+    func hold(_ index: Int) {
+        guard case .connected = state, !isSample else { return }
+        send(newMac ? .hold(index: index) : .press(index: index))
+    }
+
+    /// A key of the favourites row, tapped or held.
+    func favourite(_ index: Int, long: Bool) {
+        litFavourites.insert(index)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in self?.litFavourites.remove(index) }
+        guard case .connected = state, newMac, !isSample else { return }
+        send(.favourite(index: index, long: long))
+    }
+
+    /// A button of the music strip.
+    func music(_ command: PhoneLink.MusicCommand) {
+        guard case .connected = state, newMac, !isSample else { return }
+        send(.music(command: command))
     }
 
     /// "Ask again" after the Mac said no.

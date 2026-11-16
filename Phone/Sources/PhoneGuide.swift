@@ -6,14 +6,15 @@ enum PhoneGuide {
 
     static let sections: [Section] = [
         Section(id: "what", title: "What this app is for", part: "keys", lines: [
-            "Deck Mate shows the keys of your Mac's Stream Deck on the iPhone: the same 15 keys, in the same places and with the same pictures.",
+            "Deck Mate shows the keys of your Mac's Stream Deck on the iPhone: the same 15 keys, in the same places and with the same pictures. Since 0.7 it can also show a row of 5 favourites, the Mac's battery and front app, and what is playing on the Mac.",
             "Tap a key and your Mac does it, exactly as if you had pressed it on the box.",
             "It needs the AMS Deck Mate app open on your Mac."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
-            "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings.",
+            "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings. Since 0.7 the first part is \"Keys\".",
+            "Keys (since 0.7, at the top): \"Follow the Mac\" (as before) or \"My own keys\", and then, in the row \"Page group\", you pick a page group. See \"My own keys\" below. With an older Mac this card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the new parts stay hidden.",
             "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest, Plum, Rust or Slate. The colours are deep, calm shades and the words turn light on them.",
-            "Look, Colour for each profile (under Background): every profile from your Mac is listed with its own choice, \"Same as background\" (at first) or one of the colours. When that profile shows, the background takes its colour, so you see at a glance which profile is up. It needs a Mac at 0.4 or later, because the list of profiles comes from the Mac. Before a Mac is connected the list says so.",
+            "Look, A colour for each page group (under Background): every page group from your Mac is listed with its own choice, \"Same as background\" (at first) or one of the colours. When that group shows, the background takes its colour, so you see at a glance which one is up. It needs a Mac at 0.4 or later, because the list comes from the Mac. Before a Mac is connected the list says so.",
             "Look, Key shape: Rounded (as before), Square or Pillow (very round corners).",
             "Look, Gaps between keys: Narrow, Normal (as before) or Wide.",
             "Look, Key size: Largest (as before) or A bit smaller (about 85 %, with more air around the keys).",
@@ -22,11 +23,14 @@ enum PhoneGuide {
             "Clock, Resting clock: Never (at first), or after 2, 5 or 10 minutes without a touch. The keys then fade away and only a large dimmed clock with the date shows, like a desk clock. One tap anywhere brings the keys back; that tap presses no key.",
             "Touch, Tap buzz (on at first): the small buzz when a key is tapped. An iPad has no buzz.",
             "Touch, Click sound (off at first): a soft click when a key is tapped. It follows the silent switch and the volume of the device.",
-            "Touch, Swipe up or down changes profile (on at first). When it is off, a swipe up or down does nothing. Swiping left or right for pages always works.",
+            "Touch, Swipe up or down changes page group (on at first). When it is off, a swipe up or down does nothing. Swiping left or right for pages always works.",
             "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap.",
             "Showing, Page dots (on at first): the small dots under the keys.",
             "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
             "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows in the top line, and also under the resting clock. It goes away when charging or above 20 %.",
+            "Showing, Favourites row (on at first): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
+            "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, in the top line. Needs a Mac at 0.5.",
+            "Showing, Music strip (on at first): what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
             "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
@@ -51,12 +55,42 @@ enum PhoneGuide {
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
             "After a tap a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
             "The screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
-            "These new parts need the AMS Deck Mate app at 0.4 on your Mac."
+            "These new parts need the AMS Deck Mate app at 0.4 on your Mac. The parts new in 0.7 (own keys, long press, favourites, Mac at a glance, music strip) need it at 0.5."
         ]),
-        Section(id: "profiles", title: "Profiles follow the Mac", part: "profiles", lines: [
-            "The iPhone shows the profile and page the Mac shows. When the app in front on the Mac changes and the profile changes with it, the iPhone changes too.",
-            "To use a different profile, tap the top line (the profile name). A menu offers \"Automatic\" or \"Lock one\" of the profiles, the same as the Mac's menu. A profile you picked by hand shows a small lock beside its name (since 0.5.2): it stays until you choose \"Automatic\". You can also change it on the Mac, or tap a key that switches profile.",
-            "Since 0.5.1: swipe up or down on the keys for the next or previous profile. It is then locked (a small lock shows beside the name) until you choose \"Automatic\" in the top line."
+        Section(id: "profiles", title: "Page groups follow the Mac", part: "profiles", lines: [
+            "The iPhone shows the page group and page the Mac shows. When the app in front on the Mac changes and the page group changes with it, the iPhone changes too.",
+            "To use a different page group, tap the top line (the name of the group). A menu offers \"Automatic\" or \"Lock one\" of the page groups, the same as the Mac's menu. A group you picked by hand shows a small lock beside its name (since 0.5.2): it stays until you choose \"Automatic\". You can also change it on the Mac, or tap a key that switches page group.",
+            "Since 0.5.1: swipe up or down on the keys for the next or previous page group. It is then locked (a small lock shows beside the name) until you choose \"Automatic\" in the top line."
+        ]),
+        Section(id: "ownkeys", title: "My own keys", part: "profiles", lines: [
+            "In Settings, the card \"Keys\" at the top has two choices. \"Follow the Mac\" is as before: this iPhone or iPad shows the page group and page the Mac shows.",
+            "\"My own keys\": pick a page group in the row \"Page group\". This iPhone or iPad then moves through that group on its own: pages, folders and Back, at its own place.",
+            "The Mac's keys on screen and the box stay where they are, and the Mac still does what the tapped key says. Keys pressed elsewhere do not light up here.",
+            "Swipe up or down on the keys, or use the menu in the top line, to change your own page group. It is remembered on this device. With own keys there is no lock and no \"Automatic\" in that menu. If the group you picked is gone, the default group shows.",
+            "The Mac keeps one place for each connected device, for as long as it is connected. After it connects again, the device starts at the first page of its group.",
+            "Needs the AMS Deck Mate app at 0.5 on the Mac. With an older Mac, the Keys card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the app follows the Mac as before."
+        ]),
+        Section(id: "longpress", title: "Long press", part: "keys", lines: [
+            "A key with a small white dot in its top right corner has a second action. Hold the key for half a second and the second action runs. You feel a stronger buzz.",
+            "A long press on a key without a dot does the usual thing, as if you had tapped.",
+            "You set the second action on the Mac, in Set up keys, under \"What it does\", in the picker \"Long press\".",
+            "A broken long-press action shows the red corner, and the Mac says \"Long press: <reason>\".",
+            "Needs the AMS Deck Mate app at 0.5 on the Mac. Not yet tried on a real iPhone or iPad."
+        ]),
+        Section(id: "favourites", title: "The favourites row", part: "keys", lines: [
+            "5 keys that stay in place on every page and in every page group. They show as a row under the 15 keys.",
+            "You set them on the Mac, in Set up keys, in the row \"Favourites\" under the 15 keys. A favourite can be anything except a folder or Back, and it can have a long press too.",
+            "A favourite that moves to another page or page group moves your own place when this device has its own keys, and otherwise the Mac's place.",
+            "The row only shows when at least one favourite is set. In Settings, the switch \"Favourites row\" (on at first) turns it off.",
+            "Needs the AMS Deck Mate app at 0.5 on the Mac."
+        ]),
+        Section(id: "macnow", title: "The Mac at a glance and the music strip", part: "settings", lines: [
+            "Mac at a glance: the top line shows a small battery drawing and the Mac's battery in percent, with the app in front, for example \"82 % · Safari\", or \"82 % charging · Safari\" while it charges. A Mac without a battery shows only the app.",
+            "Music strip: above the keys. It shows the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. One tap on quieter or louder moves the volume by 6 points.",
+            "Until the next change of song or pause after the Mac app has started, the strip says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
+            "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs none. Play or pause is not yet tried.",
+            "The Mac looks at its battery and volume every 5 seconds, but only while such a device is connected.",
+            "Both have a switch in Settings (\"Mac at a glance\" and \"Music strip\", on at first). Both need the AMS Deck Mate app at 0.5 on the Mac."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -78,6 +112,23 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.7", date: "16 Nov 2026", new: [
+            "My own keys. In Settings there is a new card \"Keys\" at the top. \"Follow the Mac\" is as before: it shows the page group and page the Mac shows. \"My own keys\": pick a page group, and this iPhone or iPad then moves through that group on its own: pages, folders and Back, at its own place.",
+            "With own keys, the Mac's keys on screen and the box stay where they are, and the Mac still does what the tapped key says. Swipe up or down, or the menu in the top line, changes your own page group, and it is remembered on the device. There is no lock and no \"Automatic\" then. If the group is gone, the default group shows. Keys pressed elsewhere do not light up here.",
+            "The Mac keeps one place for each connected device while it is connected; after it connects again the device starts at the first page of its group.",
+            "Long press: a key with a second action shows a small white dot in its top right corner. Hold the key for half a second and the second action runs, with a stronger buzz. A long press on a key without a second action does the usual thing. You set the second action on the Mac, in Set up keys.",
+            "Favourites row: 5 keys that stay in place on every page and in every page group, shown as a row under the 15 keys. You set them on the Mac, in Set up keys. A switch \"Favourites row\" in Settings (on at first); the row only shows when at least one favourite is set.",
+            "Mac at a glance: the top line shows a small battery drawing and the Mac's battery in percent with the app in front, for example \"82 % · Safari\" (\"82 % charging · Safari\" while it charges). A Mac without a battery shows only the app. A switch \"Mac at a glance\" in Settings (on at first).",
+            "Music strip: above the keys, song and artist (Spotify and Apple Music), play or pause, next, quieter, the Mac's volume in percent and louder (6 points per tap). A switch \"Music strip\" in Settings (on at first).",
+            "The strip says \"Nothing playing yet\" until the next change of song or pause after the Mac app has started, because the Mac hears about it from the player when something changes.",
+            "Play or pause and next need the Mac's one-time Accessibility permission, the same as music keys. Volume needs none. The Mac looks at battery and volume every 5 seconds, only while such a device is connected.",
+            "These new parts need the AMS Deck Mate app at 0.5 on the Mac (now 0.5, build 7).",
+            "Not yet tried: long press on a real iPhone or iPad and on the real box, and play or pause from the strip."
+        ], changed: [
+            "With an older Mac, the app works as before. The Keys card in Settings says \"Needs AMS Deck Mate 0.5 on the Mac\", and the new parts stay hidden.",
+            "With the first choice of every setting the app looks as in 0.6.1, apart from the new strips (music, Mac at a glance and favourites), which are on at first and show only when the Mac can send them.",
+            "The word “profile” is now “page group” everywhere."
+        ], fixed: []),
         Release(id: "0.6.1", date: "16 Nov 2026", new: [
             "A colour for each profile. In Settings, Look, under Background, every profile from your Mac is listed with its own choice: \"Same as background\" (at first) or one of the colours. When that profile shows, the background takes its colour, so you see at a glance which profile is up. It needs a Mac at 0.4 or later, because the list of profiles comes from the Mac; before a Mac is connected the list says so.",
             "Two more background colours, Rust and Slate. The colours are now Night blue, Forest, Plum, Rust and Slate, plus Always dark and Day and night.",

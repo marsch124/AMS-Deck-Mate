@@ -13,12 +13,14 @@ struct SetupView: View {
     @State private var draft = DeckKey()
     @State private var saved = DeckKey()
     @State private var showIcons = false
+    @State private var showOverview = false
     @Environment(\.colorScheme) private var scheme
 
     /// `startSlot` opens with a key already picked (for pictures).
-    init(model: AppModel, close: @escaping () -> Void = {}, startSlot: Int? = nil) {
+    init(model: AppModel, close: @escaping () -> Void = {}, startSlot: Int? = nil, overview: Bool = false) {
         self.model = model
         self.close = close
+        _showOverview = State(initialValue: overview)
         _profileID = State(initialValue: model.position?.profile)
         _pageID = State(initialValue: model.position?.page)
         if let startSlot, let key = model.keys[startSlot] {
@@ -42,9 +44,13 @@ struct SetupView: View {
             HStack(alignment: .top, spacing: 14) {
                 profilesColumn.frame(width: 200)
                 Divider()
-                keysColumn
-                Divider()
-                editorColumn.frame(width: 300)
+                if showOverview {
+                    overview
+                } else {
+                    keysColumn
+                    Divider()
+                    editorColumn.frame(width: 300)
+                }
             }
             Divider()
             HStack(spacing: 6) {
@@ -75,21 +81,128 @@ struct SetupView: View {
         .accessibilityIdentifier("setup")
     }
 
+    // MARK: All pages at a glance
+
+    /// Every group with every one of its pages and folders as a small picture; a click opens it.
+    private var overview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("All pages").font(.headline).foregroundStyle(Palette.part("keys", scheme))
+                Text("Click a page to change its keys.").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Back to the keys") { showOverview = false }
+                    .buttonStyle(PlainButton())
+                    .keyboardShortcut(.cancelAction)
+                    .accessibilityIdentifier("hideOverview")
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(model.deck.profiles) { item in
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text(item.name.isEmpty ? "No name" : item.name)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Palette.part("profiles", scheme))
+                                Text(profileNote(item)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            }
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140, maximum: 150), spacing: 12, alignment: .topLeading)],
+                                      alignment: .leading, spacing: 10) {
+                                ForEach(item.pages) { page in
+                                    Button { open(item, page) } label: { MiniPage(page: page, current: item.id == profile?.id && page.id == self.page?.id) }
+                                        .buttonStyle(.plain)
+                                        .accessibilityIdentifier("overview-\(item.name)-\(page.name)")
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.trailing, 6)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityIdentifier("overview")
+    }
+
+    private func open(_ item: DeckProfile, _ page: DeckPage) {
+        profileID = item.id
+        pageID = page.id
+        slot = nil
+        model.show(profile: item.id, page: page.id)
+        showOverview = false
+    }
+
+    // MARK: Favourites (places 100–104 in `slot`)
+
+    /// The favourites row is picked like a key: its five places count from 100.
+    private static let favouriteBase = 100
+    private var favourite: Int? { slot.flatMap { $0 >= SetupView.favouriteBase ? $0 - SetupView.favouriteBase : nil } }
+
+    /// The key at a place: one of the page's 15, or a favourite.
+    private func key(at place: Int) -> DeckKey? {
+        place >= SetupView.favouriteBase ? model.deck.favourites[place - SetupView.favouriteBase] : page?.keys[place]
+    }
+
+    /// Puts a key on a place (nil clears it).
+    private func put(_ key: DeckKey?, at place: Int, alsoAdding folder: DeckPage? = nil) {
+        if place >= SetupView.favouriteBase {
+            model.change { $0.favourites[place - SetupView.favouriteBase] = key }
+        } else if let profile, let page {
+            edit(profile) { item in
+                guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
+                item.pages[index].keys[place] = key
+                if let folder { item.pages.append(folder) }
+            }
+        }
+    }
+
+    private var favouritesRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Favourites").font(.subheadline.weight(.semibold)).foregroundStyle(Palette.part("iphone", scheme))
+            HStack(spacing: 8) {
+                ForEach(0..<PhoneLink.favouriteCount, id: \.self) { index in
+                    let shape = RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    let key = model.deck.favourites[index]
+                    Group {
+                        if let picture = KeyArt.image(for: key, pixels: 216) {
+                            Image(decorative: picture, scale: 1).resizable().interpolation(.high)
+                        } else {
+                            Color.black
+                        }
+                    }
+                    .frame(width: 52, height: 52)
+                    .clipShape(shape)
+                    .overlay(shape.strokeBorder(Color.white.opacity(key == nil ? 0.10 : 0), lineWidth: 1))
+                    .overlay(shape.inset(by: -3).strokeBorder(Color.white, lineWidth: favourite == index ? 2.5 : 0))
+                    .contentShape(Rectangle())
+                    .onTapGesture { pick(SetupView.favouriteBase + index) }
+                    .accessibilityElement()
+                    .accessibilityLabel(key == nil ? "Empty favourite" : KeyArt.title(key))
+                    .accessibilityIdentifier("favourite\(index)")
+                }
+                Text("Five keys that stay in place on every page and in every page group, in a row under the keys on the iPhone and iPad.")
+                    .font(.caption).foregroundStyle(.white.opacity(0.7))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.leading, 4)
+            }
+            .padding(9)
+            .frame(maxWidth: 426, alignment: .leading)
+            .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+    }
+
     // MARK: Copy, paste, undo
 
     private func copyKey() {
-        guard let slot, let key = page?.keys[slot] else { NSSound.beep(); return }
+        guard let slot, let key = key(at: slot) else { NSSound.beep(); return }
         model.copiedKey = draft == saved ? key : draft
     }
 
     /// Puts the copied key on the picked place (a key already there makes way).
     private func pasteKey() {
-        guard let slot, let profile, let page, let copied = model.copiedKey else { NSSound.beep(); return }
+        guard let slot, let copied = model.copiedKey,
+              favourite == nil || copied.action.type.fitsFavourite else { NSSound.beep(); return }
         let key = copied.copied()
-        edit(profile) { item in
-            guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
-            item.pages[index].keys[slot] = key
-        }
+        put(key, at: slot)
         draft = key
         saved = key
     }
@@ -118,11 +231,11 @@ struct SetupView: View {
     private var profilesColumn: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Profiles").font(.headline).foregroundStyle(Palette.part("profiles", scheme))
+                Text("Page groups").font(.headline).foregroundStyle(Palette.part("profiles", scheme))
                 Spacer()
                 Button(action: addProfile) { Mark(name: "control-add", size: 16, colour: Palette.part("profiles", scheme)) }
                     .buttonStyle(.plain)
-                    .help("Add a profile")
+                    .help("Add a page group")
                     .accessibilityIdentifier("addProfile")
             }
             ForEach(model.deck.profiles) { item in
@@ -164,7 +277,7 @@ struct SetupView: View {
                 .buttonStyle(PlainButton())
                 .accessibilityIdentifier("addApp")
                 Text(profile.apps.isEmpty
-                     ? (isDefault(profile) ? "The default: it shows for every app without a profile of its own."
+                     ? (isDefault(profile) ? "The default: it shows for every app without a page group of its own."
                                            : "No app yet: it shows only when you pick it.")
                      : "Shows by itself when one of these apps is in front.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -222,7 +335,7 @@ struct SetupView: View {
 
     private func addProfile() {
         guard leaveKey() else { return }
-        let new = DeckProfile(name: "New profile", pages: [DeckPage(name: "Page 1")])
+        let new = DeckProfile(name: "New page group", pages: [DeckPage(name: "Page 1")])
         model.change { $0.profiles.append(new) }
         showProfile(new)
     }
@@ -230,7 +343,7 @@ struct SetupView: View {
     private func deleteProfile(_ item: DeckProfile) {
         let keys = item.pages.reduce(0) { $0 + $1.keys.count }
         let alert = NSAlert()
-        alert.messageText = "Delete the profile “\(item.name)”?"
+        alert.messageText = "Delete the page group “\(item.name)”?"
         alert.informativeText = "Its \(keys) keys go with it. The setup as it is now stays as a safety copy."
         alert.addButton(withTitle: "Delete")
         alert.addButton(withTitle: "Cancel")
@@ -248,7 +361,15 @@ struct SetupView: View {
 
     private var keysColumn: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Keys").font(.headline).foregroundStyle(Palette.part("keys", scheme))
+            HStack {
+                Text("Keys").font(.headline).foregroundStyle(Palette.part("keys", scheme))
+                Spacer()
+                Button("All pages") { if leaveKey() { slot = nil; showOverview = true } }
+                    .buttonStyle(PlainButton())
+                    .help("Every page group and every page at a glance")
+                    .accessibilityIdentifier("showOverview")
+            }
+            .frame(width: 426)
             if let profile, let page {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
@@ -306,11 +427,12 @@ struct SetupView: View {
                     }
                     Spacer()
                 }
+                favouritesRow
                 Text("Click a key to change it. Drag it onto another key or a page to move it. ⌘C and ⌘V copy a key.")
                     .font(.caption).foregroundStyle(.secondary)
                 legend
             } else {
-                Text("No profile yet. Add one on the left.").foregroundStyle(.secondary)
+                Text("No page group yet. Add one on the left.").foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
         }
@@ -385,8 +507,8 @@ struct SetupView: View {
 
     /// Picks a key to edit. Unsaved changes to the key before it are asked about first.
     private func pick(_ index: Int) {
-        guard index != slot, leaveKey(), let page else { return }
-        let key = page.keys[index] ?? DeckKey()
+        guard index != slot, leaveKey(), page != nil else { return }
+        let key = key(at: index) ?? DeckKey()
         draft = key
         saved = key
         slot = index
@@ -414,8 +536,13 @@ struct SetupView: View {
         if let slot, let profile {
             VStack(alignment: .leading, spacing: 7) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("Key \(slot + 1)").font(.headline).foregroundStyle(Palette.part("keys", scheme))
-                    Text("row \(slot / 5 + 1), place \(slot % 5 + 1)").font(.caption).foregroundStyle(.secondary)
+                    if let favourite {
+                        Text("Favourite \(favourite + 1)").font(.headline).foregroundStyle(Palette.part("iphone", scheme))
+                        Text("shows on the iPhone and iPad").font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        Text("Key \(slot + 1)").font(.headline).foregroundStyle(Palette.part("keys", scheme))
+                        Text("row \(slot / 5 + 1), place \(slot % 5 + 1)").font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 if let why = KeyCheck.problem(draft, in: profile, deck: model.deck, world: KeyWorldOnMac.world) {
                     HStack(spacing: 5) {
@@ -450,13 +577,27 @@ struct SetupView: View {
                 }
                 FieldLabel("What it does")
                 Picker("", selection: actionType) {
-                    ForEach(ActionType.forKeys, id: \.self) { Text($0.title).tag($0) }
+                    ForEach(ActionType.forKeys.filter { favourite == nil || $0.fitsFavourite }, id: \.self) { Text($0.title).tag($0) }
                 }
                 .labelsHidden()
                 .accessibilityIdentifier("actionType")
                 ScrollView {
-                    ActionFields(action: $draft.action, deck: model.deck, profile: profile) { title in
-                        if draft.title.isEmpty { draft.title = title }
+                    VStack(alignment: .leading, spacing: 7) {
+                        ActionFields(action: $draft.action, deck: model.deck, profile: profile) { title in
+                            if draft.title.isEmpty { draft.title = title }
+                        }
+                        FieldLabel("Long press")
+                        Picker("", selection: heldType) {
+                            ForEach(ActionType.forLongPress, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .labelsHidden()
+                        .accessibilityIdentifier("heldType")
+                        if draft.hasHeld {
+                            ActionFields(action: heldAction, deck: model.deck, profile: profile)
+                            Text("Hold the key for half a second. It shows a small dot in its corner.")
+                                .font(.caption).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     .padding(.trailing, 4)
                 }
@@ -505,6 +646,20 @@ struct SetupView: View {
                 })
     }
 
+    /// The long-press action; "Nothing" = no long press of its own.
+    private var heldType: Binding<ActionType> {
+        Binding(get: { draft.held?.type ?? .none },
+                set: { new in
+                    guard new != (draft.held?.type ?? .none) else { return }
+                    draft.held = new == .none ? nil
+                        : DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : "")
+                })
+    }
+
+    private var heldAction: Binding<DeckAction> {
+        Binding(get: { draft.held ?? .none }, set: { draft.held = $0 })
+    }
+
     private func tryDraft() {
         let steps = draft.action.type == .multi ? draft.action.steps : [draft.action]
         ActionRunner.run(steps)
@@ -513,6 +668,12 @@ struct SetupView: View {
 
     private func save() {
         guard let slot, let profile, let page else { return }
+        if favourite != nil {
+            let empty = draft.action.type == .none && draft.title.isEmpty && draft.icon.isEmpty
+            put(empty ? nil : draft, at: slot)
+            saved = draft
+            return
+        }
         var key = draft
         var newFolder: DeckPage?
         if key.action.type == .folder, UUID(uuidString: key.action.target).flatMap({ profile.page($0) }) == nil {
@@ -529,5 +690,46 @@ struct SetupView: View {
         }
         draft = key
         saved = key
+    }
+}
+
+/// One page as a small picture of its 15 keys, with its name under it (a folder shows the folder mark).
+private struct MiniPage: View {
+    let page: DeckPage
+    let current: Bool
+    private let side: CGFloat = 24
+    private let gap: CGFloat = 3
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            VStack(spacing: gap) {
+                ForEach(0..<3, id: \.self) { row in
+                    HStack(spacing: gap) {
+                        ForEach(0..<5, id: \.self) { column in
+                            let shape = RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            Group {
+                                if let picture = KeyArt.image(for: page.keys[row * 5 + column], pixels: 72) {
+                                    Image(decorative: picture, scale: 1).resizable().interpolation(.high)
+                                } else {
+                                    Color.white.opacity(0.06)
+                                }
+                            }
+                            .frame(width: side, height: side)
+                            .clipShape(shape)
+                        }
+                    }
+                }
+            }
+            .padding(6)
+            .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(Color.accentColor, lineWidth: current ? 2.5 : 0))
+            HStack(spacing: 3) {
+                if page.parent != nil { Mark(name: "deck-folder", size: 12) }
+                Text(page.name.isEmpty ? "Page" : page.name).font(.caption).lineLimit(1)
+                Text("\(page.keys.count)").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .contentShape(Rectangle())
     }
 }

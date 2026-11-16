@@ -7,6 +7,18 @@ enum SampleLink {
     static let status = PhoneLink.Status(profiles: [.init(id: "1", name: "Default"), .init(id: "2", name: "Writing")],
                                          current: "1", held: CommandLine.arguments.contains("-locked"), page: 0, pages: 3)
 
+    static let mac = PhoneLink.MacNow(battery: 82, charging: false, app: "Safari", song: "Morning Light",
+                                      artist: "The Sample Band", playing: true, volume: 44)
+
+    /// Four favourites, the fourth place left empty.
+    static func favourites() -> [Int: PhoneLink.Key] {
+        let tiles: [(Int, String, UIColor)] = [(0, "Play", green), (1, "Safari", blue), (2, "Writing", grey), (4, "Mute", green)]
+        var result: [Int: PhoneLink.Key] = [:]
+        for index in 0..<PhoneLink.favouriteCount { result[index] = PhoneLink.Key(index: index, title: "", picture: nil) }
+        for tile in tiles { result[tile.0] = PhoneLink.Key(index: tile.0, title: tile.1, picture: picture(tile.1, tile.2)) }
+        return result
+    }
+
     private static let blue = UIColor(red: 0.18, green: 0.44, blue: 0.88, alpha: 1)
     private static let raycast = UIColor(red: 0.85, green: 0.33, blue: 0.17, alpha: 1)
     private static let teal = UIColor(red: 0.08, green: 0.54, blue: 0.48, alpha: 1)

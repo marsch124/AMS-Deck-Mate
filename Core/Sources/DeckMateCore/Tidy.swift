@@ -141,7 +141,10 @@ public enum KeyCheck {
     /// One line on what is wrong with the key, or nil when it is fine.
     public static func problem(_ key: DeckKey?, in profile: DeckProfile, deck: Deck, world: KeyWorld) -> String? {
         guard let key else { return nil }
-        return problem(key.action, in: profile, deck: deck, world: world)
+        if let why = problem(key.action, in: profile, deck: deck, world: world) { return why }
+        guard key.hasHeld, let held = key.held,
+              let why = problem(held, in: profile, deck: deck, world: world) else { return nil }
+        return "Long press: " + why
     }
 
     static func problem(_ action: DeckAction, in profile: DeckProfile, deck: Deck, world: KeyWorld) -> String? {
@@ -164,7 +167,7 @@ public enum KeyCheck {
             guard let id = UUID(uuidString: target), profile.page(id) != nil else { return "Its folder is gone" }
             return nil
         case .profile:
-            guard let id = UUID(uuidString: target), deck.profile(id) != nil else { return "Its profile is gone" }
+            guard let id = UUID(uuidString: target), deck.profile(id) != nil else { return "Its page group is gone" }
             return nil
         case .shortcut:
             return action.combo == nil ? "No shortcut recorded" : nil

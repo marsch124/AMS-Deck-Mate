@@ -18,13 +18,16 @@ extension ActionType {
         case .back: return "Back"
         case .nextPage: return "Next page"
         case .previousPage: return "Previous page"
-        case .profile: return "Switch profile"
+        case .profile: return "Switch page group"
         case .multi: return "Several things in a row"
         }
     }
 
     static let forKeys: [ActionType] = [.app, .link, .raycast, .shortcut, .text, .media, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
+    /// A long press can do anything a key does, except open a new folder.
+    static let forLongPress: [ActionType] = [.none, .app, .link, .raycast, .shortcut, .text, .media, .multi,
+                                             .back, .nextPage, .previousPage, .profile]
     static let forSteps: [ActionType] = [.app, .link, .raycast, .shortcut, .text, .media]
 }
 
@@ -116,7 +119,7 @@ struct ActionFields: View {
             case .profile: profileFields
             case .multi: StepsEditor(action: $action, deck: deck, profile: profile)
             case .back: note("Goes back to the page the folder was opened from.")
-            case .nextPage: note("Shows the next page of this profile. After the last page comes the first.")
+            case .nextPage: note("Shows the next page of this page group. After the last page comes the first.")
             case .previousPage: note("Shows the page before this one.")
             case .none: note("The key does nothing. A key with no title and no icon stays empty.")
             }
@@ -175,12 +178,12 @@ struct ActionFields: View {
     private var profileFields: some View {
         VStack(alignment: .leading, spacing: 6) {
             Picker("", selection: $action.target) {
-                Text("Pick a profile").tag("")
+                Text("Pick a page group").tag("")
                 ForEach(deck.profiles) { Text($0.name).tag($0.id.uuidString) }
             }
             .labelsHidden()
             .accessibilityIdentifier("profilePicker")
-            note("Shows another profile's keys. It stays until you go to an app that has a profile of its own.")
+            note("Shows another page group. It stays until you go to an app that has a page group of its own.")
         }
     }
 }

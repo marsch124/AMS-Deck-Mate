@@ -74,7 +74,7 @@ final class TidyTests: XCTestCase {
                        "The Raycast extension is not installed")
         XCTAssertEqual(check(DeckAction(type: .folder, target: UUID().uuidString)), "Its folder is gone")
         XCTAssertEqual(check(DeckAction(type: .multi, steps: [DeckAction(type: .media, target: "mute"),
-                                                               DeckAction(type: .profile, target: "x")])), "Its profile is gone")
+                                                               DeckAction(type: .profile, target: "x")])), "Its page group is gone")
         XCTAssertEqual(KeyCheck.all(in: deck, world: world), [])
     }
 

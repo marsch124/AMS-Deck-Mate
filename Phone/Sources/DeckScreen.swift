@@ -39,6 +39,11 @@ struct DeckScreen: View {
     @AppStorage("swipeProfiles") private var swipeProfiles = true
     @AppStorage("showNote") private var showNote = true
     @AppStorage("showDots") private var showDots = true
+    @AppStorage("showFavourites") private var showFavourites = true
+    @AppStorage("showMusic") private var showMusic = true
+    @AppStorage("showGlance") private var showGlance = true
+    @AppStorage("ownKeys") private var ownKeys = false
+    private var favouritesShow: Bool { showFavourites && link.newMac && link.hasFavourites }
     /// The last touch, for the resting clock.
     @State private var lastTouch = Date()
     @State private var resting = false
@@ -98,9 +103,23 @@ struct DeckScreen: View {
     private var keysBlock: some View {
         VStack(spacing: 8) {
             if showNote { noteLine }
+            if showMusic, connected, link.newMac, let now = link.mac { musicStrip(now) }
             GeometryReader { box in
-                let side = Self.keySide(in: box.size, gap: keyGap.points) * keySize.scale
-                KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                let side = Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow) * keySize.scale
+                VStack(spacing: keyGap.points + Self.favouritesGap) {
+                    KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                    if favouritesShow {
+                        HStack(spacing: keyGap.points) {
+                            ForEach(0..<PhoneLink.favouriteCount, id: \.self) { index in
+                                KeyView(index: index, key: link.favourites[index], side: side, corner: keyShape.corner,
+                                        lit: link.litFavourites.contains(index), name: "favourite",
+                                        hold: { link.favourite(index, long: true) }) { link.favourite(index, long: false) }
+                            }
+                        }
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier("favouritesRow")
+                    }
+                }
                     .frame(width: box.size.width, height: box.size.height,
                            alignment: keysPlace == .bottom ? .bottom : (keysPlace == .top ? .top : .center))
                     .opacity(connected ? 1 : 0.35)
@@ -117,7 +136,7 @@ struct DeckScreen: View {
                         }
                     })
             }
-            .aspectRatio(5.0 / 3.0, contentMode: .fit)
+            .aspectRatio(favouritesShow ? 5.0 / 4.1 : 5.0 / 3.0, contentMode: .fit)
             if showDots { pageDots }
         }
     }
@@ -140,10 +159,61 @@ struct DeckScreen: View {
     }
 
     /// The side of one square key, so 5 x 3 keys with their gaps fill the room.
-    static func keySide(in size: CGSize, gap: CGFloat = 8) -> CGFloat {
+    /// With the favourites row there is a fourth row, a little apart from the 15 keys.
+    static func keySide(in size: CGSize, gap: CGFloat = 8, favourites: Bool = false) -> CGFloat {
         let byWidth = (size.width - 4 * gap) / 5
-        let byHeight = (size.height - 2 * gap) / 3
+        let rows: CGFloat = favourites ? 4 : 3
+        let byHeight = (size.height - (rows - 1) * gap - (favourites ? favouritesGap : 0)) / rows
         return max(10, floor(min(byWidth, byHeight)))
+    }
+
+    /// The extra room between the 15 keys and the favourites row.
+    static let favouritesGap: CGFloat = 8
+
+    // MARK: Music strip
+
+    /// What is playing on the Mac, with play or pause, next, quieter and louder.
+    private func musicStrip(_ now: PhoneLink.MacNow) -> some View {
+        HStack(spacing: isPad ? 12 : 6) {
+            PhoneIcon(name: "iconMusic", size: isPad ? 22 : 18).foregroundStyle(PhonePalette.part("settings"))
+            VStack(alignment: .leading, spacing: 0) {
+                Text(now.song.isEmpty ? "Nothing playing yet" : now.song)
+                    .font((isPad ? Font.callout : Font.subheadline).weight(.semibold)).lineLimit(1)
+                if !now.artist.isEmpty {
+                    Text(now.artist).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("musicSong")
+            Spacer(minLength: 4)
+            musicButton("iconPlay", now.playing ? "Pause" : "Play", "musicPlay") { link.music(.playPause) }
+            musicButton("iconNext", "Next track", "musicNext") { link.music(.next) }
+            musicButton("iconQuieter", "Quieter", "musicQuieter") { link.music(.volumeDown) }
+            if let volume = now.volume {
+                Text("\(volume) %").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    .frame(minWidth: 38)
+                    .accessibilityIdentifier("musicVolume")
+            }
+            musicButton("iconLouder", "Louder", "musicLouder") { link.music(.volumeUp) }
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 6)
+        .padding(.vertical, 3)
+        .background(PhonePalette.card, in: Capsule())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("musicStrip")
+    }
+
+    private func musicButton(_ icon: String, _ label: String, _ id: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            PhoneIcon(name: icon, size: isPad ? 24 : 20)
+                .foregroundStyle(PhonePalette.part("settings"))
+                .frame(width: isPad ? 44 : 36, height: 38)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityIdentifier(id)
     }
 
     // MARK: Top line
@@ -161,6 +231,17 @@ struct DeckScreen: View {
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("linkStatus")
+                if showGlance, connected, link.newMac, let glance = link.mac?.glance, !glance.isEmpty {
+                    // The Mac at a glance: its battery and the app in front.
+                    HStack(spacing: 5) {
+                        if link.mac?.battery != nil { PhoneIcon(name: "iconBattery", size: isPad ? 18 : 14) }
+                        Text(glance).font(isPad ? .callout : .caption).lineLimit(1)
+                    }
+                    .foregroundStyle(.secondary)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Mac: \(glance)")
+                    .accessibilityIdentifier("macGlance")
+                }
                 if let battery { batteryLine(battery) }
             }
             Spacer(minLength: 8)
@@ -183,14 +264,17 @@ struct DeckScreen: View {
             .foregroundStyle(.primary)
             .lineLimit(1)
         if let status = link.status, connected {
+            let own = ownKeys && link.newMac
             Menu {
-                Button { link.pickProfile(nil) } label: {
-                    if !status.held { Label("Automatic", systemImage: "checkmark") } else { Text("Automatic") }
+                if !own {
+                    Button { link.pickProfile(nil) } label: {
+                        if !status.held { Label("Automatic", systemImage: "checkmark") } else { Text("Automatic") }
+                    }
                 }
-                Section("Lock one") {
+                Section(own ? "My own keys" : "Lock one") {
                     ForEach(status.profiles, id: \.id) { profile in
                         Button { link.pickProfile(profile.id) } label: {
-                            if status.held && status.current == profile.id {
+                            if (status.held || own) && status.current == profile.id {
                                 Label(profile.name, systemImage: "checkmark")
                             } else {
                                 Text(profile.name)
@@ -377,7 +461,8 @@ private struct KeyGrid: View {
                 HStack(spacing: gap) {
                     ForEach(0..<5, id: \.self) { column in
                         let index = row * 5 + column
-                        KeyView(index: index, key: link.keys[index], side: side, corner: corner, lit: link.lit.contains(index)) {
+                        KeyView(index: index, key: link.keys[index], side: side, corner: corner, lit: link.lit.contains(index),
+                                hold: link.newMac ? { link.hold(index) } : nil) {
                             link.press(index)
                         }
                     }
@@ -394,6 +479,10 @@ private struct KeyView: View {
     let side: CGFloat
     var corner: CGFloat = 0.16
     let lit: Bool
+    /// "key" for the 15 keys, "favourite" for the favourites row (for checks).
+    var name = "key"
+    /// A long press (half a second); nil = the Mac does not know long presses.
+    var hold: (() -> Void)?
     let press: () -> Void
     @State private var pressed = false
     @AppStorage("tapBuzz") private var tapBuzz = true
@@ -427,9 +516,16 @@ private struct KeyView: View {
             press()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { pressed = false }
         }
+        .onLongPressGesture(minimumDuration: Navigator.longPress) {
+            guard image != nil else { return }
+            if tapBuzz { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
+            pressed = true
+            (hold ?? press)()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { pressed = false }
+        }
         .accessibilityElement()
-        .accessibilityLabel(image == nil ? "Empty key" : (key?.title ?? "Key"))
+        .accessibilityLabel(image == nil ? "Empty \(name)" : (key?.title ?? "Key"))
         .accessibilityAddTraits(.isButton)
-        .accessibilityIdentifier("key\(index)")
+        .accessibilityIdentifier("\(name)\(index)")
     }
 }

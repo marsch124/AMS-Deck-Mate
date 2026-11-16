@@ -6,9 +6,13 @@ import SwiftUI
 /// that is not in front (a plain button would only wake the window up).
 struct ClickCatcher: NSViewRepresentable {
     var onDown: (CGPoint) -> Void
+    /// The mouse button came up again (for long presses).
+    var onUp: (() -> Void)?
 
     final class Catcher: NSView {
         var onDown: ((CGPoint) -> Void)?
+        var onUp: (() -> Void)?
+        override func mouseUp(with event: NSEvent) { onUp?() }
         override var isFlipped: Bool { true }
         override var mouseDownCanMoveWindow: Bool { false }
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
@@ -20,11 +24,13 @@ struct ClickCatcher: NSViewRepresentable {
     func makeNSView(context: Context) -> Catcher {
         let view = Catcher()
         view.onDown = onDown
+        view.onUp = onUp
         return view
     }
 
     func updateNSView(_ view: Catcher, context: Context) {
         view.onDown = onDown
+        view.onUp = onUp
     }
 }
 
@@ -43,7 +49,10 @@ struct KeyGrid: View {
     /// ("deckkey:<page>:<place>"); the keys on screen use the click catcher instead.
     var dragPage: UUID?
     var onDrop: ((String, Int) -> Void)?
+    /// The keys on screen: the mouse button came up (a long press ends, or a short one acts).
+    var onRelease: ((Int) -> Void)?
     var onPress: (Int) -> Void
+    @State private var down: Int?
 
     private var width: CGFloat { side * 5 + gap * 4 }
     private var height: CGFloat { side * 3 + gap * 2 }
@@ -55,14 +64,18 @@ struct KeyGrid: View {
                     .offset(x: CGFloat(index % 5) * (side + gap), y: CGFloat(index / 5) * (side + gap))
             }
             if dragPage == nil {
-            ClickCatcher { point in
+            ClickCatcher(onDown: { point in
                 let column = Int(point.x / (side + gap))
                 let row = Int(point.y / (side + gap))
                 guard (0..<5).contains(column), (0..<3).contains(row),
                       point.x - CGFloat(column) * (side + gap) <= side,
                       point.y - CGFloat(row) * (side + gap) <= side else { return }
+                down = row * 5 + column
                 onPress(row * 5 + column)
-            }
+            }, onUp: {
+                if let down { onRelease?(down) }
+                down = nil
+            })
             .frame(width: width, height: height)
             }
         }
@@ -129,9 +142,9 @@ struct ScreenDeckView: View {
                     .lineLimit(1)
                     .accessibilityIdentifier("deckPlace")
                 if model.pinned != nil {
-                    // Locked: this profile stays until "Automatic" is chosen in the menu.
+                    // Locked: this page group stays until "Automatic" is chosen in the menu.
                     Mark(name: "app-lock", size: model.deck.screenSize == .small ? 12 : 14, colour: .white.opacity(0.7))
-                        .help("Locked: this profile stays until you choose Automatic in the menu")
+                        .help("Locked: this page group stays until you choose Automatic in the menu")
                         .accessibilityLabel("Locked")
                         .accessibilityIdentifier("profileLock")
                 }
@@ -142,7 +155,7 @@ struct ScreenDeckView: View {
             KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
                     gap: model.deck.screenSize.gap,
                     broken: Set(model.problems(on: model.page, of: model.profile).keys),
-                    letters: model.keyboardOn) { model.click($0) }
+                    letters: model.keyboardOn, onRelease: { model.release($0) }) { model.click($0) }
         }
         .padding(10)
         .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))

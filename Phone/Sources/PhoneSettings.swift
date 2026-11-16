@@ -32,6 +32,11 @@ struct PhoneSettings: View {
     @AppStorage("showNote") private var showNote = true
     @AppStorage("showDots") private var showDots = true
     @AppStorage("stayAwake") private var stayAwake = true
+    @AppStorage("ownKeys") private var ownKeys = false
+    @AppStorage("ownProfile") private var ownProfile = ""
+    @AppStorage("showFavourites") private var showFavourites = true
+    @AppStorage("showMusic") private var showMusic = true
+    @AppStorage("showGlance") private var showGlance = true
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -103,10 +108,41 @@ struct PhoneSettings: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            card("Keys", "screen") {
+                chips([false, true], Binding(get: { ownKeys }, set: { ownKeys = $0; link.sendOwn() }), "screen", "own") {
+                    $0 ? "My own keys" : "Follow the Mac"
+                }
+                if ownKeys {
+                    if let profiles = link.status?.profiles, !profiles.isEmpty {
+                        row("Page group") {
+                            chips(profiles.map(\.id),
+                                  Binding(get: { ownProfile.isEmpty ? (link.status?.current ?? "") : ownProfile },
+                                          set: { ownProfile = $0; link.sendOwn() }),
+                                  "screen", "ownGroup") { id in profiles.first { $0.id == id }?.name ?? "?" }
+                        }
+                    }
+                    note("This \(DeckScreen.device) moves through its own page group. The Mac’s keys on screen and the Stream Deck stay where they are; the Mac still does what you tap.")
+                } else {
+                    note("This \(DeckScreen.device) shows the page group and page the Mac shows.")
+                }
+                Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")
+                note("Five keys under the others that stay in place on every page and in every page group. You fill them on the Mac, in Set up keys.")
+                Toggle("Music strip", isOn: $showMusic).accessibilityIdentifier("showMusic")
+                note("What is playing on the Mac (Spotify or Music), with play, next and volume, above the keys.")
+                Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
+                note("The Mac’s battery and the app in front, in the top line.")
+                note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
+                if link.macName != nil, !link.newMac {
+                    Text("Needs AMS Deck Mate 0.5 on the Mac")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(PhonePalette.problem)
+                        .accessibilityIdentifier("needsNewMac")
+                }
+            }
             card("Look", "profiles") {
                 row("Background") { chips(PhonePrefs.Ground.allCases, $ground, "profiles", "ground") { $0.title } }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("A colour for each profile").font(.subheadline).foregroundStyle(.secondary)
+                    Text("A colour for each page group").font(.subheadline).foregroundStyle(.secondary)
                     if let profiles = link.status?.profiles, !profiles.isEmpty {
                         ForEach(profiles, id: \.id) { profile in
                             VStack(alignment: .leading, spacing: 3) {
@@ -117,9 +153,9 @@ struct PhoneSettings: View {
                                       "profiles", "colour-\(profile.name)") { $0?.title ?? "Same as background" }
                             }
                         }
-                        note("When a profile shows, the background takes its colour, so you see which one is up.")
+                        note("When a page group shows, the background takes its colour, so you see which one is up.")
                     } else {
-                        note("Your profiles are listed here once a Mac is connected.")
+                        note("Your page groups are listed here once a Mac is connected.")
                     }
                 }
                 row("Key shape") { chips(PhonePrefs.Shape.allCases, $keyShape, "profiles", "shape") { $0.title } }

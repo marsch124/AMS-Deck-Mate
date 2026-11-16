@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.4.2 (build 6), 16 Nov 2026; iPhone and iPad app 0.6.1 (build 9)
+# AMS Deck Mate, specification, version 0.5 (build 7), 16 Nov 2026; iPhone and iPad app 0.7 (build 10)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -8,21 +8,22 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Give the 15-key Stream Deck (2019) and MK.2 their keys without Elgato's app.
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
+- Since 0.5 (Mac) and 0.7 (iPhone and iPad): long press, a favourites row, own keys on each iPhone or iPad, the Mac at a glance, a music strip, and "All pages" in Set up keys (sections 24 to 28, and 5).
 
 ## 2. Menu bar
 The icon opens a menu:
 - "Show keys on screen" (shortcut Control-Option-D).
 - "Set up keys…".
-- Status lines at the top: "Profile: <name> (automatic)" or "(locked)"; "iPhone: connected – <name>" or "iPhone: none connected"; the box line.
-- "Profile": "Automatic", or one profile pinned by hand. A pinned profile is locked: a small hand-drawn lock shows beside the profile name on the keys on screen (since 0.4.2). Without the lock the profile follows the app in front.
-- "Profile for <front app>": a sub-menu of the profiles and "None – use the default". Picking one puts the front app's bundle identifier into that profile's `apps` and takes it off every other profile, so the profile then shows by itself whenever that app is in front. "None" takes the app off all profiles.
+- Status lines at the top: "Page group: <name> (automatic)" or "(locked)"; "iPhone: connected – <name>" or "iPhone: none connected"; the box line.
+- "Page group": "Automatic", or one page group pinned by hand. A pinned page group is locked: a small hand-drawn lock shows beside the name of the page group on the keys on screen (since 0.4.2). Without the lock the page group follows the app in front.
+- "Page group for <front app>": a sub-menu of the page groups and "None – use the default". Picking one puts the front app's bundle identifier into that group's `apps` and takes it off every other page group, so the page group then shows by itself whenever that app is in front. "None" takes the app off all page groups.
 - "Settings…".
 - "Quit AMS Deck Mate".
 
 ## 3. Keys on screen
 - A small floating window with the same 15 keys as the box (5 columns, 3 rows). A click does what pressing the box key does.
 - It does not take the keyboard from the app the user works in. It stays above other windows, can be dragged anywhere and remembers its place.
-- The top line shows the profile and page names and a button to set up keys.
+- The top line shows the page group and page names and a button to set up keys.
 - It works without the box.
 - Three choices, made in Settings in the card "Keys on screen" (rules in `ScreenDeck.swift`: `ScreenDeckRules`, `ScreenSize`). Together they make the keys on screen a virtual deck: Control-Option-D, the keys appear under the mouse, click a key, they are gone.
 
@@ -33,7 +34,7 @@ The icon opens a menu:
 
 **Hide after a key is pressed** (`screenHidesAfterKey`, default false)
 - Rule (`ScreenDeckRules.hides(after:setting:)`): the keys hide when the setting is on and the outcome of the click ran something on the Mac (`outcome.run` is not empty).
-- A key that only moves around (folder, Back, next or previous page, switch profile) runs nothing, so the keys stay open.
+- A key that only moves around (folder, Back, next or previous page, switch page group) runs nothing, so the keys stay open.
 - A "several things in a row" key hides them when at least one of its steps runs something on the Mac.
 - Only clicks on the screen hide the keys. Pressing a key on the box does not.
 
@@ -43,7 +44,9 @@ The icon opens a menu:
 - After a key that does something on the Mac, the keyboard goes back to the app the user was in.
 - 0.4.1: while the window has the keyboard, each key shows its letter (1 2 3 4 5 / Q W E R T / A S D F G, by place) in a small round mark in its top-left corner. The marks go away when the keyboard goes back to the previous app (after a key that does something on the Mac, or a click on the keys), so marks showing means typing works now. Only on the keys on screen; the box, the iPhone and Set up keys show none.
 
-**Broken keys (0.4).** A key whose app, file or folder, Raycast extension, folder page or profile is gone shows a red corner mark on the screen (see section 20).
+**Broken keys (0.4).** A key whose app, file or folder, Raycast extension, folder page or page group is gone shows a red corner mark on the screen (see section 20).
+
+**Long press (0.5).** A key with a long-press action (`held`) shows a small white dot in its top right corner. A key with `held` acts when the mouse button is let go: let go before 0.5 s runs the normal action; still held after 0.5 s runs `held`. All other keys act at once on the click, as before. The favourites row (section 25) is not shown on the keys on screen. See section 24.
 
 **Size** (`screenSize`, default normal)
 - `ScreenSize`: small, normal, large. The side of one key (`keySide`) is 48, 64 or 80 points; the gap between keys (`gap`) is 6, 8 or 10 points. Normal is the size 0.1 had.
@@ -51,21 +54,23 @@ The icon opens a menu:
 
 ## 4. Key look and colours
 - A flat coloured tile, a white hand-drawn icon, a short title.
-- One colour per kind (`KeyKind`): app blue, web (links) teal, raycast red-orange, shortcut purple, text amber, media green, move (folder, back, pages, profile) grey-blue, empty neutral.
+- One colour per kind (`KeyKind`): app blue, web (links) teal, raycast red-orange, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
 - A "several things" key takes the kind of its first step that is not "nothing".
 - An app key shows the app's own icon unless an icon is picked.
 - An app key with an empty title shows the app's name (`DeckKey.shownTitle(appName:)`, see section 18). Own words always win.
 - 245 hand-drawn icons: the AMS Icon Library plus new ones drawn for this app. A key's `icon` is a drawing's name; empty means the automatic one (`autoIcon`): deck-link, deck-raycast, deck-keyboard, deck-text, deck-play, deck-next, deck-previous, deck-volume-up, deck-volume-down, deck-mute, deck-folder, deck-back, deck-page-next, deck-page-previous, deck-profile, deck-multi.
 
 ## 5. Set up keys
-- Left: profiles. Add, rename, delete, make default, "Use with apps" (the apps a profile belongs to).
-- Middle: the 15 keys, with the pages and folders of the profile above them. Add page, delete page.
+- Left: page groups (heading "Page groups"). Add ("Add a page group"; the new one is named "New page group"), rename, delete, make default, "Use with apps" (the apps a page group belongs to).
+- Middle: the 15 keys, with the pages and folders of the page group above them. Add page, delete page.
 - Right: the clicked key. Title, Icon, "What it does". Cancel and Save on every edit; Escape is Cancel.
 - "Clear key" empties a key. "Try it" runs the key.
-- 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate profile; Undo and Redo; red marks for broken keys.
+- 0.5: under "What it does", a picker "Long press": Nothing, or any action type except "Folder of keys" (section 24). Under the 15 keys, a row "Favourites" of 5 places (section 25).
+- 0.5: the button "All pages" at the top right of the Keys column. It shows every page group with every page and folder as a small picture of its 15 keys, with its name and the number of keys under it. A folder carries the folder mark; the page being edited has a coloured frame. A click on a page opens it for editing. "Back to the keys" or Escape goes back to the keys.
+- 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, profile, multi. An unknown name decodes as none.
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi. An unknown name decodes as none.
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -76,9 +81,9 @@ The icon opens a menu:
 | Type text | the text | typed. Needs Accessibility. Also how a snippet goes on a key |
 | Music and sound | a `MediaKey` | playPause, next, previous, volumeUp, volumeDown, mute |
 | Folder of keys | the page's id | opens that page; the page we came from is pushed on the trail |
-| Back | none | pops the trail; with an empty trail goes to the profile's first page |
+| Back | none | pops the trail; with an empty trail goes to the group's first page |
 | Next / previous page | none | moves between the top pages, wrapping round; clears the trail. With one page: nothing |
-| Switch profile | the profile's id | goes to that profile's first page. Unknown id: nothing |
+| Switch page group | the group's id | goes to that group's first page. Unknown id: nothing |
 | Several things in a row | (uses `steps`) | steps run in order, a third of a second apart. Steps may nest to depth 4 |
 | Nothing | none | nothing |
 
@@ -96,25 +101,25 @@ A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyNa
 - The first time a key runs a command Raycast asks once; choose "Always open command".
 - Raycast has no outside door for quicklinks and snippets: use "Open a link" and "Type text".
 
-## 8. Profiles and the automatic change
-- A profile has a name, the apps it belongs to (bundle identifiers) and pages. A page is either a top page (`parent` empty) or a folder page opened by a folder key.
-- Position (`DeckPosition`): profile, page, and the trail of pages to go back through.
-- `Navigator.profile(forApp:)`: the first profile that lists the app; otherwise the default profile (`fallbackProfile`: the default, or the first profile when the default is gone).
+## 8. Page groups and the automatic change
+- A page group has a name, the apps it belongs to (bundle identifiers) and pages. A page is either a top page (`parent` empty) or a folder page opened by a folder key.
+- Position (`DeckPosition`): page group, page, and the trail of pages to go back through.
+- `Navigator.profile(forApp:)`: the first page group that lists the app; otherwise the default page group (`fallbackProfile`: the default, or the first page group when the default is gone).
 - `Navigator.follow(app, previousApp, position)`, exactly:
-  1. The position is first repaired (see below). With no usable position, the start of the default profile.
-  2. If "Change profile with the app in front" is off, the position stays.
-  3. `wanted` = the profile of the new app; `before` = the profile of the app before it.
-  4. The deck changes only when `wanted` differs from `before` and also from the profile showing now. Then it goes to the first page of `wanted`. Otherwise it stays.
-- Result: a profile picked by hand stays while moving between apps that share a profile, and changes when the user goes to an app with another profile. Any other app shows the default profile.
-- `repair`: a position whose profile is gone goes to the start of the default profile; a page that is gone goes to the profile's first page; trail entries that no longer exist are dropped.
-- `start`: the first top page of the profile asked for, else of the default profile.
+  1. The position is first repaired (see below). With no usable position, the start of the default page group.
+  2. If "Change page group with the app in front" is off, the position stays.
+  3. `wanted` = the page group of the new app; `before` = the page group of the app before it.
+  4. The deck changes only when `wanted` differs from `before` and also from the page group showing now. Then it goes to the first page of `wanted`. Otherwise it stays.
+- Result: a page group picked by hand stays while moving between apps that share a page group, and changes when the user goes to an app with another page group. Any other app shows the default page group.
+- `repair`: a position whose page group is gone goes to the start of the default page group; a page that is gone goes to the group's first page; trail entries that no longer exist are dropped.
+- `start`: the first top page of the page group asked for, else of the default page group.
 
 ## 9. Bringing over from Elgato
-- At first start the app reads the keys from Elgato's app for the 15-key box: apps, links, shortcuts, typed text, music keys, folders, pages, several-things keys, and which app a profile belongs to.
+- At first start the app reads the keys from Elgato's app for the 15-key box: apps, links, shortcuts, typed text, music keys, folders, pages, several-things keys, and which app a page group belongs to.
 - Left out: the Zoom profile, the two Final Cut profiles, and keys of kinds Deck Mate does not have (Elgato's own on-screen deck switch, plug-in keys). A folder left with nothing but its Back key is left out too, with the key that opened it (`Deck.droppingEmptyFolders`).
 - Elgato's files are only read, never changed. Elgato's pictures are not taken over; every key is redrawn in the new look.
 - "Bring over again" in Settings repeats it. It asks first; the current setup is kept as a safety copy.
-- With nothing to bring over, the first setup (`Deck.starter`) is one profile "Default" with one empty page "Page 1".
+- With nothing to bring over, the first setup (`Deck.starter`) is one page group "Default" with one empty page "Page 1".
 
 ## 10. The box
 Not yet tried on the real box (see the warning at the top).
@@ -122,6 +127,7 @@ Not yet tried on the real box (see the warning at the top).
 - Plug in: the keys light up. Settings shows "Connected", the box's name, the serial number and a brightness slider (0 to 100, default 70).
 - Elgato's own app must be quit while Deck Mate drives the box (only one can hold it). Settings warns when it runs and has "Quit Elgato's app".
 - On quit the box goes back to the Elgato logo.
+- Long press on the box (0.5): a key with a `held` action acts when it is let go, not when it goes down: held for 0.5 s or more runs `held`, shorter runs the normal action. All other keys act on key down, as before. Not yet tried on the real box; the rule is tested in `Core` with time stamps.
 - Byte layouts (from the open drivers python-elgato-streamdeck and elgato-streamdeck; code in `StreamDeckProtocol.swift`):
 
 | What | Layout |
@@ -139,28 +145,31 @@ Not yet tried on the real box (see the warning at the top).
 
 ## 12. Settings
 Three tabs: Settings, How it works, What's new. The version, Quit and Done are at the bottom.
-Since 0.4 the Settings tab is a list on the left with one part at a time on the right (before: one long scroll). The parts, in order: The box (box, brightness), First time with the box, Keys on screen (Show them, Hide after a key is pressed, Size), iPhone (section 17), Profiles (change profile with the app in front), Check keys, This Mac (open at login, permissions), From Elgato (bring over again), Where it is kept.
+Since 0.4 the Settings tab is a list on the left with one part at a time on the right (before: one long scroll). The parts, in order: The box (box, brightness), First time with the box, Keys on screen (Show them, Hide after a key is pressed, Size), iPhone (section 17), Page groups (change page group with the app in front), Check keys, This Mac (open at login, permissions), From Elgato (bring over again), Where it is kept.
 - "First time with the box": the steps for the first day with the real box (quit Elgato's app, plug the box in, allow Input Monitoring if the Mac asks), the box's answer in plain words, and a button to show the box diary (box log). Reminder: the real box is still untried (the author is away until January 2027).
-- "Check keys": the button "Check all keys" lists every broken key as "Profile · Page · key: reason" (section 20).
+- "Check keys": the button "Check all keys" lists every broken key as "Page group · Page · key: reason" (section 20).
 - The picture used for checks (sample Settings picture) shows a made-up iPhone, never real data.
+- 0.5: the Mac's Settings have no new switch. The Mac keeps one own place for each connected iPhone or iPad (in memory, for the connection) for "My own keys" (section 26). The new switches are on the iPhone and iPad (section 23).
 
 ## 13. Storage
 - One file: `~/Library/Application Support/AMS Deck Mate/deck.json`. Each save first keeps the previous file as a safety copy (the last 20) in `Backups` beside it.
 - Nothing leaves the Mac.
-- Decoding is tolerant: a missing or odd field gets its default, never an error.
+- Decoding is tolerant: a missing or odd field gets its default, never an error. A missing `held` means no long press; a missing `favourites` means 5 empty places. A favourite whose action is a folder or Back is treated as empty (refused in Set up keys, ignored if found in the file).
+- An older Mac app (before 0.5) that opens a file with `held` or `favourites` ignores them, and its next save drops them.
 
 | Object | Fields |
 |---|---|
-| Deck | version (1), profiles, defaultProfile (id), brightness (0 to 100, default 70), autoSwitch (default true), screenAtPointer (true or false, default false), screenHidesAfterKey (true or false, default false), screenSize ("small", "normal" or "large", default "normal"). A missing or odd value of the last three means the default |
-| Profile | id, name, apps (bundle identifiers), pages |
+| Deck | version (1), profiles (the page groups), defaultProfile (id of the default page group), brightness (0 to 100, default 70), autoSwitch (default true), screenAtPointer (true or false, default false), screenHidesAfterKey (true or false, default false), screenSize ("small", "normal" or "large", default "normal"), **favourites (0.5: 5 places, 0 to 4, each a key or empty; default 5 empty places)**. A missing or odd value of the screen fields means the default |
+| Page group (`Profile`) | id, name, apps (bundle identifiers), pages |
 | Page | id, name, parent (id of the page holding the folder key, or empty for a top page), keys (place 0 to 14 as the key; 0 top left, left to right, top to bottom) |
-| Key | id, title, icon, action |
+| Key | id, title, icon, action, **held (0.5: an Action, the long-press action; missing or "none" means no long press)** |
 | Action | type, target, combo, steps (actions), quiet |
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
-- New in 0.4: one small data test per new rule: the new `PhoneLink` messages (round trip), the broken-key reasons, duplicate page and profile, copy and paste, moving and swapping keys between pages, undo and redo (30 steps), the keyboard places, and the "Profile for <app>" rule (an app belongs to one profile only). The iPhone app has one more screen test that finds the profile menu and page dots by identifier.
+- New in 0.5 (round B): `Core` has 36 data tests, 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
+- New in 0.4: one small data test per new rule: the new `PhoneLink` messages (round trip), the broken-key reasons, duplicate page and page group, copy and paste, moving and swapping keys between pages, undo and redo (30 steps), the keyboard places, and the "Page group for <app>" rule (an app belongs to one page group only). The iPhone app has one more screen test that finds the page group menu and page dots by identifier.
 - New in 0.3: `PhoneLink` framing: round trip (encode then decode gives the same message), split (a message arriving in pieces is put together; a half message waits), broken (a length over 4 MB or text that is not a message is refused, not crashed on). And `shownTitle`: own title wins; empty title on an app key gives the app's name; empty title and no app name stays empty; other kinds are unchanged.
 - The iPhone app has one screen test that finds its keys by identifier.
 
@@ -171,6 +180,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
+**0.5 (Mac, build 7, 16 Nov 2026).** The features of sections 24 to 28, and "All pages" in Set up keys. The iPhone and iPad app is 0.7 (build 10). Not proven yet: long press on the real box, long press on a real iPhone or iPad, play or pause from the strip.
+
 **0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app was then at 0.4 (4); it is now 0.5.2 (7), see section 22. Mac 0.4.2 is described below.
 
 ## 16. Not in 0.4
@@ -178,10 +189,10 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - Other box sizes (6 and 32 keys, XL, Mini, Plus, Neo, pedal).
 - Elgato plug-ins.
 - Driving the real box (first test planned for January 2027).
-- The iPhone app on the Mac (the iPad came in 0.5), and editing keys from the iPhone (keys are set up on the Mac only).
+- The iPhone app on the Mac (the iPad came in 0.5), and editing keys from the iPhone (keys, favourites and long press are set up on the Mac only).
 
 ## 17. The iPhone link (0.3)
-**What it is.** Deck Mate on the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the profile and page the Mac shows (so it changes with the app in front). A tap on a key makes the Mac do it.
+**What it is.** Deck Mate on the iPhone shows the same 15 keys as the box, in the same places and with the same pictures. It follows the page group and page the Mac shows (so it changes with the app in front). A tap on a key makes the Mac do it.
 
 **Finding each other.**
 - Two Bonjour offers over TCP, same instance name (the Mac's name): `_amsdeckmate._tcp` without peer-to-peer (the shared network — proven, also from the iOS Simulator) and `_amsdeckdirect._tcp` with peer-to-peer on (AWDL, like AirDrop). On his Mac (16 Nov 2026) the peer-to-peer listener goes ready but never registers its service, so the direct way is NOT proven; a shared Wi-Fi (or the Mac on the iPhone's hotspot) is the way that works. The iPhone browses both types with peer-to-peer on and picks the Mac it talked to last, else the first by name. A connection not ready within 6 s is dropped and the search goes on. The Mac also makes a short Bonjour browse and a one-byte UDP send to 224.0.0.251:5353 at start, so macOS asks for (or refreshes) Local Network permission — each new build gets a new executable UUID, and until that refresh the system silently keeps the offer from registering.
@@ -194,8 +205,15 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - `waiting`: the Mac is asking its user; the iPhone shows that it waits.
 - `welcome(token, mac)`: allowed. The Mac sends the token to keep and its own name.
 - `refused`: not allowed (the user chose Don't Allow, or the checkbox is off). The iPhone shows "Ask again".
-- `keys(place, keys[index, title, PNG])`: `place` is the position (the line on top of the keys, as the Mac shows it: the profile's name, plus " · " and the page's name when the profile has more than one page (e.g. "OmniFocus · Page 2") as shown on the Mac); each key has its place 0 to 14, the title shown (see `shownTitle`) and its picture as PNG, drawn by the Mac (so app keys have the real app icon). The Mac sends `keys` first when the iPhone is allowed, then again whenever the position or the setup changes.
+- `keys(place, keys[index, title, PNG])`: `place` is the position (the line on top of the keys, as the Mac shows it: the group's name, plus " · " and the page's name when the page group has more than one page (e.g. "OmniFocus · Page 2") as shown on the Mac); each key has its place 0 to 14, the title shown (see `shownTitle`) and its picture as PNG, drawn by the Mac (so app keys have the real app icon). The Mac sends `keys` first when the iPhone is allowed, then again whenever the position or the setup changes.
 - `press(index)`: the iPhone tapped a key.
+
+**Version rule (0.5).** `PhoneLink.currentVersion` is 3. The Mac's version rides in `welcome`. The new parts need the Mac at 0.5 and the iPhone and iPad app at 0.7. An iPhone or iPad at 0.7 with an older Mac (which sends no version) works as before: Settings says "Needs AMS Deck Mate 0.5 on the Mac" in the Keys card and the new parts stay hidden. A Mac at 0.5 with an older iPhone app works as before; the white dot is part of the key pictures, so it still shows.
+
+**New messages (0.5).**
+- iPhone to Mac: `own(profile:)` (use my own keys with this page group; nil means "Follow the Mac"), `hold(index:)` (the key at this place was held for 0.5 s: run its `held` action, or the normal action if it has none), `favourite(index:, long:)` (a favourite 0 to 4 was tapped; `long` true for a hold), `music(command:)` with `playPause`, `next`, `volumeUp`, `volumeDown`.
+- Mac to iPhone: `favourites(keys:)` (the 5 favourites: index 0 to 4, title, PNG, with the white dot where `held` is set), `mac(MacNow)` (see section 27).
+- Framing, the 4 MB limit and tolerant decoding are unchanged.
 
 **Allowing.**
 - First contact: `hello` with no token. The Mac asks "“<iPhone name>” wants to use your keys. Allow?" with Allow and Don't Allow. Allow gives a random token and the iPhone is remembered; Don't Allow sends `refused`.
@@ -211,7 +229,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.6.1 (9). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.7 (10). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -222,7 +240,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - Used by the box, the Mac screen and the iPhone, so the Apps folder's keys now read Mail, Safari, Calculator and so on.
 
 ## 19. The Raycast folder (the author's own setup, data)
-- On Page 1 of the Default Profile, a key "Raycast" opens a folder: Back plus 14 Raycast commands from the installed extensions: Clipboard, AI Chat, Ask Perplexity, Hide apps, New reminder, Reminders, Notion note, Find in Notion, Daily plan (NotePlan), Screenshot (CleanShot area), Text from screen (CleanShot OCR), Play/Pause and Next song (Spotify), Passwords (1Password).
+- On Page 1 of the Default Page group, a key "Raycast" opens a folder: Back plus 14 Raycast commands from the installed extensions: Clipboard, AI Chat, Ask Perplexity, Hide apps, New reminder, Reminders, Notion note, Find in Notion, Daily plan (NotePlan), Screenshot (CleanShot area), Text from screen (CleanShot OCR), Play/Pause and Next song (Spotify), Passwords (1Password).
 - Keys that need no window run quietly (`quiet`). Changed in Set up keys as usual. This is data in `deck.json`, not a feature.
 
 ## 20. Set up keys, 0.4 (Mac)
@@ -230,18 +248,18 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 
 **Copy and paste.** Edit menu: Command-C and Command-V, when a key is picked and no text field is being edited. The pasted key replaces the picked one (it gets a new id).
 
-**Duplicate.** "Duplicate page" (button beside Delete page) copies the page and its folders; the copy is named "<name> copy". "Duplicate profile" (button beside Make default) copies the profile; the copy belongs to no app (`apps` is empty).
+**Duplicate.** "Duplicate page" (button beside Delete page) copies the page and its folders; the copy is named "<name> copy". "Duplicate page group" (button beside Make default) copies the page group; the copy belongs to no app (`apps` is empty).
 
 **Undo and Redo.** Command-Z and Shift-Command-Z, also two buttons in Set up keys. They go back and forward through the last 30 changes to the setup, as long as the app runs (the list is not saved). The safety copies on disk (section 13) stay as before.
 
-**Broken keys.** A key is broken when: its app is not found (bundle identifier or path), its file or folder is gone, its Raycast extension is not installed, its folder page is gone, or its profile is gone. A broken key gets a red corner mark on the screen and in Set up keys; the picked key shows the one-line reason. Settings, "Check keys", "Check all keys" lists every broken key as "Profile · Page · key: reason".
+**Broken keys.** A key is broken when: its app is not found (bundle identifier or path), its file or folder is gone, its Raycast extension is not installed, its folder page is gone, or its page group is gone. A broken key gets a red corner mark on the screen and in Set up keys; the picked key shows the one-line reason. Settings, "Check keys", "Check all keys" lists every broken key as "Page group · Page · key: reason".
 
 ## 21. The iPhone app, 0.4
 The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Layout: the 15 keys sit at the bottom of the screen, near the thumb; the place line is on top.
-- Profiles by swipe (0.5.1): a swipe up on the keys locks the next profile, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one profile. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
+- Page groups by swipe (0.5.1): a swipe up on the keys locks the next page group, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one page group. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
-- Profile menu: a tap on the top line (the profile name) opens a menu: "Automatic", or "Lock one" of the profiles (as the Mac's menu). A hand-picked profile shows the lock beside its name (0.5.2). *
+- Page group menu: a tap on the top line (the name of the page group) opens a menu: "Automatic", or "Lock one" of the page groups (as the Mac's menu). A hand-picked page group shows the lock beside its name (0.5.2). *
 - Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
 - What ran: after a tap a short note at the bottom, for example "Opened OmniFocus" or "Raycast: Clipboard history". When the Mac could not do it the note is red with the warning drawing, for example "The app is not on this Mac" or "The Mac has not allowed key presses yet". *
 - Day look: the iPhone screen follows day and night (light grey by day, dark by night); the keys stay as drawn.
@@ -251,7 +269,7 @@ The iPhone needs the Mac at 0.4 for the new parts (marked *).
 ## 22. The iPad, 0.5, 0.5.1 and 0.5.2 (iPhone and iPad app, build 7, 16 Nov 2026)
 The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only the version number changes.
 - Deck Mate is now also an iPad app, made for the iPad mini. It fills the whole screen, upright and on its side (all four ways round), instead of a phone-sized window.
-- The 15 keys are larger and sit low and centred. The top line, page dots, swipe for pages, profile menu, lit keys and the "what ran" note work the same as on the iPhone.
+- The 15 keys are larger and sit low and centred. The top line, page dots, swipe for pages, page group menu, lit keys and the "what ran" note work the same as on the iPhone.
 - On an iPad the words on screen say "iPad" instead of "iPhone".
 - Hint after 20 seconds of "Looking for your Mac…" on an iPad: put the iPad and the Mac on the same Wi-Fi, for example both on the iPhone's hotspot (an iPad without mobile data has no hotspot of its own).
 - The Mac asks once whether to allow the iPad, exactly like for an iPhone; in the Mac's Settings it appears in the "iPhone" part by its name.
@@ -260,21 +278,21 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 **0.5.1 (build 6, 16 Nov 2026), iPad only; the iPhone changes only in its number.**
 - On a newer iPad the app can open as a floating window. Make it large once with the window's green button (or drag its corner) and the iPad remembers it.
 - The keys are larger: they grow as far as the screen or window allows (before they stopped at a fixed width). On its side the iPad mini shows keys about a fifth larger.
-- Fixed: in a floating window the window's three round buttons lay over the profile name in the top line. The top line now steps aside for them if the app ever is in a window.
+- Fixed: in a floating window the window's three round buttons lay over the name of the page group in the top line. The top line now steps aside for them if the app ever is in a window.
 
 **0.5.2 (iPhone and iPad app, build 7) and Mac 0.4.2 (build 6), both 16 Nov 2026.**
 - The word "held" is gone from every text; it now says "locked".
-- A profile picked by hand (the top line's menu, a swipe up or down on the iPhone and iPad, or the Mac's menu) shows a small hand-drawn lock beside the profile name: on the iPhone and iPad top line and on the Mac's keys on screen. Locked: the profile stays until "Automatic" is chosen (tap the top line on the iPhone and iPad; the menu bar menu on the Mac). No lock: on the Mac the profile follows the app in front.
-- Mac menu line: "Profile: <name> (locked)" or "(automatic)". iPhone and iPad menu section: "Lock one".
-- iPad only: the top line is larger: the profile name is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged.
+- A page group picked by hand (the top line's menu, a swipe up or down on the iPhone and iPad, or the Mac's menu) shows a small hand-drawn lock beside the name of the page group: on the iPhone and iPad top line and on the Mac's keys on screen. Locked: the page group stays until "Automatic" is chosen (tap the top line on the iPhone and iPad; the menu bar menu on the Mac). No lock: on the Mac the page group follows the app in front.
+- Mac menu line: "Page group: <name> (locked)" or "(automatic)". iPhone and iPad menu section: "Lock one".
+- iPad only: the top line is larger: the name of the page group is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged.
 - Nothing else changes. The Mac and the iPhone and iPad app work with each other in any mix of these versions.
 
 ## 23. iPhone and iPad settings, 0.6 and 0.6.1 (iPhone and iPad app, build 9, 16 Nov 2026)
-The Mac app is unchanged at 0.4.2 (6). Settings are opened with the gear at the top right. Every choice applies at once and is remembered on that device only. Done closes Settings. With the first (default) choice of everything the app looks and works as in 0.5.2. Four groups, then the unchanged "Your Mac" part with "Forget this Mac".
+(Mac 0.5 (7) since 0.7 of the iPhone and iPad app.) The Mac app was unchanged at 0.4.2 (6) in 0.6 and 0.6.1. Settings are opened with the gear at the top right. Every choice applies at once and is remembered on that device only. Done closes Settings. With the first (default) choice of everything the app looks and works as in 0.5.2. Four groups, then the unchanged "Your Mac" part with "Forget this Mac".
 
 **Look**
 - Background: Day and night (default: light by day, dark by night, as before) / Always dark / Night blue / Forest / Plum / Rust / Slate (Rust and Slate since 0.6.1). The colours are deep, calm shades; the words turn light on them.
-- Colour for each profile (0.6.1, under Background): every profile from the Mac is listed with its own choice, "Same as background" (default) or one of the colours. While that profile shows, the background takes its colour. It needs a Mac at 0.4 or later (the list of profiles comes from the Mac); before a Mac is connected the list says so.
+- A colour for each page group (0.6.1, under Background): every page group from the Mac is listed with its own choice, "Same as background" (default) or one of the colours. While that page group shows, the background takes its colour. It needs a Mac at 0.4 or later (the list of page groups comes from the Mac); before a Mac is connected the list says so.
 - Key shape: Rounded (default, as before) / Square / Pillow (very round corners).
 - Gaps between keys: Narrow / Normal (default, as before) / Wide.
 - Key size: Largest (default, as before) / A bit smaller (about 85 %, more air around the keys).
@@ -287,11 +305,56 @@ The Mac app is unchanged at 0.4.2 (6). Settings are opened with the gear at the 
 **Touch**
 - Tap buzz (default on): the small buzz when a key is tapped. iPhone only; an iPad has no buzz.
 - Click sound (default off): a soft click when a key is tapped. It follows the device's silent switch and volume.
-- Swipe up or down changes profile (default on). Off: a swipe up or down does nothing. Left and right for pages always works.
+- Swipe up or down changes page group (default on). Off: a swipe up or down does nothing. Left and right for pages always works.
 
 **Showing**
 - "What ran" note (default on), Page dots (default on).
 - Keep the screen awake while connected (default on). Off: the screen sleeps as usual.
 - Warn when the battery is low (0.6.1, default on): at 20 % or less and not charging, a small amber line "Battery 18 % – plug in" shows in the top line and also under the resting clock. It goes away when charging or above 20 %.
 
-**Planned, not in 0.6** (these need a Mac update): My own keys, long press, a favourites row, the Mac at a glance, a music strip.
+**Planned, not in 0.6:** done in 0.7, see sections 24 to 28. In 0.7 the Settings list gets a new first part "Keys" (section 26) and three new switches under "Showing": Favourites row, Mac at a glance, Music strip (all default on, stored on that device). With an older Mac the new parts say "Needs AMS Deck Mate 0.5 on the Mac".
+
+## 24. Long press (Mac 0.5, iPhone and iPad 0.7)
+- Stored in `deck.json` as `held` on the key: an Action like the normal one (`type`, `target`, `combo`, `steps`, `quiet`). Missing or type "none": no long press.
+- Set in Set up keys: under "What it does" a picker "Long press": Nothing, or any action type except "Folder of keys", filled in like the normal action. Cancel and Save as for every edit.
+- Mark: a key with a `held` action that is not "none" shows a small white dot in its top right corner. It is drawn in the key picture, so it shows on the box, on the keys on screen and on the iPhone and iPad (also on an iPhone app older than 0.7).
+- A broken `held` action (app, file or folder gone and so on, as section 20) shows the red corner, with the reason "Long press: <reason>" in Set up keys and in "Check all keys".
+- Time: a press of 0.5 s or more is long (`Navigator.longPress` = 0.5).
+- A long press on a key without `held` does the usual thing.
+- iPhone and iPad: a key with `held` sends `hold(index:)` after 0.5 s, with a stronger buzz (if Tap buzz is on); a shorter tap sends `press(index:)`. A key without `held` sends `press` at once.
+- Box and Mac keys on screen: a key with `held` acts when let go (short) or after 0.5 s still held (long); all other keys act at once. The box rule is not yet tried on the real box.
+- "Hide after a key is pressed" applies to the action that ran, as in section 3.
+
+## 25. Favourites row (Mac 0.5, iPhone and iPad 0.7)
+- 5 places, 0 to 4, that stay in place on every page and in every page group. Stored in `deck.json` as `favourites` on the Deck. They belong to the whole setup, not to a page group or a page.
+- Any action except a folder or Back. A favourite can also have a long press (`held`).
+- Set in Set up keys: a row "Favourites" under the 15 keys. Click one and edit it like any key. Copy and Paste work on favourites; dragging does not.
+- Shown only on the iPhone and iPad, as a row of 5 under the 15 keys, with the same key look. Not on the box and not on the Mac's keys on screen.
+- iPhone and iPad Settings, Showing: switch "Favourites row" (default on, stored on that device). The row shows only when at least one favourite is set.
+- A tap sends `favourite(index:, long: false)`, a hold `favourite(index:, long: true)`. The Mac does the action like a key press. A favourite that moves to another page or page group moves the device's own place when it has its own keys (section 26), else the Mac's place.
+
+## 26. My own keys (Mac 0.5, iPhone and iPad 0.7)
+- iPhone and iPad Settings, new card "Keys" at the top: "Follow the Mac" (default, as before) or "My own keys", then a page group is picked in the row "Page group", from the Mac's list. Stored on that device (`ownKeys` and `ownProfile` settings); each device has its own choice.
+- With own keys the device sends `own(profile:)`. The Mac then keeps one own place for that device: page group, page and folder path. It is kept in memory for the connection; after reconnecting, the device starts at the first page of its group. Pages, folders, Back, next and previous page, and switch page group pressed on that device move that place only.
+- The Mac's keys on screen, the box and the Mac's own place do not move. The Mac still does what the tapped key says. Keys pressed elsewhere do not light up on a device with its own keys.
+- Swipe up or down, or the menu in the top line, changes the own page group (round the end, as section 21), and it is remembered on the device. With own keys there is no lock and no "Automatic" in that menu.
+- If the picked page group is gone, the default page group shows.
+- `own(profile: nil)` means "Follow the Mac".
+- With an older Mac the card says "Needs AMS Deck Mate 0.5 on the Mac" and the app follows the Mac.
+
+## 27. The Mac at a glance (Mac 0.5, iPhone and iPad 0.7)
+- Message `mac(MacNow)` from the Mac with the fields `battery`, `charging`, `app`, `song`, `artist`, `playing`, `volume`. It is sent when the iPhone is allowed and again when something changes.
+- The Mac looks at battery and volume every 5 seconds, only while such a device is connected.
+- Top line on the iPhone and iPad: a small battery drawing and "82 % · Safari", or "82 % charging · Safari" while charging. A Mac without a battery shows only the app.
+- Settings, Showing: switch "Mac at a glance" (default on, stored on that device).
+
+## 28. The music strip (Mac 0.5, iPhone and iPad 0.7)
+- A strip above the keys on the iPhone and iPad, shown when the switch "Music strip" is on (default on, stored on that device) and the Mac is at 0.5: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder.
+- Spotify and Apple Music. The Mac listens for the change notices both send when the song or the play state changes, so the strip says "Nothing playing yet" until the next change of song or pause after the Mac app has started.
+- Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
+- Not yet tried: play or pause from the strip.
+
+## Not proven yet (0.5 and 0.7)
+- Long press on the real box (away until January 2027).
+- Long press on a real iPhone or iPad.
+- Play or pause from the music strip.
