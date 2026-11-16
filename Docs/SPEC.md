@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.4.2 (build 6), 16 Nov 2026; iPhone and iPad app 0.6 (build 8)
+# AMS Deck Mate, specification, version 0.4.2 (build 6), 16 Nov 2026; iPhone and iPad app 0.6.1 (build 9)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -211,7 +211,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - The allowed iPhones, each with "Forget" to take the permission back.
 
 **The iPhone app.**
-- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.6 (8). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
+- Bundle id `com.schabbauer.AMSDeckMatePhone`; display name "Deck Mate"; iOS 17 and later; iPhone and iPad (since 0.5); on TestFlight. Version 0.6.1 (9). Source in `Phone/`; its guide is `Phone/Sources/PhoneGuide.swift`, the same shape as `App/Sources/Guide.swift`.
 - Shows the 15 keys (5 columns, 3 rows) upright and sideways. Keeps the screen on while connected.
 - 0.4 look and behaviour: see section 21.
 - States: "Looking for your Mac…", waiting for the Mac's answer, connected (keys), refused ("Ask again").
@@ -269,11 +269,12 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - iPad only: the top line is larger: the profile name is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged.
 - Nothing else changes. The Mac and the iPhone and iPad app work with each other in any mix of these versions.
 
-## 23. iPhone and iPad settings, 0.6 (iPhone and iPad app, build 8, 16 Nov 2026)
+## 23. iPhone and iPad settings, 0.6 and 0.6.1 (iPhone and iPad app, build 9, 16 Nov 2026)
 The Mac app is unchanged at 0.4.2 (6). Settings are opened with the gear at the top right. Every choice applies at once and is remembered on that device only. Done closes Settings. With the first (default) choice of everything the app looks and works as in 0.5.2. Four groups, then the unchanged "Your Mac" part with "Forget this Mac".
 
 **Look**
-- Background: Day and night (default: light by day, dark by night, as before) / Always dark / Night blue / Forest / Plum. The three colours are deep, calm shades; the words turn light on them.
+- Background: Day and night (default: light by day, dark by night, as before) / Always dark / Night blue / Forest / Plum / Rust / Slate (Rust and Slate since 0.6.1). The colours are deep, calm shades; the words turn light on them.
+- Colour for each profile (0.6.1, under Background): every profile from the Mac is listed with its own choice, "Same as background" (default) or one of the colours. While that profile shows, the background takes its colour. It needs a Mac at 0.4 or later (the list of profiles comes from the Mac); before a Mac is connected the list says so.
 - Key shape: Rounded (default, as before) / Square / Pillow (very round corners).
 - Gaps between keys: Narrow / Normal (default, as before) / Wide.
 - Key size: Largest (default, as before) / A bit smaller (about 85 %, more air around the keys).
@@ -291,5 +292,6 @@ The Mac app is unchanged at 0.4.2 (6). Settings are opened with the gear at the 
 **Showing**
 - "What ran" note (default on), Page dots (default on).
 - Keep the screen awake while connected (default on). Off: the screen sleeps as usual.
+- Warn when the battery is low (0.6.1, default on): at 20 % or less and not charging, a small amber line "Battery 18 % – plug in" shows in the top line and also under the resting clock. It goes away when charging or above 20 %.
 
 **Planned, not in 0.6** (these need a Mac update): My own keys, long press, a favourites row, the Mac at a glance, a music strip.

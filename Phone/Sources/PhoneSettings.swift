@@ -18,6 +18,8 @@ struct PhoneSettings: View {
     @Environment(\.dismiss) private var dismiss
     @State private var tab: Tab = .settings
     @AppStorage("ground") private var ground = PhonePrefs.Ground.auto
+    @AppStorage("profileGrounds") private var profileGrounds = ""
+    @AppStorage("batteryWarning") private var warnBattery = true
     @AppStorage("keyShape") private var keyShape = PhonePrefs.Shape.rounded
     @AppStorage("keyGap") private var keyGap = PhonePrefs.Gap.normal
     @AppStorage("keySize") private var keySize = PhonePrefs.Size.largest
@@ -103,6 +105,23 @@ struct PhoneSettings: View {
             .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             card("Look", "profiles") {
                 row("Background") { chips(PhonePrefs.Ground.allCases, $ground, "profiles", "ground") { $0.title } }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("A colour for each profile").font(.subheadline).foregroundStyle(.secondary)
+                    if let profiles = link.status?.profiles, !profiles.isEmpty {
+                        ForEach(profiles, id: \.id) { profile in
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(profile.name).font(.callout.weight(.medium))
+                                chips([PhonePrefs.Ground?.none] + PhonePrefs.profileGrounds.map { Optional($0) },
+                                      Binding(get: { PhonePrefs.profileGround(profile.id, in: profileGrounds) },
+                                              set: { profileGrounds = PhonePrefs.setProfileGround($0, for: profile.id, in: profileGrounds) }),
+                                      "profiles", "colour-\(profile.name)") { $0?.title ?? "Same as background" }
+                            }
+                        }
+                        note("When a profile shows, the background takes its colour, so you see which one is up.")
+                    } else {
+                        note("Your profiles are listed here once a Mac is connected.")
+                    }
+                }
                 row("Key shape") { chips(PhonePrefs.Shape.allCases, $keyShape, "profiles", "shape") { $0.title } }
                 row("Gaps between keys") { chips(PhonePrefs.Gap.allCases, $keyGap, "profiles", "gap") { $0.title } }
                 row("Key size") { chips(PhonePrefs.Size.allCases, $keySize, "profiles", "size") { $0.title } }
@@ -126,6 +145,8 @@ struct PhoneSettings: View {
                 Toggle("The note on what a key did", isOn: $showNote).accessibilityIdentifier("showNote")
                 Toggle("Page dots", isOn: $showDots).accessibilityIdentifier("showDots")
                 Toggle("Keep the screen awake while connected", isOn: $stayAwake).accessibilityIdentifier("stayAwake")
+                Toggle("Warn when the battery is low", isOn: $warnBattery).accessibilityIdentifier("batteryWarningSwitch")
+                note("At 20 % or less, and not charging, a small amber line says so, also on the resting clock.")
             }
             Text(version)
                 .font(.caption)

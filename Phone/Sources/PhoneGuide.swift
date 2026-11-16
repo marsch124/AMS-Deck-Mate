@@ -12,7 +12,8 @@ enum PhoneGuide {
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings.",
-            "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest or Plum. The three colours are deep, calm shades and the words turn light on them.",
+            "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest, Plum, Rust or Slate. The colours are deep, calm shades and the words turn light on them.",
+            "Look, Colour for each profile (under Background): every profile from your Mac is listed with its own choice, \"Same as background\" (at first) or one of the colours. When that profile shows, the background takes its colour, so you see at a glance which profile is up. It needs a Mac at 0.4 or later, because the list of profiles comes from the Mac. Before a Mac is connected the list says so.",
             "Look, Key shape: Rounded (as before), Square or Pillow (very round corners).",
             "Look, Gaps between keys: Narrow, Normal (as before) or Wide.",
             "Look, Key size: Largest (as before) or A bit smaller (about 85 %, with more air around the keys).",
@@ -25,6 +26,7 @@ enum PhoneGuide {
             "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap.",
             "Showing, Page dots (on at first): the small dots under the keys.",
             "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
+            "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows in the top line, and also under the resting clock. It goes away when charging or above 20 %.",
             "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
@@ -76,6 +78,14 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.6.1", date: "16 Nov 2026", new: [
+            "A colour for each profile. In Settings, Look, under Background, every profile from your Mac is listed with its own choice: \"Same as background\" (at first) or one of the colours. When that profile shows, the background takes its colour, so you see at a glance which profile is up. It needs a Mac at 0.4 or later, because the list of profiles comes from the Mac; before a Mac is connected the list says so.",
+            "Two more background colours, Rust and Slate. The colours are now Night blue, Forest, Plum, Rust and Slate, plus Always dark and Day and night.",
+            "Low battery warning. In Settings, Showing, \"Warn when the battery is low\" (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows in the top line, and also under the resting clock. It goes away when charging or above 20 %.",
+            "The Mac app is unchanged at 0.4.2 and needs no update."
+        ], changed: [
+            "With the first choice of every setting, the app looks and works as in 0.6, apart from the battery line, which is on at first."
+        ], fixed: []),
         Release(id: "0.6", date: "16 Nov 2026", new: [
             "Settings on the iPhone and iPad. Open them with the gear at the top right. Every choice applies at once and is remembered on that device; Done closes. There are four groups.",
             "Look: Background (Day and night, Always dark, Night blue, Forest, Plum; the three colours are deep, calm shades and the words turn light on them), Key shape (Rounded, Square, Pillow with very round corners), Gaps between keys (Narrow, Normal, Wide), Key size (Largest, or A bit smaller at about 85 % with more air around) and Where the keys sit (Bottom, Middle, Top).",

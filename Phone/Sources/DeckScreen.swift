@@ -22,7 +22,14 @@ struct DeckScreen: View {
         return false
     }
 
-    @AppStorage("ground") private var ground = PhonePrefs.Ground.auto
+    @AppStorage("ground") private var baseGround = PhonePrefs.Ground.auto
+    @AppStorage("profileGrounds") private var profileGrounds = ""
+    @AppStorage("batteryWarning") private var warnBattery = true
+    @State private var battery: String?
+    /// The background now: the showing profile's own colour, else the chosen background.
+    private var ground: PhonePrefs.Ground {
+        (connected ? PhonePrefs.profileGround(link.status?.current, in: profileGrounds) : nil) ?? baseGround
+    }
     @AppStorage("keyShape") private var keyShape = PhonePrefs.Shape.rounded
     @AppStorage("keyGap") private var keyGap = PhonePrefs.Gap.normal
     @AppStorage("keySize") private var keySize = PhonePrefs.Size.largest
@@ -67,7 +74,12 @@ struct DeckScreen: View {
         }
         // Every touch counts as "still here" for the resting clock (and never gets in the way of the keys).
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastTouch = Date() })
+        .onAppear { UIDevice.current.isBatteryMonitoringEnabled = true }
         .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { now in
+            let state = UIDevice.current.batteryState
+            let words = warnBattery ? PhonePrefs.batteryWarning(level: UIDevice.current.batteryLevel,
+                                                                charging: state == .charging || state == .full) : nil
+            if words != battery { battery = words }
             let due = PhonePrefs.rests(afterMinutes: restAfter, idle: now.timeIntervalSince(lastTouch))
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
         }
@@ -114,7 +126,10 @@ struct DeckScreen: View {
     private var restingClock: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            BigClock(size: isPad ? 170 : 96, dimmed: true).foregroundStyle(.white)
+            VStack(spacing: 14) {
+                BigClock(size: isPad ? 170 : 96, dimmed: true).foregroundStyle(.white)
+                if let battery { batteryLine(battery) }
+            }
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -146,6 +161,7 @@ struct DeckScreen: View {
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("linkStatus")
+                if let battery { batteryLine(battery) }
             }
             Spacer(minLength: 8)
             Button { showSettings = true } label: {
@@ -219,6 +235,17 @@ struct DeckScreen: View {
         case let .connected(mac): return "Connected to \(mac)"
         case let .refused(mac): return "\(mac) said no"
         }
+    }
+
+    /// "Battery 18 % – plug in", in amber.
+    private func batteryLine(_ words: String) -> some View {
+        HStack(spacing: 5) {
+            PhoneIcon(name: "iconWarning", size: isPad ? 16 : 13)
+            Text(words).font((isPad ? Font.callout : Font.caption).weight(.semibold))
+        }
+        .foregroundStyle(Color(red: 0.95, green: 0.66, blue: 0.18))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("batteryWarning")
     }
 
     // MARK: Under and over the keys

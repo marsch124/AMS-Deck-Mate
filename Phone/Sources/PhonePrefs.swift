@@ -5,7 +5,7 @@ import UIKit
 /// The settings of the iPhone and iPad app. Each is kept on the device and applies at once.
 enum PhonePrefs {
     enum Ground: String, CaseIterable, Identifiable {
-        case auto, dark, blue, forest, plum
+        case auto, dark, blue, forest, plum, rust, slate
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -14,6 +14,8 @@ enum PhonePrefs {
             case .blue: return "Night blue"
             case .forest: return "Forest"
             case .plum: return "Plum"
+            case .rust: return "Rust"
+            case .slate: return "Slate"
             }
         }
         /// The colour behind the keys; nil = the one that follows day and night.
@@ -24,6 +26,8 @@ enum PhonePrefs {
             case .blue: return Color(red: 0.07, green: 0.13, blue: 0.27)
             case .forest: return Color(red: 0.06, green: 0.20, blue: 0.16)
             case .plum: return Color(red: 0.22, green: 0.10, blue: 0.24)
+            case .rust: return Color(red: 0.30, green: 0.13, blue: 0.08)
+            case .slate: return Color(red: 0.16, green: 0.20, blue: 0.27)
             }
         }
     }
@@ -72,6 +76,31 @@ enum PhonePrefs {
         case bottom, middle, top
         var id: String { rawValue }
         var title: String { rawValue.prefix(1).uppercased() + rawValue.dropFirst() }
+    }
+
+    /// The colours a profile can have of its own (not "day and night": that is "same as background").
+    static let profileGrounds: [Ground] = [.dark, .blue, .forest, .plum, .rust, .slate]
+
+    /// The colour each profile has of its own, kept as text: "id=colour;id=colour".
+    static func profileGround(_ profile: String?, in stored: String) -> Ground? {
+        guard let profile else { return nil }
+        for pair in stored.split(separator: ";") {
+            let bits = pair.split(separator: "=", maxSplits: 1)
+            if bits.count == 2, bits[0] == profile { return Ground(rawValue: String(bits[1])) }
+        }
+        return nil
+    }
+
+    static func setProfileGround(_ ground: Ground?, for profile: String, in stored: String) -> String {
+        var pairs = stored.split(separator: ";").map(String.init).filter { !$0.hasPrefix(profile + "=") }
+        if let ground { pairs.append("\(profile)=\(ground.rawValue)") }
+        return pairs.joined(separator: ";")
+    }
+
+    /// The battery warning: at 20 % or less and not charging. nil = nothing to say.
+    static func batteryWarning(level: Float, charging: Bool) -> String? {
+        guard level >= 0, level <= 0.2, !charging else { return nil }
+        return "Battery \(Int((level * 100).rounded())) % – plug in"
     }
 
     /// Minutes without a touch before the resting clock shows; 0 = never.

@@ -21,6 +21,8 @@ final class DeckScreenTests: XCTestCase {
         app.buttons["ground-Day and night"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["showClock"].exists)
         XCTAssertTrue(app.buttons["rest-Never"].exists)
+        XCTAssertTrue(app.buttons["colour-Writing-Rust"].exists, "each profile can have a colour of its own")
+        XCTAssertTrue(app.descendants(matching: .any)["batteryWarningSwitch"].exists)
 
         app.buttons["doneButton"].tap()
     }
