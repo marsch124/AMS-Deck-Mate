@@ -6,7 +6,7 @@ enum PhoneGuide {
 
     static let sections: [Section] = [
         Section(id: "what", title: "What this app is for", part: "keys", lines: [
-            "Deck Mate shows the keys of your Mac's Stream Deck on the iPhone: the same 15 keys, in the same places and with the same pictures. Since 0.7 it can also show a row of 5 favourites, the Mac's battery and front app, and what is playing on the Mac.",
+            "Deck Mate shows the keys of your Mac's Stream Deck on the iPhone: the same 15 keys, in the same places and with the same pictures. Since 0.7 it can also show a row of 5 favourites, the app in front on the Mac, and what is playing on the Mac.",
             "Tap a key and your Mac does it, exactly as if you had pressed it on the box.",
             "It needs the AMS Deck Mate app open on your Mac."
         ]),
@@ -31,7 +31,7 @@ enum PhoneGuide {
             "Showing, Dark while the Mac sleeps (on at first, since 0.9): when the Mac's screen goes to sleep, this screen goes black with a small moon and \"Mac asleep\". See \"Dark while the Mac sleeps\" below. Needs a Mac at 0.7.",
             "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows centred under the heading, and also under the resting clock. It goes away when charging or above 20 %.",
             "Showing, Favourites row (on at first): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
-            "Showing, Mac at a glance (on at first): the Mac's battery in percent and the name of the app in front, as two small pills at the bottom middle (since 0.13; before, one tiny grey line). Needs a Mac at 0.5.",
+            "Showing, Mac at a glance (on at first): the name of the app in front on the Mac, as one small blue pill at the bottom middle (since 0.13 a pill; since 0.14 without the battery). Needs a Mac at 0.5.",
             "Showing, Music button (on at first): one small round button, at the top right beside the settings button (since 0.13, with the iPad or iPhone held on its side, at the bottom left). Tap it for a small plate that shows what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
             "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
@@ -56,7 +56,7 @@ enum PhoneGuide {
             "The iPhone keeps its screen on while it is connected, except while the Mac sleeps (since 0.9, see \"Dark while the Mac sleeps\"). It works upright and sideways.",
             "On an iPad (since 0.5) the keys are large, low and centred, in all four ways round; since 0.5.1 they grow as far as the screen or window allows. On a newer iPad the app can open as a floating window: make it large once with the window's green button (or drag its corner) and the iPad remembers it. Everything else works the same.",
             "Since 0.4 the 15 keys sit low on the screen, near your thumb, with the place line on top.",
-            "Held on its side (since 0.10), the iPhone puts the top line (status dot and page group name), the note on what a key did and the navigation picture in a panel on the left, so the keys get the whole height on the right and are much larger. Since 0.13 the music button and the settings gear sit at the bottom of that panel, with the Mac at a glance pills just above them. Before 0.13 the music button and the gear were in the top line.",
+            "Held on its side (since 0.10), the iPhone puts the top line (status dot and page group name), the note on what a key did and the navigation picture in a panel on the left, so the keys get the whole height on the right and are much larger. Since 0.13 the music button and the settings gear sit at the bottom of that panel, with the Mac at a glance pill (since 0.14 only the blue app pill) just above them. Before 0.13 the music button and the gear were in the top line.",
             "Swipe left or right on the keys for the next or previous page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "A key you press lights up, whether you pressed it here, on the box or on the Mac's screen.",
             "After a tap a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
@@ -100,7 +100,7 @@ enum PhoneGuide {
             "Needs the AMS Deck Mate app at 0.5 on the Mac."
         ]),
         Section(id: "macnow", title: "The Mac at a glance and the music button", part: "settings", lines: [
-            "Mac at a glance: since 0.13, two small pills at the bottom middle of the screen. A green pill shows a small battery drawing and the Mac's battery, for example \"82 %\", or \"82 % charging\" while it charges. A blue pill shows the name of the app in front on the Mac, for example \"Safari\". Before 0.13 it was one tiny grey line, for example \"82 % · Safari\". A Mac without a battery shows only the blue app pill. With the iPhone held on its side, the pills sit in the left panel, just above the two buttons.",
+            "Mac at a glance: one small blue pill at the bottom middle of the screen, with the name of the app in front on the Mac, for example \"Safari\". It no longer shows the Mac's battery (0.13 had a second, green pill for it; it was removed in 0.14). With the iPhone held on its side, the pill sits in the left panel, just above the two buttons.",
             "Music button: a small round button. Held upright it is at the top right, beside the settings button. Since 0.13, with the iPad or iPhone held on its side, it is at the bottom left: on the iPad in the bottom-left corner under the navigation picture, on the iPhone at the bottom of the left panel. It is filled green while something is playing. Tap it and a small plate opens with the song and artist playing on the Mac (Spotify and Apple Music), buttons for play or pause, next, quieter and louder, and the Mac's volume in percent. The plate has a solid background. Tap outside the plate to close it. One tap on quieter or louder moves the volume by 6 points.",
             "Until the next change of song or pause after the Mac app has started, the plate says \"Nothing playing yet\". The Mac hears about the song from the player only when something changes.",
             "Play or pause and next use the same one-time Accessibility permission on the Mac as music keys. Volume needs none. Play or pause is not yet tried.",
@@ -144,6 +144,11 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.14", date: "16 Nov 2026", new: [], changed: [
+            "Mac at a glance no longer shows the Mac's battery. Before (0.13), there were two small pills at the bottom middle: a green one with a battery drawing and the Mac's battery, for example \"95 %\", and a blue one with the app in front on the Mac. Now there is only the blue pill with the app in front, for example \"Claude\".",
+            "Nothing else moved: the navigation picture, the music and settings buttons and the heading are exactly as in 0.13. The switch \"Mac at a glance\" in Settings, Showing, works as before. The low battery warning for the iPhone or iPad itself stays.",
+            "How it works is updated for the one blue pill. The Mac app is unchanged at 0.9."
+        ], fixed: []),
         Release(id: "0.13", date: "16 Nov 2026", new: [
             "Mac at a glance now shows as two small pills at the bottom middle of the screen. A green pill has a small battery drawing and the Mac's battery, for example \"95 %\" or \"95 % charging\". A blue pill has the name of the app in front on the Mac, for example \"Claude\". A Mac without a battery shows only the blue app pill.",
             "Not yet tried: the new places on a real iPad and a real iPhone held on its side."

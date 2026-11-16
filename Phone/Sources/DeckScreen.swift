@@ -504,20 +504,14 @@ struct DeckScreen: View {
         }
     }
 
-    /// The Mac at a glance at the very bottom, as two small pills: its battery (green) and the app in front (blue).
+    /// The Mac at a glance at the very bottom: the app in front, in one small blue pill (his pick, 0.14: no battery).
     @ViewBuilder
     private var glanceLine: some View {
-        if showGlance, connected, link.newMac, let mac = link.mac, !mac.glance.isEmpty {
-            HStack(spacing: 6) {
-                if let battery = mac.battery {
-                    glancePill(icon: "iconBattery", words: mac.charging ? "\(battery) % charging" : "\(battery) %",
-                               part: "settings")
-                }
-                if !mac.app.isEmpty { glancePill(icon: nil, words: mac.app, part: "screen") }
-            }
+        if showGlance, connected, link.newMac, let mac = link.mac, !mac.app.isEmpty {
+            glancePill(icon: nil, words: mac.app, part: "screen")
             .frame(maxWidth: .infinity)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Mac: \(mac.glance)")
+            .accessibilityLabel("Mac: \(mac.app)")
             .accessibilityIdentifier("macGlance")
         }
     }
