@@ -104,6 +104,8 @@ final class TidyTests: XCTestCase {
         XCTAssertEqual(ScreenDeckRules.keyIndex(forKeyCode: 17), 9)   // T
         XCTAssertEqual(ScreenDeckRules.keyIndex(forKeyCode: 5), 14)   // G
         XCTAssertNil(ScreenDeckRules.keyIndex(forKeyCode: 53))        // Escape
+        XCTAssertEqual((0..<15).compactMap(ScreenDeckRules.keyLetter).joined(), "12345QWERTASDFG")
+        XCTAssertNil(ScreenDeckRules.keyLetter(15))
     }
 
     func testNewIPhoneMessagesCrossTheLineAndOldHelloStillReads() {

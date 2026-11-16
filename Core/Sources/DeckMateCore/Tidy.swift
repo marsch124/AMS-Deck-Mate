@@ -268,4 +268,10 @@ extension ScreenDeckRules {
         let rows: [Int] = [18, 19, 20, 21, 23, 12, 13, 14, 15, 17, 0, 1, 2, 3, 5]
         return rows.firstIndex(of: code)
     }
+
+    /// The keyboard letter shown on a key on screen while the keys take the keyboard.
+    public static func keyLetter(_ index: Int) -> String? {
+        let letters = ["1", "2", "3", "4", "5", "Q", "W", "E", "R", "T", "A", "S", "D", "F", "G"]
+        return letters.indices.contains(index) ? letters[index] : nil
+    }
 }

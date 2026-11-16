@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.4 (build 4), 16 Nov 2026
+# AMS Deck Mate, specification, version 0.4.1 (build 5), 16 Nov 2026
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -41,6 +41,7 @@ The icon opens a menu:
 - Right after the keys are shown (Control-Option-D or the menu) the window takes the keyboard. Keys 1 to 5 press the top row (places 0 to 4), Q W E R T the middle row (5 to 9), A S D F G the bottom row (10 to 14). These are matched by key position, so they are the same places on every keyboard layout.
 - Left and right arrows, or Tab and Shift-Tab, change page (as Next page and Previous page). Escape hides the keys.
 - After a key that does something on the Mac, the keyboard goes back to the app the user was in.
+- 0.4.1: while the window has the keyboard, each key shows its letter (1 2 3 4 5 / Q W E R T / A S D F G, by place) in a small round mark in its top-left corner. The marks go away when the keyboard goes back to the previous app (after a key that does something on the Mac, or a click on the keys), so marks showing means typing works now. Only on the keys on screen; the box, the iPhone and Set up keys show none.
 
 **Broken keys (0.4).** A key whose app, file or folder, Raycast extension, folder page or profile is gone shows a red corner mark on the screen (see section 20).
 
@@ -169,6 +170,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app stays at 0.4 (4).
 
 ## 16. Not in 0.4
 - The first Stream Deck from 2017.

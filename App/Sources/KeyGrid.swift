@@ -37,6 +37,8 @@ struct KeyGrid: View {
     var gap: CGFloat = 8
     /// Broken keys get a red corner.
     var broken: Set<Int> = []
+    /// The keys on screen while they take the keyboard: each key shows its letter (1, Q, A …).
+    var letters = false
     /// Set up keys: keys are picked with a plain click and can be dragged onto each other
     /// ("deckkey:<page>:<place>"); the keys on screen use the click catcher instead.
     var dragPage: UUID?
@@ -85,6 +87,18 @@ struct KeyGrid: View {
         .overlay(shape.fill(Color.black.opacity(isPressed ? 0.28 : 0)))
         .overlay(shape.strokeBorder(Color.white.opacity(keys[index] == nil ? 0.10 : 0), lineWidth: 1))
         .overlay(shape.inset(by: -3).strokeBorder(Color.white, lineWidth: selected == index ? 2.5 : 0))
+        .overlay(alignment: .topLeading) {
+            if letters, let letter = ScreenDeckRules.keyLetter(index) {
+                Text(letter)
+                    .font(.system(size: max(9, side * 0.17), weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.black.opacity(0.8))
+                    .frame(width: max(13, side * 0.26), height: max(13, side * 0.26))
+                    .background(Color.white.opacity(0.88), in: Circle())
+                    .padding(side * 0.05)
+                    .allowsHitTesting(false)
+                    .accessibilityIdentifier("letter\(index)")
+            }
+        }
         .overlay(alignment: .topTrailing) {
             if broken.contains(index) {
                 BrokenCorner(side: side * 0.3).accessibilityIdentifier("broken\(index)")
@@ -125,7 +139,8 @@ struct ScreenDeckView: View {
             }
             KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
                     gap: model.deck.screenSize.gap,
-                    broken: Set(model.problems(on: model.page, of: model.profile).keys)) { model.click($0) }
+                    broken: Set(model.problems(on: model.page, of: model.profile).keys),
+                    letters: model.keyboardOn) { model.click($0) }
         }
         .padding(10)
         .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))

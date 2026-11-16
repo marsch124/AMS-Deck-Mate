@@ -33,6 +33,9 @@ enum Guide {
             "You can also use the keyboard. Right after the keys appear, 1 to 5 press the top row, Q W E R T the middle row and A S D F G the bottom row. These are the same places on every keyboard.",
             "The left and right arrow keys, or Tab and Shift-Tab, change page. Escape hides the keys.",
             "After a key that does something on the Mac, the keyboard goes back to the app you were in.",
+            "Since 0.4.1, while the keys on screen have the keyboard, each key shows its letter in a small round mark in its top-left corner: 1 2 3 4 5 on the top row, Q W E R T in the middle and A S D F G at the bottom.",
+            "The letters go away as soon as the keyboard goes back to the app you were in, after a key that does something on the Mac or after a click on the keys. So letters showing means typing works right now.",
+            "The letters show only on the keys on screen, not on the box, the iPhone or in Set up keys.",
             "A key whose app, file, folder, Raycast command, folder page or profile is gone shows a small red mark in its corner."
         ]),
         Section(id: "look", title: "The look of a key", part: "keys", lines: [
@@ -138,6 +141,15 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.4.1", date: "16 Nov 2026", new: [
+            "Keys on screen: while they have the keyboard (right after showing them with Control-Option-D or the menu), each key shows its keyboard letter in a small round mark in its top-left corner: 1 2 3 4 5 on the top row, Q W E R T in the middle and A S D F G at the bottom.",
+            "The letters go away as soon as the keyboard goes back to the app you were in (after a key that does something on the Mac, or after a click on the keys). So letters showing means typing works right now.",
+            "The letters show only on the keys on screen. The box, the iPhone and Set up keys show none."
+        ], changed: [
+            "Mac app only. The iPhone app stays at 0.4."
+        ], fixed: [
+            "Nothing else changed in this version."
+        ]),
         Release(id: "0.4", date: "16 Nov 2026", new: [
             "iPhone: the keys sit low on the screen, near the thumb. The 15 keys are at the bottom and the place line is on top.",
             "iPhone: swipe left or right on the keys to go to the next or previous page. Small page dots under the keys show which page you are on. There are no dots inside a folder or when there is only one page.",

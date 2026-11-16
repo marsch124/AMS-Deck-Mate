@@ -23,6 +23,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var redoStack: [Deck] = []
     /// A key copied in "Set up keys" (Copy), ready to paste.
     @Published var copiedKey: DeckKey?
+    /// The keys on screen take the keyboard right now: they show their letters.
+    @Published var keyboardOn = false
 
     /// Every press, wherever it came from (the iPhone lights the key up).
     let pressedEvents = PassthroughSubject<Int, Never>()

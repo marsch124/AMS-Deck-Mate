@@ -27,7 +27,19 @@ enum HotKey {
 /// The floating keys. They take the keyboard only right after they were shown by hand, so 1–5,
 /// Q–T and A–G press the keys; a click never takes it (a shortcut key must reach the app in front).
 final class DeckPanel: NSPanel {
-    var takesKeyboard = false
+    /// Told whenever the keyboard comes or goes, so the keys show their letters only while typing works.
+    var onKeyboard: ((Bool) -> Void)?
+    var takesKeyboard = false {
+        didSet { if !takesKeyboard { onKeyboard?(false) } }
+    }
+    override func becomeKey() {
+        super.becomeKey()
+        onKeyboard?(true)
+    }
+    override func resignKey() {
+        super.resignKey()
+        onKeyboard?(false)
+    }
     var onKey: ((NSEvent) -> Bool)?
     override var canBecomeKey: Bool { takesKeyboard }
     override func keyDown(with event: NSEvent) {
@@ -325,6 +337,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         panel.contentView = host
         panel.delegate = self
         panel.onKey = { [weak self] event in self?.deckKey(event) ?? false }
+        panel.onKeyboard = { [weak self] on in
+            guard let model = self?.model, model.keyboardOn != on else { return }
+            model.keyboardOn = on
+            DispatchQueue.main.async { self?.fitDeck() }
+        }
         if let saved = UserDefaults.standard.string(forKey: "deckOrigin") {
             panel.setFrameOrigin(NSPointFromString(saved))
         } else if let screen = NSScreen.main {
@@ -396,6 +413,9 @@ enum Snapshots {
         let phone = PhoneServer(sampleFor: model)
         for (name, look) in [("day", NSAppearance.Name.aqua), ("night", NSAppearance.Name.darkAqua)] {
             shot(ScreenDeckView(model: model).padding(16), "deck-\(name)", look, folder)
+            model.keyboardOn = true
+            shot(ScreenDeckView(model: model).padding(16), "deck-letters-\(name)", look, folder)
+            model.keyboardOn = false
             shot(SetupView(model: model, startSlot: 5), "setup-\(name)", look, folder)
             shot(SetupView(model: model, startSlot: 13), "setup-steps-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings), "settings-\(name)", look, folder)
