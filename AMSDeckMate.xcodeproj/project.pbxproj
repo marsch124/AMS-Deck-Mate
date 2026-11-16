@@ -23,6 +23,7 @@
 		76DE12C927BB43C6B8E51E11 /* SampleLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EECC7045EF82EDD6111E1DE /* SampleLink.swift */; };
 		79D9A6140848CF13AB2B5204 /* PhoneLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564D1488659C79AEC8657E00 /* PhoneLook.swift */; };
 		87759550CBD8EF9192A8C9A4 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7613A567D91FF441F5BE1118 /* AppModel.swift */; };
+		89E32DC8C2C85DC519554B2C /* PhonePrefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A70809CB187F06B052FFC2 /* PhonePrefs.swift */; };
 		8A5A44F82DAB1FA19644D27A /* DeckDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8095E39B39479EDAE38E3FAC /* DeckDevice.swift */; };
 		A7FA39D2512E3E6990EF8E49 /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884B2B68338DE11AE6C9F9D /* Guide.swift */; };
 		AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769601D7D405BCA33D04C661 /* Store.swift */; };
@@ -66,6 +67,7 @@
 		8095E39B39479EDAE38E3FAC /* DeckDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDevice.swift; sourceTree = "<group>"; };
 		81AF782BD024BAB473ADCB48 /* Icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Icons; path = App/Resources/Icons; sourceTree = SOURCE_ROOT; };
 		881C1DA770F5E89BAA84499D /* PhoneSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettings.swift; sourceTree = "<group>"; };
+		99A70809CB187F06B052FFC2 /* PhonePrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhonePrefs.swift; sourceTree = "<group>"; };
 		A6A63C7CEBB25FEEB670001E /* ActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRunner.swift; sourceTree = "<group>"; };
 		A8E776FF15C6691A7E97DAEC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AC9085CF6126FF6B11B8514D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 				3762868082154D49F518F35B /* PhoneApp.swift */,
 				CC5304A926380E265BD2D024 /* PhoneGuide.swift */,
 				564D1488659C79AEC8657E00 /* PhoneLook.swift */,
+				99A70809CB187F06B052FFC2 /* PhonePrefs.swift */,
 				881C1DA770F5E89BAA84499D /* PhoneSettings.swift */,
 				3EECC7045EF82EDD6111E1DE /* SampleLink.swift */,
 			);
@@ -365,6 +368,7 @@
 				1299E87862CE7E6F4603A897 /* PhoneApp.swift in Sources */,
 				D56BBF46D1A11591A630A143 /* PhoneGuide.swift in Sources */,
 				79D9A6140848CF13AB2B5204 /* PhoneLook.swift in Sources */,
+				89E32DC8C2C85DC519554B2C /* PhonePrefs.swift in Sources */,
 				EE222C5887D4D79DD417E6AE /* PhoneSettings.swift in Sources */,
 				76DE12C927BB43C6B8E51E11 /* SampleLink.swift in Sources */,
 			);
@@ -493,14 +497,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				INFOPLIST_FILE = Phone/Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.5.2;
+				MARKETING_VERSION = 0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
 				PRODUCT_NAME = "Deck Mate";
 				SDKROOT = iphoneos;
@@ -515,14 +519,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				INFOPLIST_FILE = Phone/Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.5.2;
+				MARKETING_VERSION = 0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
 				PRODUCT_NAME = "Deck Mate";
 				SDKROOT = iphoneos;

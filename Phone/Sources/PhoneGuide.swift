@@ -10,6 +10,23 @@ enum PhoneGuide {
             "Tap a key and your Mac does it, exactly as if you had pressed it on the box.",
             "It needs the AMS Deck Mate app open on your Mac."
         ]),
+        Section(id: "settings", title: "Settings", part: "settings", lines: [
+            "Open Settings with the gear at the top right. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings.",
+            "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest or Plum. The three colours are deep, calm shades and the words turn light on them.",
+            "Look, Key shape: Rounded (as before), Square or Pillow (very round corners).",
+            "Look, Gaps between keys: Narrow, Normal (as before) or Wide.",
+            "Look, Key size: Largest (as before) or A bit smaller (about 85 %, with more air around the keys).",
+            "Look, Where the keys sit: Bottom (as before), Middle or Top.",
+            "Clock, Clock above the keys (off at first): a large clock with the date in the free space above the keys. It only shows when there is room, for example on an iPad upright, but not on an iPhone on its side.",
+            "Clock, Resting clock: Never (at first), or after 2, 5 or 10 minutes without a touch. The keys then fade away and only a large dimmed clock with the date shows, like a desk clock. One tap anywhere brings the keys back; that tap presses no key.",
+            "Touch, Tap buzz (on at first): the small buzz when a key is tapped. An iPad has no buzz.",
+            "Touch, Click sound (off at first): a soft click when a key is tapped. It follows the silent switch and the volume of the device.",
+            "Touch, Swipe up or down changes profile (on at first). When it is off, a swipe up or down does nothing. Swiping left or right for pages always works.",
+            "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap.",
+            "Showing, Page dots (on at first): the small dots under the keys.",
+            "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
+            "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
+        ]),
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
             "It finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
             "Wi-Fi must be on, on the iPhone and on the Mac. Some hotel networks keep devices apart; then put the Mac on your iPhone's hotspot.",
@@ -59,6 +76,17 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.6", date: "16 Nov 2026", new: [
+            "Settings on the iPhone and iPad. Open them with the gear at the top right. Every choice applies at once and is remembered on that device; Done closes. There are four groups.",
+            "Look: Background (Day and night, Always dark, Night blue, Forest, Plum; the three colours are deep, calm shades and the words turn light on them), Key shape (Rounded, Square, Pillow with very round corners), Gaps between keys (Narrow, Normal, Wide), Key size (Largest, or A bit smaller at about 85 % with more air around) and Where the keys sit (Bottom, Middle, Top).",
+            "Clock: \"Clock above the keys\" (off at first) shows a large clock with the date in the free space above the keys. It only shows when there is room, for example on an iPad upright, not on an iPhone on its side.",
+            "Clock: \"Resting clock\" (Never at first, or after 2, 5 or 10 minutes without a touch). The keys fade away and only a large dimmed clock with the date shows, like a desk clock. One tap anywhere brings the keys back; that tap presses no key.",
+            "Touch: Tap buzz (on at first; an iPad has no buzz), Click sound (off at first; a soft click that follows the silent switch and volume) and \"Swipe up or down changes profile\" (on at first; when off, an up or down swipe does nothing, while left and right for pages always works).",
+            "Showing: the \"What ran\" note (on), Page dots (on) and \"Keep the screen awake while connected\" (on; when off, the screen sleeps as usual).",
+            "The Mac app is unchanged at 0.4.2 and needs no update."
+        ], changed: [
+            "With the first choice of every setting, the app looks and works exactly as in 0.5.2. The \"Your Mac\" part with \"Forget this Mac\" is unchanged."
+        ], fixed: []),
         Release(id: "0.5.2", date: "16 Nov 2026", new: [
             "A profile you picked by hand (from the top line's menu, by a swipe up or down, or from the Mac's menu) now shows a small hand-drawn lock beside the profile name. Locked means the profile stays until you choose \"Automatic\" (tap the top line). No lock means it follows the Mac.",
             "The menu section is now titled \"Lock one\".",

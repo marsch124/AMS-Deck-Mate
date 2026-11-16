@@ -5,19 +5,21 @@ import UIKit
 @main
 struct DeckMatePhoneApp: App {
     @StateObject private var link = LinkClient.make()
+    @AppStorage("stayAwake") private var stayAwake = true
+
+    private func keepAwake() {
+        if case .connected = link.state { UIApplication.shared.isIdleTimerDisabled = stayAwake } else {
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
             DeckScreen(link: link)
                 .task { link.start() }
                 // Keep the screen awake while the keys are in use, and let it sleep otherwise.
-                .onChange(of: link.state, initial: true) { _, state in
-                    if case .connected = state {
-                        UIApplication.shared.isIdleTimerDisabled = true
-                    } else {
-                        UIApplication.shared.isIdleTimerDisabled = false
-                    }
-                }
+                .onChange(of: link.state, initial: true) { _, _ in keepAwake() }
+                .onChange(of: stayAwake) { _, _ in keepAwake() }
         }
     }
 }

@@ -22,39 +22,56 @@ struct DeckScreen: View {
         return false
     }
 
+    @AppStorage("ground") private var ground = PhonePrefs.Ground.auto
+    @AppStorage("keyShape") private var keyShape = PhonePrefs.Shape.rounded
+    @AppStorage("keyGap") private var keyGap = PhonePrefs.Gap.normal
+    @AppStorage("keySize") private var keySize = PhonePrefs.Size.largest
+    @AppStorage("keysPlace") private var keysPlace = PhonePrefs.Place.bottom
+    @AppStorage("showClock") private var showClock = false
+    @AppStorage("restAfter") private var restAfter = 0
+    @AppStorage("swipeProfiles") private var swipeProfiles = true
+    @AppStorage("showNote") private var showNote = true
+    @AppStorage("showDots") private var showDots = true
+    /// The last touch, for the resting clock.
+    @State private var lastTouch = Date()
+    @State private var resting = false
+
     var body: some View {
         ZStack {
-            PhonePalette.ground.ignoresSafeArea()
+            (ground.colour ?? PhonePalette.ground).ignoresSafeArea()
             VStack(spacing: 8) {
                 topBar.padding(.leading, inWindow ? 76 : 0)
-                Spacer(minLength: 0)
-                if !connected { messageCard }
-                Spacer(minLength: 0)
-                noteLine
-                GeometryReader { box in
-                    let side = Self.keySide(in: box.size)
-                    KeyGrid(link: link, side: side)
-                        .frame(width: box.size.width, height: box.size.height, alignment: .bottom)
-                        .opacity(connected ? 1 : 0.35)
-                        .contentShape(Rectangle())
-                        .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
-                            // Sideways = pages; up or down = the next or previous profile (it is then locked).
-                            let across = drag.translation.width
-                            let along = drag.translation.height
-                            if abs(across) > 60, abs(across) > abs(along) * 1.5 {
-                                link.page(across < 0 ? 1 : -1)
-                            } else if abs(along) > 60, abs(along) > abs(across) * 1.5,
-                                      let next = link.status?.profile(after: along < 0 ? 1 : -1) {
-                                link.pickProfile(next)
-                            }
-                        })
+                if keysPlace == .top { keysBlock }
+                GeometryReader { room in
+                    // The free room: the message while there is no Mac, else the clock when it fits.
+                    ZStack {
+                        if !connected {
+                            messageCard
+                        } else if showClock, room.size.height >= 110 {
+                            BigClock(size: min(room.size.height * 0.5, room.size.width * 0.22, 150))
+                        }
+                    }
+                    .frame(width: room.size.width, height: room.size.height)
                 }
-                .aspectRatio(5.0 / 3.0, contentMode: .fit)
-                pageDots
+                .frame(minHeight: connected ? 0 : 150)
+                .layoutPriority(-1)
+                if keysPlace != .top {
+                    keysBlock
+                    if keysPlace == .middle { Color.clear.layoutPriority(-1) }
+                }
             }
             .padding(.horizontal, isPad ? 20 : 12)
             .padding(.vertical, isPad ? 14 : 8)
+            .opacity(resting ? 0 : 1)
+            if resting { restingClock }
         }
+        // Every touch counts as "still here" for the resting clock (and never gets in the way of the keys).
+        .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastTouch = Date() })
+        .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { now in
+            let due = PhonePrefs.rests(afterMinutes: restAfter, idle: now.timeIntervalSince(lastTouch))
+            if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
+        }
+        .preferredColorScheme(ground == .auto ? nil : .dark)
         .background(GeometryReader { box in
             // In a floating window on the iPad its three round buttons sit top left: the top line steps aside.
             Color.clear.onAppear { windowWidth = box.size.width }
@@ -65,9 +82,50 @@ struct DeckScreen: View {
         .accessibilityIdentifier("deckScreen")
     }
 
-    /// The side of one square key, so 5 x 3 keys with a gap of 8 fill the room.
-    static func keySide(in size: CGSize) -> CGFloat {
-        let gap: CGFloat = 8
+    /// The note on what ran, the 15 keys and the page dots.
+    private var keysBlock: some View {
+        VStack(spacing: 8) {
+            if showNote { noteLine }
+            GeometryReader { box in
+                let side = Self.keySide(in: box.size, gap: keyGap.points) * keySize.scale
+                KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                    .frame(width: box.size.width, height: box.size.height,
+                           alignment: keysPlace == .bottom ? .bottom : (keysPlace == .top ? .top : .center))
+                    .opacity(connected ? 1 : 0.35)
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
+                        // Sideways = pages; up or down = the next or previous profile (it is then locked).
+                        let across = drag.translation.width
+                        let along = drag.translation.height
+                        if abs(across) > 60, abs(across) > abs(along) * 1.5 {
+                            link.page(across < 0 ? 1 : -1)
+                        } else if swipeProfiles, abs(along) > 60, abs(along) > abs(across) * 1.5,
+                                  let next = link.status?.profile(after: along < 0 ? 1 : -1) {
+                            link.pickProfile(next)
+                        }
+                    })
+            }
+            .aspectRatio(5.0 / 3.0, contentMode: .fit)
+            if showDots { pageDots }
+        }
+    }
+
+    /// Nothing but a big dimmed clock, like a desk clock; one tap brings the keys back.
+    private var restingClock: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            BigClock(size: isPad ? 170 : 96, dimmed: true).foregroundStyle(.white)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            lastTouch = Date()
+            withAnimation(.easeOut(duration: 0.25)) { resting = false }
+        }
+        .transition(.opacity)
+    }
+
+    /// The side of one square key, so 5 x 3 keys with their gaps fill the room.
+    static func keySide(in size: CGSize, gap: CGFloat = 8) -> CGFloat {
         let byWidth = (size.width - 4 * gap) / 5
         let byHeight = (size.height - 2 * gap) / 3
         return max(10, floor(min(byWidth, byHeight)))
@@ -283,7 +341,8 @@ struct DeckScreen: View {
 private struct KeyGrid: View {
     @ObservedObject var link: LinkClient
     let side: CGFloat
-    private let gap: CGFloat = 8
+    var gap: CGFloat = 8
+    var corner: CGFloat = 0.16
 
     var body: some View {
         VStack(spacing: gap) {
@@ -291,7 +350,7 @@ private struct KeyGrid: View {
                 HStack(spacing: gap) {
                     ForEach(0..<5, id: \.self) { column in
                         let index = row * 5 + column
-                        KeyView(index: index, key: link.keys[index], side: side, lit: link.lit.contains(index)) {
+                        KeyView(index: index, key: link.keys[index], side: side, corner: corner, lit: link.lit.contains(index)) {
                             link.press(index)
                         }
                     }
@@ -306,14 +365,17 @@ private struct KeyView: View {
     let index: Int
     let key: PhoneLink.Key?
     let side: CGFloat
+    var corner: CGFloat = 0.16
     let lit: Bool
     let press: () -> Void
     @State private var pressed = false
+    @AppStorage("tapBuzz") private var tapBuzz = true
+    @AppStorage("tapClick") private var tapClick = false
 
     private var image: UIImage? { key?.picture.flatMap { UIImage(data: $0) } }
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: side * 0.16, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: side * corner, style: .continuous)
         let down = pressed || lit
         ZStack {
             if let image {
@@ -332,7 +394,8 @@ private struct KeyView: View {
         .contentShape(shape)
         .onTapGesture {
             guard image != nil else { return }   // empty places do nothing
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            if tapBuzz { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+            if tapClick { PhonePrefs.click() }
             pressed = true
             press()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { pressed = false }

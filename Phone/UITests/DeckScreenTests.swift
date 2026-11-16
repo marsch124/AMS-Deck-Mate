@@ -13,7 +13,14 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["profileLock"].exists, "a profile picked by hand shows the lock")
 
         app.buttons["settingsButton"].tap()
-        XCTAssertTrue(app.staticTexts["phoneVersion"].waitForExistence(timeout: 5))
+        // The settings are there, and a choice takes.
+        let forest = app.buttons["ground-Forest"]
+        XCTAssertTrue(forest.waitForExistence(timeout: 5))
+        forest.tap()
+        XCTAssertTrue(forest.isSelected)
+        app.buttons["ground-Day and night"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["showClock"].exists)
+        XCTAssertTrue(app.buttons["rest-Never"].exists)
 
         app.buttons["doneButton"].tap()
     }
