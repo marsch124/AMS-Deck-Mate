@@ -16,7 +16,7 @@ enum Guide {
         Section(id: "menu", title: "The menu bar", part: "settings", lines: [
             "Click the small icon to open the menu: \"Show keys on screen\", \"Set up keys…\", \"Profile\", \"Settings…\" and \"Quit AMS Deck Mate\".",
             "Under \"Profile\" you choose \"Automatic\" or pin one profile by hand.",
-            "The top of the menu tells you what is going on: \"Profile: <name>\" with \"(automatic)\" or \"(held)\", \"iPhone: connected – <name>\" or \"iPhone: none connected\", and a line about the box.",
+            "The top of the menu tells you what is going on: \"Profile: <name>\" with \"(automatic)\" or \"(locked)\", \"iPhone: connected – <name>\" or \"iPhone: none connected\", and a line about the box.",
             "\"Profile for <the app in front>\" is a small list of your profiles and \"None – use the default\". Pick one and that profile shows by itself whenever that app is in front. The app is taken off any other profile, so it belongs to only one."
         ]),
         Section(id: "screen", title: "Keys on screen", part: "screen", lines: [
@@ -84,7 +84,7 @@ enum Guide {
         Section(id: "profiles", title: "Profiles change by themselves", part: "profiles", lines: [
             "When an app that belongs to a profile comes to the front, the keys change to that profile. Any other app shows the default profile.",
             "A profile you pick by hand stays while you move between apps that share a profile. It changes when you go to an app with another profile.",
-            "Pinning a profile in the menu holds it. You can switch the automatic change off in Settings."
+            "Picking a profile in the menu locks it: a small lock shows beside its name on the keys on screen (since 0.4.2), and it stays until you choose \"Automatic\". You can switch the automatic change off in Settings."
         ]),
         Section(id: "bringover", title: "Bringing over your Elgato keys", part: "profiles", lines: [
             "At first start the app reads the keys from Elgato's app for the 15-key box: apps, links, shortcuts, typed text, music keys, folders, pages, several-things keys and which app a profile belongs to.",
@@ -141,6 +141,15 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.4.2", date: "16 Nov 2026", new: [
+            "Keys on screen: a profile picked by hand (from the menu bar menu, or from the iPhone or iPad) now shows a small hand-drawn lock beside the profile name. Locked means the profile stays until you choose \"Automatic\" in the menu bar menu. Without the lock, the profile follows the app in front.",
+            "Menu: the first line now reads \"Profile: <name> (locked)\" or \"(automatic)\"."
+        ], changed: [
+            "The word \"held\" is gone everywhere; the texts now say \"locked\".",
+            "The iPhone and iPad app is now 0.5.2 (its profile menu says \"Lock one\"). The two work together in any mix of versions."
+        ], fixed: [
+            "Nothing else changed in this version."
+        ]),
         Release(id: "0.4.1", date: "16 Nov 2026", new: [
             "Keys on screen: while they have the keyboard (right after showing them with Control-Option-D or the menu), each key shows its keyboard letter in a small round mark in its top-left corner: 1 2 3 4 5 on the top row, Q W E R T in the middle and A S D F G at the bottom.",
             "The letters go away as soon as the keyboard goes back to the app you were in (after a key that does something on the Mac, or after a click on the keys). So letters showing means typing works right now.",

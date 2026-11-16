@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.4.1 (build 5), 16 Nov 2026; iPhone and iPad app 0.5.1 (build 6)
+# AMS Deck Mate, specification, version 0.4.2 (build 6), 16 Nov 2026; iPhone and iPad app 0.5.2 (build 7)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -13,8 +13,8 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 The icon opens a menu:
 - "Show keys on screen" (shortcut Control-Option-D).
 - "Set up keys…".
-- Status lines at the top: "Profile: <name> (automatic)" or "(held)"; "iPhone: connected – <name>" or "iPhone: none connected"; the box line.
-- "Profile": "Automatic", or one profile pinned by hand. A pinned profile is held.
+- Status lines at the top: "Profile: <name> (automatic)" or "(locked)"; "iPhone: connected – <name>" or "iPhone: none connected"; the box line.
+- "Profile": "Automatic", or one profile pinned by hand. A pinned profile is locked: a small hand-drawn lock shows beside the profile name on the keys on screen (since 0.4.2). Without the lock the profile follows the app in front.
 - "Profile for <front app>": a sub-menu of the profiles and "None – use the default". Picking one puts the front app's bundle identifier into that profile's `apps` and takes it off every other profile, so the profile then shows by itself whenever that app is in front. "None" takes the app off all profiles.
 - "Settings…".
 - "Quit AMS Deck Mate".
@@ -171,7 +171,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
 
-**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app was then at 0.4 (4); it is now 0.5.1 (6), see section 22.
+**0.4.1 (Mac only, build 5, 16 Nov 2026).** Only change: the keyboard letters on the keys on screen (see section 3). The iPhone app was then at 0.4 (4); it is now 0.5.2 (7), see section 22. Mac 0.4.2 is described below.
 
 ## 16. Not in 0.4
 - The first Stream Deck from 2017.
@@ -239,17 +239,17 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 ## 21. The iPhone app, 0.4
 The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Layout: the 15 keys sit at the bottom of the screen, near the thumb; the place line is on top.
-- Profiles by swipe (0.5.1): a swipe up on the keys holds the next profile, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one profile. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
+- Profiles by swipe (0.5.1): a swipe up on the keys locks the next profile, a swipe down the one before, round the end (`PhoneLink.Status.profile(after:)`, sent as `profile(id:)`); nothing happens with one profile. A swipe counts when it is longer than 60 points and at least 1.5 times as long in its own direction as in the other.
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
-- Profile menu: a tap on the top line (the profile name) opens a menu: "Automatic", or hold one of the profiles (as the Mac's menu). *
+- Profile menu: a tap on the top line (the profile name) opens a menu: "Automatic", or "Lock one" of the profiles (as the Mac's menu). A hand-picked profile shows the lock beside its name (0.5.2). *
 - Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
 - What ran: after a tap a short note at the bottom, for example "Opened OmniFocus" or "Raycast: Clipboard history". When the Mac could not do it the note is red with the warning drawing, for example "The app is not on this Mac" or "The Mac has not allowed key presses yet". *
 - Day look: the iPhone screen follows day and night (light grey by day, dark by night); the keys stay as drawn.
 - Hotspot hint: after 20 seconds of "Looking for your Mac…" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. Button "Open Settings"; the close (x) button hides the hint.
 - The app uses its own warning and close drawings; the 22 hand-drawn deck drawings are also in the AMS Icon Library as app marks.
 
-## 22. The iPad, 0.5 and 0.5.1 (iPhone and iPad app, build 6, 16 Nov 2026)
-The Mac app stays 0.4.1 (5) and is unchanged. On the iPhone only the version number changes.
+## 22. The iPad, 0.5, 0.5.1 and 0.5.2 (iPhone and iPad app, build 7, 16 Nov 2026)
+The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only the version number changes.
 - Deck Mate is now also an iPad app, made for the iPad mini. It fills the whole screen, upright and on its side (all four ways round), instead of a phone-sized window.
 - The 15 keys are larger and sit low and centred. The top line, page dots, swipe for pages, profile menu, lit keys and the "what ran" note work the same as on the iPhone.
 - On an iPad the words on screen say "iPad" instead of "iPhone".
@@ -261,3 +261,10 @@ The Mac app stays 0.4.1 (5) and is unchanged. On the iPhone only the version num
 - On a newer iPad the app can open as a floating window. Make it large once with the window's green button (or drag its corner) and the iPad remembers it.
 - The keys are larger: they grow as far as the screen or window allows (before they stopped at a fixed width). On its side the iPad mini shows keys about a fifth larger.
 - Fixed: in a floating window the window's three round buttons lay over the profile name in the top line. The top line now steps aside for them if the app ever is in a window.
+
+**0.5.2 (iPhone and iPad app, build 7) and Mac 0.4.2 (build 6), both 16 Nov 2026.**
+- The word "held" is gone from every text; it now says "locked".
+- A profile picked by hand (the top line's menu, a swipe up or down on the iPhone and iPad, or the Mac's menu) shows a small hand-drawn lock beside the profile name: on the iPhone and iPad top line and on the Mac's keys on screen. Locked: the profile stays until "Automatic" is chosen (tap the top line on the iPhone and iPad; the menu bar menu on the Mac). No lock: on the Mac the profile follows the app in front.
+- Mac menu line: "Profile: <name> (locked)" or "(automatic)". iPhone and iPad menu section: "Lock one".
+- iPad only: the top line is larger: the profile name is title size and bold, the "Connected to …" line is bigger, and the settings button is larger. The iPhone top line is unchanged.
+- Nothing else changes. The Mac and the iPhone and iPad app work with each other in any mix of these versions.

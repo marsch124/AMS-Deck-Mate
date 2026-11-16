@@ -36,8 +36,8 @@ enum PhoneGuide {
         ]),
         Section(id: "profiles", title: "Profiles follow the Mac", part: "profiles", lines: [
             "The iPhone shows the profile and page the Mac shows. When the app in front on the Mac changes and the profile changes with it, the iPhone changes too.",
-            "To use a different profile, tap the top line (the profile name). A menu offers \"Automatic\" or holding one of the profiles, the same as the Mac's menu. You can also change it on the Mac, or tap a key that switches profile.",
-            "Since 0.5.1: swipe up or down on the keys for the next or previous profile. It is then held until you choose \"Automatic\" in the top line."
+            "To use a different profile, tap the top line (the profile name). A menu offers \"Automatic\" or \"Lock one\" of the profiles, the same as the Mac's menu. A profile you picked by hand shows a small lock beside its name (since 0.5.2): it stays until you choose \"Automatic\". You can also change it on the Mac, or tap a key that switches profile.",
+            "Since 0.5.1: swipe up or down on the keys for the next or previous profile. It is then locked (a small lock shows beside the name) until you choose \"Automatic\" in the top line."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
@@ -59,6 +59,14 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.5.2", date: "16 Nov 2026", new: [
+            "A profile you picked by hand (from the top line's menu, by a swipe up or down, or from the Mac's menu) now shows a small hand-drawn lock beside the profile name. Locked means the profile stays until you choose \"Automatic\" (tap the top line). No lock means it follows the Mac.",
+            "The menu section is now titled \"Lock one\".",
+            "The Mac app is now 0.4.2 (it shows the same lock on its keys on screen). The two work together in any mix of versions."
+        ], changed: [
+            "The word \"held\" is gone everywhere; the texts now say \"locked\".",
+            "iPad only: the top line is larger. The profile name is clearly bigger (title size, bold), the \"Connected to …\" line under it is bigger too, and the settings button is larger. The iPhone top line is unchanged."
+        ], fixed: []),
         Release(id: "0.5.1", date: "16 Nov 2026", new: [
             "On a newer iPad the app can open as a floating window. Make it large once with the window's green button (or drag its corner) and the iPad remembers it.",
             "The keys on the iPad are larger: they now grow as far as the screen or window allows (before they stopped at a fixed width). On its side the iPad mini shows keys about a fifth larger.",

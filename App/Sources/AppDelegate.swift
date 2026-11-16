@@ -190,7 +190,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         _ = add("Set up keys…", #selector(openSetup))
         menu.addItem(.separator())
         let place = model.profile?.name ?? "none"
-        _ = add("Profile: \(place)" + (model.pinned == nil ? " (automatic)" : " (held)"), nil)
+        _ = add("Profile: \(place)" + (model.pinned == nil ? " (automatic)" : " (locked)"), nil)
         let automatic = add("Automatic", #selector(pickProfile(_:)))
         automatic.state = model.pinned == nil ? .on : .off
         automatic.indentationLevel = 1

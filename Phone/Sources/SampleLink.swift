@@ -5,7 +5,7 @@ import DeckMateCore
 enum SampleLink {
     static let place = "Default · Page 1"
     static let status = PhoneLink.Status(profiles: [.init(id: "1", name: "Default"), .init(id: "2", name: "Writing")],
-                                         current: "1", held: false, page: 0, pages: 3)
+                                         current: "1", held: CommandLine.arguments.contains("-locked"), page: 0, pages: 3)
 
     private static let blue = UIColor(red: 0.18, green: 0.44, blue: 0.88, alpha: 1)
     private static let raycast = UIColor(red: 0.85, green: 0.33, blue: 0.17, alpha: 1)

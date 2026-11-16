@@ -254,7 +254,7 @@ struct SettingsView: View {
                     .accessibilityIdentifier("autoSwitch")
                 note(model.pinned == nil
                      ? "Each profile lists its apps in “Set up keys”. Any other app shows the default profile."
-                     : "A profile is held by hand right now. Choose Automatic in the menu to let it follow the app again.")
+                     : "A profile is locked by hand right now. Choose Automatic in the menu to let it follow the app again.")
             }
         case .check:
             card("Check keys", "keys") { checkBody }

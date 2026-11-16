@@ -129,9 +129,11 @@ struct ScreenDeckView: View {
                     .lineLimit(1)
                     .accessibilityIdentifier("deckPlace")
                 if model.pinned != nil {
-                    Text("held")
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.55))
+                    // Locked: this profile stays until "Automatic" is chosen in the menu.
+                    Mark(name: "app-lock", size: model.deck.screenSize == .small ? 12 : 14, colour: .white.opacity(0.7))
+                        .help("Locked: this profile stays until you choose Automatic in the menu")
+                        .accessibilityLabel("Locked")
+                        .accessibilityIdentifier("profileLock")
                 }
                 Spacer(minLength: 8)
                 headerButton("control-settings", "Set up keys", "deckSetup", openSetup)

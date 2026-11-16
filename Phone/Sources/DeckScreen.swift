@@ -38,7 +38,7 @@ struct DeckScreen: View {
                         .opacity(connected ? 1 : 0.35)
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
-                            // Sideways = pages; up or down = the next or previous profile (it is then held).
+                            // Sideways = pages; up or down = the next or previous profile (it is then locked).
                             let across = drag.translation.width
                             let along = drag.translation.height
                             if abs(across) > 60, abs(across) > abs(along) * 1.5 {
@@ -80,9 +80,9 @@ struct DeckScreen: View {
             VStack(alignment: .leading, spacing: 2) {
                 placeLine
                 HStack(spacing: 6) {
-                    Circle().fill(statusColour).frame(width: 8, height: 8)
+                    Circle().fill(statusColour).frame(width: isPad ? 10 : 8, height: isPad ? 10 : 8)
                     Text(statusText)
-                        .font(.caption)
+                        .font(isPad ? .callout : .caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -91,7 +91,7 @@ struct DeckScreen: View {
             }
             Spacer(minLength: 8)
             Button { showSettings = true } label: {
-                PhoneIcon(name: "iconSettings", size: 24)
+                PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
                     .foregroundStyle(PhonePalette.part("settings"))
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
@@ -101,11 +101,11 @@ struct DeckScreen: View {
         }
     }
 
-    /// The place; a tap on it picks a profile (Automatic, or hold one), like the Mac's menu.
+    /// The place; a tap on it picks a profile (Automatic, or lock one), like the Mac's menu.
     @ViewBuilder
     private var placeLine: some View {
         let title = Text(link.place.isEmpty ? "Deck Mate" : link.place)
-            .font(.headline)
+            .font(isPad ? .title2.weight(.bold) : .headline)
             .foregroundStyle(.primary)
             .lineLimit(1)
         if let status = link.status, connected {
@@ -113,7 +113,7 @@ struct DeckScreen: View {
                 Button { link.pickProfile(nil) } label: {
                     if !status.held { Label("Automatic", systemImage: "checkmark") } else { Text("Automatic") }
                 }
-                Section("Hold one") {
+                Section("Lock one") {
                     ForEach(status.profiles, id: \.id) { profile in
                         Button { link.pickProfile(profile.id) } label: {
                             if status.held && status.current == profile.id {
@@ -127,7 +127,14 @@ struct DeckScreen: View {
             } label: {
                 HStack(spacing: 5) {
                     title
-                    Text(status.held ? "held ▾" : "▾").font(.subheadline.weight(.semibold))
+                    if status.held {
+                        // Locked: this profile stays until "Automatic" is chosen.
+                        PhoneIcon(name: "iconLock", size: isPad ? 20 : 16)
+                            .foregroundStyle(PhonePalette.part("profiles"))
+                            .accessibilityLabel("Locked")
+                            .accessibilityIdentifier("profileLock")
+                    }
+                    Text("▾").font((isPad ? Font.title3 : Font.subheadline).weight(.semibold))
                         .foregroundStyle(PhonePalette.part("profiles"))
                 }
             }

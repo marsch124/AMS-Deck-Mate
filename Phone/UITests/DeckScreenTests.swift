@@ -4,12 +4,13 @@ import XCTest
 final class DeckScreenTests: XCTestCase {
     func testDeckAndSettings() {
         let app = XCUIApplication()
-        app.launchArguments = ["-sample"]
+        app.launchArguments = ["-sample", "-locked"]
         app.launch()
 
         XCTAssertTrue(app.descendants(matching: .any)["key0"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.descendants(matching: .any)["deckPlace"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["pageDots"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["profileLock"].exists, "a profile picked by hand shows the lock")
 
         app.buttons["settingsButton"].tap()
         XCTAssertTrue(app.staticTexts["phoneVersion"].waitForExistence(timeout: 5))
