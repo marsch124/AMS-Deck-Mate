@@ -16,9 +16,22 @@ public struct LiveKeys: Equatable, Sendable {
     public var on: Set<String>
     /// An app is listening to the microphone right now.
     public var micInUse: Bool
+    /// What the glance keys show, by their names in `GlanceKeys` ("event", "weather:<town>", "due", "battery").
+    public var glances: [String: Glance]
+    /// The latest Body Battery, for the key's colour.
+    public var battery: Int?
+    /// What Spotify plays, and whether its cover's picture is here already.
+    public var cover: CoverKeys.Now?
+    public var coverReady: Bool
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
-                timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false) {
+                timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
+                glances: [String: Glance] = [:], battery: Int? = nil, cover: CoverKeys.Now? = nil,
+                coverReady: Bool = false) {
+        self.glances = glances
+        self.battery = battery
+        self.cover = cover
+        self.coverReady = coverReady
         self.apps = apps
         self.copied = copied
         self.files = files
@@ -110,6 +123,10 @@ extension DeckAction {
         case .running:
             guard let app = RunningApps.app(number: RunningApps.number(target), in: live.running) else { return self }
             return DeckAction(type: .app, target: app)
+        case .cover:
+            return DeckAction(type: .media, target: MediaKey.playPause.rawValue)
+        case .bodyBattery:
+            return DeckAction(type: .link, target: BatteryKeys.board)
         default:
             return self
         }
@@ -155,11 +172,44 @@ extension DeckKey {
         case .micLight:
             key.action.quiet = live.micInUse
             if key.title.isEmpty { key.title = live.micInUse ? "Mic in use" : "Mic free" }
+        case .nextEvent:
+            key.showing(live.glances[GlanceKeys.event], else: "Next event")
+        case .weather:
+            let town = key.action.target.trimmingCharacters(in: .whitespacesAndNewlines)
+            if town.isEmpty {
+                if key.title.isEmpty { key.title = WeatherKeys.noTownWords }
+            } else {
+                key.showing(live.glances[GlanceKeys.weather(town)], else: town)
+            }
+        case .dueToday:
+            key.showing(live.glances[GlanceKeys.due], else: DueKeys.words)
+        case .bodyBattery:
+            key.action.target = live.battery.map(String.init) ?? ""
+            key.showing(live.glances[GlanceKeys.battery], else: BatteryKeys.words)
+        case .cover:
+            if let now = live.cover {
+                key.action.quiet = now.playing
+                if live.coverReady { key.icon = GlanceKeys.coverPrefix + now.track }
+                if key.title.isEmpty { key.title = now.song.isEmpty ? "Spotify" : now.song }
+            } else if key.title.isEmpty {
+                key.title = CoverKeys.idleWords
+            }
+        case .desk:
+            if key.title.isEmpty { key.title = "Desk" }
         default:
             break
         }
         if let held = key.held, held.type == .recentFile || held.type == .running { key.held = held.resolving(live) }
         return key
+    }
+}
+
+extension DeckKey {
+    /// A glance key as it shows now: the large words take the drawing's place, and the small words
+    /// become the title of a key that has none. No glance yet = the drawing stays, with `words`.
+    mutating func showing(_ glance: Glance?, else words: String) {
+        if let glance, !glance.big.isEmpty { icon = GlanceKeys.textPrefix + glance.big }
+        if title.isEmpty { title = glance.map { $0.words.isEmpty ? words : $0.words } ?? words }
     }
 }
 

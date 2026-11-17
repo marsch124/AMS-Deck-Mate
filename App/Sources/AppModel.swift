@@ -80,6 +80,8 @@ final class AppModel: ObservableObject {
     private(set) var startNote: String?
     /// The weekly copy of the keys file in iCloud Drive.
     let cloudCopy: CloudCopy
+    /// What the glance keys read: calendar, weather, OmniFocus, Spotify's cover, the Garmin board.
+    private let glance = GlanceWatch()
     private let clipboard = ClipboardWatch()
     private let filesWatch = RecentFilesWatch()
     private var shown: [DeckKey?] = []
@@ -109,6 +111,7 @@ final class AppModel: ObservableObject {
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259)])
             sampleNow = day
+            GlanceWatch.keepSampleCover()
             var counted = KeyUse(since: day.addingTimeInterval(-41 * 86_400))
             for (slot, presses) in [(0, 212), (1, 97), (2, 64), (9, 31), (13, 12), (5, 3)] {
                 guard let key = sample.profiles.first?.pages.first?.keys[slot] else { continue }
@@ -175,6 +178,8 @@ final class AppModel: ObservableObject {
         ActionRunner.live = { [weak self] in self?.liveNow ?? LiveKeys() }
         ActionRunner.timerPressed = { [weak self] in self?.timerPressed($0) }
         ActionRunner.switchPressed = { [weak self] in self?.switchPressed($0) }
+        ActionRunner.glancePressed = { [weak self] in self?.glance.pressed($0) }
+        glance.onChange = { [weak self] in self?.bump() }
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
             liveWatchers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 self?.refreshRunning()
@@ -208,7 +213,11 @@ final class AppModel: ObservableObject {
     /// What the keys that change by themselves stand for right now.
     var liveNow: LiveKeys {
         LiveKeys(apps: recentApps, copied: copiedTexts, files: recentFiles, running: runningApps,
-                 timers: TimerKeys.left(timers, now: sampleNow ?? Date()), on: switchedOn, micInUse: micInUse)
+                 timers: TimerKeys.left(timers, now: sampleNow ?? Date()), on: switchedOn, micInUse: micInUse,
+                 glances: isSample ? GlanceWatch.sampleGlances : glance.glances,
+                 battery: isSample ? 62 : glance.battery,
+                 cover: isSample ? GlanceWatch.sampleCover : glance.cover,
+                 coverReady: isSample || glance.coverReady)
     }
     /// Pictures with made-up keys stand still at this moment.
     private var sampleNow: Date?
@@ -223,6 +232,7 @@ final class AppModel: ObservableObject {
     /// The clipboard and the list of opened files are only looked at while a key needs them.
     private func watchLive() {
         guard !isSample else { return }
+        glance.watch(deck)
         clipboard.isOn = deck.uses(.copied)
         filesWatch.isOn = deck.uses(.recentFile)
         if !clipboard.isOn, !copiedTexts.isEmpty { copiedTexts = [] }
@@ -764,7 +774,18 @@ enum Sample {
                        11: DeckKey(action: DeckAction(type: .running, target: "2")),
                        12: DeckKey(action: DeckAction(type: .running, target: "3")),
                        14: key("Back a page", DeckAction(type: .previousPage))]
-        let main = DeckProfile(name: "Default", pages: [first, second, folder])
+        var third = DeckPage(name: "Page 3")
+        third.keys = [0: DeckKey(action: DeckAction(type: .nextEvent)),
+                      1: DeckKey(action: DeckAction(type: .weather, target: "Lisbon")),
+                      2: DeckKey(action: DeckAction(type: .dueToday)),
+                      3: DeckKey(action: DeckAction(type: .cover)),
+                      4: DeckKey(action: DeckAction(type: .bodyBattery)),
+                      5: key("Writing desk", DeckAction(type: .desk, steps: [
+                          DeskKeys.step(DeskKeys.Spot(app: "com.apple.Safari", x: 0, y: 25, width: 1200, height: 800)),
+                          DeskKeys.step(DeskKeys.Spot(app: "com.apple.Notes", x: 1200, y: 25, width: 528, height: 800)),
+                          DeskKeys.step(DeskKeys.Spot(app: "com.apple.mail", x: 200, y: 120, width: 980, height: 640))])),
+                      14: key("Back a page", DeckAction(type: .previousPage))]
+        let main = DeckProfile(name: "Default", pages: [first, second, third, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])
         writing.pages[0].keys = [0: key("Bold", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 11, command: true, keyName: "B"))),
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]

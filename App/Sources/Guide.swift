@@ -50,11 +50,13 @@ enum Guide {
             "The pictures are files in the folder \"Pictures\" beside your keys. The AMS Apps Overview tool puts them there. There is no button to choose a picture in the app yet.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
             "There are 254 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
-            "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free."
+            "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free.",
+            "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
             "New in 0.10: the + beside \"Page groups\" now opens a small list: \"Empty page group\" and four ready-made ones. See \"Ready-made page groups\" below. Under the page's buttons there is also \"Add an “Open apps” folder\". See \"Open app keys\" below.",
+            "New in 0.11: six more kinds under \"What it does\": \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". The Weather key has a field for the town, and the Desk key has the button \"Take the desk as it is now\" and a list of the apps it holds.",
             "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
             "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\". For a key that shows a picture, the Icon button says \"Own picture\". Picking a drawing, or \"Automatic\", replaces the picture.",
@@ -97,6 +99,7 @@ enum Guide {
             "Folder of keys opens another page of keys, and Back returns. Next page and Previous page move between pages.",
             "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart, unless you put a \"Wait\" step between two of them (since 0.10). See \"Several things in a row and Wait\".",
             "Since 0.10, six more kinds: \"Timer\", \"Switch (on or off)\", \"Run an Apple Shortcut\", \"List to pick from\", \"Open app\" and \"Microphone light\". That makes 23 kinds of key, instead of 17. See the parts after \"Recent file key\".",
+            "Since 0.11, six more kinds: \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". That makes 29 kinds of key, instead of 23. See the parts after \"Ready-made page groups\".",
             "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
             "Since 0.8, two more: \"Last copied text\" and \"Recent file\". See the two parts after \"Ask AI about copied text\".",
             "Nothing leaves the key empty.",
@@ -211,6 +214,65 @@ enum Guide {
             "If a page group of that name exists, the new one is named for example \"Notion (ready-made)\".",
             "Nothing you have is changed. Undo takes it back."
         ]),
+        Section(id: "glance", title: "Keys that show something at a glance", part: "keys", lines: [
+            "New in 0.11. Five new kinds of key show a value: Next event, Weather, Due today, Album cover and Body Battery. You find them in Set up keys, under \"What it does\".",
+            "The value stands on the key in large white words, where the drawing normally is, with small words under it. If you gave the key a title, your title replaces the small words.",
+            "Until a value is there, the key shows its drawing.",
+            "They show on the box, on the keys on screen and on the iPhone and iPad (the Mac draws them), so the iPhone and iPad app needs no update.",
+            "Deck Mate only looks things up while at least one key of that kind exists in your setup."
+        ]),
+        Section(id: "nextEvent", title: "Next event key", part: "keys", lines: [
+            "New in 0.11. In Set up keys, under \"What it does\", choose \"Next event\". The key is blue with a calendar drawing.",
+            "It shows the next event in your calendars that has a time. All-day events are left out. It looks 7 days ahead.",
+            "The large words: \"Now\" while the event goes on; for example \"12 min\" in the last hour before it starts; its time, for example \"14:30\", later today; the weekday, for example \"Wed\", on another day. On another day the time stands before the title in the small words, for example \"09:00 Dentist\".",
+            "The small words are the event's title. With no event in the next 7 days the key shows a dash and \"No events\".",
+            "A press opens the Calendar app. Under \"Choose app…\" you can pick another app instead, for example Fantastical.",
+            "The first time, the Mac asks once whether AMS Deck Mate may see your calendar. Until then the key says \"Press to allow\". Choose \"Allow Full Access\".",
+            "Deck Mate only reads. It never changes an event.",
+            "If you said no, the key says \"Calendar not allowed\". Change it in System Settings › Privacy & Security › Calendars.",
+            "The key follows changes in your calendar at once, and looks again every minute."
+        ]),
+        Section(id: "weatherKey", title: "Weather key", part: "keys", lines: [
+            "New in 0.11. In Set up keys, under \"What it does\", choose \"Weather\" and type a town. The key is teal with a sun drawing.",
+            "The large words are the temperature in whole degrees Celsius, for example \"3°\". The small words are the sky in a word or two: Clear, Mostly clear, Partly cloudy, Cloudy, Fog, Drizzle, Rain, Snow, Showers, Snow showers or Thunder.",
+            "Without a town the key says \"Set a town\".",
+            "You can have several Weather keys with different towns. Give each key the town as its title to tell them apart. The title then shows instead of the sky.",
+            "The weather is asked for again every 20 minutes. A press opens the Mac's Weather app.",
+            "Privacy: the free weather service Open-Meteo gets the town's name once, to find its place. After that it gets only that place (its position on the map). Nothing else about you goes out. There is no account and no key, and the Mac asks nothing."
+        ]),
+        Section(id: "dueToday", title: "Due today key", part: "keys", lines: [
+            "New in 0.11. In Set up keys, under \"What it does\", choose \"Due today\". The key is purple with a tick drawing.",
+            "The large words are the number of OmniFocus tasks that are due today or overdue. Tasks that are completed or dropped are not counted. The small words say \"Due today\".",
+            "Deck Mate counts only while OmniFocus is open. Otherwise the key says \"OmniFocus closed\". Deck Mate never opens OmniFocus just to count. It counts again every 2 minutes.",
+            "A press opens OmniFocus on its Forecast.",
+            "The first time, the Mac asks once whether AMS Deck Mate may control OmniFocus. Until then the key says \"Press to allow\". Choose Allow, or OK.",
+            "Deck Mate only counts. It never changes a task."
+        ]),
+        Section(id: "albumCover", title: "Album cover key", part: "keys", lines: [
+            "New in 0.11. In Set up keys, under \"What it does\", choose \"Album cover\". The key is green.",
+            "It shows the cover of the song Spotify plays, filling the whole key, with the song's name on a dark band at the bottom. Until a cover is there it shows a music note.",
+            "A press plays or pauses, like the other music keys. It needs the Mac's Accessibility yes, the same one as the shortcut, text and music keys.",
+            "The cover appears with the next song change after Deck Mate starts, because Spotify only says what plays when something changes. Before that the key says \"Nothing playing\".",
+            "The picture comes from Spotify's own open look-up, by the song's name only. Nothing about you is sent, and the Mac asks nothing.",
+            "A podcast, an advert or a local file shows the song's name with the music note.",
+            "Covers are kept in memory only."
+        ]),
+        Section(id: "bodyBattery", title: "Body Battery key", part: "keys", lines: [
+            "New in 0.11. In Set up keys, under \"What it does\", choose \"Body Battery\". The key has a battery drawing.",
+            "The large words are your latest Body Battery, from your AMS Garmin Bridge Board, which runs on this Mac from login. The small words say \"Body Battery\".",
+            "The key is green from 50, amber from 25 to 49 and red below 25. It is grey-blue while there is no number.",
+            "It asks again every 10 minutes. A press opens the board in the browser.",
+            "Nothing leaves the Mac, and the Mac asks nothing. If the board is not running, the key just shows its drawing."
+        ]),
+        Section(id: "deskKey", title: "Desk key", part: "keys", lines: [
+            "New in 0.11. In Set up keys, under \"What it does\", choose \"Desk\". The key is blue with a window drawing. Without a title it says \"Desk\".",
+            "The button \"Take the desk as it is now\" remembers the apps that have a window on screen right now: up to 8 apps, the front window of each, with its place and size. Small panels (under 200 × 150) are left out, and so are Deck Mate's own windows.",
+            "The list shows each app with its window size, for example \"Safari · 1200 × 800\", and a button to take one out.",
+            "A press opens every app of the desk and puts each one's front window back in its place and size. It waits up to about 8 seconds for an app that is still opening.",
+            "It needs the Mac's Accessibility yes, the same one the shortcut, text and music keys use. The Mac asks at the first press if it was never given.",
+            "A Desk key also works as a long press and as a step of \"Several things in a row\".",
+            "A desk whose app is no longer on this Mac is marked as broken: \"An app of the desk is not on this Mac\". A desk with nothing in it says \"No windows taken yet\"."
+        ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
             "Pick a command from a list. It holds the commands of the Raycast extensions on this Mac, found by itself, and 16 of Raycast's own.",
@@ -288,7 +350,8 @@ enum Guide {
         ]),
         Section(id: "permissions", title: "What the Mac asks for", part: "settings", lines: [
             "Accessibility, once, for keys that press a keyboard shortcut, type text, paste a last copied text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
-            "The Mac may also ask for Input Monitoring when the box is first plugged in."
+            "The Mac may also ask for Input Monitoring when the box is first plugged in.",
+            "New in 0.11: \"Next event\" makes the Mac ask once whether Deck Mate may see your calendar (Allow Full Access; it only reads). \"Due today\" makes the Mac ask once whether Deck Mate may control OmniFocus (it only counts). The \"Desk\" key and the \"Album cover\" key use the Accessibility yes. Weather, Album cover and Body Battery ask the Mac nothing."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
@@ -315,6 +378,23 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.11", date: "17 Nov 2026", new: [
+            "Six new kinds of key in Set up keys, under \"What it does\". Before: 23 kinds of key. Now: 29. This is round 2 of 3 of the ideas you picked. Five of them show something at a glance: the value stands on the key in large white words, where the drawing normally is, with small words under it. If you gave the key a title, your title replaces the small words. Until a value is there, the key shows its drawing. They show on the box, on the keys on screen and on the iPhone and iPad.",
+            "\"Next event\" (blue, calendar drawing): shows the next event in your calendars that has a time, looking 7 days ahead. All-day events are left out. Large words: \"Now\" while the event goes on; for example \"12 min\" in the last hour before it starts; its time, for example \"14:30\", later today; the weekday, for example \"Wed\", on another day, with the time before the title in the small words (\"09:00 Dentist\"). Small words: the event's title. With no event in 7 days: a dash and \"No events\". A press opens the Calendar app, or another app you choose with \"Choose app…\", for example Fantastical. The first time, the Mac asks once whether AMS Deck Mate may see your calendar. Until then the key says \"Press to allow\"; choose \"Allow Full Access\". Deck Mate only reads and never changes an event. If you say no, the key says \"Calendar not allowed\" (change it in System Settings › Privacy & Security › Calendars). It follows calendar changes at once and looks again every minute.",
+            "\"Weather\" (teal, sun drawing): you type a town in Set up keys. Large words: the temperature in whole degrees Celsius, for example \"3°\". Small words: the sky in a word or two (Clear, Mostly clear, Partly cloudy, Cloudy, Fog, Drizzle, Rain, Snow, Showers, Snow showers, Thunder). With no town yet: \"Set a town\". Several Weather keys with different towns are fine; give each key the town as its title to tell them apart (the title then shows instead of the sky). The weather is asked for again every 20 minutes. A press opens the Mac's Weather app. Privacy: the free weather service Open-Meteo gets the town's name once, to find its place, and after that only that place (its position on the map). Nothing else about you goes out. No account, no key, and the Mac asks nothing.",
+            "\"Due today\" (purple, tick drawing): the large words are the number of OmniFocus tasks that are due today or overdue (not completed, not dropped). Small words: \"Due today\". It counts only while OmniFocus is open; otherwise the key says \"OmniFocus closed\", because Deck Mate never opens OmniFocus just to count. It counts again every 2 minutes. A press opens OmniFocus on its Forecast. The first time, the Mac asks once whether AMS Deck Mate may control OmniFocus. Until then the key says \"Press to allow\"; choose Allow, or OK. Deck Mate only counts and never changes a task.",
+            "\"Album cover\" (green, music note drawing until a cover is there): shows the cover of the song Spotify plays, filling the whole key, with the song's name on a dark band at the bottom. A press plays or pauses; like the other music keys it needs the Mac's Accessibility yes. The cover appears with the next song change after Deck Mate starts, because Spotify only says what plays when something changes; before that the key says \"Nothing playing\". The picture comes from Spotify's own open look-up, by the song's name only. Nothing about you is sent, and the Mac asks nothing. A podcast, an advert or a local file shows the song's name with the music note. Covers are kept in memory only.",
+            "\"Body Battery\" (battery drawing): the large words are your latest Body Battery from your AMS Garmin Bridge Board, which runs on this Mac from login. Small words: \"Body Battery\". The key is green from 50, amber from 25 to 49 and red below 25, and grey-blue while there is no number. It asks again every 10 minutes. A press opens the board in the browser. Nothing leaves the Mac, and the Mac asks nothing. If the board is not running, the key just shows its drawing.",
+            "\"Desk\" (blue, window drawing; without a title it says \"Desk\"): in Set up keys the button \"Take the desk as it is now\" remembers the apps that have a window on screen right now. Up to 8 apps, the front window of each, with its place and size. Small panels (under 200 × 150) are left out, and so are Deck Mate's own windows. The list shows each app with its window size, for example \"Safari · 1200 × 800\", and a button to take one out. A press opens every app of the desk and puts each one's front window back in its place and size; it waits up to about 8 seconds for an app that is still opening. It needs the Mac's Accessibility yes, the same one the shortcut, text and music keys use; the Mac asks at the first press if it was never given. A Desk key also works as a long press and as a step of \"Several things in a row\". A desk whose app is no longer on this Mac is marked as broken (\"An app of the desk is not on this Mac\"); a desk with nothing in it says \"No windows taken yet\".",
+            "The Mac looks things up only while a key of that kind exists in your setup. The iPhone and iPad need no update, because the Mac draws the keys.",
+            "Round 3 will bring the dial key on iPhone and iPad and the resting box.",
+            "Not yet tried for real: none of the six was pressed on a real screen yet by the maker. The first press of \"Next event\" and of \"Due today\" each brings one question from the Mac. The box is at home until January 2027."
+        ], changed: [
+            "There are 29 kinds of key to choose from, instead of 23.",
+            "The Mac now asks for two more yeses, each once and only when you press such a key: to see your calendar (Next event) and to control OmniFocus (Due today). Before: only Accessibility, and System Events for dark mode.",
+            "How it works has new parts: \"Keys that show something at a glance\", \"Next event key\", \"Weather key\", \"Due today key\", \"Album cover key\", \"Body Battery key\" and \"Desk key\", and new lines in \"What a key can do\", \"The look of a key\", \"Set up keys\" and \"What the Mac asks for\".",
+            "The Mac app is now 0.11 (build 18). The iPhone and iPad app stays 0.16 (build 21) and needs no update, because the Mac draws the keys."
+        ], fixed: []),
         Release(id: "0.10", date: "17 Nov 2026", new: [
             "Six new kinds of key in Set up keys, under \"What it does\". Before: 17 kinds of key. Now: 23.",
             "\"Timer\": pick the minutes (1, 2, 3, 5, 10, 15, 20, 25, 30, 45 or 60). A press starts it and the key counts down, second by second, for example \"4:59\". Another press stops it. When the time is up, the Mac plays a sound twice and the key says \"Done\" for one minute, or until you press it. A key without a title shows \"5 min\". Two keys with the same minutes are the same timer. The key is amber. The countdown shows on the box, on the keys on screen and on the iPhone and iPad. A timer is forgotten when Deck Mate quits.",

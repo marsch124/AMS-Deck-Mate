@@ -21,6 +21,12 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// running = one of the apps open now (target "1"–"15"); micLight = shows whether the microphone is in use;
     /// wait = a pause between the steps of a "several things in a row" key (target = seconds).
     case timer, toggle, appleShortcut, list, running, micLight, wait
+    /// Keys that show something at a glance (see GlanceKinds.swift): nextEvent = the next event of the calendar
+    /// (target = the app a press opens; empty = Calendar); weather = temperature and sky of a town (target);
+    /// dueToday = how many OmniFocus tasks are due; cover = the album cover of what Spotify plays (a press =
+    /// play or pause); bodyBattery = the latest Body Battery from the Garmin board on this Mac;
+    /// desk = opens apps and puts their windows in place (its steps, see `DeskKeys`).
+    case nextEvent, weather, dueToday, cover, bodyBattery, desk
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -149,6 +155,12 @@ public struct DeckAction: Codable, Hashable, Sendable {
         // Red while the microphone is in use, grey-blue while it is free.
         case .micLight: return quiet ? .raycast : .move
         case .wait: return .empty
+        case .nextEvent, .desk: return .app
+        case .weather: return .web
+        case .dueToday: return .shortcut
+        case .cover: return .media
+        // On a key as it shows right now the target is the level: green, amber or red.
+        case .bodyBattery: return BatteryKeys.kind(Int(target))
         }
     }
 
@@ -186,6 +198,12 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .running: return "deck-app"
         case .micLight: return quiet ? "microphone" : "microphoneoff"
         case .wait: return "app-hourglass"
+        case .nextEvent: return "app-calendar"
+        case .weather: return "sun"
+        case .dueToday: return "control-check"
+        case .cover: return "music"
+        case .bodyBattery: return "battery"
+        case .desk: return "deck-window-full"
         }
     }
 }

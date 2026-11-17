@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.10 (build 17), 17 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.11 (build 18), 17 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -11,6 +11,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
+- Since 0.11 (Mac, round 2 of 3 of his picked ideas): six new kinds of key (Next event, Weather, Due today, Album cover, Body Battery, Desk; 29 kinds instead of 23), five of them showing a value at a glance (sections 56 to 62). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.10 (Mac, round 1 of 3 of his 25 picked ideas): six new kinds of key (Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 23 kinds instead of 17), the Wait step, Find a key on the keys on screen, Settings > Key use and four ready-made page groups (sections 46 to 55). 254 drawings (252 before). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.9.4 (Mac): one more drawing to choose for a key, Drawer (`drawer.svg`), 252 in all instead of 251; his GridFit key now shows it instead of Autodesk Fusion's icon. Shows on the Stream Deck, on screen keys and on the iPhone and iPad with no update there (history below). iPhone and iPad stay 0.16 (build 21).
 - Since 0.9.3 (Mac): a key can show a picture of its own instead of a white drawing (section 4 and history below); 10 web-app keys of "My Apps" show their app's real icon. iPhone and iPad stay 0.16 (build 21).
@@ -84,7 +85,7 @@ The icon opens a menu:
 - 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none.
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none.
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -111,6 +112,12 @@ The icon opens a menu:
 | Open app (0.10) | `running`; "1" to "15" | see 50 |
 | Microphone light (0.10) | `micLight` | shows only; see 51 |
 | Wait (0.10), a step only | `wait`; seconds | see 52 |
+| Next event (0.11) | `nextEvent`; an app's bundle id, or empty for Calendar | opens that app; see 57 |
+| Weather (0.11) | `weather`; the town as typed | opens the Mac's Weather; see 58 |
+| Due today (0.11) | `dueToday` | opens OmniFocus on its Forecast; see 59 |
+| Album cover (0.11) | `cover` | play or pause; see 60 |
+| Body Battery (0.11) | `bodyBattery` | opens the board in the browser; see 61 |
+| Desk (0.11) | `desk`; the apps are `steps` | puts the windows back; see 62 |
 | Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
@@ -168,6 +175,7 @@ Not yet tried on the real box (see the warning at the top).
 ## 11. Permissions
 - Accessibility, asked once, for keys that press a shortcut, type text or control music and sound. Settings shows whether it is allowed and has an "Allow…" button.
 - The Mac may ask for Input Monitoring when the box is first plugged in.
+- New in 0.11: Calendars, full access (`NSCalendarsFullAccessUsageDescription`), asked once at the first press of a Next event key; read only. OmniFocus control (Automation, Apple events), asked once at the first press of a Due today key; counts only. Accessibility is also used by the Album cover key (play or pause) and the Desk key (window places). `NSAllowsLocalNetworking` in Info.plist lets the Body Battery key read `http://127.0.0.1:7788` (the AMS Garmin Bridge Board on this Mac).
 
 ## 12. Settings
 Three tabs: Settings, How it works, What's new. The version, Quit and Done are at the bottom.
@@ -194,6 +202,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.11: 21 new data tests, 89 in all (68 before), in `Core/Tests/DeckMateCoreTests/GlanceKindsTests.swift` for the rules of sections 56 to 62 (next event and its words, weather words and answers, due count, battery level and colour, track name and cover address, desk capture and steps, the new `ActionType` cases reading back).
 - New in 0.10: 16 new data tests, 68 in all (52 before): `LiveKindsTests.swift` (13: timer clock, minutes, start and stop; timer finishes once and "Done" goes away; timer key shows itself; switch steps; open apps keep their order; first free place; step timing with Wait; microphone light; pressing the new kinds runs them; key check for the new kinds; key finder; key use counts and quiet list; an old keys file still reads) and `TemplatesTests.swift` (3: every ready-made page group is well formed, the key table, a page group made from a template).
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
 - New in 0.5 (round B): `Core` has 36 data tests (37 since 0.6, see below), 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
@@ -212,6 +221,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.11 (Mac, build 18, 17 Nov 2026).** Round 2 of 3: six new kinds of key (sections 56 to 62: Next event, Weather, Due today, Album cover, Body Battery, Desk; 23 kinds before, 29 now). New `ActionType` cases `nextEvent, weather, dueToday, cover, bodyBattery, desk`. Rules in `Core/Sources/DeckMateCore/GlanceKinds.swift`, Mac side in `App/Sources/Glances.swift`. `LiveKeys` gained `glances`, `battery`, `cover`, `coverReady`. Info.plist gained `NSCalendarsFullAccessUsageDescription` and `NSAllowsLocalNetworking`. iPhone and iPad stay 0.16 (build 21). Not proven yet: none of the six was pressed on a real screen; the two one-time questions (calendar, OmniFocus) are not seen yet. Round 3: the dial key on iPhone and iPad and the resting box.
 
 **0.10 (Mac, build 17, 17 Nov 2026).** Round 1 of 3 (his 25 picked ideas): six new kinds of key (sections 46 to 51: Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 17 kinds before, 23 now), the Wait step (52), Find a key (53), Settings > Key use (54) and four ready-made page groups (55). Drawings: 254 (252 before). 68 data tests (52 before). iPhone and iPad stay 0.16 (build 21). Round 2: keys that need a yes from the Mac first (next calendar event, weather, OmniFocus tasks due today, album cover, Body Battery, the "Desk" key). Round 3: the dial key on iPhone and iPad and the resting box.
 
@@ -472,7 +483,8 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
 - Not proven yet: on a real iPhone held on its side.
 
-## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9 and 0.10)
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10 and 0.11)
+- 0.11: the six new kinds were checked with made-up data and small tests only. Not pressed on a real screen: the calendar question (Allow Full Access) and the OmniFocus question at the first press, the weather from Open-Meteo, the Spotify notice and cover look-up, the board on port 7788, and the desk put back with real windows (Accessibility). The box is at home until January 2027.
 - 0.10: everything was checked with made-up keys and small tests. Dark mode's one-time question ("System Events"), a real Apple Shortcut run and the timer on the real box are not tried yet. The box is at home until January 2027.
 - "Ask AI (copied text)" against the real Raycast.
 - The dark screen on the real iPad.
@@ -632,3 +644,51 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - The new page group belongs to the app (Finder `com.apple.finder`, Safari `com.apple.Safari`, Notion `notion.id`, Fusion `com.autodesk.fusion360`) so it shows by itself when that app is in front, unless another page group already belongs to that app. Then it belongs to no app and shows only when picked. His page group for Notion already has the app, so the ready-made Notion belongs to no app.
 - If a page group of that name exists, the new one is named "<name> (ready-made)".
 - Nothing existing is changed. Undo (30 steps) takes it back.
+
+## 56. Keys that show something at a glance (Mac 0.11)
+- Five of the six new kinds (Next event, Weather, Due today, Album cover, Body Battery) show a value. Rules in `Core/Sources/DeckMateCore/GlanceKinds.swift`: `Glance` (`big` = the large words, `words` = the small words), `GlanceKeys`, `EventKeys`, `WeatherKeys`, `DueKeys`, `BatteryKeys`, `CoverKeys`, `DeskKeys`.
+- New `ActionType` cases: `nextEvent`, `weather`, `dueToday`, `cover`, `bodyBattery`, `desk`. Kinds of key: 29 (23 before).
+- Look: the value stands on the key in LARGE white words where the drawing normally is, with small words under it; a title the user gave replaces the small words. Until a value is there the key shows its drawing.
+- How a resolved key carries it: the key's `icon` as it shows now is "text:<large words>" (`GlanceKeys.textPrefix`, `bigWords(_:)`) or "cover:<track>" (`GlanceKeys.coverPrefix`, `coverTrack(_:)`). These are never saved; they are made when the keys are resolved from `LiveKeys`.
+- `LiveKeys` (Live.swift) gained `glances` (by name: `GlanceKeys.event`, `due`, `battery`, `weather(<town>)`), `battery`, `cover` and `coverReady`.
+- `Deck.allActions` lists every action of the setup (keys, long presses, favourites, the steps inside them); `Deck.weatherTowns` lists the towns of the weather keys, each once.
+- Mac side in `App/Sources/Glances.swift`. Each watcher runs only while a key of its kind exists in the setup (found with `Deck.allActions`). The keys show on the box, on screen keys and on the iPhone and iPad (the Mac draws them).
+
+## 57. Next event key (Mac 0.11)
+- `ActionType.nextEvent`; `target` = the bundle id of the app a press opens; empty = Calendar (`EventKeys.calendarApp`, `com.apple.iCal`). In Set up keys: "Choose app…" (for example Fantastical). Colour: blue. Drawing: calendar.
+- Source: EventKit, all calendars. Looks `EventKeys.daysAhead` = 7 days ahead. `EventKeys.next` picks the event that starts first among those with a time that have not ended; all-day events are left out; an event going on counts until it ends.
+- Large words (`EventKeys.glance`): "Now" while it goes on; "<n> min" in the last hour before the start (rounded up); the time "14:30" later today; the weekday ("Sun" to "Sat") on another day, with the time before the title in the small words ("09:00 Dentist"). Small words: the title ("Event" when empty). No event: a dash and "No events".
+- Access: the first press makes macOS ask once for calendar access (`NSCalendarsFullAccessUsageDescription`, "Allow Full Access"). Until then "Press to allow" (`EventKeys.askWords`); if refused "Calendar not allowed" (`refusedWords`; fix in System Settings > Privacy & Security > Calendars). Read only: it never writes an event.
+- Follows calendar changes at once (the store's change notice) and reads again every minute.
+
+## 58. Weather key (Mac 0.11)
+- `ActionType.weather`; `target` = the town as typed (a text field in Set up keys). Colour: teal. Drawing: sun. A press opens the Mac's Weather (`WeatherKeys.weatherApp`, `com.apple.weather`).
+- Large words: the temperature in whole degrees Celsius (`WeatherKeys.degrees`, "3°", "-4°"). Small words: the sky from the WMO code (`WeatherKeys.sky`): 0 Clear, 1 Mostly clear, 2 Partly cloudy, 3 Cloudy, 45 and 48 Fog, 51 to 57 Drizzle, 61 to 67 Rain, 71 to 77 Snow, 80 to 82 Showers, 85 and 86 Snow showers, 95 to 99 Thunder, anything else "Weather". No town: "Set a town" (`noTownWords`).
+- Several keys with different towns work: `GlanceKeys.weather(_:)` names a glance by the lower-case town (`WeatherKeys.name`). A key's own title (for instance the town) replaces the sky.
+- Service: Open-Meteo, no account, no key. Step 1, once per town: `https://geocoding-api.open-meteo.com/v1/search?name=<town>&count=1` (`searchURL`, `place(fromSearch:)`); only the town's name goes out. The place is kept in UserDefaults `weatherPlaces` (town to "lat,lon", `Place.text`). Step 2: `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&current=temperature_2m,weather_code` (`weatherURL`, `now(fromWeather:)`); only the place goes out. Asked again every `everyMinutes` = 20. The Mac asks nothing.
+
+## 59. Due today key (Mac 0.11)
+- `ActionType.dueToday`. Colour: purple. Drawing: tick. Large words: the number of OmniFocus tasks due today or overdue, not completed and not dropped; small words "Due today" (`DueKeys.glance`).
+- Source: one AppleScript call to OmniFocus (`evaluate javascript`); the answer is read by `DueKeys.count` ("3" or "3.0"; a non-number is nothing). OmniFocus is `DueKeys.apps` (`com.omnigroup.OmniFocus4`, then `3`).
+- Only while OmniFocus is running; otherwise "OmniFocus closed". Deck Mate never opens OmniFocus to count. Again every `everySeconds` = 120.
+- A press opens `omnifocus:///forecast`.
+- Access: the first press makes macOS ask once whether Deck Mate may control OmniFocus (Automation). Until then "Press to allow". Counts only; never changes a task.
+
+## 60. Album cover key (Mac 0.11)
+- `ActionType.cover`. Colour: green. Drawing: music note until a cover is there. A press = play or pause (the media key; needs Accessibility, section 11).
+- Source: Spotify's distributed notice `com.spotify.client.PlaybackStateChanged`, read at each change; `CoverKeys.track` takes the track name from "spotify:track:<name>" (ASCII letters and digits, at most 40; anything else, such as a podcast episode, an advert or a local file, is nil). Spotify only says what plays when something changes, so the cover shows from the next song change after Deck Mate starts; before that the key says "Nothing playing" (`idleWords`).
+- Picture: `https://open.spotify.com/oembed?url=https://open.spotify.com/track/<name>` (`lookupURL`); `pictureURL(fromLookup:)` takes `thumbnail_url`, https only. Only the track's name goes out; the Mac asks nothing. Covers are kept in memory only.
+- Look: the key's `icon` is "cover:<track>" (section 56); the cover fills the whole key with the song's name on a dark band at the bottom. `LiveKeys.cover` holds the song, `coverReady` the tracks whose picture is in memory. A non-track shows the song's name with the music note.
+
+## 61. Body Battery key (Mac 0.11)
+- `ActionType.bodyBattery`. Large words: the latest Body Battery (0 to 100); small words "Body Battery". Drawing: battery.
+- Source: the AMS Garmin Bridge Board on this Mac, `http://127.0.0.1:7788/api/board` (`BatteryKeys.boardData`), field `today.bodyBattery.latest` (`BatteryKeys.level(fromBoard:)`; a number outside 0 to 100 is nothing). Info.plist `NSAllowsLocalNetworking` allows the plain http call. Again every `everyMinutes` = 10. Nothing leaves the Mac; the Mac asks nothing.
+- Colour (`BatteryKeys.kind`): green (media) from 50, amber (text) from 25 to 49, red (raycast) below 25; grey-blue (move) while there is no number. If the board does not answer the key shows its drawing.
+- A press opens `http://127.0.0.1:7788/` in the browser. `LiveKeys.battery` holds the number.
+
+## 62. Desk key (Mac 0.11)
+- `ActionType.desk`; the desk is the key's `steps`, each a `DeckAction` of type `app` with `target` = the app and `name` = "x,y,width,height" (`DeskKeys.step`, `spot(_:)`, `spots(of:)`). x and y are the window's top left corner in the Mac's points (0, 0 = top left of the main screen). Colour: blue. Drawing: window. Default title "Desk".
+- Set up keys: the button "Take the desk as it is now" (`DeskKeys.capture`): from the windows on screen, front to back, the front window of each app, up to `most` = 8 apps; windows smaller than `smallest` = 200 × 150 and Deck Mate's own windows are left out. The list shows each app with its size ("Safari · 1200 × 800", `Spot.size`) and a button to take one out.
+- A press opens every app of the desk and puts each one's front window back in its place and size through Accessibility, waiting up to about 8 seconds for an app that is still opening. Needs Accessibility (section 11); the Mac asks at the first press if it was never given.
+- Also works as a long press and as a step of "Several things in a row".
+- Key check: an app that is no longer on this Mac makes the desk broken, "An app of the desk is not on this Mac"; a desk with no steps says "No windows taken yet".

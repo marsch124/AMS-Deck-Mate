@@ -31,18 +31,25 @@ extension ActionType {
         case .running: return "Open app"
         case .micLight: return "Microphone light"
         case .wait: return "Wait"
+        case .nextEvent: return "Next event"
+        case .weather: return "Weather"
+        case .dueToday: return "Due today (OmniFocus)"
+        case .cover: return "Album cover (Spotify)"
+        case .bodyBattery: return "Body Battery"
+        case .desk: return "Desk (windows in place)"
         }
     }
 
     static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
-                                        .media, .timer, .toggle, .micLight, .list, .multi,
+                                        .media, .timer, .toggle, .micLight,
+                                        .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk, .list, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder or only show something.
     static let forLongPress: [ActionType] = [.none, .app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut,
-                                             .text, .copied, .media, .timer, .toggle, .list, .multi,
+                                             .text, .copied, .media, .timer, .toggle, .desk, .list, .multi,
                                              .back, .nextPage, .previousPage, .profile]
     static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied, .media,
-                                         .timer, .toggle, .wait]
+                                         .timer, .toggle, .desk, .wait]
     /// What an entry of a list to pick from, or one side of a switch of his own, can do.
     static let forEntries: [ActionType] = [.app, .link, .raycast, .shortcut, .appleShortcut, .text, .media]
 }
@@ -187,6 +194,30 @@ struct ActionFields: View {
                 }
                 .labelsHidden()
                 note("Waits before the next step, for an app that needs a moment to open.")
+            case .nextEvent:
+                HStack(spacing: 8) {
+                    Text("A press opens " + (action.target.isEmpty ? "Calendar" : KeyArt.appName(action.target))).lineLimit(1)
+                    Spacer(minLength: 4)
+                    if !action.target.isEmpty {
+                        Button("Calendar") { action.target = "" }.buttonStyle(PlainButton())
+                    }
+                    Button("Choose app…") { if let picked = Chooser.app() { action.target = picked } }
+                        .buttonStyle(PlainButton())
+                        .accessibilityIdentifier("eventApp")
+                }
+                note("Shows your next event that has a time: “Now” while it goes on, the minutes in its last hour before the start, its time later today, or its weekday. It looks seven days ahead and leaves out all-day events. The first press makes the Mac ask once whether AMS Deck Mate may see your calendar: choose “Allow Full Access”. It only reads, and never changes an event.")
+            case .weather:
+                TextField("Town", text: $action.target)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("weatherTown")
+                note("Shows the temperature and the sky of this town, asked again every 20 minutes. A press opens the Mac’s Weather. The free weather service Open-Meteo gets the town’s name once, to find its place, and after that only the place. With more than one weather key, give each its town as the title.")
+            case .dueToday:
+                note("Shows how many OmniFocus tasks are due today or overdue, counted every two minutes while OmniFocus is open. A press opens OmniFocus on its Forecast. The first press makes the Mac ask once whether AMS Deck Mate may control OmniFocus: choose Allow. It only counts, and never changes a task.")
+            case .cover:
+                note("Shows the cover of the song Spotify plays, with the song’s name. A press plays or pauses. The cover appears with the next song change after AMS Deck Mate starts. The picture comes from Spotify’s own open look-up, by the track only.")
+            case .bodyBattery:
+                note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50, amber from 25, red below. A press opens the board. Nothing leaves the Mac.")
+            case .desk: DeskFields(action: $action)
             case .folder: folderFields
             case .profile: profileFields
             case .multi: StepsEditor(action: $action, deck: deck, profile: profile)
@@ -458,6 +489,42 @@ struct RaycastPicker: View {
         .padding(12)
         .frame(width: 300, height: 380)
         .onAppear { commands = RaycastCatalog.load() }
+    }
+}
+
+/// A desk key: the apps it opens, each with the size of its window, and the button that takes the desk as it is now.
+struct DeskFields: View {
+    @Binding var action: DeckAction
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        let spots = DeskKeys.spots(of: action)
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(spots.enumerated()), id: \.offset) { index, spot in
+                HStack(spacing: 6) {
+                    Text(KeyArt.appName(spot.app)).lineLimit(1)
+                    Text(spot.size).foregroundStyle(.secondary).monospacedDigit()
+                    Spacer(minLength: 4)
+                    Button("Take out") { action.steps = spots.enumerated().filter { $0.offset != index }.map { DeskKeys.step($0.element) } }
+                        .buttonStyle(PlainButton())
+                        .accessibilityIdentifier("deskRemove-\(index)")
+                }
+                .font(.callout)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+            }
+            HStack {
+                Button(spots.isEmpty ? "Take the desk as it is now" : "Take the desk again, as it is now") {
+                    action.steps = Desk.now().map(DeskKeys.step)
+                }
+                .buttonStyle(MainButton(part: "keys"))
+                .accessibilityIdentifier("deskTake")
+                Spacer()
+            }
+            Text("Remembers the apps that have a window on screen right now (up to eight), with the place and size of each one’s front window. A press opens them and puts every window back. Moving windows needs the Mac’s Accessibility yes, the same one the shortcut keys use.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 

@@ -16,7 +16,7 @@ enum ActionRunner {
 
     static func needsKeys(_ action: DeckAction) -> Bool {
         switch action.type {
-        case .shortcut, .text, .media, .copied: return true
+        case .shortcut, .text, .media, .copied, .cover, .desk: return true
         case .multi, .list, .toggle: return action.steps.contains(where: needsKeys)
         default: return false
         }
@@ -37,6 +37,9 @@ enum ActionRunner {
     static var switchPressed: ((DeckAction) -> Void)?
     /// Shows the entries of a "List to pick from" key at the mouse pointer (set by the app at start).
     static var showPickList: ((DeckAction) -> Void)?
+
+    /// A glance key or a desk key was pressed (set by the app at start).
+    static var glancePressed: ((DeckAction) -> Void)?
 
     /// The apps used last, newest first (the app in front first); kept up to date by AppModel.
     static var recentApps: [String] = []
@@ -106,6 +109,13 @@ enum ActionRunner {
         case .running:
             let now = action.resolving(live())
             if now.type == .app { run(now) }
+        case .nextEvent, .weather, .dueToday, .desk:
+            glancePressed?(action)
+        case .cover:
+            guard mayPressKeys else { askToPressKeys(); return }
+            pressMedia(.playPause)
+        case .bodyBattery:
+            if let url = URL(string: BatteryKeys.board) { NSWorkspace.shared.open(url) }
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
             break       // moving around is the Navigator's work; a light only shows; a wait only waits
         }

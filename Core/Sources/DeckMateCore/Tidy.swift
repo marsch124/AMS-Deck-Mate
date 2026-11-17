@@ -192,8 +192,13 @@ public enum KeyCheck {
             }
             return SwitchKeys.step(of: action, isOn: false) == nil && SwitchKeys.step(of: action, isOn: true) == nil
                 ? "Nothing to switch yet" : nil
+        case .weather:
+            return target.isEmpty ? "No town yet" : nil
+        case .desk:
+            for spot in DeskKeys.spots(of: action) where !world.appExists(spot.app) { return "An app of the desk is not on this Mac" }
+            return DeskKeys.spots(of: action).isEmpty ? "No windows taken yet" : nil
         case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
-             .timer, .running, .micLight, .wait:
+             .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery:
             return nil
         }
     }
@@ -263,6 +268,14 @@ public enum ActionWords {
         case .appleShortcut: return action.target.isEmpty ? "No Shortcut picked" : "Ran the Shortcut “\(action.target)”"
         case .list: return "Pick from the list on the Mac"
         case .running: return "No app in that place"
+        case .nextEvent: return "Opened the calendar"
+        case .weather: return "Opened Weather"
+        case .dueToday: return "Opened OmniFocus"
+        case .cover: return MediaKey.playPause.title
+        case .bodyBattery: return "Opened the Garmin board"
+        case .desk:
+            let count = DeskKeys.spots(of: action).count
+            return count == 0 ? "No windows taken yet" : count == 1 ? "Set up the desk: 1 app" : "Set up the desk: \(count) apps"
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait: return "Done"
         }
     }

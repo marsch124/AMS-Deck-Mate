@@ -123,7 +123,8 @@ public enum Navigator {
         case .micLight:
             break       // it only shows something
         case .app, .link, .raycast, .shortcut, .text, .media, .recent, .askAI, .copied, .recentFile,
-             .timer, .toggle, .appleShortcut, .list, .running, .wait:
+             .timer, .toggle, .appleShortcut, .list, .running, .wait,
+             .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk:
             outcome.run.append(action)
         }
     }

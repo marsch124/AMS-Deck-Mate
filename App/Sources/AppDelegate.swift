@@ -109,6 +109,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             NSApp.terminate(nil)
             return
         }
+        // For checks: "--glance <folder>" reads the weather of Stockholm and the Body Battery for real, waits
+        // seven seconds and writes the five glance keys as one picture. The setup is not touched and the Mac
+        // is asked nothing (the calendar and OmniFocus keys only say whether they were allowed).
+        if let index = arguments.firstIndex(of: "--glance"), index + 1 < arguments.count {
+            let folder = URL(fileURLWithPath: arguments[index + 1])
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            var page = DeckPage(name: "Glance")
+            let kinds: [DeckAction] = [DeckAction(type: .nextEvent), DeckAction(type: .weather, target: "Stockholm"),
+                                       DeckAction(type: .dueToday), DeckAction(type: .cover), DeckAction(type: .bodyBattery)]
+            for (slot, action) in kinds.enumerated() { page.keys[slot] = DeckKey(action: action) }
+            let watch = GlanceWatch()
+            watch.watch(Deck(profiles: [DeckProfile(name: "Check", pages: [page])]))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 7) {
+                let live = LiveKeys(glances: watch.glances, battery: watch.battery, cover: watch.cover, coverReady: watch.coverReady)
+                var shown = page
+                shown.keys = page.keys.mapValues { $0.resolving(live) }
+                try? KeyArt.pngForCheck(shown)?.write(to: folder.appendingPathComponent("glance.png"))
+                for (name, glance) in watch.glances.sorted(by: { $0.key < $1.key }) { print("\(name): \(glance.big) | \(glance.words)") }
+                var places = UserDefaults.standard.dictionary(forKey: "weatherPlaces") ?? [:]
+                places["stockholm"] = nil
+                UserDefaults.standard.set(places, forKey: "weatherPlaces")
+                print("glance written")
+                NSApp.terminate(nil)
+            }
+            return
+        }
         // Switches "Open at login" on or off from outside, then quits: "--open-at-login on".
         if let index = arguments.firstIndex(of: "--open-at-login"), index + 1 < arguments.count {
             if arguments[index + 1] == "on" { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
@@ -519,6 +545,13 @@ enum Snapshots {
                 shot(SetupView(model: model, startSlot: 2), "setup-timer-\(name)", look, folder)
                 shot(SetupView(model: model, startSlot: 4), "setup-switch-\(name)", look, folder)
                 shot(SetupView(model: model, startSlot: 8), "setup-list-\(name)", look, folder)
+                // 0.11: the glance keys and the desk key (page 3 of the made-up keys).
+                if let third = group.topPages.dropFirst(2).first {
+                    model.show(profile: group.id, page: third.id)
+                    shot(ScreenDeckView(model: model).padding(16), "deck-glance-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 1), "setup-weather-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 5), "setup-desk-\(name)", look, folder)
+                }
                 model.show(profile: group.id, page: first.id)
             }
             model.startFinding()

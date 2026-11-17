@@ -9,6 +9,16 @@ enum KeyArt {
     private static var phonePictures: [String: Data] = [:]
     private static var ownPictures: [String: NSImage] = [:]
 
+    private static var covers: [String: NSImage] = [:]
+
+    /// The album cover of a track, when it has been fetched. Kept in memory only.
+    static func cover(_ track: String) -> NSImage? { covers[track] }
+
+    static func keep(cover: NSImage, for track: String) {
+        if covers.count >= 12 { covers.removeAll() }
+        covers[track] = cover
+    }
+
     /// Where the pictures of keys with a picture of their own are kept (the setup's Pictures folder).
     static var picturesFolder: URL?
 
@@ -60,7 +70,11 @@ enum KeyArt {
         if let key {
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
-            draw(key, size: size)
+            if let track = GlanceKeys.coverTrack(key.icon), let picture = cover(track) {
+                drawCover(key, picture, size: size)
+            } else {
+                draw(key, size: size)
+            }
             if key.action.type == .toggle {
                 // A small switch top left: filled with its knob to the right when on, an outline when off.
                 let k = size / 72
@@ -94,18 +108,55 @@ enum KeyArt {
         return picture
     }
 
+    /// An album cover fills the whole key; the song's name stands on a dark band at the bottom.
+    /// A paused song's cover is a little darker.
+    private static func drawCover(_ key: DeckKey, _ picture: NSImage, size: CGFloat) {
+        let k = size / 72
+        let whole = CGRect(x: 0, y: 0, width: size, height: size)
+        NSGraphicsContext.current?.imageInterpolation = .high
+        picture.draw(in: whole, from: .zero, operation: .sourceOver, fraction: 1)
+        if !key.action.quiet {
+            NSColor.black.withAlphaComponent(0.35).setFill()
+            whole.fill(using: .sourceOver)
+        }
+        let title = Self.title(key)
+        guard !title.isEmpty else { return }
+        NSColor.black.withAlphaComponent(0.6).setFill()
+        CGRect(x: 0, y: 0, width: size, height: 19 * k).fill(using: .sourceOver)
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        style.lineBreakMode = .byTruncatingTail
+        (title as NSString).draw(with: CGRect(x: 3 * k, y: 3.5 * k, width: size - 6 * k, height: 12.5 * k),
+                                 options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
+                                 attributes: [.font: NSFont.systemFont(ofSize: 9.5 * k, weight: .semibold),
+                                              .foregroundColor: NSColor.white, .paragraphStyle: style])
+    }
+
     private static func draw(_ key: DeckKey, size: CGFloat) {
         let k = size / 72
         let title = Self.title(key)
         let hasTitle = !title.isEmpty
-        // A key with a picture of its own whose file is missing falls back to the automatic drawing.
-        let iconName = key.pictureName == nil ? key.shownIcon : key.action.autoIcon
+        // A key with a picture of its own whose file is missing falls back to the automatic drawing;
+        // so does a key that would show a cover that is not here.
+        let plain = key.pictureName == nil && GlanceKeys.coverTrack(key.icon) == nil
+        let iconName = plain ? key.shownIcon : key.action.autoIcon
         // The drawing sits a little above the middle when there is a title under it.
         let iconSide = (hasTitle ? 34 : 44) * k
         let iconMid = CGPoint(x: size / 2, y: hasTitle ? size - 27 * k : size / 2)
         let iconRect = CGRect(x: iconMid.x - iconSide / 2, y: iconMid.y - iconSide / 2, width: iconSide, height: iconSide)
 
-        if let name = key.pictureName, let picture = ownPicture(name) {
+        if let words = GlanceKeys.bigWords(key.icon) {
+            // A glance key: large words where the drawing would be, made smaller until they fit.
+            var font = NSFont.systemFont(ofSize: (hasTitle ? 25 : 30) * k, weight: .bold)
+            var extent = (words as NSString).size(withAttributes: [.font: font])
+            let room = size - 8 * k
+            if extent.width > room {
+                font = NSFont.systemFont(ofSize: font.pointSize * room / extent.width, weight: .bold)
+                extent = (words as NSString).size(withAttributes: [.font: font])
+            }
+            (words as NSString).draw(at: CGPoint(x: (size - extent.width) / 2, y: iconMid.y - extent.height / 2),
+                                     withAttributes: [.font: font, .foregroundColor: NSColor.white])
+        } else if let name = key.pictureName, let picture = ownPicture(name) {
             // A picture of its own (an app's real icon): a little larger than a drawing, with an app icon's round corners.
             let side = (hasTitle ? 36 : 46) * k
             let box = CGRect(x: iconMid.x - side / 2, y: iconMid.y - side / 2, width: side, height: side)
