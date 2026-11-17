@@ -16,6 +16,11 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     case recent, askAI
     /// copied = a text copied before the current one (target "1"–"3"); recentFile = a file opened lately (target "1"–"3").
     case copied, recentFile
+    /// timer = counts down its minutes (target); toggle = a switch that is on or off (target: see `SwitchKeys`);
+    /// appleShortcut = runs a Shortcut of the Shortcuts app by its name; list = a small list to pick from (its steps);
+    /// running = one of the apps open now (target "1"–"15"); micLight = shows whether the microphone is in use;
+    /// wait = a pause between the steps of a "several things in a row" key (target = seconds).
+    case timer, toggle, appleShortcut, list, running, micLight, wait
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -96,16 +101,20 @@ public struct DeckAction: Codable, Hashable, Sendable {
     public var combo: KeyCombo?
     /// The steps of a "several things in a row" key.
     public var steps: [DeckAction]
-    /// Raycast only: run without bringing Raycast to the front.
+    /// Raycast: run without bringing Raycast to the front. On a key as it shows right now it also
+    /// says "lit": a switch that is on, a timer that runs, a microphone in use (never saved that way).
     public var quiet: Bool
+    /// The words of an entry in a list to pick from; empty = made from what it does.
+    public var name: String
 
     public init(type: ActionType = .none, target: String = "", combo: KeyCombo? = nil,
-                steps: [DeckAction] = [], quiet: Bool = false) {
+                steps: [DeckAction] = [], quiet: Bool = false, name: String = "") {
         self.type = type
         self.target = target
         self.combo = combo
         self.steps = steps
         self.quiet = quiet
+        self.name = name
     }
 
     public init(from decoder: Decoder) throws {
@@ -115,6 +124,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         combo = try? c.decodeIfPresent(KeyCombo.self, forKey: .combo)
         steps = c.value(.steps, [])
         quiet = c.value(.quiet, false)
+        name = c.value(.name, "")
     }
 
     public static let none = DeckAction()
@@ -131,7 +141,14 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .text, .copied: return .text
         case .media: return .media
         case .folder, .back, .nextPage, .previousPage, .profile: return .move
-        case .multi: return steps.first(where: { $0.type != .none })?.kind ?? .shortcut
+        case .multi: return steps.first(where: { $0.type != .none && $0.type != .wait })?.kind ?? .shortcut
+        case .timer: return .text
+        case .toggle, .appleShortcut: return .shortcut
+        case .list: return steps.first(where: { $0.type != .none })?.kind ?? .web
+        case .running: return .app
+        // Red while the microphone is in use, grey-blue while it is free.
+        case .micLight: return quiet ? .raycast : .move
+        case .wait: return .empty
         }
     }
 
@@ -162,6 +179,13 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .previousPage: return "deck-page-previous"
         case .profile: return "deck-profile"
         case .multi: return "deck-multi"
+        case .timer: return "app-timer"
+        case .toggle: return target == SwitchKeys.dark ? "app-moon" : target == SwitchKeys.mute ? "deck-mute" : "deck-multi"
+        case .appleShortcut: return "deck-script"
+        case .list: return "control-list"
+        case .running: return "deck-app"
+        case .micLight: return quiet ? "microphone" : "microphoneoff"
+        case .wait: return "app-hourglass"
         }
     }
 }

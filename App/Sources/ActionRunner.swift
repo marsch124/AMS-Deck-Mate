@@ -5,9 +5,6 @@ import DeckMateCore
 /// Does what a key says on the Mac: opens apps and links, runs Raycast commands, presses shortcuts,
 /// types text, controls music.
 enum ActionRunner {
-    /// The pause between the steps of a "several things in a row" key.
-    static let stepPause = 0.33
-
     /// Pressing shortcuts, typing and the music keys need the Mac's Accessibility permission.
     static var mayPressKeys: Bool { AXIsProcessTrusted() }
 
@@ -20,16 +17,26 @@ enum ActionRunner {
     static func needsKeys(_ action: DeckAction) -> Bool {
         switch action.type {
         case .shortcut, .text, .media, .copied: return true
-        case .multi: return action.steps.contains(where: needsKeys)
+        case .multi, .list, .toggle: return action.steps.contains(where: needsKeys)
         default: return false
         }
     }
 
     static func run(_ actions: [DeckAction]) {
-        for (index, action) in actions.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * stepPause) { run(action) }
+        // A third of a second apart; a "Wait" step pushes everything after it back.
+        for step in StepTiming.starts(actions) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + step.after) { run(step.action) }
         }
     }
+
+    /// What the keys that change by themselves stand for right now (set by the app at start).
+    static var live: () -> LiveKeys = { LiveKeys() }
+    /// A timer key was pressed: its minutes (set by the app at start).
+    static var timerPressed: ((String) -> Void)?
+    /// A switch key was pressed (set by the app at start).
+    static var switchPressed: ((DeckAction) -> Void)?
+    /// Shows the entries of a "List to pick from" key at the mouse pointer (set by the app at start).
+    static var showPickList: ((DeckAction) -> Void)?
 
     /// The apps used last, newest first (the app in front first); kept up to date by AppModel.
     static var recentApps: [String] = []
@@ -88,8 +95,19 @@ enum ActionRunner {
         case .media:
             guard mayPressKeys else { askToPressKeys(); return }
             pressMedia(MediaKey(rawValue: action.target) ?? .playPause)
-        case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi:
-            break       // moving around is the Navigator's work
+        case .timer:
+            timerPressed?(action.target)
+        case .toggle:
+            switchPressed?(action)
+        case .appleShortcut:
+            AppleShortcuts.run(action.target)
+        case .list:
+            showPickList?(action)
+        case .running:
+            let now = action.resolving(live())
+            if now.type == .app { run(now) }
+        case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
+            break       // moving around is the Navigator's work; a light only shows; a wait only waits
         }
     }
 

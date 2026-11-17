@@ -32,6 +32,7 @@ enum Guide {
             "Together: press Control-Option-D, the keys appear under the mouse, click one, and they are gone.",
             "You can also use the keyboard. Right after the keys appear, 1 to 5 press the top row, Q W E R T the middle row and A S D F G the bottom row. These are the same places on every keyboard.",
             "The left and right arrow keys, or Tab and Shift-Tab, change page. Escape hides the keys.",
+            "New in 0.10: Space or / (or the new magnifier in the top line) opens \"Find a key\". See the part \"Find a key\" below.",
             "After a key that does something on the Mac, the keyboard goes back to the app you were in.",
             "Since 0.4.1, while the keys on screen have the keyboard, each key shows its letter in a small round mark in its top-left corner: 1 2 3 4 5 on the top row, Q W E R T in the middle and A S D F G at the bottom.",
             "The letters go away as soon as the keyboard goes back to the app you were in, after a key that does something on the Mac or after a click on the keys. So letters showing means typing works right now.",
@@ -48,10 +49,12 @@ enum Guide {
             "Since 0.9.3 a key can also show a picture of its own, for example an app's real icon, instead of a white drawing. This works for any key, also one that opens a web address or a file. The picture has rounded corners like an app icon and sits on the key's usual colour (links stay teal). If the picture file is gone, the key shows the usual drawing for what it does.",
             "The pictures are files in the folder \"Pictures\" beside your keys. The AMS Apps Overview tool puts them there. There is no button to choose a picture in the app yet.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
-            "There are 252 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer."
+            "There are 254 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
+            "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
+            "New in 0.10: the + beside \"Page groups\" now opens a small list: \"Empty page group\" and four ready-made ones. See \"Ready-made page groups\" below. Under the page's buttons there is also \"Add an “Open apps” folder\". See \"Open app keys\" below.",
             "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
             "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\". For a key that shows a picture, the Icon button says \"Own picture\". Picking a drawing, or \"Automatic\", replaces the picture.",
@@ -92,7 +95,8 @@ enum Guide {
             "Raycast: run a Raycast command. Keyboard shortcut: press the keys to record them.",
             "Type text. Music and sound: play or pause, next, previous, volume up, volume down, mute.",
             "Folder of keys opens another page of keys, and Back returns. Next page and Previous page move between pages.",
-            "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart.",
+            "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart, unless you put a \"Wait\" step between two of them (since 0.10). See \"Several things in a row and Wait\".",
+            "Since 0.10, six more kinds: \"Timer\", \"Switch (on or off)\", \"Run an Apple Shortcut\", \"List to pick from\", \"Open app\" and \"Microphone light\". That makes 23 kinds of key, instead of 17. See the parts after \"Recent file key\".",
             "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
             "Since 0.8, two more: \"Last copied text\" and \"Recent file\". See the two parts after \"Ask AI about copied text\".",
             "Nothing leaves the key empty.",
@@ -137,6 +141,75 @@ enum Guide {
             "Deck Mate only looks this up while at least one such key exists in your setup.",
             "The key is teal, like the other keys that open files and links. Until there is a file for its place, it shows \"Recent file\".",
             "On the iPhone and iPad the key shows too, drawn by the Mac."
+        ]),
+        Section(id: "timer", title: "Timer key", part: "keys", lines: [
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Timer\" and pick the minutes: 1, 2, 3, 5, 10, 15, 20, 25, 30, 45 or 60.",
+            "Press the key and the timer starts. The key counts down, second by second, for example \"4:59\". Press again and it stops.",
+            "When the time is up, the Mac plays a sound twice and the key says \"Done\" for one minute, or until you press it.",
+            "A key without a title shows \"5 min\" (or whatever minutes you picked). Words you write on a key win.",
+            "Two keys with the same minutes are the same timer: start one and the other counts down too.",
+            "The key is amber. The countdown shows on the box, on the keys on screen and on the iPhone and iPad.",
+            "A timer is forgotten when Deck Mate quits."
+        ]),
+        Section(id: "switch", title: "Switch key (on or off)", part: "keys", lines: [
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Switch (on or off)\". It has three choices.",
+            "\"Dark mode\" switches the Mac between light and dark. The first time, the Mac asks once whether Deck Mate may control \"System Events\". Choose Allow.",
+            "\"Mute the sound\" mutes and unmutes the Mac.",
+            "\"Two things in turn\": you set what happens when it goes on and what happens when it goes off. The key remembers which one it is, also after a restart.",
+            "The key shows a small switch mark in its top-left corner: filled when on, an outline when off.",
+            "A key without a title says \"Dark\" or \"Light\", \"Muted\" or \"Sound on\", \"On\" or \"Off\".",
+            "Dark mode and mute follow the Mac also when you change them somewhere else. Mute follows within about two seconds.",
+            "The key is purple."
+        ]),
+        Section(id: "appleShortcut", title: "Apple Shortcut key", part: "keys", lines: [
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Run an Apple Shortcut\".",
+            "Pick one of the Shortcuts from the Shortcuts app in a list (\"Pick a Shortcut…\"), or type its name.",
+            "Press the key and that Shortcut runs. The key is purple.",
+            "A key with no Shortcut picked gets the red corner \"No Shortcut picked\"."
+        ]),
+        Section(id: "pickList", title: "List to pick from", part: "keys", lines: [
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"List to pick from\". One key opens a small list at the mouse pointer.",
+            "Each entry has a name and does one thing: open an app, open a link or a file, run Raycast, press a keyboard shortcut, type text, music and sound, or run an Apple Shortcut.",
+            "Click an entry to run it. A click anywhere else, a second press of the key, or ten seconds puts the list away.",
+            "Tapped on the iPhone or iPad, the list shows on the Mac, because the choice is made with the mouse.",
+            "An entry without a name shows what it does."
+        ]),
+        Section(id: "openApps", title: "Open app keys", part: "keys", lines: [
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Open app\" and pick 1st to 15th. The key stands for one of the apps that are open right now.",
+            "The apps are in the order they were opened. An app keeps its place while it stays open, and a newly opened app goes to the end.",
+            "The key shows that app's own icon and name. Press it and the app comes forward. With fewer apps open it says \"No app\".",
+            "Under the page's buttons there is a new button \"Add an “Open apps” folder\". It puts a folder key on the first empty place of the page. Inside are Back and Open app 1 to 14, so the folder is always a live picture of what is open.",
+            "When the page is full, it says so and changes nothing."
+        ]),
+        Section(id: "micLight", title: "Microphone light", part: "keys", lines: [
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Microphone light\".",
+            "It shows whether any app is listening to the Mac's microphone right now. Red with a microphone and \"Mic in use\", or grey-blue with a crossed-out microphone and \"Mic free\".",
+            "It changes within about two seconds. A press does nothing. It only looks and never changes the microphone."
+        ]),
+        Section(id: "wait", title: "Several things in a row and Wait", part: "keys", lines: [
+            "The key \"Several things in a row\" was already there. New in 0.10 is the step \"Wait\": half a second, 1, 2, 3, 5 or 10 seconds between two steps. It is for an app that needs a moment to open.",
+            "Without a Wait, steps still run a third of a second apart.",
+            "A Timer, a Switch and \"Run an Apple Shortcut\" can also be steps."
+        ]),
+        Section(id: "findKey", title: "Find a key", part: "screen", lines: [
+            "New in 0.10. On the keys on screen, click the magnifier in the top line, or press Space or / while the keys have the keyboard (right after Control-Option-D).",
+            "Type a few letters. Up to six keys from all page groups and pages are listed under the keys, when their title, page or page group holds every word you typed. Titles that start with the word come first. Each shows its place, \"Page group · Page\".",
+            "Up and down arrows choose. Return, or a click, runs the key and shows its page. Delete takes a letter away. Escape leaves the search, and Escape again hides the keys.",
+            "Keys that only move around (Back, next page, previous page) are not listed.",
+            "While you search, letters go to the search and not to the keys."
+        ]),
+        Section(id: "keyUse", title: "Key use", part: "settings", lines: [
+            "New in 0.10. Settings has a new part, \"Key use\", in the list on the left.",
+            "Deck Mate counts each press of a key that does something on the Mac: from the box, the keys on screen, the keyboard, the iPhone and the iPad.",
+            "It shows since which day it has counted, \"Pressed most\" (the five most pressed keys, with their numbers) and \"Not pressed in the last 30 days\". In the first 30 days that list says \"Not pressed since <day>\". It is a list for tidying up, each key as \"Page group · Page · “Title”\".",
+            "Keys that only move around (folders, Back, pages, page group) and the microphone light are not counted.",
+            "Only the number and the time of the last press are kept, in a small file \"use.json\" beside your keys file on this Mac. It is not part of the iCloud copy."
+        ]),
+        Section(id: "readyMade", title: "Ready-made page groups", part: "profiles", lines: [
+            "New in 0.10. In Set up keys, the + beside \"Page groups\" opens a small list: \"Empty page group\" and four ready-made ones: Finder, Safari, Notion and Fusion. Each has one page of keyboard-shortcut keys for that app.",
+            "The new page group shows by itself when that app is in front. If another page group already belongs to that app (yours for Notion does), the new one belongs to no app and shows only when you pick it.",
+            "If a page group of that name exists, the new one is named for example \"Notion (ready-made)\".",
+            "Nothing you have is changed. Undo takes it back."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
@@ -219,7 +292,7 @@ enum Guide {
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
-            "Since 0.4 \"Settings\" is a short list on the left with one part at a time on the right, instead of one long page. The parts are: The box, First time with the box, Keys on screen, iPhone, Page groups, Check keys, This Mac, From Elgato and Where it is kept.",
+            "Since 0.4 \"Settings\" is a short list on the left with one part at a time on the right, instead of one long page. The parts are: The box, First time with the box, Keys on screen, iPhone, Page groups, Check keys, Key use (new in 0.10), This Mac, From Elgato and Where it is kept.",
             "They hold the box and brightness, change page group with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions, bring over again and the check for broken keys.",
             "The version number, Quit and Done stay at the bottom."
         ]),
@@ -242,6 +315,28 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.10", date: "17 Nov 2026", new: [
+            "Six new kinds of key in Set up keys, under \"What it does\". Before: 17 kinds of key. Now: 23.",
+            "\"Timer\": pick the minutes (1, 2, 3, 5, 10, 15, 20, 25, 30, 45 or 60). A press starts it and the key counts down, second by second, for example \"4:59\". Another press stops it. When the time is up, the Mac plays a sound twice and the key says \"Done\" for one minute, or until you press it. A key without a title shows \"5 min\". Two keys with the same minutes are the same timer. The key is amber. The countdown shows on the box, on the keys on screen and on the iPhone and iPad. A timer is forgotten when Deck Mate quits.",
+            "\"Switch (on or off)\" with three choices: \"Dark mode\" (switches the Mac between light and dark; the first time, the Mac asks once whether Deck Mate may control \"System Events\", and you choose Allow), \"Mute the sound\", and \"Two things in turn\" (you set what happens when it goes on and what happens when it goes off; the key remembers which it is, also after a restart). The key shows a small switch mark in its top-left corner: filled when on, an outline when off. Without a title it says \"Dark\" or \"Light\", \"Muted\" or \"Sound on\", \"On\" or \"Off\". The key is purple. Dark mode and mute follow the Mac also when you change them somewhere else (mute within about two seconds).",
+            "\"Run an Apple Shortcut\": pick one of the Shortcuts from the Shortcuts app in a list (\"Pick a Shortcut…\"), or type its name. A press runs it. A key with no Shortcut picked gets the red corner \"No Shortcut picked\". The key is purple.",
+            "\"List to pick from\": one key that opens a small list at the mouse pointer. Each entry has a name and does one thing: open an app, open a link or a file, Raycast, a keyboard shortcut, type text, music and sound, or run an Apple Shortcut. Click an entry to run it. A click elsewhere, a second press or ten seconds puts the list away. Tapped on the iPhone or iPad, the list shows on the Mac. An entry without a name shows what it does.",
+            "\"Open app\": a key that stands for one of the apps open right now (1st to 15th, in the order they were opened; an app keeps its place while it stays open, and a newly opened app goes to the end). It shows that app's own icon and name, and a press brings the app forward. With fewer apps open it says \"No app\".",
+            "New button \"Add an “Open apps” folder\" in Set up keys, under the page's buttons. It puts a folder key on the first empty place of the page. Inside are Back and Open app 1 to 14, so the folder is always a live picture of what is open. When the page is full, it says so and changes nothing.",
+            "\"Microphone light\": shows whether any app is listening to the Mac's microphone right now. A red key with a microphone and \"Mic in use\", or a grey-blue key with a crossed-out microphone and \"Mic free\". It changes within about two seconds. A press does nothing. It only looks and never changes the microphone. Two drawings were added from the AMS icon library, a microphone and a crossed-out microphone: 254 drawings to pick from now, instead of 252.",
+            "New step \"Wait\" in \"Several things in a row\": half a second, 1, 2, 3, 5 or 10 seconds between two steps. It is for an app that needs a moment to open. A Timer, a Switch and \"Run an Apple Shortcut\" can also be steps.",
+            "Find a key, on the keys on screen. Click the new magnifier in the top line, or press Space or / while the keys have the keyboard (right after Control-Option-D). Type a few letters: up to six keys from all page groups and pages whose title, page or page group holds every word you typed are listed under the keys, titles that start with the word first, each with its place (\"Page group · Page\"). Up and down arrows choose, Return or a click runs the key and shows its page, Delete takes a letter away, Escape leaves the search (Escape again hides the keys). Keys that only move around (Back, next page, previous page) are not listed. While you search, letters go to the search and not to the keys.",
+            "Settings has a new part, \"Key use\", in the list on the left. Deck Mate now counts each press of a key that does something on the Mac: from the box, the keys on screen, the keyboard, the iPhone and the iPad. It shows since which day it has counted, \"Pressed most\" (the five most pressed keys with their numbers) and \"Not pressed in the last 30 days\" (during the first 30 days: \"Not pressed since <day>\"). That is a list for tidying up, each key as \"Page group · Page · “Title”\". Keys that only move around (folders, Back, pages, page group) and the microphone light are not counted. Only the number and the time of the last press are kept, in a small file \"use.json\" beside your keys file on this Mac. It is not part of the iCloud copy.",
+            "Ready-made page groups. In Set up keys, the + beside \"Page groups\" now opens a small list: \"Empty page group\" and four ready-made ones, Finder, Safari, Notion and Fusion. Each has one page of keyboard-shortcut keys for that app. The new page group shows by itself when that app is in front, unless another page group already belongs to that app (yours for Notion does). Then it belongs to no app and shows only when you pick it. If a page group of that name exists, the new one is named for example \"Notion (ready-made)\". Nothing you have is changed, and Undo takes it back.",
+            "Round 1 of 3. You picked these from a list of 25 ideas. Round 2 will bring the keys that need a yes from the Mac first: next calendar event, weather, OmniFocus tasks due today, album cover, Body Battery and the \"Desk\" key. Round 3 will bring the dial key on iPhone and iPad and the resting box.",
+            "Not yet tried for real: everything was checked with made-up keys and small tests. Dark mode's one-time question, running a real Apple Shortcut, and the timer on the real box are not tried yet. The box is at home until January 2027."
+        ], changed: [
+            "The key \"Several things in a row\" was already there, under that name. What is new is the step \"Wait\". Before, steps always ran a third of a second apart. Now they still do, unless you put a Wait between them.",
+            "On the keys on screen, the keyboard now also knows Space and / for finding a key. Before, only the places, the arrows, Tab and Escape.",
+            "There are 254 hand-drawn drawings to pick from, instead of 252.",
+            "How it works has new parts: \"Timer key\", \"Switch key (on or off)\", \"Apple Shortcut key\", \"List to pick from\", \"Open app keys\", \"Microphone light\", \"Several things in a row and Wait\", \"Find a key\", \"Key use\" and \"Ready-made page groups\", and new lines in \"Keys on screen\", \"The look of a key\", \"Set up keys\", \"What a key can do\" and \"Settings\".",
+            "The Mac app is now 0.10 (build 17). The iPhone and iPad app stays 0.16 (build 21) and needs no update, because the Mac draws the keys."
+        ], fixed: []),
         Release(id: "0.9.4", date: "17 Nov 2026", new: [
             "One more hand-drawn drawing to choose for a key in \"Set up keys\", where you pick a key's drawing: Drawer (a drawer front with a small handle).",
             "There are now 252 drawings to choose from, instead of 251. It is drawn in the same style as all the others (one line, round ends, no fill) and comes from the shared AMS icon library, so the other AMS apps can use the same drawing.",

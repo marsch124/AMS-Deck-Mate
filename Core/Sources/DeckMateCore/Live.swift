@@ -8,11 +8,24 @@ public struct LiveKeys: Equatable, Sendable {
     public var copied: [String]
     /// The files opened last, newest first, as full paths.
     public var files: [String]
+    /// The apps open now, in the order of the "Open app" keys.
+    public var running: [String]
+    /// The timers going, by their minutes: the seconds left; 0 = finished and still saying "Done".
+    public var timers: [String: Int]
+    /// The switches that are on, by their target ("dark", "mute", "own:…").
+    public var on: Set<String>
+    /// An app is listening to the microphone right now.
+    public var micInUse: Bool
 
-    public init(apps: [String] = [], copied: [String] = [], files: [String] = []) {
+    public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
+                timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false) {
         self.apps = apps
         self.copied = copied
         self.files = files
+        self.running = running
+        self.timers = timers
+        self.on = on
+        self.micInUse = micInUse
     }
 }
 
@@ -94,6 +107,9 @@ extension DeckAction {
         case .recentFile:
             guard let file = RecentFiles.file(number: RecentApps.number(target), in: live.files) else { return self }
             return DeckAction(type: .link, target: file)
+        case .running:
+            guard let app = RunningApps.app(number: RunningApps.number(target), in: live.running) else { return self }
+            return DeckAction(type: .app, target: app)
         default:
             return self
         }
@@ -119,10 +135,30 @@ extension DeckKey {
                 let text = CopiedTexts.text(number: RecentApps.number(key.action.target), in: live.copied)
                 key.title = text.map(CopiedTexts.preview) ?? "Nothing copied"
             }
+        case .running:
+            // Like a "Recent app" key: it shows the app it stands for, with the app's own icon and name.
+            let now = key.action.resolving(live)
+            if now.type == .app { key.title = ""; key.icon = "" } else if key.title.isEmpty { key.title = "No app" }
+            key.action = now
+        case .timer:
+            let minutes = TimerKeys.minutes(key.action.target)
+            if let left = live.timers[String(minutes)] {
+                key.title = left == 0 ? "Done" : TimerKeys.clock(left)
+                key.action.quiet = true
+            } else if key.title.isEmpty {
+                key.title = "\(minutes) min"
+            }
+        case .toggle:
+            let isOn = live.on.contains(key.action.target)
+            key.action.quiet = isOn
+            if key.title.isEmpty { key.title = SwitchKeys.words(key.action.target, isOn: isOn) }
+        case .micLight:
+            key.action.quiet = live.micInUse
+            if key.title.isEmpty { key.title = live.micInUse ? "Mic in use" : "Mic free" }
         default:
             break
         }
-        if let held = key.held, held.type == .recentFile { key.held = held.resolving(live) }
+        if let held = key.held, held.type == .recentFile || held.type == .running { key.held = held.resolving(live) }
         return key
     }
 }

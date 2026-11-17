@@ -14,6 +14,7 @@ struct SetupView: View {
     @State private var saved = DeckKey()
     @State private var showIcons = false
     @State private var showOverview = false
+    @State private var addingGroup = false
     @Environment(\.colorScheme) private var scheme
 
     /// `startSlot` opens with a key already picked (for pictures).
@@ -233,10 +234,28 @@ struct SetupView: View {
             HStack {
                 Text("Page groups").font(.headline).foregroundStyle(Palette.part("profiles", scheme))
                 Spacer()
-                Button(action: addProfile) { Mark(name: "control-add", size: 16, colour: Palette.part("profiles", scheme)) }
+                Button { addingGroup = true } label: { Mark(name: "control-add", size: 16, colour: Palette.part("profiles", scheme)) }
                     .buttonStyle(.plain)
-                    .help("Add a page group")
+                    .help("Add a page group: an empty one or a ready-made one")
                     .accessibilityIdentifier("addProfile")
+                    .popover(isPresented: $addingGroup, arrowEdge: .bottom) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Button("Empty page group") { addingGroup = false; addProfile() }
+                                .buttonStyle(MainButton(part: "profiles"))
+                                .accessibilityIdentifier("addEmptyGroup")
+                            Text("Ready-made").font(.caption.weight(.semibold)).foregroundStyle(Palette.part("profiles", scheme))
+                                .padding(.top, 2)
+                            ForEach(Templates.all) { item in
+                                Button("\(item.name) – \(item.keys.count) shortcut keys") { addingGroup = false; addReadyMade(item) }
+                                    .buttonStyle(PlainButton())
+                                    .accessibilityIdentifier("readyMade-\(item.id)")
+                            }
+                            Text("A ready-made page group shows by itself when its app is in front, unless another page group already belongs to that app.")
+                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                .frame(width: 230, alignment: .leading)
+                        }
+                        .padding(12)
+                    }
             }
             ForEach(model.deck.profiles) { item in
                 Button { showProfile(item) } label: {
@@ -340,6 +359,32 @@ struct SetupView: View {
         showProfile(new)
     }
 
+    /// A ready-made page group: one page of keyboard-shortcut keys for an app.
+    private func addReadyMade(_ template: PageGroupTemplate) {
+        guard leaveKey() else { return }
+        let new = Templates.profile(from: template, in: model.deck)
+        model.change { $0.profiles.append(new) }
+        showProfile(new)
+    }
+
+    /// A folder that always shows the apps open now, opened from the first empty place of this page.
+    private func addOpenApps(_ profile: DeckProfile, _ page: DeckPage) {
+        guard leaveKey() else { return }
+        guard let place = page.firstFreePlace else {
+            let alert = NSAlert()
+            alert.messageText = "This page has no empty place."
+            alert.informativeText = "Clear a key or pick another page, then add the “Open apps” folder again. Nothing was changed."
+            alert.runModal()
+            return
+        }
+        let folder = RunningApps.folder(parent: page.id)
+        edit(profile) { item in
+            guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
+            item.pages[index].keys[place] = DeckKey(title: "Open apps", action: DeckAction(type: .folder, target: folder.id.uuidString))
+            item.pages.append(folder)
+        }
+    }
+
     private func deleteProfile(_ item: DeckProfile) {
         let keys = item.pages.reduce(0) { $0 + $1.keys.count }
         let alert = NSAlert()
@@ -400,7 +445,8 @@ struct SetupView: View {
                             .accessibilityIdentifier("addPage")
                     }
                 }
-                KeyGrid(keys: page.keys, selected: slot, side: 72, gap: 10,
+                // As the box shows them right now: a timer with its minutes, an "Open app" key with its app.
+                KeyGrid(keys: model.live(page.keys), selected: slot, side: 72, gap: 10,
                         broken: Set(model.problems(on: page, of: profile).keys), dragPage: page.id,
                         onDrop: { moveKey($0, to: (page.id, $1)) }) { pick($0) }
                     .padding(13)
@@ -427,9 +473,19 @@ struct SetupView: View {
                     }
                     Spacer()
                 }
+                HStack(spacing: 8) {
+                    Button("Add an “Open apps” folder") { addOpenApps(profile, page) }
+                        .buttonStyle(PlainButton())
+                        .accessibilityIdentifier("addOpenApps")
+                    Text("always shows the apps open now")
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Spacer()
+                }
                 favouritesRow
                 Text("Click a key to change it. Drag it onto another key or a page to move it. ⌘C and ⌘V copy a key.")
                     .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: 426, alignment: .leading)
                 legend
             } else {
                 Text("No page group yet. Add one on the left.").foregroundStyle(.secondary)
@@ -642,7 +698,7 @@ struct SetupView: View {
         Binding(get: { draft.action.type },
                 set: { new in
                     guard new != draft.action.type else { return }
-                    draft.action = DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : ([.recent, .copied, .recentFile].contains(new) ? "1" : ""))
+                    draft.action = DeckAction.fresh(new)
                 })
     }
 
@@ -651,8 +707,7 @@ struct SetupView: View {
         Binding(get: { draft.held?.type ?? .none },
                 set: { new in
                     guard new != (draft.held?.type ?? .none) else { return }
-                    draft.held = new == .none ? nil
-                        : DeckAction(type: new, target: new == .media ? MediaKey.playPause.rawValue : ([.recent, .copied, .recentFile].contains(new) ? "1" : ""))
+                    draft.held = new == .none ? nil : DeckAction.fresh(new)
                 })
     }
 

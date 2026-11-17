@@ -55,6 +55,27 @@ final class AppModel: ObservableObject {
     }
     /// The files opened last, newest first, for the "Recent file" keys.
     @Published private(set) var recentFiles: [String] = []
+    /// The apps open now, in the order of the "Open app" keys.
+    @Published private(set) var runningApps: [String] = []
+    /// The timers going, and the ones just finished.
+    @Published private(set) var timers = TimerKeys.State()
+    /// The switches that are on: dark mode and mute as the Mac has them, and his own.
+    @Published private(set) var switchedOn: Set<String> = []
+    /// An app is listening to the microphone (looked at only while a key shows it).
+    @Published private(set) var micInUse = false
+    /// Goes up whenever a key that changes by itself looks different: each second of a timer, a
+    /// switch, an app opened or quit. The iPhone link sends the keys again then.
+    @Published private(set) var liveStamp = 0
+    /// Which keys are pressed, for Settings › Key use.
+    @Published private(set) var use = KeyUse(since: Date())
+    /// Finding a key by its words, on the keys on screen.
+    @Published var finding = false
+    @Published var findWords = ""
+    @Published var findPick = 0
+    private var timerTick: Timer?
+    private var lookTimer: Timer?
+    private var useTimer: Timer?
+    private var liveWatchers: [NSObjectProtocol] = []
     /// What happened to the keys file at start, when it was damaged (for one message); nil = all well.
     private(set) var startNote: String?
     /// The weekly copy of the keys file in iCloud Drive.
@@ -82,6 +103,18 @@ final class AppModel: ObservableObject {
             recentApps = ["com.apple.Safari", "com.apple.Notes"]
             copiedTexts = ["current", "Meeting notes for Monday"]
             recentFiles = ["/Users/sample/Documents/Plan.pdf"]
+            runningApps = ["com.apple.Safari", "com.apple.mail", "com.apple.Notes"]
+            switchedOn = [SwitchKeys.dark]
+            micInUse = true
+            let day = Date(timeIntervalSince1970: 1_794_800_000)
+            timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259)])
+            sampleNow = day
+            var counted = KeyUse(since: day.addingTimeInterval(-41 * 86_400))
+            for (slot, presses) in [(0, 212), (1, 97), (2, 64), (9, 31), (13, 12), (5, 3)] {
+                guard let key = sample.profiles.first?.pages.first?.keys[slot] else { continue }
+                counted.presses[key.id.uuidString] = KeyUse.Entry(count: presses, last: day.addingTimeInterval(slot == 5 ? -35 * 86_400 : -3600))
+            }
+            use = counted
             return
         }
         let start = store.start()
@@ -133,6 +166,27 @@ final class AppModel: ObservableObject {
             self.recentFiles = files
             self.refreshBox()
         }
+        if let data = try? Data(contentsOf: useFile), let kept = try? JSONDecoder().decode(KeyUse.self, from: data) {
+            use = kept
+        } else {
+            saveUse()       // the counting begins today
+        }
+        switchedOn = Set((UserDefaults.standard.stringArray(forKey: AppModel.switchesKey) ?? []).filter(SwitchKeys.isOwn))
+        ActionRunner.live = { [weak self] in self?.liveNow ?? LiveKeys() }
+        ActionRunner.timerPressed = { [weak self] in self?.timerPressed($0) }
+        ActionRunner.switchPressed = { [weak self] in self?.switchPressed($0) }
+        for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
+            liveWatchers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.refreshRunning()
+            })
+        }
+        // The Mac went dark or light, from a key or from anywhere else.
+        liveWatchers.append(DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil, queue: .main) { [weak self] _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { self?.lookAtMac() }
+        })
+        refreshRunning()
+        lookAtMac()
         watchLive()
         cloudCopy.save = { [weak self] in self?.saveNow() }
         cloudCopy.start()
@@ -152,7 +206,14 @@ final class AppModel: ObservableObject {
     var keys: [Int: DeckKey] { live(position.map { Navigator.keys(at: $0, in: deck) } ?? [:]) }
 
     /// What the keys that change by themselves stand for right now.
-    var liveNow: LiveKeys { LiveKeys(apps: recentApps, copied: copiedTexts, files: recentFiles) }
+    var liveNow: LiveKeys {
+        LiveKeys(apps: recentApps, copied: copiedTexts, files: recentFiles, running: runningApps,
+                 timers: TimerKeys.left(timers, now: sampleNow ?? Date()), on: switchedOn, micInUse: micInUse)
+    }
+    /// Pictures with made-up keys stand still at this moment.
+    private var sampleNow: Date?
+    private static let switchesKey = "switchedOn"
+    private var useFile: URL { store.folder.appendingPathComponent("use.json") }
 
     /// Keys as they show now: a "Recent app" key turns into its app, a "Recent file" key into its
     /// file, a "Last copied text" key shows the first words of its text.
@@ -166,6 +227,142 @@ final class AppModel: ObservableObject {
         filesWatch.isOn = deck.uses(.recentFile)
         if !clipboard.isOn, !copiedTexts.isEmpty { copiedTexts = [] }
         if !filesWatch.isOn, !recentFiles.isEmpty { recentFiles = [] }
+        // Mute and the microphone are looked at every two seconds, and only while a key shows them.
+        let looks = deck.uses(.toggle) || deck.uses(.micLight)
+        if looks, lookTimer == nil {
+            let timer = Timer(timeInterval: 2, repeats: true) { [weak self] _ in self?.lookAtMac() }
+            RunLoop.main.add(timer, forMode: .common)
+            lookTimer = timer
+            lookAtMac()
+        } else if !looks, lookTimer != nil {
+            lookTimer?.invalidate()
+            lookTimer = nil
+            lookAtMac()
+        }
+    }
+
+    // MARK: Keys that change by themselves (0.10)
+
+    /// A key that changes by itself looks different now: the box and the iPhone get it.
+    private func bump() {
+        liveStamp &+= 1
+        refreshBox()
+    }
+
+    private func refreshRunning() {
+        let open = NSWorkspace.shared.runningApplications.filter { $0.activationPolicy == .regular }.compactMap(\.bundleIdentifier)
+        let next = RunningApps.order(was: runningApps, now: open)
+        guard next != runningApps else { return }
+        runningApps = next
+        bump()
+    }
+
+    /// Dark mode and mute as the Mac has them now, his own switches as they were left, and the microphone.
+    private func lookAtMac() {
+        guard !isSample else { return }
+        var on = switchedOn.filter(SwitchKeys.isOwn)
+        if MacSwitches.isDark { on.insert(SwitchKeys.dark) }
+        if MacSwitches.isMuted { on.insert(SwitchKeys.mute) }
+        let mic = deck.uses(.micLight) && MacSwitches.micInUse
+        guard on != switchedOn || mic != micInUse else { return }
+        switchedOn = on
+        micInUse = mic
+        bump()
+    }
+
+    /// A timer key was pressed: it starts, or stops, or (finished) is put away.
+    func timerPressed(_ target: String) {
+        timers = TimerKeys.pressed(timers, target: target, now: Date())
+        runTimers()
+        bump()
+    }
+
+    /// The clock of the timers ticks only while one is going or still says "Done".
+    private func runTimers() {
+        if timers.isIdle {
+            timerTick?.invalidate()
+            timerTick = nil
+        } else if timerTick == nil {
+            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.tickTimers() }
+            RunLoop.main.add(timer, forMode: .common)
+            timerTick = timer
+        }
+    }
+
+    private func tickTimers() {
+        let next = TimerKeys.tick(timers, now: Date())
+        timers = next.state
+        for name in next.finished {
+            ranEvents.send(("Timer done: \(name) min", true))
+            MacSwitches.timerSound()
+        }
+        runTimers()
+        bump()
+    }
+
+    /// A switch key was pressed.
+    func switchPressed(_ action: DeckAction) {
+        switch action.target {
+        case SwitchKeys.dark:
+            MacSwitches.setDark(!MacSwitches.isDark)
+        case SwitchKeys.mute:
+            MacSwitches.setMuted(!MacSwitches.isMuted)
+        default:
+            let isOn = switchedOn.contains(action.target)
+            if let step = SwitchKeys.step(of: action, isOn: isOn) { ActionRunner.run(step) }
+            if isOn { switchedOn.remove(action.target) } else { switchedOn.insert(action.target) }
+            UserDefaults.standard.set(switchedOn.filter(SwitchKeys.isOwn).sorted(), forKey: AppModel.switchesKey)
+            bump()
+            return
+        }
+        for wait in [0.5, 1.5] { DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in self?.lookAtMac() } }
+    }
+
+    // MARK: Key use
+
+    private func saveUseSoon() {
+        useTimer?.invalidate()
+        let timer = Timer(timeInterval: 3, repeats: false) { [weak self] _ in self?.saveUse() }
+        RunLoop.main.add(timer, forMode: .common)
+        useTimer = timer
+    }
+
+    private func saveUse() {
+        guard !isSample else { return }
+        useTimer?.invalidate()
+        useTimer = nil
+        if let data = try? JSONEncoder().encode(use) { try? data.write(to: useFile, options: .atomic) }
+    }
+
+    /// The moment the lists of Settings › Key use are counted from (pictures stand still).
+    var useNow: Date { sampleNow ?? Date() }
+
+    // MARK: Finding a key
+
+    /// The keys that fit the typed words, from every page group and page.
+    var findHits: [KeyFinder.Hit] {
+        KeyFinder.hits(findWords, in: deck) { [self] in KeyArt.title(live($0)) }
+    }
+
+    func startFinding() {
+        findWords = ""
+        findPick = 0
+        finding = true
+    }
+
+    func stopFinding() {
+        guard finding else { return }
+        finding = false
+        findWords = ""
+        findPick = 0
+    }
+
+    /// A found key was picked: its page shows, and the key is pressed.
+    func runFound(_ hit: KeyFinder.Hit, release: @escaping () -> Void) {
+        stopFinding()
+        guard let place = Navigator.go(profile: hit.profile.uuidString, page: hit.page.uuidString, in: deck) else { return }
+        show(place)
+        pressFromKeyboard(hit.slot, release: release)
     }
 
     /// "OmniFocus · Page 2", for the top line of the keys on screen.
@@ -239,6 +436,12 @@ final class AppModel: ObservableObject {
                                 : Navigator.press(index, at: position, in: deck, long: long)
         let now = liveNow
         let run = outcome.run.map { $0.resolving(now) }
+        // Count the press, for Settings › Key use (only keys that do something on the Mac).
+        if !outcome.run.isEmpty, !isSample,
+           let key = favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index] {
+            use.record(key.id, now: Date())
+            saveUseSoon()
+        }
         tell(run, in: deck.profile(position.profile))
         ActionRunner.run(run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
@@ -501,6 +704,7 @@ final class AppModel: ObservableObject {
 
     func willQuit() {
         saveNow()
+        saveUse()
         device.giveBack()
     }
 }
@@ -545,6 +749,20 @@ enum Sample {
         second.name = "Page 2"
         second.keys = [0: key("Projects", DeckAction(type: .link, target: "~/Documents")),
                        1: DeckKey(action: DeckAction(type: .recentFile, target: "1")),
+                       2: DeckKey(action: DeckAction(type: .timer, target: "25")),
+                       3: DeckKey(action: DeckAction(type: .timer, target: "5")),
+                       4: DeckKey(action: DeckAction(type: .toggle, target: SwitchKeys.dark)),
+                       5: DeckKey(action: DeckAction(type: .toggle, target: SwitchKeys.mute)),
+                       6: DeckKey(action: DeckAction(type: .micLight)),
+                       7: key("Morning", DeckAction(type: .appleShortcut, target: "Morning routine")),
+                       8: key("Places", DeckAction(type: .list, steps: [
+                           DeckAction(type: .link, target: "~/Documents", name: "Documents"),
+                           DeckAction(type: .link, target: "https://example.com/news", name: "News"),
+                           DeckAction(type: .app, target: "com.apple.Notes"),
+                           DeckAction(type: .text, target: "Kind regards, Sam", name: "Sign-off")])),
+                       10: DeckKey(action: DeckAction(type: .running, target: "1")),
+                       11: DeckKey(action: DeckAction(type: .running, target: "2")),
+                       12: DeckKey(action: DeckAction(type: .running, target: "3")),
                        14: key("Back a page", DeckAction(type: .previousPage))]
         let main = DeckProfile(name: "Default", pages: [first, second, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])

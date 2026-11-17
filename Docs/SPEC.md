@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.9.2 (build 14), 16 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.10 (build 17), 17 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -11,6 +11,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
+- Since 0.10 (Mac, round 1 of 3 of his 25 picked ideas): six new kinds of key (Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 23 kinds instead of 17), the Wait step, Find a key on the keys on screen, Settings > Key use and four ready-made page groups (sections 46 to 55). 254 drawings (252 before). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.9.4 (Mac): one more drawing to choose for a key, Drawer (`drawer.svg`), 252 in all instead of 251; his GridFit key now shows it instead of Autodesk Fusion's icon. Shows on the Stream Deck, on screen keys and on the iPhone and iPad with no update there (history below). iPhone and iPad stay 0.16 (build 21).
 - Since 0.9.3 (Mac): a key can show a picture of its own instead of a white drawing (section 4 and history below); 10 web-app keys of "My Apps" show their app's real icon. iPhone and iPad stay 0.16 (build 21).
 - Since 0.9.2 (Mac): six new drawings to choose for a key (Home, Arrow up, Arrow left, Arrow right, Window top half, Window bottom half), 251 in all instead of 245; they show on the Stream Deck, on screen keys and, drawn by the Mac, on the iPhone and iPad with no update there (section 14 history below). iPhone and iPad stay 0.16.
@@ -83,7 +84,7 @@ The icon opens a menu:
 - 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi. An unknown name decodes as none.
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none.
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -97,12 +98,19 @@ The icon opens a menu:
 | Back | none | pops the trail; with an empty trail goes to the group's first page |
 | Next / previous page | none | moves between the top pages, wrapping round; clears the trail. With one page: nothing |
 | Switch page group | the group's id | goes to that group's first page. Unknown id: nothing |
-| Several things in a row | (uses `steps`) | steps run in order, a third of a second apart. Steps may nest to depth 4 |
+| Several things in a row | (uses `steps`) | steps run in order, a third of a second apart (since 0.10 a "Wait" step pushes the later steps back, section 52). Steps may nest to depth 4 |
 | Recent app (0.7) | "1", "2" or "3" (1st, 2nd, 3rd) | brings that recent app forward; see 31 |
 | Ask AI (copied text) (0.7) | none | opens Raycast AI Chat with the copied text; see 32 |
 | Last copied text (0.8) | `copied`; "1", "2" or "3" (1st, 2nd, 3rd) | pastes that copied text; see 36 |
 | Last copied text, list (0.9) | `copied`; "list" | opens a small list at the mouse pointer; see 41 |
 | Recent file (0.8) | `recentFile`; "1", "2" or "3" (1st, 2nd, 3rd) | opens that file; see 36 |
+| Timer (0.10) | `timer`; minutes as text, "5" | see 46 |
+| Switch (on or off) (0.10) | `toggle`; "dark", "mute" or "own:<name>" | see 47 |
+| Run an Apple Shortcut (0.10) | `appleShortcut`; the Shortcut's name | see 48 |
+| List to pick from (0.10) | `list`; the entries are `steps` | see 49 |
+| Open app (0.10) | `running`; "1" to "15" | see 50 |
+| Microphone light (0.10) | `micLight` | shows only; see 51 |
+| Wait (0.10), a step only | `wait`; seconds | see 52 |
 | Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
@@ -186,6 +194,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.10: 16 new data tests, 68 in all (52 before): `LiveKindsTests.swift` (13: timer clock, minutes, start and stop; timer finishes once and "Done" goes away; timer key shows itself; switch steps; open apps keep their order; first free place; step timing with Wait; microphone light; pressing the new kinds runs them; key check for the new kinds; key finder; key use counts and quiet list; an old keys file still reads) and `TemplatesTests.swift` (3: every ready-made page group is well formed, the key table, a page group made from a template).
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
 - New in 0.5 (round B): `Core` has 36 data tests (37 since 0.6, see below), 7 of them new, for the new rules: long press (`held`), favourites, own keys, and the new `PhoneLink` messages. The iPhone app's screen test now also finds the favourites row, the Mac at a glance, the music strip and the Keys card by identifier.
 - New in 0.9 (data tests, seconds each): `CloudCopies.due(last:now:)` (never copied, or 7 days or more ago, is due), the copy's name ("deck <day>.json"), keeping only the newest 8; `Store.copies()` also lists the iCloud copies (`Copy.inCloud`); `CopiedTexts.choices(in:)` and `CopiedTexts.line(_:)` for the list. The iPhone app's screen test also finds `privateMark`.
@@ -203,6 +212,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.10 (Mac, build 17, 17 Nov 2026).** Round 1 of 3 (his 25 picked ideas): six new kinds of key (sections 46 to 51: Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 17 kinds before, 23 now), the Wait step (52), Find a key (53), Settings > Key use (54) and four ready-made page groups (55). Drawings: 254 (252 before). 68 data tests (52 before). iPhone and iPad stay 0.16 (build 21). Round 2: keys that need a yes from the Mac first (next calendar event, weather, OmniFocus tasks due today, album cover, Body Battery, the "Desk" key). Round 3: the dial key on iPhone and iPad and the resting box.
 
 **0.9.4 (Mac, build 16, 17 Nov 2026).** One more drawing to choose for a key in Set up keys: Drawer (a drawer front with a small handle; file `drawer.svg`). Before: 251 drawings. Now: 252. It comes from the shared AMS icon library, same style as the others (one line, round ends, no fill), and shows on the Stream Deck, on screen keys and on the iPhone and iPad (the Mac draws the keys), so the iPhone and iPad app stays 0.16 (build 21). In his page group "My Apps", page "Home & trips", place 9: the GridFit key now shows the white drawer drawing, the same mark AMS Apps Overview shows for AMS Snug GridFit (his choice on 17 Nov, "Use the drawer"). Before it showed Autodesk Fusion's app icon. The key still opens Autodesk Fusion, stays blue (it opens an app) and did not move; a copy of the keys file from before is in Backups. Existing keys keep their icons. No new test (no new rule); 52 data tests as before.
 
@@ -462,6 +473,7 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Not proven yet: on a real iPhone held on its side.
 
 ## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9 and 0.10)
+- 0.10: everything was checked with made-up keys and small tests. Dark mode's one-time question ("System Events"), a real Apple Shortcut run and the timer on the real box are not tried yet. The box is at home until January 2027.
 - "Ask AI (copied text)" against the real Raycast.
 - The dark screen on the real iPad.
 - The navigation picture on the real iPad.
@@ -555,3 +567,68 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - iPhone on its side, heading: the line that says where you are, for example "AMS Deck · Home" (page group · page). Before (0.10 to 0.15) it stood top left in the left panel (section 34) above the navigation picture, in up to two lines, with the connection dot in front of it. Now it stands in one line in the middle above the keys, with the connection dot right in front of it, in the free room that was already there above the keys, so the keys keep their size and place. The iPad is unchanged.
 - Unchanged: the iPad on its side (buttons at the bottom left, section 43), and the iPad and iPhone upright (gear and music at the top right, lock beside the dot).
 - Not proven yet: on a real iPad and a real iPhone held on its side.
+
+## 46. Timer key (Mac 0.10)
+- `ActionType.timer`; `target` = the minutes as text. Offered in Set up keys: 1, 2, 3, 5, 10, 15, 20, 25, 30, 45, 60 (`TimerKeys.choices`). A new key starts on "5". Anything odd reads as 5; the value is kept between 1 and 600 (`TimerKeys.minutes`).
+- A press (`TimerKeys.pressed`): a finished timer ("Done") is put away; a running one stops; an idle one starts. Two keys with the same minutes are the same timer (the state is kept by the minutes).
+- The key counts down second by second as a clock, "4:59", from an hour "1:05:00" (`TimerKeys.clock`). A key without a title shows "5 min" (its minutes). Colour: amber (the kind of typed text). Drawing: `app-timer`.
+- When the time is up (`TimerKeys.tick`) the Mac plays a sound twice, once per finished timer, and the key says "Done" for 60 seconds (`TimerKeys.doneStays`) or until pressed.
+- The countdown shows on the box, on the keys on screen and on the iPhone and iPad (the Mac draws it). A timer is not saved: it is forgotten when Deck Mate quits.
+
+## 47. Switch key (Mac 0.10)
+- `ActionType.toggle`; `target` is "dark", "mute" or "own:<a name of its own>" (`SwitchKeys`). In Set up keys: "Switch (on or off)" with "Dark mode", "Mute the sound" and "Two things in turn". A new key starts on "Dark mode".
+- Dark mode switches the Mac between light and dark. The first time, macOS asks once whether Deck Mate may control "System Events"; the user chooses Allow. Mute switches the sound off and on. Both follow the Mac when changed elsewhere (mute is read about every two seconds).
+- "Two things in turn": the key holds two steps in `steps`: the first runs when the switch goes on, the second when it goes off (`SwitchKeys.step(of:isOn:)`; a step of kind "nothing" does nothing). The key remembers which state it is in, also after a restart. A new switch of this kind gets its own name (`SwitchKeys.newOwn()`).
+- Look: a small switch mark in the top-left corner, filled when on, an outline when off. Without a title the key says "Dark" or "Light", "Muted" or "Sound on", "On" or "Off" (`SwitchKeys.words`). Colour: purple. Drawing: a moon for dark mode, the mute drawing for mute.
+
+## 48. Run an Apple Shortcut (Mac 0.10)
+- `ActionType.appleShortcut`; `target` = the name of a Shortcut of the Shortcuts app. In Set up keys: "Run an Apple Shortcut" with a list ("Pick a Shortcut…") of the Shortcuts on this Mac, or the name typed. A press runs it. Colour: purple.
+- A key with no Shortcut picked is broken: the red corner and the reason "No Shortcut picked" (section 20, broken keys).
+- Can also be a step of "Several things in a row", a switch of his own and an entry of a list (section 49).
+
+## 49. List to pick from (Mac 0.10)
+- `ActionType.list`; the entries are the key's `steps`. Each entry is a `DeckAction` with its own `name` (new field `DeckAction.name`; empty = made from what it does). An entry can be: open an app, open a link or a file, Raycast, keyboard shortcut, type text, music and sound, or run an Apple Shortcut.
+- A press opens a small panel at the mouse pointer (the same way as the copied-text list, section 41). A click on an entry runs it. A click elsewhere, a second press of the key or 10 seconds puts the panel away.
+- Pressed from the iPhone, iPad or the box, the panel also opens on the Mac (the choice is made with the mouse).
+- The key takes the colour of its first entry.
+
+## 50. Open app keys (Mac 0.10)
+- `ActionType.running`; `target` "1" to "15" (`RunningApps.number`; anything odd reads as 1). The key stands for the app in that place of the list of apps open now.
+- The list (`RunningApps.order(was:now:)`): apps keep their place while they stay open; a newly opened app goes to the end; an app that quit leaves a gap that closes. The key shows that app's own icon and name; a press brings the app forward (`RunningApps.app(number:in:)`). With fewer apps open the key says "No app". Colour: blue (an app key).
+- New button in Set up keys, under the page's buttons: "Add an “Open apps” folder". It puts a folder key on the first empty place of the page (`DeckPage.firstFreePlace`) and a new page "Open apps" holding Back at place 1 and "Open app" 1 to 14 (`RunningApps.folder(parent:)`, 14 keys: `RunningApps.folderKeys`). When all 15 places are taken it says so and changes nothing.
+
+## 51. Microphone light (Mac 0.10)
+- `ActionType.micLight`. It shows whether any app is listening to the Mac's microphone now, read about every two seconds.
+- In use: a red key (Raycast red) with the `microphone` drawing and the words "Mic in use". Free: a grey-blue key (the moving-around colour) with the `microphoneoff` drawing and "Mic free".
+- A press does nothing. It only looks and never changes the microphone.
+- Two new drawings from the AMS icon library, `microphone.svg` and `microphoneoff.svg`: 254 hand-drawn icons in all (252 before).
+- It is not counted in the key use (section 54).
+
+## 52. The Wait step (Mac 0.10)
+- `ActionType.wait`, only as a step of "Several things in a row" (it is not offered as a key of its own). `target` = the seconds. Offered: half a second, 1, 2, 3, 5 or 10 (`StepTiming.waits`); the value is kept between 0.5 and 60 seconds, anything odd reads as 1 (`StepTiming.seconds`).
+- Steps still run 0.33 seconds apart (`StepTiming.pause`). A Wait does nothing itself: it pushes everything after it back by its seconds (`StepTiming.starts`).
+- A chain key shows the kind of its first step that is not "nothing" and not a Wait.
+- Timer, Switch and Run an Apple Shortcut can also be steps; the same list of steps is used by "Several things in a row" and "Two things in turn".
+- "Several things in a row" itself is not new: it has been there since 0.1 (Martin's "chain key"). Only the Wait step is new.
+
+## 53. Find a key (Mac 0.10)
+- On the keys on screen: a magnifier in the top line, or Space or / while the keys have the keyboard (right after Control-Option-D). While searching, letters go to the search and not to the keys' places.
+- Typing a few letters lists up to six keys (`KeyFinder.hits`, limit 6) from all page groups and pages whose title, page name or page group name holds every typed word (not case-sensitive). Titles that start with the first word come first, then the rest, each group in the order of the pages. An app key without a title is searched by its app's name. Each hit shows its place, "Page group · Page".
+- Up and down arrows choose; Return or a click runs the key and shows its page; Delete takes a letter away; Escape leaves the search (Escape again hides the keys).
+- Keys that only move around (Back, next page, previous page) and empty places are not listed.
+
+## 54. Key use (Mac 0.10)
+- Settings has a new part "Key use" (left list). Each press of a key that does something on the Mac is counted (`KeyUse.record`): from the box, the keys on screen, the keyboard, the iPhone and the iPad. For each key (by its id) the number and the time of the last press are kept; nothing else (no words, no texts).
+- Not counted: folders, Back, next and previous page, switch page group, empty keys and the microphone light.
+- It shows since which day it has counted ("Counted since <day>", `KeyUse.since`), "Pressed most" (the five most pressed, most first, with their numbers; `KeyUse.most`) and "Not pressed in the last 30 days" (`KeyUse.quiet`, 30 = `KeyUse.quietDays`). In the first 30 days the second list says "Not pressed since <day>". Each key is written "Page group · Page · “Title”" (a key without a title as "key <place>"); favourites as "Favourites · “Title”".
+- It is a file "use.json" beside the keys file in Application Support, on this Mac only. It is not part of the weekly iCloud copy (section 40) nor of the safety copies. An old keys file without the new fields still reads (tested).
+
+## 55. Ready-made page groups (Mac 0.10)
+- In Set up keys, the + beside "Page groups" opens a small list: "Empty page group" (as before) and four ready-made ones: Finder, Safari, Notion, Fusion (`Templates.all`, code in `Core/Sources/DeckMateCore/Templates.swift`). Each is one page "Page 1" of keyboard-shortcut keys (kind "Keyboard shortcut"), in the order of the places 1, 2, 3 and so on. The shortcuts are for the Mac versions with their standard settings and an ANSI keyboard (`KeyCombo.ansi`).
+- Finder (14 keys): New window, New folder, New tab, Back, Forward, Up, Get info, Quick Look, Go to folder, Hidden files, Duplicate, Find, Downloads, Home.
+- Safari (14): New tab, Close tab, Reopen tab, Back, Forward, Reload, Address bar, Find, Bookmark, Private window, Reader, Sidebar, Tab overview, Next tab.
+- Notion (11): New page, Search, Back, Forward, Sidebar, New tab, Close tab, Find, New window, Parent page, Dark mode.
+- Fusion (14): Line, Rectangle, Circle, Dimension, Trim, Offset, Project, Extrude, Press pull, Fillet, Move, Hole, Joint, Measure.
+- The new page group belongs to the app (Finder `com.apple.finder`, Safari `com.apple.Safari`, Notion `notion.id`, Fusion `com.autodesk.fusion360`) so it shows by itself when that app is in front, unless another page group already belongs to that app. Then it belongs to no app and shows only when picked. His page group for Notion already has the app, so the ready-made Notion belongs to no app.
+- If a page group of that name exists, the new one is named "<name> (ready-made)".
+- Nothing existing is changed. Undo (30 steps) takes it back.

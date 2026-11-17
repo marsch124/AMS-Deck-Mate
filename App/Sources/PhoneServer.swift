@@ -98,6 +98,9 @@ final class PhoneServer: ObservableObject {
                 .sink { [weak self] _ in self?.sendKeysToAll() },
             model.$recentFiles.dropFirst().debounce(for: .milliseconds(60), scheduler: RunLoop.main)
                 .sink { [weak self] _ in self?.sendKeysToAll() },
+            // A timer's second, a switch, an app opened or quit: the keys look different.
+            model.$liveStamp.dropFirst().debounce(for: .milliseconds(40), scheduler: RunLoop.main)
+                .sink { [weak self] _ in self?.sendKeysToAll() },
             model.pressedEvents.sink { [weak self] index in
                 // An iPhone with its own keys shows other keys: it lights only its own taps.
                 guard let self else { return }

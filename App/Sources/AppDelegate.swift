@@ -77,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     private var deckWaits = false
     private var sizeWatch: AnyCancellable?
     private var clickWatch: AnyCancellable?
+    private var findWatch: AnyCancellable?
     private var phone: PhoneServer!
     private static let note = "com.schabbauer.AMSDeckMate."
 
@@ -139,6 +140,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         }
         makeEditMenu()
         ActionRunner.showCopiedList = { [weak self] texts in self?.copiedList.toggle(texts: texts) }
+        ActionRunner.showPickList = { [weak self] list in
+            let entries = list.steps.filter { $0.type != .none }
+            self?.copiedList.toggle(title: "Pick one", empty: "This list has no entries yet.", rows: entries.map(PickList.words),
+                                    kind: list.kind) { ActionRunner.run(entries[$0]) }
+        }
         phone = PhoneServer(model: model)
         phone.start()
         makeItem()
@@ -147,6 +153,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         clickWatch = model.ranEvents.sink { [weak self] _ in self?.deckPanel?.releaseKeyboard() }
         // A new size in Settings shows at once.
         sizeWatch = model.$deck.map(\.screenSize).removeDuplicates().dropFirst()
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.fitDeck() } }
+        // The list of found keys under the keys makes the floating window taller, and shorter again.
+        findWatch = model.$finding.combineLatest(model.$findWords).dropFirst()
             .sink { [weak self] _ in DispatchQueue.main.async { self?.fitDeck() } }
         HotKey.register(keyCode: kVK_ANSI_D, modifiers: controlKey | optionKey) { [weak self] in self?.toggleDeck() }
 
@@ -321,6 +330,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         guard let panel = deckPanel else { return false }
         let others = event.modifierFlags.intersection([.command, .control, .option])
         guard others.isEmpty else { return false }
+        if model.finding {
+            // Looking for a key: letters go to the search, not to the keys.
+            let hits = model.findHits
+            switch Int(event.keyCode) {
+            case kVK_Escape: model.stopFinding()
+            case kVK_Return, kVK_ANSI_KeypadEnter:
+                if hits.indices.contains(model.findPick) { model.runFound(hits[model.findPick]) { panel.releaseKeyboard() } }
+            case kVK_Delete:
+                model.findWords = String(model.findWords.dropLast())
+                model.findPick = 0
+            case kVK_DownArrow: model.findPick = min(model.findPick + 1, max(0, hits.count - 1))
+            case kVK_UpArrow: model.findPick = max(0, model.findPick - 1)
+            default:
+                let typed = (event.characters ?? "").unicodeScalars.filter { $0.value >= 0x20 && $0.value != 0x7F && $0.value < 0xF700 }
+                if !typed.isEmpty, model.findWords.count < 40 {
+                    model.findWords += String(String.UnicodeScalarView(typed))
+                    model.findPick = 0
+                }
+            }
+            return true
+        }
+        if Int(event.keyCode) == kVK_Space || event.characters == "/" {
+            model.startFinding()
+            return true
+        }
         switch Int(event.keyCode) {
         case kVK_Escape: panel.orderOut(nil); return true
         case kVK_RightArrow: model.stepPage(1); return true
@@ -331,6 +365,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             model.pressFromKeyboard(index) { panel.releaseKeyboard() }
             return true
         }
+    }
+
+    /// The magnifier on the keys on screen: the keys take the keyboard and the search begins; a second click ends it.
+    private func findKey() {
+        guard let panel = deckPanel else { return }
+        if model.finding { model.stopFinding(); return }
+        panel.takesKeyboard = true
+        panel.makeKeyAndOrderFront(nil)
+        model.startFinding()
     }
 
     /// Where the mouse pointer is right now, in screen points (origin bottom left).
@@ -355,7 +398,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     private func makeDeckPanel() -> DeckPanel {
         let host = NSHostingView(rootView: ScreenDeckView(model: model,
                                                           openSetup: { [weak self] in self?.openSetup() },
-                                                          close: { [weak self] in self?.deckPanel?.orderOut(nil) }))
+                                                          close: { [weak self] in self?.deckPanel?.orderOut(nil) },
+                                                          find: { [weak self] in self?.findKey() },
+                                                          runFound: { [weak self] hit in
+                                                              self?.model.runFound(hit) { self?.deckPanel?.releaseKeyboard() }
+                                                          }))
         let size = host.fittingSize
         let panel = DeckPanel(contentRect: NSRect(origin: .zero, size: size),
                             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -372,6 +419,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         panel.onKey = { [weak self] event in self?.deckKey(event) ?? false }
         panel.onKeyboard = { [weak self] on in
             guard let model = self?.model, model.keyboardOn != on else { return }
+            if !on { model.stopFinding() }       // no keyboard, no search
             model.keyboardOn = on
             DispatchQueue.main.async { self?.fitDeck() }
         }
@@ -462,8 +510,24 @@ enum Snapshots {
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             shot(RestoreView(copies: (0..<6).map { Store.Copy(name: "deck \($0)", date: day.addingTimeInterval(Double($0) * -4000), groups: 3, keys: 47 - $0) },
                              bringBack: { _ in }, cancel: {}), "restore-\(name)", look, folder)
-            shot(CopiedListView(texts: ["Meeting notes for Monday morning, with the agenda", "https://example.com/a/long/address", "Thank you!"],
+            shot(CopiedListView(rows: ["Meeting notes for Monday morning, with the agenda", "https://example.com/a/long/address", "Thank you!"],
                                 pick: { _ in }).padding(12), "copied-list-\(name)", look, folder)
+            // 0.10: the new kinds of key (page 2 of the made-up keys), finding a key, the list of a list key, key use.
+            if let group = model.profile, let second = group.topPages.dropFirst().first, let first = group.topPages.first {
+                model.show(profile: group.id, page: second.id)
+                shot(ScreenDeckView(model: model).padding(16), "deck-new-\(name)", look, folder)
+                shot(SetupView(model: model, startSlot: 2), "setup-timer-\(name)", look, folder)
+                shot(SetupView(model: model, startSlot: 4), "setup-switch-\(name)", look, folder)
+                shot(SetupView(model: model, startSlot: 8), "setup-list-\(name)", look, folder)
+                model.show(profile: group.id, page: first.id)
+            }
+            model.startFinding()
+            model.findWords = "sa"
+            shot(ScreenDeckView(model: model).padding(16), "deck-find-\(name)", look, folder)
+            model.stopFinding()
+            shot(CopiedListView(title: "Pick one", rows: ["Documents", "News", "Notes", "Sign-off"], kind: .web, pick: { _ in }).padding(12),
+                 "pick-list-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .use), "settings-use-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .kept), "settings-kept-\(name)", look, folder)
         }
         for size in [ScreenSize.small, .large] {

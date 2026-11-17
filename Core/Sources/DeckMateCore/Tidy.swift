@@ -178,7 +178,22 @@ public enum KeyCheck {
                 if let found = problem(step, in: profile, deck: deck, world: world) { return found }
             }
             return action.steps.isEmpty ? "No steps" : nil
-        case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile:
+        case .appleShortcut:
+            return target.isEmpty ? "No Shortcut picked" : nil
+        case .list:
+            for entry in action.steps {
+                if let found = problem(entry, in: profile, deck: deck, world: world) { return found }
+            }
+            return action.steps.isEmpty ? "The list is empty" : nil
+        case .toggle:
+            guard SwitchKeys.isOwn(target) else { return nil }
+            for step in action.steps where step.type != .none {
+                if let found = problem(step, in: profile, deck: deck, world: world) { return found }
+            }
+            return SwitchKeys.step(of: action, isOn: false) == nil && SwitchKeys.step(of: action, isOn: true) == nil
+                ? "Nothing to switch yet" : nil
+        case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
+             .timer, .running, .micLight, .wait:
             return nil
         }
     }
@@ -214,7 +229,8 @@ extension RaycastLink {
 
 /// A few words on what a key did, for the iPhone ("Opened OmniFocus").
 public enum ActionWords {
-    public static func done(_ actions: [DeckAction], appName: (String) -> String) -> String? {
+    public static func done(_ all: [DeckAction], appName: (String) -> String) -> String? {
+        let actions = all.filter { $0.type != .wait }       // a pause is not something done
         guard let first = actions.first else { return nil }
         let words = done(first, appName: appName)
         return actions.count > 1 ? "\(words) and \(actions.count - 1) more" : words
@@ -241,7 +257,13 @@ public enum ActionWords {
         case .askAI: return "Raycast: Ask AI"
         case .copied: return action.target == CopiedTexts.list ? "Pick a copied text on the Mac" : "Pasted the copied text"
         case .recentFile: return "No recent file yet"
-        case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi: return "Done"
+        case .timer: return "Timer: \(TimerKeys.minutes(action.target)) min"
+        case .toggle:
+            return action.target == SwitchKeys.dark ? "Switched dark mode" : action.target == SwitchKeys.mute ? "Switched the sound" : "Switched"
+        case .appleShortcut: return action.target.isEmpty ? "No Shortcut picked" : "Ran the Shortcut “\(action.target)”"
+        case .list: return "Pick from the list on the Mac"
+        case .running: return "No app in that place"
+        case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait: return "Done"
         }
     }
 }

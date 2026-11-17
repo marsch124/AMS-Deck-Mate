@@ -132,16 +132,31 @@ struct ScreenDeckView: View {
     @ObservedObject var model: AppModel
     var openSetup: () -> Void = {}
     var close: () -> Void = {}
+    /// The magnifier was clicked: the keys take the keyboard and the search begins (or ends).
+    var find: () -> Void = {}
+    /// A found key was picked.
+    var runFound: (KeyFinder.Hit) -> Void = { _ in }
+
+    private var gridWidth: CGFloat { model.deck.screenSize.keySide * 5 + model.deck.screenSize.gap * 4 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
+                if model.finding {
+                    // Typed letters go here while a key is being looked for.
+                    (Text("Find: ").foregroundColor(.white.opacity(0.6)) + Text(model.findWords).foregroundColor(.white)
+                        + Text("▏").foregroundColor(.white.opacity(0.75)))
+                        .font((model.deck.screenSize == .small ? Font.caption : Font.callout).weight(.medium))
+                        .lineLimit(1)
+                        .accessibilityIdentifier("findWords")
+                } else {
                 Text(model.placeLine)
                     .font((model.deck.screenSize == .small ? Font.caption : Font.callout).weight(.medium))
                     .foregroundStyle(.white.opacity(0.92))
                     .lineLimit(1)
                     .accessibilityIdentifier("deckPlace")
-                if model.pinned != nil {
+                }
+                if model.pinned != nil, !model.finding {
                     // Locked: this page group stays until "Automatic" is chosen in the menu.
                     Mark(name: "app-lock", size: model.deck.screenSize == .small ? 12 : 14, colour: .white.opacity(0.7))
                         .help("Locked: this page group stays until you choose Automatic in the menu")
@@ -149,19 +164,53 @@ struct ScreenDeckView: View {
                         .accessibilityIdentifier("profileLock")
                 }
                 Spacer(minLength: 8)
+                headerButton("app-search", "Find a key by its name (Space or / while the keys have the keyboard)", "deckFind", find)
                 headerButton("control-settings", "Set up keys", "deckSetup", openSetup)
                 headerButton("control-close", "Hide the keys", "deckClose", close)
             }
             KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
                     gap: model.deck.screenSize.gap,
                     broken: Set(model.problems(on: model.page, of: model.profile).keys),
-                    letters: model.keyboardOn, onRelease: { model.release($0) }) { model.click($0) }
+                    letters: model.keyboardOn && !model.finding, onRelease: { model.release($0) }) { model.click($0) }
+            if model.finding { findList }
         }
         .padding(10)
         .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
         .fixedSize()
         .accessibilityIdentifier("screenDeck")
+    }
+
+    /// The keys that fit the typed words, under the keys: ↑ ↓ choose, Return or a click runs one.
+    private var findList: some View {
+        let hits = model.findHits
+        let small = model.deck.screenSize == .small
+        return VStack(alignment: .leading, spacing: 3) {
+            if hits.isEmpty {
+                Text(model.findWords.isEmpty ? "Type a few letters of a key’s name. Esc leaves." : "No key with these words.")
+                    .font(small ? .caption2 : .caption)
+                    .foregroundStyle(.white.opacity(0.6))
+                    .accessibilityIdentifier("findEmpty")
+            }
+            ForEach(Array(hits.enumerated()), id: \.element.id) { index, hit in
+                HStack(spacing: 6) {
+                    Text(hit.title).font((small ? Font.caption : Font.callout).weight(.semibold)).foregroundStyle(.white).lineLimit(1)
+                    Text(hit.place).font(small ? .caption2 : .caption).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+                    Spacer(minLength: 0)
+                    if index == model.findPick {
+                        Text("↩").font(.caption.weight(.bold)).foregroundStyle(.white.opacity(0.85))
+                    }
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Color.white.opacity(index == model.findPick ? 0.20 : 0.06),
+                            in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay(ClickCatcher(onDown: { _ in }, onUp: { runFound(hit) }))
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("found-\(index)")
+            }
+        }
+        .frame(width: gridWidth, alignment: .leading)
     }
 
     private func headerButton(_ icon: String, _ help: String, _ id: String, _ action: @escaping () -> Void) -> some View {

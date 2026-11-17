@@ -137,7 +137,7 @@ struct SettingsView: View {
 
     enum Part: String, CaseIterable, Identifiable {
         case box = "The box", firstTime = "First time with the box", screen = "Keys on screen", phone = "iPhone",
-             profiles = "Page groups", check = "Check keys", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
+             profiles = "Page groups", check = "Check keys", use = "Key use", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
         var id: String { rawValue }
         var colour: String {
             switch self {
@@ -145,7 +145,7 @@ struct SettingsView: View {
             case .screen, .kept: return "screen"
             case .phone: return "raycast"
             case .profiles: return "profiles"
-            case .check, .elgato: return "keys"
+            case .check, .use, .elgato: return "keys"
             case .mac: return "settings"
             }
         }
@@ -261,6 +261,8 @@ struct SettingsView: View {
             }
         case .check:
             card("Check keys", "keys") { checkBody }
+        case .use:
+            card("Key use", "keys") { useBody }
         case .mac:
             card("This Mac", "settings") {
                 Toggle("Open at login", isOn: Binding(
@@ -422,6 +424,56 @@ struct SettingsView: View {
                 }
             }
             note("A key whose app, file, folder, page group or Raycast extension is gone gets a red corner on screen and in “Set up keys”.")
+        }
+    }
+
+    // MARK: Key use
+
+    /// Which keys are pressed most, and which not at all: a list for tidying up.
+    private var useBody: some View {
+        let now = model.useNow
+        // A key is named by what it is, not by what it shows this second (a running timer shows its clock).
+        let name: (DeckKey) -> String = { key in
+            if !key.title.isEmpty { return key.title }
+            switch key.action.type {
+            case .timer: return "Timer \(TimerKeys.minutes(key.action.target)) min"
+            case .running: return "Open app \(RunningApps.number(key.action.target))"
+            case .recent: return "Recent app \(RecentApps.number(key.action.target))"
+            case .recentFile: return "Recent file \(RecentApps.number(key.action.target))"
+            case .copied: return "Last copied text"
+            case .toggle:
+                return key.action.target == SwitchKeys.dark ? "Dark mode switch" : key.action.target == SwitchKeys.mute ? "Mute switch" : "Switch"
+            default:
+                let shown = KeyArt.title(key)
+                return shown.isEmpty ? key.action.type.title : shown
+            }
+        }
+        let most = model.use.most(in: model.deck, name: name)
+        let quiet = model.use.quiet(in: model.deck, now: now, name: name)
+        let since = model.use.since.formatted(date: .abbreviated, time: .omitted)
+        let full = model.use.days(now: now) >= KeyUse.quietDays
+        return VStack(alignment: .leading, spacing: 6) {
+            Text("Counted since \(since).").accessibilityIdentifier("useSince")
+            Text("Pressed most").font(.callout.weight(.semibold)).foregroundStyle(Palette.part("keys", scheme)).padding(.top, 2)
+            if most.isEmpty { note("No key pressed yet.") }
+            ForEach(most) { line in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(line.count)").font(.callout.weight(.semibold)).monospacedDigit().frame(width: 38, alignment: .trailing)
+                    Text(line.words).font(.callout).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Text(full ? "Not pressed in the last \(KeyUse.quietDays) days" : "Not pressed since \(since)")
+                .font(.callout.weight(.semibold)).foregroundStyle(Palette.part("keys", scheme)).padding(.top, 4)
+                .accessibilityIdentifier("useQuietTitle")
+            if quiet.isEmpty { note("Every key was pressed.") }
+            ForEach(quiet.prefix(40)) { line in
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Circle().fill(Color.secondary.opacity(0.6)).frame(width: 5, height: 5)
+                    Text(line.words).font(.callout).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            if quiet.count > 40 { note("… and \(quiet.count - 40) more.") }
+            note("Every press of a key that does something on the Mac is counted: on the box, on the keys on screen, by keyboard, and from iPhone and iPad. Keys that only move around (folders, Back, pages, page groups) and the microphone light are left out. Only the number and the time of the last press are kept, in a small file beside your keys on this Mac.")
         }
     }
 

@@ -61,6 +61,25 @@ enum KeyArt {
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
             draw(key, size: size)
+            if key.action.type == .toggle {
+                // A small switch top left: filled with its knob to the right when on, an outline when off.
+                let k = size / 72
+                let pill = CGRect(x: 6 * k, y: size - 16 * k, width: 17 * k, height: 10 * k)
+                let path = NSBezierPath(roundedRect: pill, xRadius: 5 * k, yRadius: 5 * k)
+                let knob = CGRect(x: key.action.quiet ? pill.maxX - 8.5 * k : pill.minX + 1.5 * k, y: pill.minY + 1.5 * k,
+                                  width: 7 * k, height: 7 * k)
+                if key.action.quiet {
+                    NSColor.white.setFill()
+                    path.fill()
+                    Palette.tile(kind).setFill()
+                } else {
+                    NSColor.white.withAlphaComponent(0.9).setStroke()
+                    path.lineWidth = 1.4 * k
+                    NSBezierPath(roundedRect: pill.insetBy(dx: 0.7 * k, dy: 0.7 * k), xRadius: 4.3 * k, yRadius: 4.3 * k).stroke()
+                    NSColor.white.withAlphaComponent(0.9).setFill()
+                }
+                NSBezierPath(ovalIn: knob).fill()
+            }
             if key.hasHeld {
                 // A small white dot top right: this key does something else on a long press.
                 let k = size / 72

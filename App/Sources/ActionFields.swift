@@ -24,15 +24,27 @@ extension ActionType {
         case .askAI: return "Ask AI (copied text)"
         case .copied: return "Last copied text"
         case .recentFile: return "Recent file"
+        case .timer: return "Timer"
+        case .toggle: return "Switch (on or off)"
+        case .appleShortcut: return "Run an Apple Shortcut"
+        case .list: return "List to pick from"
+        case .running: return "Open app"
+        case .micLight: return "Microphone light"
+        case .wait: return "Wait"
         }
     }
 
-    static let forKeys: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .text, .copied, .media, .multi,
+    static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
+                                        .media, .timer, .toggle, .micLight, .list, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
-    /// A long press can do anything a key does, except open a new folder.
-    static let forLongPress: [ActionType] = [.none, .app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .text, .copied, .media, .multi,
+    /// A long press can do anything a key does, except open a new folder or only show something.
+    static let forLongPress: [ActionType] = [.none, .app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut,
+                                             .text, .copied, .media, .timer, .toggle, .list, .multi,
                                              .back, .nextPage, .previousPage, .profile]
-    static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .text, .copied, .media]
+    static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied, .media,
+                                         .timer, .toggle, .wait]
+    /// What an entry of a list to pick from, or one side of a switch of his own, can do.
+    static let forEntries: [ActionType] = [.app, .link, .raycast, .shortcut, .appleShortcut, .text, .media]
 }
 
 extension KeyCombo {
@@ -149,6 +161,32 @@ struct ActionFields: View {
                 note("Shows and opens a file you opened lately, by its name. The list is the Mac’s own record of opened files in your home folder, from the last seven days.")
             case .askAI:
                 note("Opens Raycast AI Chat with the text you copied last already filled in. Nothing copied = AI Chat just opens.")
+            case .timer:
+                Picker("", selection: $action.target) {
+                    ForEach(TimerKeys.choices, id: \.self) { Text($0 == 1 ? "1 minute" : "\($0) minutes").tag(String($0)) }
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("timerPicker")
+                note("A press starts the timer and the key counts down. Another press stops it. When the time is up the Mac plays a sound twice and the key says “Done” for a minute, or until you press it.")
+            case .toggle: switchFields
+            case .appleShortcut: AppleShortcutFields(action: $action, suggestTitle: suggestTitle)
+            case .list:
+                StepsEditor(action: $action, deck: deck, profile: profile, isList: true)
+            case .running:
+                Picker("", selection: $action.target) {
+                    ForEach(1...15, id: \.self) { Text($0 == 1 ? "1st of the apps open now" : "\($0).").tag(String($0)) }
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("runningPicker")
+                note("Shows one of the apps that are open right now, with its own icon and name, and brings it forward. An app keeps its place while it stays open; a newly opened app goes to the end. “Add an “Open apps” folder” under the keys makes a whole folder of them.")
+            case .micLight:
+                note("Shows whether an app is listening to the Mac’s microphone right now: red with “Mic in use”, or grey-blue with “Mic free”. It follows within about two seconds. A press does nothing, and the key never changes the microphone.")
+            case .wait:
+                Picker("", selection: $action.target) {
+                    ForEach(StepTiming.waits, id: \.self) { Text($0 == "0.5" ? "Half a second" : $0 == "1" ? "1 second" : "\($0) seconds").tag($0) }
+                }
+                .labelsHidden()
+                note("Waits before the next step, for an app that needs a moment to open.")
             case .folder: folderFields
             case .profile: profileFields
             case .multi: StepsEditor(action: $action, deck: deck, profile: profile)
@@ -162,6 +200,50 @@ struct ActionFields: View {
 
     private func note(_ text: String) -> some View {
         Text(text).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// A switch key: dark mode, mute, or two things of his own in turn.
+    private var switchFields: some View {
+        let own = SwitchKeys.isOwn(action.target)
+        return VStack(alignment: .leading, spacing: 6) {
+            Picker("", selection: Binding(get: { own ? "own" : action.target }, set: { new in
+                if new == "own" {
+                    if !own { action = DeckAction(type: .toggle, target: SwitchKeys.newOwn(), steps: [DeckAction(type: .app), DeckAction(type: .app)]) }
+                } else {
+                    action = DeckAction(type: .toggle, target: new)
+                }
+            })) {
+                Text("Dark mode").tag(SwitchKeys.dark)
+                Text("Mute the sound").tag(SwitchKeys.mute)
+                Text("Two things in turn").tag("own")
+            }
+            .labelsHidden()
+            .accessibilityIdentifier("switchPicker")
+            if own, action.steps.count >= 2 {
+                ForEach(0..<2, id: \.self) { index in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 6) {
+                            Text(index == 0 ? "When it goes on" : "When it goes off")
+                                .font(.callout.weight(.semibold)).foregroundStyle(Palette.part("keys", scheme))
+                            Picker("", selection: Binding(get: { action.steps[index].type },
+                                                          set: { if $0 != action.steps[index].type { action.steps[index] = DeckAction.fresh($0) } })) {
+                                ForEach(ActionType.forEntries + [.none], id: \.self) { Text($0.title).tag($0) }
+                            }
+                            .labelsHidden()
+                        }
+                        ActionFields(action: $action.steps[index], deck: deck, profile: profile)
+                    }
+                    .padding(8)
+                    .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                note("The key remembers whether it is on or off, also after a restart.")
+            } else if action.target == SwitchKeys.dark {
+                note("Switches the Mac between its light and its dark look. The first time, the Mac asks once whether AMS Deck Mate may control “System Events”: choose Allow.")
+            } else {
+                note("Mutes the Mac’s sound, and brings it back.")
+            }
+            note("The key shows a small switch mark in its top left corner: filled when on, an outline when off.")
+        }
     }
 
     private var appFields: some View {
@@ -379,11 +461,48 @@ struct RaycastPicker: View {
     }
 }
 
-/// The steps of a "several things in a row" key.
+/// A key that runs a Shortcut of the Mac's Shortcuts app: pick it from the list, or type its name.
+struct AppleShortcutFields: View {
+    @Binding var action: DeckAction
+    var suggestTitle: (String) -> Void
+    @State private var names: [String]?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                TextField("Name of the Shortcut", text: $action.target)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("appleShortcutName")
+                Menu("Pick a Shortcut…") {
+                    if let names {
+                        if names.isEmpty { Text("No Shortcuts found") }
+                        ForEach(names, id: \.self) { name in
+                            Button(name) {
+                                action.target = name
+                                suggestTitle(name)
+                            }
+                        }
+                    } else {
+                        Text("Reading your Shortcuts…")
+                    }
+                }
+                .fixedSize()
+                .accessibilityIdentifier("pickAppleShortcut")
+            }
+            Text("Runs this Shortcut from the Shortcuts app. The name must be exactly as it is there.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+        .onAppear { AppleShortcuts.names { names = $0 } }
+    }
+}
+
+/// The steps of a "several things in a row" key, or the entries of a "list to pick from" key.
 struct StepsEditor: View {
     @Binding var action: DeckAction
     let deck: Deck
     let profile: DeckProfile
+    /// The entries of a list: each has a name, and nothing runs by itself.
+    var isList = false
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
@@ -393,30 +512,35 @@ struct StepsEditor: View {
                     HStack(spacing: 6) {
                         Text("\(index + 1)").font(.callout.weight(.semibold)).foregroundStyle(Palette.part("keys", scheme))
                         Picker("", selection: stepType(index)) {
-                            ForEach(ActionType.forSteps, id: \.self) { Text($0.title).tag($0) }
+                            ForEach(isList ? ActionType.forEntries : ActionType.forSteps, id: \.self) { Text($0.title).tag($0) }
                         }
                         .labelsHidden()
                         Spacer(minLength: 0)
                         Button { action.steps.remove(at: index) } label: { Mark(name: "control-close", size: 13) }
                             .buttonStyle(.plain)
-                            .help("Remove this step")
+                            .help(isList ? "Remove this entry" : "Remove this step")
+                    }
+                    if isList {
+                        TextField("Name in the list (empty = what it does)", text: $action.steps[index].name)
+                            .textFieldStyle(.roundedBorder)
                     }
                     ActionFields(action: $action.steps[index], deck: deck, profile: profile)
                 }
                 .padding(8)
                 .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
-            Button("Add a step") { action.steps.append(DeckAction(type: .app)) }
+            Button(isList ? "Add an entry" : "Add a step") { action.steps.append(DeckAction(type: .app)) }
                 .buttonStyle(PlainButton())
                 .accessibilityIdentifier("addStep")
-            Text("The steps run one after another, a third of a second apart.")
-                .font(.caption).foregroundStyle(.secondary)
+            Text(isList ? "A press shows these at the mouse pointer. Click one to run it; a click elsewhere, a second press or ten seconds put the list away."
+                        : "The steps run one after another, a third of a second apart. A “Wait” step gives an app time to open.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func stepType(_ index: Int) -> Binding<ActionType> {
         Binding(get: { action.steps[index].type },
-                set: { if $0 != action.steps[index].type { action.steps[index] = DeckAction(type: $0) } })
+                set: { if $0 != action.steps[index].type { action.steps[index] = DeckAction.fresh($0) } })
     }
 }
 

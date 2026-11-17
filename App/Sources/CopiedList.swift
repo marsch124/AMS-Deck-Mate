@@ -14,13 +14,20 @@ final class CopiedListPanel {
 
     /// The key was pressed: show the list, or put it away when it is showing.
     func toggle(texts: [String]) {
-        if panel != nil { close() } else { show(texts) }
+        toggle(title: "Copied texts", empty: "Nothing copied earlier yet.", rows: texts.map(CopiedTexts.line), kind: .text) {
+            ActionRunner.paste(texts[$0])
+        }
     }
 
-    private func show(_ texts: [String]) {
-        let view = CopiedListView(texts: texts) { [weak self] text in
+    /// The same small list for a "List to pick from" key: `pick` gets the number of the clicked row.
+    func toggle(title: String, empty: String, rows: [String], kind: KeyKind, pick: @escaping (Int) -> Void) {
+        if panel != nil { close() } else { show(title, empty, rows, kind, pick) }
+    }
+
+    private func show(_ title: String, _ empty: String, _ rows: [String], _ kind: KeyKind, _ pick: @escaping (Int) -> Void) {
+        let view = CopiedListView(title: title, empty: empty, rows: rows, kind: kind) { [weak self] index in
             self?.close()
-            ActionRunner.paste(text)
+            pick(index)
         }
         let host = NSHostingView(rootView: view)
         host.frame = NSRect(origin: .zero, size: host.fittingSize)
@@ -60,31 +67,35 @@ final class CopiedListPanel {
 }
 
 struct CopiedListView: View {
-    let texts: [String]
-    var pick: (String) -> Void
+    var title = "Copied texts"
+    var empty = "Nothing copied earlier yet."
+    /// The rows, each already cut to one line.
+    let rows: [String]
+    var kind = KeyKind.text
+    var pick: (Int) -> Void
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Copied texts").font(.caption.weight(.semibold)).foregroundStyle(Palette.part("keys", scheme))
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(Palette.part("keys", scheme))
                 .padding(.horizontal, 6)
-            if texts.isEmpty {
-                Text("Nothing copied earlier yet.").font(.callout).foregroundStyle(.secondary)
+            if rows.isEmpty {
+                Text(empty).font(.callout).foregroundStyle(.secondary)
                     .padding(.horizontal, 6).padding(.vertical, 3)
             }
-            ForEach(Array(texts.enumerated()), id: \.offset) { index, text in
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, text in
                 HStack(spacing: 7) {
                     Text("\(index + 1)").font(.caption.weight(.bold)).foregroundStyle(.white)
                         .frame(width: 17, height: 17)
-                        .background(Color(nsColor: Palette.tile(.text)), in: Circle())
-                    Text(CopiedTexts.line(text)).font(.callout).lineLimit(1)
+                        .background(Color(nsColor: Palette.tile(kind)), in: Circle())
+                    Text(text).font(.callout).lineLimit(1)
                     Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .frame(width: 330, alignment: .leading)
                 .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .overlay(ClickCatcher(onDown: { _ in }, onUp: { pick(text) }))
+                .overlay(ClickCatcher(onDown: { _ in }, onUp: { pick(index) }))
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("copied-\(index)")
             }
