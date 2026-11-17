@@ -48,7 +48,7 @@ enum Guide {
             "Since 0.9.3 a key can also show a picture of its own, for example an app's real icon, instead of a white drawing. This works for any key, also one that opens a web address or a file. The picture has rounded corners like an app icon and sits on the key's usual colour (links stay teal). If the picture file is gone, the key shows the usual drawing for what it does.",
             "The pictures are files in the folder \"Pictures\" beside your keys. The AMS Apps Overview tool puts them there. There is no button to choose a picture in the app yet.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
-            "There are 251 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings."
+            "There are 252 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
@@ -242,6 +242,15 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.9.4", date: "17 Nov 2026", new: [
+            "One more hand-drawn drawing to choose for a key in \"Set up keys\", where you pick a key's drawing: Drawer (a drawer front with a small handle).",
+            "There are now 252 drawings to choose from, instead of 251. It is drawn in the same style as all the others (one line, round ends, no fill) and comes from the shared AMS icon library, so the other AMS apps can use the same drawing.",
+            "Existing keys keep their drawings. The new one shows on the Stream Deck, on the keys on screen, and on the iPhone and iPad, because the Mac draws the keys. No iPhone or iPad update is needed."
+        ], changed: [
+            "In your page group \"My Apps\", on the page \"Home & trips\", the GridFit key (place 9) now shows the white drawer drawing, the same mark AMS Apps Overview shows for AMS Snug GridFit. Before, it showed Autodesk Fusion's app icon. You chose this yourself (\"Use the drawer\").",
+            "The key still opens Autodesk Fusion, stays blue because it opens an app, and did not move. Nothing else changed. A copy of the keys from before is in Backups.",
+            "No new test, because there is no new rule: there are still 52 tests. The Mac app is now 0.9.4 (build 16); the iPhone and iPad app stays 0.16 (build 21)."
+        ], fixed: []),
         Release(id: "0.9.3", date: "17 Nov 2026", new: [
             "A key can now show a picture instead of a white hand-drawn drawing, for example an app's real icon. Before, only a key that opens an app installed on the Mac showed a real icon; a key that opens a web address or a file could only show a white drawing.",
             "The picture is a file in the folder \"Pictures\" beside your keys (in AMS Deck Mate's folder under Application Support). A key points to it by name. It is drawn with rounded corners like an app icon, 36 of the key's 72 points wide when the key has a title and 46 when it has none. The key's tile keeps the colour of its kind, so links stay teal. If the picture file is missing, the key shows the usual automatic drawing for what it does.",
