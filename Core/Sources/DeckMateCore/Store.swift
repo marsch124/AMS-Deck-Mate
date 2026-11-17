@@ -16,6 +16,8 @@ public struct Store {
 
     public var file: URL { folder.appendingPathComponent("deck.json") }
     public var backups: URL { folder.appendingPathComponent("Backups", isDirectory: true) }
+    /// Pictures a key can show instead of a drawing (an app's real icon), as <name>.png.
+    public var pictures: URL { folder.appendingPathComponent("Pictures", isDirectory: true) }
 
     /// nil when there is no setup yet (first start), or the file cannot be read at all.
     public func load() -> Deck? {

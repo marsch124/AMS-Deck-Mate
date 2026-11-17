@@ -203,6 +203,18 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     }
 
     public var shownIcon: String { icon.isEmpty ? action.autoIcon : icon }
+
+    /// How a key names a picture of its own instead of a drawing: "picture:<name>".
+    public static let picturePrefix = "picture:"
+
+    /// The picture this key shows (the file <name>.png in the Pictures folder beside the keys file);
+    /// nil when its icon is a drawing or the automatic one. Only a plain file name counts, never a path.
+    public var pictureName: String? {
+        guard icon.hasPrefix(DeckKey.picturePrefix) else { return nil }
+        let name = String(icon.dropFirst(DeckKey.picturePrefix.count))
+        guard !name.isEmpty, !name.contains("/"), !name.hasPrefix(".") else { return nil }
+        return name
+    }
 }
 
 public struct DeckPage: Codable, Equatable, Identifiable, Sendable {

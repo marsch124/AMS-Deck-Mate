@@ -45,6 +45,8 @@ enum Guide {
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
             "Each kind has its own colour: apps blue, links teal, Raycast red, keyboard shortcuts purple, typed text amber, music and sound green, moving around grey-blue.",
             "A key that opens an app shows the app's own icon, unless you pick a hand-drawn one.",
+            "Since 0.9.3 a key can also show a picture of its own, for example an app's real icon, instead of a white drawing. This works for any key, also one that opens a web address or a file. The picture has rounded corners like an app icon and sits on the key's usual colour (links stay teal). If the picture file is gone, the key shows the usual drawing for what it does.",
+            "The pictures are files in the folder \"Pictures\" beside your keys. The AMS Apps Overview tool puts them there. There is no button to choose a picture in the app yet.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
             "There are 251 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings."
         ]),
@@ -52,7 +54,7 @@ enum Guide {
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
             "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
             "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
-            "Click a key to edit it on the right: Title, Icon and \"What it does\".",
+            "Click a key to edit it on the right: Title, Icon and \"What it does\". For a key that shows a picture, the Icon button says \"Own picture\". Picking a drawing, or \"Automatic\", replaces the picture.",
             "Every edit has Cancel and Save. Escape is Cancel.",
             "\"Clear key\" empties a key. \"Try it\" runs the key.",
             "Move keys by dragging: drop a key on another place to move it there, or to swap with the key that is there. Drop a key on a page chip at the top to send it to that page, to the same place. A key already there swaps. A folder key takes its folder along.",
@@ -240,6 +242,20 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.9.3", date: "17 Nov 2026", new: [
+            "A key can now show a picture instead of a white hand-drawn drawing, for example an app's real icon. Before, only a key that opens an app installed on the Mac showed a real icon; a key that opens a web address or a file could only show a white drawing.",
+            "The picture is a file in the folder \"Pictures\" beside your keys (in AMS Deck Mate's folder under Application Support). A key points to it by name. It is drawn with rounded corners like an app icon, 36 of the key's 72 points wide when the key has a title and 46 when it has none. The key's tile keeps the colour of its kind, so links stay teal. If the picture file is missing, the key shows the usual automatic drawing for what it does.",
+            "It shows on the Stream Deck, on the keys on screen, in Set up keys and \"All pages\", and on the iPhone and iPad, because the Mac draws the keys. No iPhone or iPad update is needed; that app stays 0.16 (build 21).",
+            "In Set up keys the Icon button says \"Own picture\" for a key that shows one. Picking a drawing or \"Automatic\" replaces the picture. There is no button yet to choose a picture file in the app: the AMS Apps Overview tool (Tools/deck-pages.py with --icons) puts the pictures there and copies the icon files.",
+            "The weekly copy in iCloud Drive and the safety copies hold only your keys, not the Pictures folder. The tool can put the pictures back at any time.",
+            "A new test checks that a key can name a picture of its own. There are now 52 tests, instead of 51."
+        ], changed: [
+            "In your page group \"My Apps\" (34 app keys on 5 pages), 10 web-app keys now show the app's real icon. Before, they showed a white drawing: Breathing (a breath drawing), Cold Shower (an ice bath), Big 12S (a book), Tracking (a badge), Tri Glossary (a triathlon drawing), FermentLog (a bottle), PackTrack (a box), CountDown (an hourglass), PomoTimer (a stopwatch) and TechLingo (a laptop).",
+            "The Timers key changes from a watch drawing to the stopwatch drawing, the same mark AMS Apps Overview shows for Timers.",
+            "The five \"Overview\" keys, bottom right on each of the five pages, now show AMS Apps Overview's own app icon. Before, they showed a white list drawing. In all, 16 keys changed their icon: 10 web apps, Timers and the 5 Overview keys.",
+            "The 20 keys that open an installed app already showed the real icon and are unchanged. Three apps have no icon of their own and keep their drawing: Ironman plan (triathlon), Wealth (wallet) and Nutrition (food). GridFit keeps Autodesk Fusion's icon, because it opens Fusion and has no icon of its own.",
+            "No key moved. A copy of the keys from before is in Backups. The number of hand-drawn drawings to pick from is unchanged: 251. The Mac app is now 0.9.3 (build 15); the iPhone and iPad app stays 0.16 (build 21)."
+        ], fixed: []),
         Release(id: "0.9.2", date: "16 Nov 2026", new: [
             "Six new hand-drawn drawings to choose for a key in \"Set up keys\", where you pick a key's drawing: Home (a small house), Arrow up, Arrow left, Arrow right, Window top half and Window bottom half.",
             "Before, there was no house, only an arrow down, and for windows only left half, right half and full window. Now there are arrows in all four directions, and window top half and bottom half join the other three window drawings.",

@@ -7,6 +7,19 @@ enum KeyArt {
     private static var appIcons: [String: NSImage] = [:]
     private static var pictures: [String: CGImage] = [:]
     private static var phonePictures: [String: Data] = [:]
+    private static var ownPictures: [String: NSImage] = [:]
+
+    /// Where the pictures of keys with a picture of their own are kept (the setup's Pictures folder).
+    static var picturesFolder: URL?
+
+    /// A key's own picture by its name; nil when the file is not there.
+    private static func ownPicture(_ name: String) -> NSImage? {
+        if let hit = ownPictures[name] { return hit }
+        guard let url = picturesFolder?.appendingPathComponent(name + ".png"),
+              let picture = NSImage(contentsOf: url), picture.isValid else { return nil }
+        ownPictures[name] = picture
+        return picture
+    }
 
     /// The app a key opens, as a file on this Mac.
     static func appURL(_ target: String) -> URL? {
@@ -66,13 +79,23 @@ enum KeyArt {
         let k = size / 72
         let title = Self.title(key)
         let hasTitle = !title.isEmpty
-        let iconName = key.shownIcon
+        // A key with a picture of its own whose file is missing falls back to the automatic drawing.
+        let iconName = key.pictureName == nil ? key.shownIcon : key.action.autoIcon
         // The drawing sits a little above the middle when there is a title under it.
         let iconSide = (hasTitle ? 34 : 44) * k
         let iconMid = CGPoint(x: size / 2, y: hasTitle ? size - 27 * k : size / 2)
         let iconRect = CGRect(x: iconMid.x - iconSide / 2, y: iconMid.y - iconSide / 2, width: iconSide, height: iconSide)
 
-        if key.icon.isEmpty, key.action.type == .raycast, let icon = RaycastIcons.image(forLink: key.action.target) {
+        if let name = key.pictureName, let picture = ownPicture(name) {
+            // A picture of its own (an app's real icon): a little larger than a drawing, with an app icon's round corners.
+            let side = (hasTitle ? 36 : 46) * k
+            let box = CGRect(x: iconMid.x - side / 2, y: iconMid.y - side / 2, width: side, height: side)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current?.imageInterpolation = .high
+            NSBezierPath(roundedRect: box, xRadius: side * 0.23, yRadius: side * 0.23).addClip()
+            picture.draw(in: box, from: .zero, operation: .sourceOver, fraction: 1)
+            NSGraphicsContext.restoreGraphicsState()
+        } else if key.icon.isEmpty, key.action.type == .raycast, let icon = RaycastIcons.image(forLink: key.action.target) {
             // An extension command shows its extension's own icon on a light round tile, so dark icons read too.
             let tile = iconRect.insetBy(dx: -2 * k, dy: -2 * k)
             NSColor.white.withAlphaComponent(0.92).setFill()
@@ -178,9 +201,37 @@ enum KeyArt {
         return png
     }
 
+    /// A whole page as one large picture (five keys of 144 across), for looking at the keys from outside: `--pages`.
+    static func pngForCheck(_ page: DeckPage) -> Data? {
+        let side = 144, gap = 12
+        let width = side * 5 + gap * 6, height = side * 3 + gap * 4
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.setFillColor(NSColor(white: 0.1, alpha: 1).cgColor)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        for index in 0..<StreamDeckProtocol.keyCount {
+            let box = CGRect(x: gap + (index % 5) * (side + gap), y: height - (index / 5 + 1) * (side + gap),
+                             width: side, height: side)
+            context.saveGState()
+            context.addPath(CGPath(roundedRect: box, cornerWidth: 20, cornerHeight: 20, transform: nil))
+            context.clip()
+            if let picture = image(for: page.keys[index], pixels: side) {
+                context.draw(picture, in: box)
+            } else {
+                context.setFillColor(NSColor.white.withAlphaComponent(0.08).cgColor)
+                context.fill(box)
+            }
+            context.restoreGState()
+        }
+        guard let picture = context.makeImage() else { return nil }
+        return NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
+    }
+
     static func forgetAppIcons() {
         mapPictures.removeAll()
         appIcons.removeAll()
+        ownPictures.removeAll()
         pictures.removeAll()
         phonePictures.removeAll()
     }

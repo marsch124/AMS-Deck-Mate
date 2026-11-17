@@ -73,6 +73,7 @@ final class AppModel: ObservableObject {
 
     init(store: Store = Store(), sample: Deck? = nil) {
         self.store = store
+        KeyArt.picturesFolder = store.pictures
         cloudCopy = CloudCopy(store: store)
         isSample = sample != nil
         if let sample {

@@ -26,6 +26,16 @@ final class RulesTests: XCTestCase {
         return (Deck(profiles: [main, work], defaultProfile: main.id), main, work, folder)
     }
 
+    func testAKeyCanNameAPictureOfItsOwn() {
+        let link = DeckAction(type: .link, target: "https://example.com")
+        XCTAssertEqual(DeckKey(icon: "picture:tracking", action: link).pictureName, "tracking")
+        XCTAssertNil(DeckKey(icon: "book", action: link).pictureName, "a drawing is not a picture")
+        XCTAssertNil(DeckKey(icon: "", action: link).pictureName, "the automatic drawing is not a picture")
+        XCTAssertNil(DeckKey(icon: "picture:", action: link).pictureName)
+        XCTAssertNil(DeckKey(icon: "picture:../deck", action: link).pictureName, "never a path out of the Pictures folder")
+        XCTAssertEqual(Store(folder: URL(fileURLWithPath: "/tmp/x")).pictures.lastPathComponent, "Pictures")
+    }
+
     func testAKeyThatOpensSomethingStaysOnItsPageAndSaysWhatToRun() {
         let (deck, _, _, _) = deck()
         let start = Navigator.start(in: deck)!

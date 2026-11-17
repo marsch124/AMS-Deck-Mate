@@ -88,6 +88,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             NSApp.terminate(nil)
             return
         }
+        // For checks: "--pages <folder>" writes every page of the setup as one picture of its 15 keys, as the
+        // keys really look, and changes nothing ("--data <folder>" picks another setup than the real one).
+        if let index = arguments.firstIndex(of: "--pages"), index + 1 < arguments.count {
+            var store = Store()
+            if let data = arguments.firstIndex(of: "--data"), data + 1 < arguments.count {
+                store = Store(folder: URL(fileURLWithPath: arguments[data + 1]))
+            }
+            KeyArt.picturesFolder = store.pictures
+            let folder = URL(fileURLWithPath: arguments[index + 1])
+            try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            for group in store.load()?.profiles ?? [] {
+                for page in group.pages {
+                    let name = "\(group.name) - \(page.name).png".replacingOccurrences(of: "/", with: "-")
+                    try? KeyArt.pngForCheck(page)?.write(to: folder.appendingPathComponent(name))
+                }
+            }
+            print("pages written")
+            NSApp.terminate(nil)
+            return
+        }
         // Switches "Open at login" on or off from outside, then quits: "--open-at-login on".
         if let index = arguments.firstIndex(of: "--open-at-login"), index + 1 < arguments.count {
             if arguments[index + 1] == "on" { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }

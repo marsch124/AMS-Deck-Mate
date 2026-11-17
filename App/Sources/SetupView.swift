@@ -564,7 +564,7 @@ struct SetupView: View {
                             .frame(width: 46, height: 46)
                             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
-                    Button(draft.icon.isEmpty ? "Automatic" : IconStore.title(draft.icon)) { showIcons = true }
+                    Button(draft.icon.isEmpty ? "Automatic" : draft.pictureName != nil ? "Own picture" : IconStore.title(draft.icon)) { showIcons = true }
                         .buttonStyle(PlainButton())
                         .accessibilityIdentifier("pickIcon")
                         .popover(isPresented: $showIcons, arrowEdge: .leading) {

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1430"
-   version = "1.3">
+   version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
+      buildImplicitDependencies = "YES"
+      runPostActionsOnFailure = "NO">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -15,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FFEA3CFD36DB46587A0C38FB"
-               BuildableName = "Deck Mate.app"
+               BuildableName = "AMSDeckMatePhone.app"
                BlueprintName = "AMSDeckMatePhone"
                ReferencedContainer = "container:AMSDeckMate.xcodeproj">
             </BuildableReference>
@@ -26,19 +27,21 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "NO">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FFEA3CFD36DB46587A0C38FB"
-            BuildableName = "Deck Mate.app"
+            BuildableName = "AMSDeckMatePhone.app"
             BlueprintName = "AMSDeckMatePhone"
             ReferencedContainer = "container:AMSDeckMate.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
          <TestableReference
-            skipped = "NO">
+            skipped = "NO"
+            parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FDD0E2740C3AAE66CDABDCF9"
@@ -59,6 +62,8 @@
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -75,7 +80,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FFEA3CFD36DB46587A0C38FB"
-            BuildableName = "Deck Mate.app"
+            BuildableName = "AMSDeckMatePhone.app"
             BlueprintName = "AMSDeckMatePhone"
             ReferencedContainer = "container:AMSDeckMate.xcodeproj">
          </BuildableReference>
@@ -92,7 +97,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "FFEA3CFD36DB46587A0C38FB"
-            BuildableName = "Deck Mate.app"
+            BuildableName = "AMSDeckMatePhone.app"
             BlueprintName = "AMSDeckMatePhone"
             ReferencedContainer = "container:AMSDeckMate.xcodeproj">
          </BuildableReference>
