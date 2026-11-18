@@ -27,7 +27,18 @@ struct DeckScreen: View {
     @AppStorage("batteryWarning") private var warnBattery = true
     @AppStorage("darkWhenMacSleeps") private var darkWhenMacSleeps = true
     /// A tap on the dark screen shows the keys until the Mac wakes and sleeps again.
-    @State private var keysWhileAsleep = false
+    private var keysWhileAsleep: Bool {
+        get { link.asleepKeysShown }
+        nonmutating set { link.asleepKeysShown = newValue }
+    }
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("eveningRest") private var eveningRest = false
+    @AppStorage("eveningFrom") private var eveningFrom = PhoneEvening.defaultFrom
+    @AppStorage("eveningTo") private var eveningTo = PhoneEvening.defaultTo
+    /// The brightness he had before the resting clock dimmed the screen.
+    @State private var savedBrightness: CGFloat?
+    /// A failed press shows its note even when the note switch is off.
+    private var failedNote: Bool { !showNote && link.note?.ok == false }
     @State private var battery: String?
     /// The background now: the showing profile's own colour, else the chosen background.
     private var ground: PhonePrefs.Ground {
@@ -74,7 +85,9 @@ struct DeckScreen: View {
         ZStack {
             (ground.colour ?? PhonePalette.ground).ignoresSafeArea()
             Group {
-                if phoneSideways {
+                if resting {
+                    Color.clear
+                } else if phoneSideways {
                     // iPhone on its side: everything but the keys sits in a panel on the left, so the keys get the whole height.
                     HStack(spacing: 12) {
                         sidePanel
@@ -122,9 +135,21 @@ struct DeckScreen: View {
             let words = warnBattery ? PhonePrefs.batteryWarning(level: UIDevice.current.batteryLevel,
                                                                 charging: state == .charging || state == .full) : nil
             if words != battery { battery = words }
-            let due = PhonePrefs.rests(afterMinutes: restAfter, idle: now.timeIntervalSince(lastTouch))
+            let parts = Calendar.current.dateComponents([.hour, .minute], from: now)
+            let minutes = PhoneEvening.restMinutes(setting: restAfter, on: eveningRest,
+                                                   now: (parts.hour ?? 0) * 60 + (parts.minute ?? 0),
+                                                   from: eveningFrom, to: eveningTo)
+            let due = PhonePrefs.rests(afterMinutes: minutes, idle: now.timeIntervalSince(lastTouch))
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
+            // The keys shown on a tap while the Mac sleeps stay for 2 minutes after the last touch.
+            if keysWhileAsleep, now.timeIntervalSince(lastTouch) >= 120 { withAnimation(.easeOut(duration: 0.25)) { keysWhileAsleep = false } }
         }
+        .onChange(of: resting) { _, now in now ? dimScreen() : restoreScreen() }
+        .onChange(of: scenePhase) { _, phase in
+            // Never leave the device dim: back to his brightness, and the keys instead of the resting clock.
+            if phase != .active { restoreScreen(); if resting { resting = false; lastTouch = Date() } }
+        }
+        .onDisappear { restoreScreen() }
         .onChange(of: link.macAsleep) { _, _ in keysWhileAsleep = false }
         // Turned from one side straight to the other the size stays the same: only this tells.
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in readIslandSide() }
@@ -142,6 +167,18 @@ struct DeckScreen: View {
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("deckScreen")
+    }
+
+    /// The resting clock dims the screen to a quarter of his brightness (not below 5 %).
+    private func dimScreen() {
+        if savedBrightness == nil { savedBrightness = UIScreen.main.brightness }
+        UIScreen.main.brightness = max(0.05, (savedBrightness ?? 0.2) * 0.25)
+    }
+
+    private func restoreScreen() {
+        guard let saved = savedBrightness else { return }
+        UIScreen.main.brightness = saved
+        savedBrightness = nil
     }
 
     /// An iPhone held on its side ("-sideways" forces it, for checks).
@@ -175,6 +212,7 @@ struct DeckScreen: View {
         }
         .frame(width: Self.sidePanelWidth)
         .frame(maxHeight: .infinity, alignment: .top)
+        .overlay(alignment: .top) { if failedNote { noteLine } }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("sidePanel")
     }
@@ -334,6 +372,9 @@ struct DeckScreen: View {
             }
             .aspectRatio(favouritesShow ? 5.0 / 4.1 : 5.0 / 3.0, contentMode: .fit)
             if showDots { pageDots }
+        }
+        .overlay(alignment: .top) {
+            if !note, !phoneSideways, failedNote { noteLine.offset(y: -36) }
         }
     }
 
@@ -740,6 +781,20 @@ struct DeckScreen: View {
             }
             if let text = cardText {
                 Text(text).font(.callout).multilineTextAlignment(.center).foregroundStyle(.secondary)
+            }
+            if case .waiting = link.state {
+                TimelineView(.periodic(from: .now, by: 2)) { context in
+                    if let since = link.waitingSince, context.date.timeIntervalSince(since) > 30 {
+                        VStack(spacing: 8) {
+                            Text("Nothing yet? Wake your Mac and look for the window “… wants to use your keys”.")
+                                .font(.callout).multilineTextAlignment(.center)
+                            Button("Ask again") { link.retry() }
+                                .buttonStyle(PhoneMainButton(part: "screen"))
+                                .accessibilityIdentifier("askAgainWaiting")
+                        }
+                        .padding(.top, 4)
+                    }
+                }
             }
             if case .refused = link.state {
                 Button("Ask again") { link.retry() }

@@ -14,6 +14,7 @@ final class LinkClient: ObservableObject {
     @Published private(set) var state: State = .looking {
         didSet {
             if state == .looking { if lookingSince == nil { lookingSince = Date() } } else { lookingSince = nil }
+            if case .waiting = state { if waitingSince == nil { waitingSince = Date() } } else { waitingSince = nil }
         }
     }
     @Published private(set) var place = ""
@@ -26,7 +27,15 @@ final class LinkClient: ObservableObject {
     @Published private(set) var note: (text: String, ok: Bool)?
     /// Since when it has been looking for the Mac (for the hotspot hint).
     @Published private(set) var lookingSince: Date? = Date()
+    /// Since when it has been waiting for the Mac's Allow (for the hint after 30 seconds).
+    @Published private(set) var waitingSince: Date?
+    /// A tap on the dark screen showed the keys while the Mac sleeps (the screen stays awake meanwhile).
+    @Published var asleepKeysShown = false
     private var noteID = 0
+    /// Failed tries in a row to reach the Mac (for the waiting time before the next one).
+    private var failedTries = 0
+    private var lookWork: DispatchWorkItem?
+    private var asleepWork: DispatchWorkItem?
     /// What the Mac app understands: 3 = own keys, long press, favourites, the Mac at a glance, music
     /// (AMS Deck Mate 0.5 or later on the Mac).
     @Published private(set) var macVersion = 0
@@ -104,12 +113,30 @@ final class LinkClient: ObservableObject {
 
     /// What the Macs gave when they allowed this device: Mac's name → "id:secret". The secret never
     /// travels again: it only proves this device to the Mac, and the Mac to this device.
-    private var tokens: [String: String] {
+    private var legacyTokens: [String: String] {
         get { UserDefaults.standard.dictionary(forKey: "macKeys") as? [String: String] ?? [:] }
         set { UserDefaults.standard.set(newValue, forKey: "macKeys") }
     }
+    private func token(for mac: String) -> String? { MacKeyStore.read(mac) ?? legacyTokens[mac] }
+    private func keep(token: String, for mac: String) {
+        if MacKeyStore.write(token, for: mac) {
+            var old = legacyTokens
+            if old[mac] != nil { old[mac] = nil; legacyTokens = old }
+        } else {
+            var old = legacyTokens
+            old[mac] = token
+            legacyTokens = old
+        }
+    }
+    /// Moves what the old place holds into the Keychain; an entry leaves the old place only after it
+    /// was read back from the Keychain. Anything that does not work stays where it is.
+    private func moveKeysToKeychain() {
+        var old = legacyTokens
+        for (mac, value) in old where MacKeyStore.write(value, for: mac) { old[mac] = nil }
+        if old.count != legacyTokens.count { legacyTokens = old }
+    }
     private func idAndSecret(for mac: String) -> (id: String, secret: String)? {
-        guard let parts = tokens[mac]?.split(separator: ":", maxSplits: 1), parts.count == 2 else { return nil }
+        guard let parts = token(for: mac)?.split(separator: ":", maxSplits: 1), parts.count == 2 else { return nil }
         return (String(parts[0]), String(parts[1]))
     }
     /// The Mac it talked to last: it is picked first when several are close by.
@@ -153,14 +180,19 @@ final class LinkClient: ObservableObject {
 
     func start() {
         guard !isSample, browsers.isEmpty else { return }
+        moveKeysToKeychain()
         UserDefaults.standard.removeObject(forKey: "macTokens")      // permissions from before 0.11 travelled readable
         // The Mac offers its keys on the shared network and, where it can, directly (like AirDrop).
         for type in [PhoneLink.service, PhoneLink.directService] {
             let parameters = NWParameters()
             parameters.includePeerToPeer = true
             let browser = NWBrowser(for: .bonjour(type: type, domain: nil), using: parameters)
-            browser.browseResultsChangedHandler = { [weak self] _, _ in
-                MainActor.assumeIsolated { self?.lookAgain() }
+            browser.browseResultsChangedHandler = { [weak self] _, changes in
+                MainActor.assumeIsolated {
+                    // A Mac's offer that newly appears: no more waiting, try at once.
+                    let appeared = changes.contains { if case .added = $0 { return true } else { return false } }
+                    if appeared { self?.lookNow() }
+                }
             }
             browser.stateUpdateHandler = { [weak self] state in
                 guard case .failed = state else { return }
@@ -188,6 +220,14 @@ final class LinkClient: ObservableObject {
         unanswered = 0
         macTooOld = false
         state = .looking
+        lookNow()
+    }
+
+    /// No waiting: forget the failed tries and look at once.
+    private func lookNow() {
+        failedTries = 0
+        lookWork?.cancel()
+        lookWork = nil
         lookAgain()
     }
 
@@ -302,8 +342,24 @@ final class LinkClient: ObservableObject {
         }
         session = nil
         if case .refused = state { return }
+        // A line that worked: look again after 1 second. Tries that fail in a row wait longer and longer.
+        if case .connected = state { failedTries = 0 } else { failedTries += 1 }
+        // The Mac slept, then the line was lost for good (switched off?): after 10 minutes say it is being looked for.
+        if macAsleep, asleepWork == nil {
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.asleepWork = nil
+                if case .connected = self.state { return }
+                self.macAsleep = false
+            }
+            asleepWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 600, execute: work)
+        }
         state = .looking
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.lookAgain() }
+        lookWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.lookAgain() }
+        lookWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + PhoneBackoff.wait(afterFailures: max(failedTries, 1)), execute: work)
     }
 
     /// The Mac's key arrived: from here on the line is sealed. This device shows its own key
@@ -341,7 +397,7 @@ final class LinkClient: ObservableObject {
             if token.contains(":") {
                 // Allowed just now: the Mac's id and secret for this device, to keep.
                 guard case .waiting = state else { return dropLine() }
-                tokens[talkingTo] = token
+                keep(token: token, for: talkingTo)
             } else {
                 // Known already: the Mac must prove that it knows the secret too.
                 guard let known = idAndSecret(for: talkingTo), known.id == token,
@@ -356,6 +412,9 @@ final class LinkClient: ObservableObject {
             remembered = talkingTo
             macVersion = version ?? 2
             macAsleep = false
+            failedTries = 0
+            asleepWork?.cancel()
+            asleepWork = nil
             if !newMac { favourites = [:]; mac = nil }
             if macVersion < 4 { map = [] }
             state = .connected(talkingTo)
@@ -476,18 +535,23 @@ final class LinkClient: ObservableObject {
         unanswered = 0
         macTooOld = false
         state = .looking
-        lookAgain()
+        lookNow()
     }
 
     /// "Forget this Mac": its permission is dropped here; next time it asks again.
     func forget() {
-        if let mac = macName { tokens[mac] = nil }
+        if let mac = macName {
+            MacKeyStore.delete(mac)
+            var old = legacyTokens
+            old[mac] = nil
+            legacyTokens = old
+        }
         remembered = nil
         connection?.cancel()
         connection = nil
         keys = [:]
         place = ""
         state = .looking
-        lookAgain()
+        lookNow()
     }
 }
