@@ -411,7 +411,7 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
 public struct Deck: Codable, Equatable, Sendable {
     /// The number of the file's format as this version writes it. A file with a higher number was
     /// saved by a later Deck Mate; saving never lowers it.
-    public static let currentVersion = 2
+    public static let currentVersion = 3
     public var version: Int
     public var profiles: [DeckProfile]
     /// The profile for every app that has no profile of its own.

@@ -160,6 +160,29 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.18", date: "18 Nov 2026", new: [
+            "Round of calm, safety and tidiness. Before: iPhone and iPad app 0.17 (build 22). Now: 0.18 (build 23). It works with Mac 0.16, and it also works with Mac 0.15.",
+            "A note about a key that did not work always shows. Before: with the switch \"The note on what a key did\" off, you saw nothing, also when a key failed. Now: a small note shows anyway (above the keys on an iPad; over the top of the left panel on an iPhone held on its side). A new line under the switch says: \"A key that did not work always shows its note, also when this is off.\"",
+            "The screen stays awake while you look at the keys of a sleeping Mac. Before: nothing kept it awake there. Now: a tap that shows the keys while the Mac sleeps keeps the screen awake until 2 minutes after your last touch. Then the dark screen and the normal auto-lock come back.",
+            "\"Looking for your Mac…\" after a long silence. Before: when the line was lost while the screen said \"Mac asleep\" and no line came back, it kept saying \"Mac asleep\". Now: after 10 minutes without a line it says \"Looking for your Mac…\".",
+            "Waiting for Allow is easier. Before: the card only waited. Now: after 30 seconds it adds \"Nothing yet? Wake your Mac and look for the window “… wants to use your keys”.\" and a full-colour button \"Ask again\".",
+            "Settings sorted. Before: the Favourites row, the Music button, Mac at a glance and the navigation picture were in the Keys card. Now: they are in the Showing card. The long-press note is now in the Touch card. \"Swipe up or down changes page group\" is the new name (before: \"profile\"). The Music button's note on an iPad says: \"A small round button at the bottom left. Tap it for what is playing on the Mac (Spotify or Music), with play, next and volume.\" On an iPhone held on its side it says \"in the column beside the keys\" instead of \"at the bottom left\".",
+            "The resting clock also dims the screen. Before: only the keys faded away. Now: while the resting clock shows, the screen goes to a quarter of the brightness you had (never below 5 %). A tap, the end of the clock, or leaving the app brings the brightness back. The keys are not drawn while it rests.",
+            "Looking for the Mac is gentler. Before: a try every second, for ever. Now: after a failed try it waits 1, 2, 4, 8, 15 and then 30 seconds between tries. It is back to 1 second after a line that worked, when you come back to the app, with \"Ask again\", with \"Forget this Mac\", and when the Mac's offer appears again.",
+            "The secret that allows your Mac is safer. Before: it was kept with the app's settings. Now: it is kept in the iPhone's or iPad's Keychain (its safe for passwords), only on this device and not copied elsewhere. It moves there by itself and you are not asked to allow again. \"Forget this Mac\" removes it.",
+            "Rest sooner in the evening: Settings › Clock has a new switch \"Rest sooner in the evening\" (off at first), with From 21:30 and To 07:00 (the time may pass midnight). Inside those hours the resting clock comes after 1 minute without a touch, also when \"Resting clock\" says Never.",
+            "The sample green tile is darker, as on the Mac, so white words read well. There is no amber tile on the phone.",
+            "Not yet tried: none of this was run on a real iPhone or iPad."
+        ], changed: [
+            "Settings are sorted anew: Showing holds the Favourites row, the Music button, Mac at a glance and the navigation picture. Before: they sat in Keys.",
+            "The resting clock dims the screen too, and the search for the Mac backs off (see above).",
+            "The app 0.17 keeps working with Mac 0.16, and the app 0.18 works with Mac 0.15.",
+            "How it works is updated for these changes. The app is now 0.18 (build 23)."
+        ], fixed: [
+            "A key that failed could go unseen when the switch for the note was off. Now its note always shows.",
+            "A screen that kept saying \"Mac asleep\" after a lost line now says \"Looking for your Mac…\" after 10 minutes.",
+            "The search for the Mac every second, for ever, is now slower step by step."
+        ]),
         Release(id: "0.17", date: "18 Nov 2026", new: [
             "A dead line now shows as dead. With a Mac at 0.15, the app asks the Mac \"are you there?\" every 5 seconds. When nothing at all comes back for 12 seconds, it stops saying Connected and looks for the Mac again. Before: after a change of Wi-Fi, or when the Mac dropped off the Wi-Fi, the app could say Connected for ever while taps went nowhere. Now: within 12 seconds it says it is looking again.",
             "A sleeping Mac is not given up on. The dark \"Mac asleep\" screen stays exactly as it was.",

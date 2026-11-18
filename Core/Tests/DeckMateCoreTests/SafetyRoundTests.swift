@@ -96,7 +96,7 @@ final class SafetyRoundTests: XCTestCase {
         older.version = 1
         other.save(older)
         XCTAssertEqual(other.load()?.version, Deck.currentVersion)
-        XCTAssertEqual(Deck.currentVersion, 2)
+        XCTAssertEqual(Deck.currentVersion, 3)
     }
 
     // MARK: B. A key kind from a later version

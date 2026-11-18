@@ -197,7 +197,7 @@ struct SettingsView: View {
                 EveningDimRows(model: model)
                 if model.elgatoRunning {
                     HStack(alignment: .firstTextBaseline) {
-                        Text("Elgato’s app is running. Only one app can hold the box, so quit it before you plug the box in.")
+                        Text("Elgato’s app is running. Quit it before you plug the box in: otherwise both apps draw on the keys.")
                             .font(.callout)
                             .foregroundStyle(Palette.part("raycast", scheme))
                             .fixedSize(horizontal: false, vertical: true)
