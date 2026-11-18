@@ -199,7 +199,7 @@ public enum KeyCheck {
             return DeskKeys.spots(of: action).isEmpty ? "No windows taken yet" : nil
         case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
              .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery, .weatherTown,
-             .garmin, .macNow, .freeUntil, .macDo, .joinMeeting, .searchCopied, .counter, .stopwatch, .zero, .paragon:
+             .garmin, .macNow, .freeUntil, .macDo, .joinMeeting, .searchCopied, .counter, .stopwatch, .zero, .paragon, .breath, .bar, .often:
             return nil
         case .focus:
             return FocusKeys.plan(of: action).steps.isEmpty ? "No template chosen yet" : nil
@@ -307,7 +307,9 @@ public enum ActionWords {
             case .note: return "Note for PARAGON"
             }
         case .focus: return "Focus rounds"
-        case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait: return "Done"
+        case .breath: return "Breathing pacer"
+        case .often: return "No key pressed often yet"
+        case .none, .bar, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait: return "Done"
         }
     }
 }

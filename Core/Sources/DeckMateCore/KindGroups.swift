@@ -2,8 +2,8 @@ import Foundation
 
 extension ActionType {
     /// The kinds to pick for a key in "Set up keys", in the order of the old flat list.
-    public static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
-                                               .macDo, .searchCopied, .media, .playlist, .timer, .focus, .stopwatch, .counter, .toggle, .micLight,
+    public static let forKeys: [ActionType] = [.app, .running, .recent, .often, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
+                                               .macDo, .searchCopied, .media, .playlist, .timer, .focus, .stopwatch, .counter, .breath, .bar, .toggle, .micLight,
                                                .joinMeeting, .paragon,
                                                .nextEvent, .freeUntil, .weather, .worldClock, .sunTimes, .bodyBattery, .garmin, .macNow,
                                                .dueToday, .cover, .desk, .list, .multi,
@@ -18,12 +18,12 @@ public struct KindGroup: Sendable {
     public let kinds: [ActionType]
 
     public static let all: [KindGroup] = [
-        KindGroup(title: "Open", part: "screen", kinds: [.app, .running, .recent, .link, .recentFile, .desk]),
+        KindGroup(title: "Open", part: "screen", kinds: [.app, .running, .recent, .often, .link, .recentFile, .desk]),
         KindGroup(title: "Type and press", part: "raycast",
                   kinds: [.shortcut, .text, .copied, .searchCopied, .askAI, .raycast, .appleShortcut, .multi, .list]),
         KindGroup(title: "Music and sound", part: "settings", kinds: [.media, .playlist, .cover, .micLight]),
         KindGroup(title: "Time", part: "profiles",
-                  kinds: [.timer, .stopwatch, .counter, .focus, .worldClock, .sunTimes, .nextEvent, .freeUntil, .joinMeeting]),
+                  kinds: [.timer, .stopwatch, .counter, .focus, .breath, .bar, .worldClock, .sunTimes, .nextEvent, .freeUntil, .joinMeeting]),
         KindGroup(title: "At a glance", part: "box", kinds: [.weather, .bodyBattery, .garmin, .macNow, .dueToday, .paragon]),
         KindGroup(title: "On the Mac", part: "keys", kinds: [.macDo, .toggle]),
         KindGroup(title: "Moving around", part: "iphone", kinds: [.folder, .back, .nextPage, .previousPage, .profile]),
@@ -56,6 +56,9 @@ public struct KindGroup: Sendable {
         case .stopwatch: return "clock lap"
         case .counter: return "count tally"
         case .focus: return "pomodoro pomotimer rounds"
+        case .breath: return "breathing breathe calm pacer relax"
+        case .bar: return "progress timer focus row"
+        case .often: return "most used favourite frequent"
         case .worldClock: return "time zone town city"
         case .sunTimes: return "sunrise sunset"
         case .nextEvent: return "calendar meeting appointment"

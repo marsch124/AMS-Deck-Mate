@@ -120,13 +120,13 @@ public enum Navigator {
         case .multi:
             guard depth < 4 else { return }
             for step in action.steps { apply(step, to: &outcome, in: deck, depth: depth + 1) }
-        case .micLight:
+        case .micLight, .bar:
             break       // it only shows something
         case .app, .link, .raycast, .shortcut, .text, .media, .recent, .askAI, .copied, .recentFile,
              .timer, .toggle, .appleShortcut, .list, .running, .wait,
              .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk, .weatherTown,
              .garmin, .macNow, .worldClock, .sunTimes, .freeUntil,
-             .macDo, .joinMeeting, .playlist, .searchCopied, .counter, .stopwatch, .zero, .paragon, .focus:
+             .macDo, .joinMeeting, .playlist, .searchCopied, .counter, .stopwatch, .zero, .paragon, .focus, .breath, .often:
             outcome.run.append(action)
         }
     }

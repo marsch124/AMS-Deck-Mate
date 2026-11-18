@@ -34,6 +34,8 @@ enum ActionRunner {
     static var live: () -> LiveKeys = { LiveKeys() }
     /// A timer key was pressed: its minutes (set by the app at start).
     static var timerPressed: ((String) -> Void)?
+    /// A breathing pacer key was pressed: it starts, or stops when it runs.
+    static var breathPressed: ((DeckAction) -> Void)?
     /// A Body Battery or Garmin key was pressed: the board's page, or its app while the board is off.
     static var boardPressed: (() -> Void)?
     /// A switch key was pressed (set by the app at start).
@@ -147,7 +149,11 @@ enum ActionRunner {
             zeroPressed?(action.target)
         case .focus:
             focusPressed?(action)
-        case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
+        case .breath:
+            breathPressed?(action)
+        case .often:
+            break       // AppModel turns it into the key it stands for before it gets here; none yet = nothing
+        case .none, .bar, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
             break       // moving around is the Navigator's work; a light only shows; a wait only waits
         }
     }

@@ -52,6 +52,9 @@ extension ActionType {
         case .zero: return "Back to 0"
         case .paragon: return "PARAGON"
         case .focus: return "Focus rounds (PomoTimer)"
+        case .breath: return "Breathing pacer"
+        case .bar: return "Progress bar (part of a row)"
+        case .often: return "Often used key"
         }
     }
 
@@ -212,7 +215,7 @@ struct ActionFields: View {
                 }
                 .labelsHidden()
                 .accessibilityIdentifier("garminPicker")
-                note("Shows one number from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes. Steps turn green at your goal; the resting pulse turns amber from 5 beats over your usual and red from 8; stress follows Garmin’s own steps. A press opens the board. Nothing leaves the Mac.")
+                note("Shows one number from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes. Steps turn green at your goal; the resting pulse says so in words from 5 beats over your usual and turns amber from 8; stress follows Garmin’s own steps, amber only when high. The two gym numbers come from your gym app’s sessions. Numbers the watch has not renewed for 3 hours turn grey-blue and say the time they are from. A press opens the board. Nothing leaves the Mac.")
             case .macNow:
                 Picker("", selection: $action.target) {
                     ForEach(MacNowKeys.Number.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
@@ -259,10 +262,16 @@ struct ActionFields: View {
                 note("Shows how many PARAGON tasks are due today; overdue ones are named in small words and turn the key red. A press opens Today in PARAGON. The numbers come from the small file PARAGON on this Mac writes for its own widget, read every minute: they are as fresh as PARAGON’s last look at your notes here. A file from an earlier day shows “–” and “Open PARAGON”.")
             case .paragon: ParagonFields(action: $action)
             case .focus: FocusFields(action: $action)
+            case .breath:
+                note("A calm bar that rises while you breathe in and falls while you breathe out.")
+            case .bar:
+                note("One part of a progress bar that several keys in a row make together.")
+            case .often:
+                note("Shows one of the keys you press most.")
             case .cover:
                 note("Shows the cover of the song Spotify plays, with the song’s name. A press plays or pauses. The cover appears with the next song change after AMS Deck Mate starts. The picture comes from Spotify’s own open look-up, by the track only.")
             case .bodyBattery:
-                note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50, amber from 25, red below. A press opens the board. Nothing leaves the Mac.")
+                note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50, teal from 25, amber below. A press opens the board (while the key says “Board off”, it starts the board). Nothing leaves the Mac.")
             case .desk: DeskFields(action: $action)
             case .weatherTown: note("Asks for another town for a weather key.")
             case .macDo: MacDoFields(action: $action)
@@ -743,7 +752,7 @@ struct FocusFields: View {
                 Text(said).font(.caption).foregroundStyle(.secondary)
                 Spacer()
             }
-            Text(FocusPlans.words(plan) + " A press opens AMS PomoTimer in your browser and starts this template there, and the key counts along: the step’s name and its time left, red while you focus, green in a pause. While it counts, a press brings PomoTimer back; hold the key down to stop the count on the key. The key counts by itself: when you pause or skip in PomoTimer, it does not know.")
+            Text(FocusPlans.words(plan) + " A press opens AMS PomoTimer in your browser and starts this template there, and the key counts along: the step’s name and its time left, purple while you focus, green in a pause. While it counts, a press brings PomoTimer back; hold the key down to stop the count on the key. The key counts by itself: when you pause or skip in PomoTimer, it does not know.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }

@@ -49,6 +49,11 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// focus = starts a template in AMS PomoTimer and counts along (target = the template's name, its
     /// steps = the plan, see `FocusKeys`). Since 0.14 `dueToday` counts PARAGON's tasks.
     case paragon, focus
+    /// The 0.16 kinds: breath = a breathing pacer, a bar that rises and falls (see `BreathKeys`; target =
+    /// a link a long press opens); bar = one part of a progress bar that several keys in a row make
+    /// together (target "<place>/<count>", see `BarKeys`); often = one of the keys pressed most
+    /// (target "1"–"5", see `OftenKeys`).
+    case breath, bar, often
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -213,6 +218,9 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .playlist: return .media
         case .searchCopied: return .web
         case .counter, .stopwatch, .zero: return .text
+        case .breath: return .media
+        case .bar: return KeyKind(rawValue: name) ?? .move
+        case .often: return .move
         }
     }
 
@@ -271,6 +279,9 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .stopwatch, .zero: return "stopwatch"
         case .paragon: return ParagonKeys.what(target).icon
         case .focus: return "app-hourglass"
+        case .breath: return "pulse"
+        case .bar: return "control-list"
+        case .often: return "app-recent"
         }
     }
 }
