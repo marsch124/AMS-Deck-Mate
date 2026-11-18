@@ -238,6 +238,9 @@ enum Guide {
             "Without a town the key says \"Set a town\".",
             "You can have several Weather keys with different towns. Give each key the town as its title to tell them apart. The title then shows instead of the sky.",
             "The weather is asked for again every 20 minutes. A press opens the Mac's Weather app.",
+            "New in 0.11.1. Hold a Weather key down (a long press, half a second) to give it another town. A small window \"Weather key\" opens on the Mac with a field for the town. Type one, or pick one of up to six towns you used before from the list in the same field. Save (Return) or Cancel (Escape). The key shows the new town's weather within a few seconds. Undo in Set up keys takes it back.",
+            "It works from the box, from the keys on screen (hold the mouse button) and from the iPhone and iPad (a long press there). The window always opens on the Mac; the iPhone and iPad say \"Type the town on the Mac\".",
+            "If the Weather key has a long press of its own (set in Set up keys), that long press is kept instead. A Weather key does not show the small white dot for this; the dot still means a long press of your own. Like every key with a long press, a Weather key acts when you let go, so a short press opens Weather on release.",
             "Privacy: the free weather service Open-Meteo gets the town's name once, to find its place. After that it gets only that place (its position on the map). Nothing else about you goes out. There is no account and no key, and the Mac asks nothing."
         ]),
         Section(id: "dueToday", title: "Due today key", part: "keys", lines: [
@@ -378,6 +381,17 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.11.1", date: "18 Nov 2026", new: [
+            "Hold a Weather key down to give it another town. Before: the town could only be changed in Set up keys. Now: a long press (half a second) on a Weather key opens a small window called \"Weather key\" on the Mac, with a field for the town. Type a town, or pick one of up to six towns you used before from the list in the same field. Save (Return) or Cancel (Escape). The key shows the new town's weather within a few seconds. Undo in Set up keys takes it back.",
+            "It works from the box, from the keys on screen (hold the mouse button) and from the iPhone and iPad (a long press there). The window always opens on the Mac. On the iPhone and iPad a small note says \"Type the town on the Mac\".",
+            "A Weather key with a long press of its own (set in Set up keys) keeps that long press, and does not open the town window.",
+            "A Weather key does not show the small white long-press dot for this. The dot still means a long press of your own.",
+            "Not yet tried for real: the long press on a Weather key was not pressed on the real box by the maker yet."
+        ], changed: [
+            "Like every key with a long press, a Weather key now acts when you let go, not at the moment it goes down. Before: a short press opened Weather the moment the key went down. Now: it opens Weather when you let go.",
+            "How it works: the part \"Weather key\" tells about the long press.",
+            "The Mac app is now 0.11.1 (build 19). The iPhone and iPad app stays 0.16 (build 21) and needs no update."
+        ], fixed: []),
         Release(id: "0.11", date: "17 Nov 2026", new: [
             "Six new kinds of key in Set up keys, under \"What it does\". Before: 23 kinds of key. Now: 29. This is round 2 of 3 of the ideas you picked. Five of them show something at a glance: the value stands on the key in large white words, where the drawing normally is, with small words under it. If you gave the key a title, your title replaces the small words. Until a value is there, the key shows its drawing. They show on the box, on the keys on screen and on the iPhone and iPad.",
             "\"Next event\" (blue, calendar drawing): shows the next event in your calendars that has a time, looking 7 days ahead. All-day events are left out. Large words: \"Now\" while the event goes on; for example \"12 min\" in the last hour before it starts; its time, for example \"14:30\", later today; the weekday, for example \"Wed\", on another day, with the time before the title in the small words (\"09:00 Dentist\"). Small words: the event's title. With no event in 7 days: a dash and \"No events\". A press opens the Calendar app, or another app you choose with \"Choose app…\", for example Fantastical. The first time, the Mac asks once whether AMS Deck Mate may see your calendar. Until then the key says \"Press to allow\"; choose \"Allow Full Access\". Deck Mate only reads and never changes an event. If you say no, the key says \"Calendar not allowed\" (change it in System Settings › Privacy & Security › Calendars). It follows calendar changes at once and looks again every minute.",

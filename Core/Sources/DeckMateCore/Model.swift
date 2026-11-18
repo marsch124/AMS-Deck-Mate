@@ -27,6 +27,9 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// play or pause); bodyBattery = the latest Body Battery from the Garmin board on this Mac;
     /// desk = opens apps and puts their windows in place (its steps, see `DeskKeys`).
     case nextEvent, weather, dueToday, cover, bodyBattery, desk
+    /// Asks for another town for a weather key (target = that key's id). Not something to pick for a key:
+    /// it is what a long press of a weather key does when the key has no long press of its own.
+    case weatherTown
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -156,7 +159,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .micLight: return quiet ? .raycast : .move
         case .wait: return .empty
         case .nextEvent, .desk: return .app
-        case .weather: return .web
+        case .weather, .weatherTown: return .web
         case .dueToday: return .shortcut
         case .cover: return .media
         // On a key as it shows right now the target is the level: green, amber or red.
@@ -199,7 +202,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .micLight: return quiet ? "microphone" : "microphoneoff"
         case .wait: return "app-hourglass"
         case .nextEvent: return "app-calendar"
-        case .weather: return "sun"
+        case .weather, .weatherTown: return "sun"
         case .dueToday: return "control-check"
         case .cover: return "music"
         case .bodyBattery: return "battery"
@@ -241,8 +244,14 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     /// What a press does: the long-press action for a long press on a key that has one, else the usual one.
     public func action(long: Bool) -> DeckAction {
         if long, hasHeld, let held { return held }
+        // A weather key without a long press of its own asks for another town.
+        if long, action.type == .weather { return DeckAction(type: .weatherTown, target: id.uuidString) }
         return action
     }
+
+    /// True when holding the key does something else than pressing it: a long press of its own, or
+    /// a weather key (which then asks for another town).
+    public var actsOnHold: Bool { hasHeld || action.type == .weather }
 
     public var shownIcon: String { icon.isEmpty ? action.autoIcon : icon }
 

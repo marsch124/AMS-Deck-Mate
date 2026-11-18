@@ -165,6 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             }
         }
         makeEditMenu()
+        ActionRunner.townAsked = { [weak self] id in self?.askTown(id) }
         ActionRunner.showCopiedList = { [weak self] texts in self?.copiedList.toggle(texts: texts) }
         ActionRunner.showPickList = { [weak self] list in
             let entries = list.steps.filter { $0.type != .none }
@@ -509,6 +510,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
 
     @objc private func openSettings() {
         show(&settingsWindow, title: "AMS Deck Mate", SettingsView(model: model, phone: phone) { [weak self] in self?.settingsWindow?.close() })
+    }
+}
+
+extension AppDelegate {
+    /// A weather key was held down: asks which town it should show. Type one, or pick one used before.
+    func askTown(_ id: String) {
+        guard let key = UUID(uuidString: id), let now = model.deck.town(ofKey: key) else { return }
+        let alert = NSAlert()
+        alert.messageText = "Weather key"
+        alert.informativeText = "Which town should this key show? Type one, or pick one you used before."
+        let box = NSComboBox(frame: NSRect(x: 0, y: 0, width: 260, height: 26))
+        box.addItems(withObjectValues: model.townsUsed)
+        box.stringValue = now
+        box.completes = true
+        box.placeholderString = "Town"
+        box.setAccessibilityIdentifier("townBox")
+        alert.accessoryView = box
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Cancel")
+        alert.window.initialFirstResponder = box
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let town = box.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !town.isEmpty, town != now else { return }
+        model.setTown(town, forKey: key)
     }
 }
 

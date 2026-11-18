@@ -37,6 +37,7 @@ extension ActionType {
         case .cover: return "Album cover (Spotify)"
         case .bodyBattery: return "Body Battery"
         case .desk: return "Desk (windows in place)"
+        case .weatherTown: return "Change the town"
         }
     }
 
@@ -210,7 +211,7 @@ struct ActionFields: View {
                 TextField("Town", text: $action.target)
                     .textFieldStyle(.roundedBorder)
                     .accessibilityIdentifier("weatherTown")
-                note("Shows the temperature and the sky of this town, asked again every 20 minutes. A press opens the Mac’s Weather. The free weather service Open-Meteo gets the town’s name once, to find its place, and after that only the place. With more than one weather key, give each its town as the title.")
+                note("Shows the temperature and the sky of this town, asked again every 20 minutes. A press opens the Mac’s Weather. The free weather service Open-Meteo gets the town’s name once, to find its place, and after that only the place. With more than one weather key, give each its town as the title. Hold the key down (a long press) to give it another town without opening this window.")
             case .dueToday:
                 note("Shows how many OmniFocus tasks are due today or overdue, counted every two minutes while OmniFocus is open. A press opens OmniFocus on its Forecast. The first press makes the Mac ask once whether AMS Deck Mate may control OmniFocus: choose Allow. It only counts, and never changes a task.")
             case .cover:
@@ -218,6 +219,7 @@ struct ActionFields: View {
             case .bodyBattery:
                 note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50, amber from 25, red below. A press opens the board. Nothing leaves the Mac.")
             case .desk: DeskFields(action: $action)
+            case .weatherTown: note("Asks for another town for a weather key.")
             case .folder: folderFields
             case .profile: profileFields
             case .multi: StepsEditor(action: $action, deck: deck, profile: profile)

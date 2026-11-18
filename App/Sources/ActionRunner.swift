@@ -41,6 +41,9 @@ enum ActionRunner {
     /// A glance key or a desk key was pressed (set by the app at start).
     static var glancePressed: ((DeckAction) -> Void)?
 
+    /// A weather key was held down: ask for its town (the key's id; set by the app at start).
+    static var townAsked: ((String) -> Void)?
+
     /// The apps used last, newest first (the app in front first); kept up to date by AppModel.
     static var recentApps: [String] = []
 
@@ -111,6 +114,8 @@ enum ActionRunner {
             if now.type == .app { run(now) }
         case .nextEvent, .weather, .dueToday, .desk:
             glancePressed?(action)
+        case .weatherTown:
+            townAsked?(action.target)
         case .cover:
             guard mayPressKeys else { askToPressKeys(); return }
             pressMedia(.playPause)

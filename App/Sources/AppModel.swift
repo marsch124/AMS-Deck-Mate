@@ -328,6 +328,25 @@ final class AppModel: ObservableObject {
         for wait in [0.5, 1.5] { DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in self?.lookAtMac() } }
     }
 
+    // MARK: The town of a weather key
+
+    private static let townsKey = "weatherTownsUsed"
+
+    /// The towns to offer when a weather key asks for its town: the ones typed before and the ones on the keys now.
+    var townsUsed: [String] {
+        let kept = UserDefaults.standard.stringArray(forKey: AppModel.townsKey) ?? []
+        return deck.weatherTowns.reversed().reduce(kept) { list, town in
+            list.contains { WeatherKeys.name($0) == WeatherKeys.name(town) } ? list : list + [town]
+        }
+    }
+
+    /// Gives a weather key another town (Undo takes it back), and remembers the town for next time.
+    func setTown(_ town: String, forKey id: UUID) {
+        let before = townsUsed
+        change { $0.setTown(town, forKey: id) }
+        UserDefaults.standard.set(WeatherKeys.remembered(before, adding: town), forKey: AppModel.townsKey)
+    }
+
     // MARK: Key use
 
     private func saveUseSoon() {
@@ -475,7 +494,7 @@ final class AppModel: ObservableObject {
     /// A key went down. A key with a long-press action waits: let go before half a second = the
     /// usual action, still down after half a second = the long-press action. Every other key acts at once.
     private func keyDown(_ index: Int, done: @escaping (Navigator.Outcome?) -> Void = { _ in }) {
-        guard keys[index]?.hasHeld == true else { done(press(index)); return }
+        guard keys[index]?.actsOnHold == true else { done(press(index)); return }
         let mark = UUID()
         holds[index] = mark
         DispatchQueue.main.asyncAfter(deadline: .now() + Navigator.longPress) { [weak self] in
@@ -537,7 +556,7 @@ final class AppModel: ObservableObject {
     /// A key with a long-press action stays pressed until the mouse button comes up (`release`).
     func click(_ index: Int) {
         pressed.insert(index)
-        if keys[index]?.hasHeld != true {
+        if keys[index]?.actsOnHold != true {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
         }
         keyDown(index) { [weak self] outcome in self?.hideAfter(outcome) }

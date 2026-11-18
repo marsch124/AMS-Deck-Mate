@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.11 (build 18), 17 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.11.1 (build 19), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -85,7 +85,7 @@ The icon opens a menu:
 - 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none.
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -202,6 +202,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.11.1: 3 new data tests, 92 in all (89 before), in `GlanceKindsTests.swift`: a weather key answers a long press with `weatherTown` (and keeps its own `held`), `actsOnHold`, and the town list `remembered` (newest first, once, at most 6) with `town(ofKey:)` and `setTown`.
 - New in 0.11: 21 new data tests, 89 in all (68 before), in `Core/Tests/DeckMateCoreTests/GlanceKindsTests.swift` for the rules of sections 56 to 62 (next event and its words, weather words and answers, due count, battery level and colour, track name and cover address, desk capture and steps, the new `ActionType` cases reading back).
 - New in 0.10: 16 new data tests, 68 in all (52 before): `LiveKindsTests.swift` (13: timer clock, minutes, start and stop; timer finishes once and "Done" goes away; timer key shows itself; switch steps; open apps keep their order; first free place; step timing with Wait; microphone light; pressing the new kinds runs them; key check for the new kinds; key finder; key use counts and quiet list; an old keys file still reads) and `TemplatesTests.swift` (3: every ready-made page group is well formed, the key table, a page group made from a template).
 - Rule tests live in `Core` (moving around, Raycast links, box byte layouts, tolerant decoding, the keys on screen). Run: `cd Core && swift test`.
@@ -221,6 +222,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.11.1 (Mac, build 19, 18 Nov 2026).** Long press on a Weather key gives it another town (section 58). New `ActionType` case `weatherTown`. 3 new data tests, 92 in all (89 before). iPhone and iPad stay 0.16 (build 21). Not proven yet: not pressed on the real box.
 
 **0.11 (Mac, build 18, 17 Nov 2026).** Round 2 of 3: six new kinds of key (sections 56 to 62: Next event, Weather, Due today, Album cover, Body Battery, Desk; 23 kinds before, 29 now). New `ActionType` cases `nextEvent, weather, dueToday, cover, bodyBattery, desk`. Rules in `Core/Sources/DeckMateCore/GlanceKinds.swift`, Mac side in `App/Sources/Glances.swift`. `LiveKeys` gained `glances`, `battery`, `cover`, `coverReady`. Info.plist gained `NSCalendarsFullAccessUsageDescription` and `NSAllowsLocalNetworking`. iPhone and iPad stay 0.16 (build 21). Not proven yet: none of the six was pressed on a real screen; the two one-time questions (calendar, OmniFocus) are not seen yet. Round 3: the dial key on iPhone and iPad and the resting box.
 
@@ -483,7 +486,8 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
 - Not proven yet: on a real iPhone held on its side.
 
-## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10 and 0.11)
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11 and 0.11.1)
+- 0.11.1: the long press on a Weather key (the "Weather key" window, from the box, the keys on screen and the iPhone and iPad) was checked with small tests only; not pressed on the real box. The box is at home until January 2027.
 - 0.11: the six new kinds were checked with made-up data and small tests only. Not pressed on a real screen: the calendar question (Allow Full Access) and the OmniFocus question at the first press, the weather from Open-Meteo, the Spotify notice and cover look-up, the board on port 7788, and the desk put back with real windows (Accessibility). The box is at home until January 2027.
 - 0.10: everything was checked with made-up keys and small tests. Dark mode's one-time question ("System Events"), a real Apple Shortcut run and the timer on the real box are not tried yet. The box is at home until January 2027.
 - "Ask AI (copied text)" against the real Raycast.
@@ -666,6 +670,9 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Large words: the temperature in whole degrees Celsius (`WeatherKeys.degrees`, "3°", "-4°"). Small words: the sky from the WMO code (`WeatherKeys.sky`): 0 Clear, 1 Mostly clear, 2 Partly cloudy, 3 Cloudy, 45 and 48 Fog, 51 to 57 Drizzle, 61 to 67 Rain, 71 to 77 Snow, 80 to 82 Showers, 85 and 86 Snow showers, 95 to 99 Thunder, anything else "Weather". No town: "Set a town" (`noTownWords`).
 - Several keys with different towns work: `GlanceKeys.weather(_:)` names a glance by the lower-case town (`WeatherKeys.name`). A key's own title (for instance the town) replaces the sky.
 - Service: Open-Meteo, no account, no key. Step 1, once per town: `https://geocoding-api.open-meteo.com/v1/search?name=<town>&count=1` (`searchURL`, `place(fromSearch:)`); only the town's name goes out. The place is kept in UserDefaults `weatherPlaces` (town to "lat,lon", `Place.text`). Step 2: `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&current=temperature_2m,weather_code` (`weatherURL`, `now(fromWeather:)`); only the place goes out. Asked again every `everyMinutes` = 20. The Mac asks nothing.
+- Long press (0.11.1): `ActionType.weatherTown`, `target` = the weather key's id; never offered in the pickers. `DeckKey.action(long:)` returns it for a weather key without `held`. `DeckKey.actsOnHold` (= `hasHeld` or a weather key) decides whether a key waits for the release, so a weather key now acts on release (a short press opens Weather then). No white long-press dot for it (the dot still means `held`).
+- Rules in `Core/Sources/DeckMateCore/GlanceKinds.swift`: `Deck.town(ofKey:)`, `Deck.setTown(_:forKey:)` (an undo step for Set up keys), `WeatherKeys.remembered(_:adding:)` (newest first, each town once whatever its capitals, at most 6). Towns used are kept in UserDefaults `weatherTownsUsed`.
+- The window is an alert with a combo box (`AppDelegate.askTown`), titled "Weather key": a field for the town with the remembered towns as its list; Save (Return), Cancel (Escape). It always opens on the Mac, whether the press came from the box, the keys on screen (mouse held) or the iPhone and iPad (note there: "Type the town on the Mac"). The new weather shows within a few seconds.
 
 ## 59. Due today key (Mac 0.11)
 - `ActionType.dueToday`. Colour: purple. Drawing: tick. Large words: the number of OmniFocus tasks due today or overdue, not completed and not dropped; small words "Due today" (`DueKeys.glance`).

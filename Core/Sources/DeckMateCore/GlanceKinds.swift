@@ -138,6 +138,16 @@ public enum WeatherKeys {
         town.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
+    /// How many towns typed before are offered again.
+    public static let remembers = 6
+
+    /// The towns typed before, after `town` was used: newest first, each once (whatever its capitals), at most six.
+    public static func remembered(_ list: [String], adding town: String) -> [String] {
+        let new = town.trimmingCharacters(in: .whitespacesAndNewlines)
+        var seen = Set<String>()
+        return Array(([new] + list).filter { !name($0).isEmpty && seen.insert(name($0)).inserted }.prefix(remembers))
+    }
+
     /// The sky in a word or two.
     public static func sky(_ code: Int) -> String {
         switch code {
@@ -354,6 +364,27 @@ public enum DeskKeys {
 }
 
 extension Deck {
+    /// The town of the weather key with this id; nil when there is no such weather key.
+    public func town(ofKey id: UUID) -> String? {
+        let keys = profiles.flatMap { $0.pages.flatMap { $0.keys.values } } + Array(favourites.values)
+        return keys.first { $0.id == id && $0.action.type == .weather }?.action.target
+    }
+
+    /// Gives the weather key with this id another town. Nothing else changes.
+    public mutating func setTown(_ town: String, forKey id: UUID) {
+        let new = town.trimmingCharacters(in: .whitespacesAndNewlines)
+        for group in profiles.indices {
+            for page in profiles[group].pages.indices {
+                for (slot, key) in profiles[group].pages[page].keys where key.id == id && key.action.type == .weather {
+                    profiles[group].pages[page].keys[slot]?.action.target = new
+                }
+            }
+        }
+        for (slot, key) in favourites where key.id == id && key.action.type == .weather {
+            favourites[slot]?.action.target = new
+        }
+    }
+
     /// Every action of the setup: keys, long presses, favourites, and the steps inside them.
     public var allActions: [DeckAction] {
         func with(_ action: DeckAction?) -> [DeckAction] {

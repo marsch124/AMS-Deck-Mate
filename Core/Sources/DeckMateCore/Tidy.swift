@@ -198,7 +198,7 @@ public enum KeyCheck {
             for spot in DeskKeys.spots(of: action) where !world.appExists(spot.app) { return "An app of the desk is not on this Mac" }
             return DeskKeys.spots(of: action).isEmpty ? "No windows taken yet" : nil
         case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
-             .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery:
+             .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery, .weatherTown:
             return nil
         }
     }
@@ -270,6 +270,7 @@ public enum ActionWords {
         case .running: return "No app in that place"
         case .nextEvent: return "Opened the calendar"
         case .weather: return "Opened Weather"
+        case .weatherTown: return "Type the town on the Mac"
         case .dueToday: return "Opened OmniFocus"
         case .cover: return MediaKey.playPause.title
         case .bodyBattery: return "Opened the Garmin board"

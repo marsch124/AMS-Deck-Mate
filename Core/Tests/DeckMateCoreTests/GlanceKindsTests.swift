@@ -210,4 +210,36 @@ final class GlanceKindsTests: XCTestCase {
         XCTAssertEqual(ActionWords.done([DeckAction(type: .desk, steps: spots)], appName: { $0 }), "Set up the desk: 2 apps")
         XCTAssertEqual(ActionWords.done([DeckAction(type: .desk)], appName: { $0 }), "No windows taken yet")
     }
+
+    // 0.11.1: a long press of a weather key asks for another town.
+
+    func testLongPressOfWeatherKeyAsksForItsTown() {
+        let key = DeckKey(action: DeckAction(type: .weather, target: "Lisbon"))
+        XCTAssertTrue(key.actsOnHold)
+        XCTAssertEqual(key.action(long: true), DeckAction(type: .weatherTown, target: key.id.uuidString))
+        XCTAssertEqual(key.action(long: false).type, .weather)
+        // A long press of its own wins.
+        let own = DeckKey(action: DeckAction(type: .weather, target: "Lisbon"), held: DeckAction(type: .back))
+        XCTAssertEqual(own.action(long: true).type, .back)
+        XCTAssertFalse(DeckKey(action: DeckAction(type: .dueToday)).actsOnHold)
+    }
+
+    func testSetTownChangesOnlyThatWeatherKey() {
+        let weather = DeckKey(action: DeckAction(type: .weather, target: "Lisbon"))
+        let other = DeckKey(action: DeckAction(type: .weather, target: "Oslo"))
+        let link = DeckKey(action: DeckAction(type: .link, target: "https://example.com"))
+        var deck = Deck(profiles: [DeckProfile(name: "A", pages: [DeckPage(name: "1", keys: [0: weather, 1: other, 2: link])])])
+        deck.setTown("  Porto ", forKey: weather.id)
+        deck.setTown("Nowhere", forKey: link.id)
+        XCTAssertEqual(deck.town(ofKey: weather.id), "Porto")
+        XCTAssertEqual(deck.town(ofKey: other.id), "Oslo")
+        XCTAssertNil(deck.town(ofKey: link.id))
+        XCTAssertEqual(deck.profiles[0].pages[0].keys[2]?.action.target, "https://example.com")
+    }
+
+    func testRememberedTownsNewestFirstEachOnce() {
+        XCTAssertEqual(WeatherKeys.remembered(["Lisbon", "Oslo"], adding: " oslo "), ["oslo", "Lisbon"])
+        XCTAssertEqual(WeatherKeys.remembered(["A", "B", "C", "D", "E", "F"], adding: "G"), ["G", "A", "B", "C", "D", "E"])
+        XCTAssertEqual(WeatherKeys.remembered(["Lisbon"], adding: "  "), ["Lisbon"])
+    }
 }
