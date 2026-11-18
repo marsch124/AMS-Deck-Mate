@@ -23,11 +23,21 @@ public struct LiveKeys: Equatable, Sendable {
     /// What Spotify plays, and whether its cover's picture is here already.
     public var cover: CoverKeys.Now?
     public var coverReady: Bool
+    /// The counters, by their names: how far each has counted.
+    public var counts: [String: Int]
+    /// The stopwatches that were started, by their names: the seconds each shows now.
+    public var watches: [String: Int]
+    /// The stopwatches that run right now.
+    public var watchesRunning: Set<String>
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
                 timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
                 glances: [String: Glance] = [:], battery: Int? = nil, cover: CoverKeys.Now? = nil,
-                coverReady: Bool = false) {
+                coverReady: Bool = false, counts: [String: Int] = [:], watches: [String: Int] = [:],
+                watchesRunning: Set<String> = []) {
+        self.counts = counts
+        self.watches = watches
+        self.watchesRunning = watchesRunning
         self.glances = glances
         self.battery = battery
         self.cover = cover
@@ -212,6 +222,29 @@ extension DeckKey {
             }
         case .freeUntil:
             key.showing(live.glances[GlanceKeys.free], else: "Free until")
+        case .macDo:
+            if key.title.isEmpty { key.title = MacDoKeys.what(key.action.target).short }
+        case .joinMeeting:
+            if key.title.isEmpty { key.title = "Join" }
+        case .playlist:
+            if key.title.isEmpty { key.title = "Playlist" }
+        case .searchCopied:
+            if key.title.isEmpty { key.title = "Search" }
+        case .counter:
+            // The number takes the drawing's place.
+            if key.icon.isEmpty || !key.icon.hasPrefix(DeckKey.picturePrefix) {
+                key.icon = GlanceKeys.textPrefix + String(CounterKeys.count(live.counts, id: key.action.target))
+            }
+            if key.title.isEmpty { key.title = "Count" }
+        case .stopwatch:
+            let running = live.watchesRunning.contains(key.action.target)
+            if let seconds = live.watches[key.action.target] {
+                key.icon = GlanceKeys.textPrefix + TimerKeys.clock(seconds)
+                key.action.quiet = running
+                if key.title.isEmpty { key.title = running ? "Running" : "Paused" }
+            } else if key.title.isEmpty {
+                key.title = "Stopwatch"
+            }
         default:
             break
         }

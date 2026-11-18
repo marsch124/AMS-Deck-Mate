@@ -19,9 +19,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.12</string>
+	<string>0.13</string>
 	<key>CFBundleVersion</key>
-	<string>20</string>
+	<string>21</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSUIElement</key>
@@ -32,14 +32,14 @@
 		<true/>
 	</dict>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>AMS Deck Mate asks other apps to quit or open only when a key of yours says so.</string>
+	<string>AMS Deck Mate asks other apps to do something (empty the bin, play a playlist, quit) only when a key of yours says so.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_amsdeckmate._tcp</string>
 		<string>_amsdeckdirect._tcp</string>
 	</array>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>AMS Deck Mate shows your next event on a key. It only reads your calendar and never changes it.</string>
+	<string>AMS Deck Mate shows your next event on a key and opens the video link of your meeting. It only reads your calendar and never changes it.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>AMS Deck Mate offers your keys to your iPhone when it is close by.</string>
 </dict>

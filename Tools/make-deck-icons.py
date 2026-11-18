@@ -36,6 +36,8 @@ ICONS = {
     "window-full": ("Window full size", WINDOW + " M6.5 12V9.5H9 M17.5 12v2.5H15"),
     "window-top": ("Window top half", WINDOW + " M3 12h18 M6.5 8.75h11"),
     "window-bottom": ("Window bottom half", WINDOW + " M3 12h18 M6.5 15.25h11"),
+    "eject": ("Eject", "M12 5l7.5 9h-15z M4.5 18.5h15"),
+    "video": ("Join video meeting", "M5 6.5h8a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2-2v-7a2 2 0 0 1 2-2z M15 10.5l5.5-3v9l-5.5-3"),
     "ai": ("AI", "M11 4.5c.6 3.8 2.2 5.4 6 6-3.8.6-5.4 2.2-6 6-.6-3.8-2.2-5.4-6-6 3.8-.6 5.4-2.2 6-6z M18 15.5v4 M16 17.5h4"),
     "app": ("App", "M6.5 4.5h11a2 2 0 0 1 2 2v11a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2-2v-11a2 2 0 0 1 2-2z M9 9h.01 M15 9h.01 M9 15h.01 M15 15h.01"),
 }

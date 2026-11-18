@@ -17,6 +17,7 @@ enum ActionRunner {
     static func needsKeys(_ action: DeckAction) -> Bool {
         switch action.type {
         case .shortcut, .text, .media, .copied, .cover, .desk: return true
+        case .macDo: return MacDoKeys.what(action.target) == .pastePlain
         case .multi, .list, .toggle: return action.steps.contains(where: needsKeys)
         default: return false
         }
@@ -40,6 +41,11 @@ enum ActionRunner {
 
     /// A glance key or a desk key was pressed (set by the app at start).
     static var glancePressed: ((DeckAction) -> Void)?
+
+    /// A counter key, a stopwatch key was pressed, or one of them was held down: its name (set by the app at start).
+    static var counterPressed: ((String) -> Void)?
+    static var stopwatchPressed: ((String) -> Void)?
+    static var zeroPressed: ((String) -> Void)?
 
     /// A weather key was held down: ask for its town (the key's id; set by the app at start).
     static var townAsked: ((String) -> Void)?
@@ -121,6 +127,20 @@ enum ActionRunner {
             pressMedia(.playPause)
         case .bodyBattery, .garmin:
             if let url = URL(string: BatteryKeys.board) { NSWorkspace.shared.open(url) }
+        case .macDo:
+            MacDoer.run(action)
+        case .joinMeeting:
+            MacDoer.joinMeeting()
+        case .playlist:
+            MacDoer.play(action.target)
+        case .searchCopied:
+            MacDoer.search(action.target)
+        case .counter:
+            counterPressed?(action.target)
+        case .stopwatch:
+            stopwatchPressed?(action.target)
+        case .zero:
+            zeroPressed?(action.target)
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
             break       // moving around is the Navigator's work; a light only shows; a wait only waits
         }
@@ -137,7 +157,7 @@ enum ActionRunner {
         return URL(string: "https://" + text)
     }
 
-    private static func press(_ combo: KeyCombo) {
+    static func press(_ combo: KeyCombo) {
         var flags: CGEventFlags = []
         if combo.command { flags.insert(.maskCommand) }
         if combo.control { flags.insert(.maskControl) }

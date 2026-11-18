@@ -185,6 +185,12 @@ final class GlanceWatch {
         }
     }
 
+    /// The calendar was allowed from another key ("Join the meeting"): read it afresh.
+    func calendarAllowed() {
+        store = EKEventStore()
+        readEvents()
+    }
+
     /// The first press asks the Mac for the calendar (once); every later press opens the calendar app.
     private func eventPressed(_ action: DeckAction) {
         guard EKEventStore.authorizationStatus(for: .event) == .notDetermined else {

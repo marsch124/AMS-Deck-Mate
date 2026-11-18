@@ -13,6 +13,10 @@ extension DeckAction {
         case .toggle: return DeckAction(type: type, target: SwitchKeys.dark)
         case .garmin: return DeckAction(type: type, target: GarminKeys.Number.steps.rawValue)
         case .macNow: return DeckAction(type: type, target: MacNowKeys.Number.battery.rawValue)
+        case .macDo: return DeckAction(type: type, target: MacDo.desktop.rawValue)
+        case .searchCopied: return DeckAction(type: type, target: SearchKeys.Engine.google.rawValue)
+        case .counter: return DeckAction(type: type, target: CounterKeys.newID())
+        case .stopwatch: return DeckAction(type: type, target: StopwatchKeys.newID())
         default: return DeckAction(type: type)
         }
     }
@@ -83,6 +87,8 @@ public enum TimerKeys {
 public enum SwitchKeys {
     public static let dark = "dark"
     public static let mute = "mute"
+    /// Keeps the Mac and its screen from going to sleep by themselves while it is on.
+    public static let awake = "awake"
     /// A switch of his own: "own:<a name of its own>"; its first step runs when it goes on, its second when it goes off.
     public static let ownPrefix = "own:"
 
@@ -101,6 +107,7 @@ public enum SwitchKeys {
         switch target {
         case dark: return isOn ? "Dark" : "Light"
         case mute: return isOn ? "Muted" : "Sound on"
+        case awake: return isOn ? "Awake" : "May sleep"
         default: return isOn ? "On" : "Off"
         }
     }

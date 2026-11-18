@@ -49,15 +49,17 @@ enum Guide {
             "Since 0.9.3 a key can also show a picture of its own, for example an app's real icon, instead of a white drawing. This works for any key, also one that opens a web address or a file. The picture has rounded corners like an app icon and sits on the key's usual colour (links stay teal). If the picture file is gone, the key shows the usual drawing for what it does.",
             "The pictures are files in the folder \"Pictures\" beside your keys. The AMS Apps Overview tool puts them there. There is no button to choose a picture in the app yet.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
-            "There are 254 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
+            "There are 256 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
             "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free.",
-            "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number. New in 0.12: a glance key can also change its colour with its value. The five new kinds are Garmin number (teal), Mac at a glance (grey-blue), World clock (grey-blue), Sunrise and sunset (amber) and Free until (green or red, by your calendar)."
+            "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number. New in 0.12: a glance key can also change its colour with its value. The five new kinds are Garmin number (teal), Mac at a glance (grey-blue), World clock (grey-blue), Sunrise and sunset (amber) and Free until (green or red, by your calendar).",
+            "New in 0.13: \"On the Mac\" keys are purple like shortcut keys. \"Join the meeting\" is blue, \"Spotify playlist\" is green, \"Search for the copied text\" is teal, and \"Counter\" and \"Stopwatch\" are amber. Two new drawings to pick: an eject mark and a video camera, so there are 256 to choose from."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
             "New in 0.10: the + beside \"Page groups\" now opens a small list: \"Empty page group\" and four ready-made ones. See \"Ready-made page groups\" below. Under the page's buttons there is also \"Add an “Open apps” folder\". See \"Open app keys\" below.",
             "New in 0.11: six more kinds under \"What it does\": \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". The Weather key has a field for the town, and the Desk key has the button \"Take the desk as it is now\" and a list of the apps it holds.",
             "New in 0.12: five more kinds under \"What it does\": \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". Garmin number and Mac at a glance have a list to pick the number from. World clock and Sunrise and sunset have a field for the town.",
+            "New in 0.13: six more kinds under \"What it does\": \"On the Mac\", \"Join the meeting\", \"Spotify playlist\", \"Search for the copied text\", \"Counter\" and \"Stopwatch\". \"On the Mac\" has a list of six choices. \"Spotify playlist\" has a field for the link, and \"Search for the copied text\" has a list of five search sites. \"Switch (on or off)\" has a fourth choice, \"Keep the Mac awake\".",
             "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
             "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\". For a key that shows a picture, the Icon button says \"Own picture\". Picking a drawing, or \"Automatic\", replaces the picture.",
@@ -75,6 +77,7 @@ enum Guide {
             "A key with a long-press action shows a small white dot in its top right corner: on the box, on the keys on screen and on the iPhone and iPad.",
             "Hold the key for half a second (0.5 seconds). On the iPhone and iPad a long press gives a stronger buzz. On the Mac's keys on screen, hold the mouse button. On the box, hold the key.",
             "A long press on a key that has no second action does the usual thing, as if you had tapped.",
+            "New in 0.13: on a Counter key or a Stopwatch key, a long press sets it back to 0. It needs no setting, and the key shows no white dot for it. If you give such a key a long press of your own, that one runs instead.",
             "On the box and on the Mac's keys on screen, a key with a long-press action acts when you let go: the usual action if you let go early, the second action if you are still holding after half a second. All other keys act at once, as before.",
             "A long-press action that is broken (for example its app is gone) shows the red corner. In Set up keys the reason starts with \"Long press:\".",
             "Not yet tried on the real box. The box is away until January 2027."
@@ -102,6 +105,7 @@ enum Guide {
             "Since 0.10, six more kinds: \"Timer\", \"Switch (on or off)\", \"Run an Apple Shortcut\", \"List to pick from\", \"Open app\" and \"Microphone light\". That makes 23 kinds of key, instead of 17. See the parts after \"Recent file key\".",
             "Since 0.11, six more kinds: \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". That makes 29 kinds of key, instead of 23. See the parts after \"Ready-made page groups\".",
             "Since 0.12, five more kinds: \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". That makes 34 kinds of key, instead of 29. See the parts after \"Body Battery key\".",
+            "Since 0.13, six more kinds: \"On the Mac\", \"Join the meeting\", \"Spotify playlist\", \"Search for the copied text\", \"Counter\" and \"Stopwatch\". That makes 40 kinds of key, instead of 34. \"Switch (on or off)\" also has a new choice, \"Keep the Mac awake\". See the parts after \"Desk key\".",
             "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
             "Since 0.8, two more: \"Last copied text\" and \"Recent file\". See the two parts after \"Ask AI about copied text\".",
             "Nothing leaves the key empty.",
@@ -157,7 +161,8 @@ enum Guide {
             "A timer is forgotten when Deck Mate quits."
         ]),
         Section(id: "switch", title: "Switch key (on or off)", part: "keys", lines: [
-            "New in 0.10. In Set up keys, under \"What it does\", choose \"Switch (on or off)\". It has three choices.",
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Switch (on or off)\". It has three choices, and since 0.13 a fourth, \"Keep the Mac awake\".",
+            "New in 0.13: \"Keep the Mac awake\". While it is on, the Mac and its screen do not go to sleep by themselves. Press again to switch it off. It is off again after AMS Deck Mate quits or the Mac restarts. Without a title the key says \"Awake\" or \"May sleep\".",
             "\"Dark mode\" switches the Mac between light and dark. The first time, the Mac asks once whether Deck Mate may control \"System Events\". Choose Allow.",
             "\"Mute the sound\" mutes and unmutes the Mac.",
             "\"Two things in turn\": you set what happens when it goes on and what happens when it goes off. The key remembers which one it is, also after a restart.",
@@ -320,6 +325,47 @@ enum Guide {
             "A Desk key also works as a long press and as a step of \"Several things in a row\".",
             "A desk whose app is no longer on this Mac is marked as broken: \"An app of the desk is not on this Mac\". A desk with nothing in it says \"No windows taken yet\"."
         ]),
+        Section(id: "macDo", title: "On the Mac keys", part: "keys", lines: [
+            "New in 0.13. In Set up keys, under \"What it does\", choose \"On the Mac\" and pick one of six things from the list. The key is purple, like a shortcut key.",
+            "\"Lock the Mac\" locks the screen at once. You need your password or Touch ID to get back in.",
+            "\"Show the desktop\" moves all windows aside so the desktop shows. A second press brings them back.",
+            "\"Quit all apps\" quits every open app except the Finder, AMS Deck Mate itself and the apps you list under \"Stays open\". Use the button \"Add app…\" to add one; each has a remove button. It asks first on the Mac and names the apps, for example \"Quit 6 apps?\" with Quit and Cancel. An app with unsaved work still asks you itself.",
+            "\"Empty the bin\" asks first and says how many things are in the bin, for example \"12 things will be gone for good. This cannot be undone.\" with Empty and Cancel. If your Finder is set to warn before emptying, the Finder asks once more after that. Take the tick off \"Ask first\" to see only the Finder's question. With an empty bin the key says so and does nothing. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder. Choose Allow.",
+            "\"Eject all disks\" asks first and names the disks, for example \"Eject 2 disks?\" with Eject and Cancel. It ejects every plugged-in disk, card, stick and disk picture. It never ejects the Mac's own disk and never a share on another computer. A disk that is still in use stays, and the key tells you which one. With no disk plugged in, it says so.",
+            "For \"Quit all apps\", \"Empty the bin\" and \"Eject all disks\" there is a tick \"Ask first\" (on at first). You can take it off, and the key then acts at once.",
+            "When one of these three is pressed from the iPhone or iPad, the question opens on the Mac. In the question, Return does it and Escape cancels.",
+            "\"Paste as plain text\" pastes the text you copied without its font, size and colour. It needs the Mac's Accessibility yes, like shortcut keys."
+        ]),
+        Section(id: "meetingKey", title: "Join the meeting key", part: "keys", lines: [
+            "New in 0.13. In Set up keys, under \"What it does\", choose \"Join the meeting\". The key is blue.",
+            "A press opens the video link of your meeting. It takes the meeting that starts within ten minutes. If there is none, the one going on now. If there is none, the next one within a day.",
+            "It finds links of Zoom, Microsoft Teams, Google Meet, Webex, FaceTime, Whereby, Jitsi and GoTo, in the event's link, its place or its notes. If no link is found, the key says so.",
+            "It uses the same calendar yes as \"Next event\". It only reads and never changes an event."
+        ]),
+        Section(id: "playlistKey", title: "Spotify playlist key", part: "keys", lines: [
+            "New in 0.13. In Set up keys, under \"What it does\", choose \"Spotify playlist\" and paste a Spotify link. The key is green.",
+            "The link can be a playlist, an album, an artist, a song or a podcast. In Spotify, use Share, then Copy link.",
+            "A press starts it playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify. Choose Allow.",
+            "A key without a proper Spotify link shows the red corner of a broken key."
+        ]),
+        Section(id: "searchKey", title: "Search for the copied text key", part: "keys", lines: [
+            "New in 0.13. In Set up keys, under \"What it does\", choose \"Search for the copied text\". The key is teal.",
+            "A press opens your browser with a search for the text you copied last. Choose the search site: Google (at first), DuckDuckGo, Bing, Wikipedia or YouTube.",
+            "A copied web address opens as it is. Of a long text only the first 300 letters are searched. If nothing is copied, nothing happens.",
+            "The text goes only to the search site you picked."
+        ]),
+        Section(id: "counterKey", title: "Counter key", part: "keys", lines: [
+            "New in 0.13. In Set up keys, under \"What it does\", choose \"Counter\". The key is amber.",
+            "Every press counts one more, shown as a large number on the key. It stops at 99,999.",
+            "Hold the key down (a long press) to set it back to 0.",
+            "The number is kept when the Mac restarts. Each counter key has its own number."
+        ]),
+        Section(id: "stopwatchKey", title: "Stopwatch key", part: "keys", lines: [
+            "New in 0.13. In Set up keys, under \"What it does\", choose \"Stopwatch\". The key is amber.",
+            "A press starts it and the key shows the time running. Another press pauses it. The next press goes on.",
+            "Hold the key down (a long press) to set it back to 0.",
+            "It keeps running when AMS Deck Mate restarts. Each stopwatch key has its own time."
+        ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
             "Pick a command from a list. It holds the commands of the Raycast extensions on this Mac, found by itself, and 16 of Raycast's own.",
@@ -399,7 +445,8 @@ enum Guide {
             "Accessibility, once, for keys that press a keyboard shortcut, type text, paste a last copied text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
             "The Mac may also ask for Input Monitoring when the box is first plugged in.",
             "New in 0.11: \"Next event\" makes the Mac ask once whether Deck Mate may see your calendar (Allow Full Access; it only reads). \"Due today\" makes the Mac ask once whether Deck Mate may control OmniFocus (it only counts). The \"Desk\" key and the \"Album cover\" key use the Accessibility yes. Weather, Album cover and Body Battery ask the Mac nothing.",
-            "New in 0.12: nothing new is asked. \"Free until\" uses the same calendar yes as \"Next event\". The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing."
+            "New in 0.12: nothing new is asked. \"Free until\" uses the same calendar yes as \"Next event\". The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing.",
+            "New in 0.13: \"Join the meeting\" uses the same calendar yes as \"Next event\" and only reads. \"Empty the bin\" makes the Mac ask once whether Deck Mate may control the Finder. \"Spotify playlist\" makes the Mac ask once whether Deck Mate may control Spotify. \"Paste as plain text\" uses the Accessibility yes. Choose Allow each time. The other new keys ask the Mac nothing."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
@@ -426,6 +473,32 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.13", date: "18 Nov 2026", new: [
+            "Twelve new things a key can do. This is the second round of the ideas you picked. Before: 34 kinds of key. Now: 40, and \"Switch (on or off)\" has a fourth choice. They are in Set up keys, under \"What it does\".",
+            "New kind \"On the Mac\" (purple, like shortcut keys) with six choices. Before: no key could lock the Mac, quit apps, empty the bin or eject disks. Now: one key each.",
+            "On the Mac, \"Lock the Mac\": locks the screen at once. You need your password or Touch ID to get back in.",
+            "On the Mac, \"Show the desktop\": moves all windows aside so the desktop shows. A second press brings them back.",
+            "On the Mac, \"Quit all apps\": quits every open app except the Finder, AMS Deck Mate itself and the apps you list under \"Stays open\" (button \"Add app…\", each with a remove button). It asks first on the Mac and names the apps, for example \"Quit 6 apps?\" with Quit and Cancel. An app with unsaved work still asks you itself. The tick \"Ask first\" is on at first and can be taken off.",
+            "On the Mac, \"Empty the bin\": asks first and says how many things are in the bin, for example \"12 things will be gone for good. This cannot be undone.\" with Empty and Cancel. If your Finder is set to warn before emptying, the Finder asks once more after that. Take the tick off \"Ask first\" to see only the Finder's question. With an empty bin the key says so and does nothing. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder: choose Allow. \"Ask first\" is on at first and can be taken off.",
+            "On the Mac, \"Eject all disks\": asks first and names the disks, for example \"Eject 2 disks?\" with Eject and Cancel. It ejects every plugged-in disk, card, stick and disk picture. It never ejects the Mac's own disk and never a share on another computer. A disk that is still in use stays, and the key tells you which one. With no disk plugged in, it says so. \"Ask first\" is on at first and can be taken off.",
+            "On the Mac, \"Paste as plain text\": pastes the text you copied without its font, size and colour. It needs the Mac's Accessibility yes, like shortcut keys.",
+            "When \"Quit all apps\", \"Empty the bin\" or \"Eject all disks\" is pressed from the iPhone or iPad, the question opens on the Mac. In the question, Return does it and Escape cancels.",
+            "New kind \"Join the meeting\" (blue): opens the video link of your meeting. It takes the one that starts within ten minutes, else the one going on now, else the next one within a day. It finds links of Zoom, Microsoft Teams, Google Meet, Webex, FaceTime, Whereby, Jitsi and GoTo in the event's link, place or notes. If no link is found, the key says so. It uses the same calendar yes as \"Next event\" and only reads.",
+            "New kind \"Spotify playlist\" (green): paste a Spotify link (a playlist, album, artist, song or podcast; in Spotify, Share, then Copy link). A press starts it playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify: choose Allow. A key without a proper Spotify link shows the red corner of a broken key.",
+            "New kind \"Search for the copied text\" (teal): opens your browser with a search for the text you copied last. Choose Google (at first), DuckDuckGo, Bing, Wikipedia or YouTube. A copied web address opens as it is. Of a long text only the first 300 letters are searched. If nothing is copied, nothing happens. The text goes only to the search site you picked.",
+            "New kind \"Counter\" (amber): every press counts one more, shown as a large number on the key. Hold the key down (a long press) to set it back to 0. It stops at 99,999. The number is kept when the Mac restarts. Each counter key has its own number.",
+            "New kind \"Stopwatch\" (amber): a press starts it and the key shows the time running. Another press pauses it. The next press goes on. Hold the key down to set it back to 0. It keeps running when AMS Deck Mate restarts. Each stopwatch key has its own time.",
+            "New choice for \"Switch (on or off)\": \"Keep the Mac awake\". While it is on, the Mac and its screen do not go to sleep by themselves. Press again to switch it off. It is off again after AMS Deck Mate quits or the Mac restarts. The key says \"Awake\" or \"May sleep\".",
+            "Two new drawings to pick for a key: an eject mark and a video camera. Before: 254 drawings. Now: 256.",
+            "The made-up sample keys got a page with the new keys.",
+            "Not yet tried for real: none of these keys was pressed for real before this release."
+        ], changed: [
+            "There are 40 kinds of key to choose from, instead of 34.",
+            "A long press on a Counter or Stopwatch key sets it back to 0.",
+            "The Mac asks for something new in two places: the Finder (\"Empty the bin\") and Spotify (\"Spotify playlist\"), each once at the first press. \"Join the meeting\" uses the calendar yes that \"Next event\" already needs.",
+            "How it works has new parts: \"On the Mac keys\", \"Join the meeting key\", \"Spotify playlist key\", \"Search for the copied text key\", \"Counter key\" and \"Stopwatch key\", and new lines in \"What a key can do\", \"The look of a key\", \"Set up keys\", \"Long press: a second action\", \"Switch key (on or off)\" and \"What the Mac asks for\".",
+            "The Mac app is now 0.13 (build 21). The iPhone and iPad app stays 0.16 (build 21) and shows the new keys without an update, because the Mac draws the keys."
+        ], fixed: []),
         Release(id: "0.12", date: "18 Nov 2026", new: [
             "Five new kinds of key in Set up keys, under \"What it does\". Before: 29 kinds of key. Now: 34. This is the first round of the 28 ideas you picked from 50 new ones. Together they show eleven new things at a glance. Like the five glance keys of 0.11, the value stands on the key in large white words, where the drawing normally is, with small words under it. If you gave the key a title, your title replaces the small words. Until a value is there, the key shows its drawing. They show on the box, on the keys on screen and on the iPhone and iPad.",
             "New for all glance keys: a key can change its colour with its value. Before: only Body Battery did. Now: Garmin number, Mac at a glance and Free until do too, as told below.",

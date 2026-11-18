@@ -89,6 +89,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             NSApp.terminate(nil)
             return
         }
+        // For checks: "--actions" says what the 0.13 keys would do right now and does none of it.
+        if arguments.contains("--actions") {
+            MacDoer.dryRun { words in
+                print(words)
+                NSApp.terminate(nil)
+            }
+            return
+        }
         // For checks: "--pages <folder>" writes every page of the setup as one picture of its 15 keys, as the
         // keys really look, and changes nothing ("--data <folder>" picks another setup than the real one).
         if let index = arguments.firstIndex(of: "--pages"), index + 1 < arguments.count {
@@ -589,6 +597,13 @@ enum Snapshots {
                 if let fourth = group.topPages.dropFirst(3).first {
                     model.show(profile: group.id, page: fourth.id)
                     shot(ScreenDeckView(model: model).padding(16), "deck-glance2-\(name)", look, folder)
+                }
+                // 0.13: on the Mac, meeting, playlist, search, counter, stopwatch, keep awake (page 5).
+                if let fifth = group.topPages.dropFirst(4).first {
+                    model.show(profile: group.id, page: fifth.id)
+                    shot(ScreenDeckView(model: model).padding(16), "deck-mac-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 2), "setup-quit-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 7), "setup-playlist-\(name)", look, folder)
                 }
                 model.show(profile: group.id, page: first.id)
             }

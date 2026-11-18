@@ -442,7 +442,11 @@ struct SettingsView: View {
             case .recentFile: return "Recent file \(RecentApps.number(key.action.target))"
             case .copied: return "Last copied text"
             case .toggle:
-                return key.action.target == SwitchKeys.dark ? "Dark mode switch" : key.action.target == SwitchKeys.mute ? "Mute switch" : "Switch"
+                return key.action.target == SwitchKeys.dark ? "Dark mode switch" : key.action.target == SwitchKeys.mute ? "Mute switch"
+                    : key.action.target == SwitchKeys.awake ? "Keep awake switch" : "Switch"
+            case .macDo: return MacDoKeys.what(key.action.target).title
+            case .counter: return "Counter"
+            case .stopwatch: return "Stopwatch"
             default:
                 let shown = KeyArt.title(key)
                 return shown.isEmpty ? key.action.type.title : shown

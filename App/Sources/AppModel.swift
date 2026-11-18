@@ -63,6 +63,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var switchedOn: Set<String> = []
     /// An app is listening to the microphone (looked at only while a key shows it).
     @Published private(set) var micInUse = false
+    /// The counters, by their names: how far each has counted. Kept across restarts.
+    @Published private(set) var counts: [String: Int] = [:]
+    /// The stopwatches that were started. Kept across restarts, so a running one goes on.
+    @Published private(set) var watches = StopwatchKeys.State()
+    private var watchTick: Timer?
+    private static let countsKey = "counters"
+    private static let watchesKey = "stopwatches"
     /// Goes up whenever a key that changes by itself looks different: each second of a timer, a
     /// switch, an app opened or quit. The iPhone link sends the keys again then.
     @Published private(set) var liveStamp = 0
@@ -111,6 +118,8 @@ final class AppModel: ObservableObject {
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259)])
             sampleNow = day
+            counts = ["sampleCount": 12]
+            watches = StopwatchKeys.State(banked: ["sampleWatch": 154], since: ["sampleWatch": day.addingTimeInterval(-600)])
             GlanceWatch.keepSampleCover()
             var counted = KeyUse(since: day.addingTimeInterval(-41 * 86_400))
             for (slot, presses) in [(0, 212), (1, 97), (2, 64), (9, 31), (13, 12), (5, 3)] {
@@ -179,6 +188,16 @@ final class AppModel: ObservableObject {
         ActionRunner.timerPressed = { [weak self] in self?.timerPressed($0) }
         ActionRunner.switchPressed = { [weak self] in self?.switchPressed($0) }
         ActionRunner.glancePressed = { [weak self] in self?.glance.pressed($0) }
+        counts = (UserDefaults.standard.dictionary(forKey: AppModel.countsKey) as? [String: Int]) ?? [:]
+        if let data = UserDefaults.standard.data(forKey: AppModel.watchesKey),
+           let kept = try? JSONDecoder().decode(StopwatchKeys.State.self, from: data) {
+            watches = kept
+        }
+        ActionRunner.counterPressed = { [weak self] in self?.counterPressed($0) }
+        ActionRunner.stopwatchPressed = { [weak self] in self?.stopwatchPressed($0) }
+        ActionRunner.zeroPressed = { [weak self] in self?.zeroPressed($0) }
+        MacDoer.calendarAllowed = { [weak self] in self?.glance.calendarAllowed() }
+        runWatches()
         glance.onChange = { [weak self] in self?.bump() }
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
             liveWatchers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
@@ -217,7 +236,9 @@ final class AppModel: ObservableObject {
                  glances: isSample ? GlanceWatch.sampleGlances : glance.glances,
                  battery: isSample ? 62 : glance.battery,
                  cover: isSample ? GlanceWatch.sampleCover : glance.cover,
-                 coverReady: isSample || glance.coverReady)
+                 coverReady: isSample || glance.coverReady,
+                 counts: counts, watches: StopwatchKeys.seconds(watches, now: sampleNow ?? Date()),
+                 watchesRunning: Set(watches.since.keys))
     }
     /// Pictures with made-up keys stand still at this moment.
     private var sampleNow: Date?
@@ -273,6 +294,7 @@ final class AppModel: ObservableObject {
         var on = switchedOn.filter(SwitchKeys.isOwn)
         if MacSwitches.isDark { on.insert(SwitchKeys.dark) }
         if MacSwitches.isMuted { on.insert(SwitchKeys.mute) }
+        if KeepAwake.isOn { on.insert(SwitchKeys.awake) }
         let mic = deck.uses(.micLight) && MacSwitches.micInUse
         guard on != switchedOn || mic != micInUse else { return }
         switchedOn = on
@@ -310,6 +332,47 @@ final class AppModel: ObservableObject {
         bump()
     }
 
+    // MARK: Counters and stopwatches (0.13)
+
+    /// A counter key was pressed: one more.
+    func counterPressed(_ id: String) {
+        counts = CounterKeys.pressed(counts, id: id)
+        UserDefaults.standard.set(counts, forKey: AppModel.countsKey)
+        bump()
+    }
+
+    /// A stopwatch key was pressed: it runs, or pauses and keeps its time.
+    func stopwatchPressed(_ id: String) {
+        watches = StopwatchKeys.pressed(watches, id: id, now: Date())
+        saveWatches()
+    }
+
+    /// A counter or a stopwatch was held down: back to 0.
+    func zeroPressed(_ id: String) {
+        counts = CounterKeys.reset(counts, id: id)
+        UserDefaults.standard.set(counts, forKey: AppModel.countsKey)
+        watches = StopwatchKeys.reset(watches, id: id)
+        saveWatches()
+    }
+
+    private func saveWatches() {
+        if let data = try? JSONEncoder().encode(watches) { UserDefaults.standard.set(data, forKey: AppModel.watchesKey) }
+        runWatches()
+        bump()
+    }
+
+    /// The keys are drawn again each second only while a stopwatch runs.
+    private func runWatches() {
+        if !watches.isRunning {
+            watchTick?.invalidate()
+            watchTick = nil
+        } else if watchTick == nil {
+            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.bump() }
+            RunLoop.main.add(timer, forMode: .common)
+            watchTick = timer
+        }
+    }
+
     /// A switch key was pressed.
     func switchPressed(_ action: DeckAction) {
         switch action.target {
@@ -317,6 +380,10 @@ final class AppModel: ObservableObject {
             MacSwitches.setDark(!MacSwitches.isDark)
         case SwitchKeys.mute:
             MacSwitches.setMuted(!MacSwitches.isMuted)
+        case SwitchKeys.awake:
+            KeepAwake.set(!KeepAwake.isOn)
+            lookAtMac()
+            return
         default:
             let isOn = switchedOn.contains(action.target)
             if let step = SwitchKeys.step(of: action, isOn: isOn) { ActionRunner.run(step) }
@@ -816,8 +883,24 @@ enum Sample {
         fourth.keys = [0: DeckKey(action: DeckAction(type: .worldClock, target: "Tokyo")),
                        1: DeckKey(action: DeckAction(type: .sunTimes, target: "Lisbon")),
                        2: DeckKey(action: DeckAction(type: .freeUntil)),
-                       14: key("Back a page", DeckAction(type: .previousPage))]
-        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, folder])
+                       14: key("Next page", DeckAction(type: .nextPage))]
+        var fifth = DeckPage(name: "Page 5")
+        fifth.keys = [0: DeckKey(action: DeckAction(type: .macDo, target: MacDo.lock.rawValue)),
+                      1: DeckKey(action: DeckAction(type: .macDo, target: MacDo.desktop.rawValue)),
+                      2: DeckKey(action: DeckAction(type: .macDo, target: MacDo.quitAll.rawValue,
+                                                    steps: [DeckAction(type: .app, target: "com.apple.Safari")])),
+                      3: DeckKey(action: DeckAction(type: .macDo, target: MacDo.emptyBin.rawValue)),
+                      4: DeckKey(action: DeckAction(type: .macDo, target: MacDo.ejectAll.rawValue)),
+                      5: DeckKey(action: DeckAction(type: .macDo, target: MacDo.pastePlain.rawValue)),
+                      6: DeckKey(action: DeckAction(type: .joinMeeting)),
+                      7: key("Focus mix", DeckAction(type: .playlist, target: "spotify:playlist:37i9dQZF1DX8NTLI2TtZa6")),
+                      8: DeckKey(action: DeckAction(type: .searchCopied, target: SearchKeys.Engine.google.rawValue)),
+                      9: key("Glasses of water", DeckAction(type: .counter, target: "sampleCount")),
+                      10: DeckKey(action: DeckAction(type: .stopwatch, target: "sampleWatch")),
+                      11: DeckKey(action: DeckAction(type: .stopwatch, target: "sampleIdle")),
+                      12: DeckKey(action: DeckAction(type: .toggle, target: SwitchKeys.awake)),
+                      14: key("Back a page", DeckAction(type: .previousPage))]
+        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, fifth, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])
         writing.pages[0].keys = [0: key("Bold", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 11, command: true, keyName: "B"))),
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]

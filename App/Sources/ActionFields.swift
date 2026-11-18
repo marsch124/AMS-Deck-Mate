@@ -43,20 +43,29 @@ extension ActionType {
         case .worldClock: return "World clock"
         case .sunTimes: return "Sunrise and sunset"
         case .freeUntil: return "Free until (calendar)"
+        case .macDo: return "On the Mac"
+        case .joinMeeting: return "Join the meeting"
+        case .playlist: return "Spotify playlist"
+        case .searchCopied: return "Search for the copied text"
+        case .counter: return "Counter"
+        case .stopwatch: return "Stopwatch"
+        case .zero: return "Back to 0"
         }
     }
 
     static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
-                                        .media, .timer, .toggle, .micLight,
+                                        .macDo, .searchCopied, .media, .playlist, .timer, .stopwatch, .counter, .toggle, .micLight,
+                                        .joinMeeting,
                                         .nextEvent, .freeUntil, .weather, .worldClock, .sunTimes, .bodyBattery, .garmin, .macNow,
                                         .dueToday, .cover, .desk, .list, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder or only show something.
     static let forLongPress: [ActionType] = [.none, .app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut,
-                                             .text, .copied, .media, .timer, .toggle, .desk, .list, .multi,
+                                             .text, .copied, .macDo, .searchCopied, .media, .playlist, .timer, .stopwatch, .counter,
+                                             .toggle, .joinMeeting, .desk, .list, .multi,
                                              .back, .nextPage, .previousPage, .profile]
-    static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied, .media,
-                                         .timer, .toggle, .desk, .wait]
+    static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
+                                         .macDo, .searchCopied, .media, .playlist, .timer, .toggle, .joinMeeting, .desk, .wait]
     /// What an entry of a list to pick from, or one side of a switch of his own, can do.
     static let forEntries: [ActionType] = [.app, .link, .raycast, .shortcut, .appleShortcut, .text, .media]
 }
@@ -258,6 +267,29 @@ struct ActionFields: View {
                 note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50, amber from 25, red below. A press opens the board. Nothing leaves the Mac.")
             case .desk: DeskFields(action: $action)
             case .weatherTown: note("Asks for another town for a weather key.")
+            case .macDo: MacDoFields(action: $action)
+            case .joinMeeting:
+                note("Opens the video link of your meeting: the one that starts within ten minutes, else the one going on now, else the next one within a day. It finds links of Zoom, Microsoft Teams, Google Meet, Webex, FaceTime, Whereby, Jitsi and GoTo in the event’s link, place or notes, and says so when there is none. It uses the same calendar permission as the Next event key, and only reads.")
+            case .playlist:
+                TextField("Spotify link", text: $action.target)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("playlistLink")
+                note(action.target.trimmingCharacters(in: .whitespaces).isEmpty
+                     ? "Paste a Spotify link: in Spotify choose Share › Copy link on a playlist, an album, an artist, a song or a podcast."
+                     : PlaylistKeys.kind(action.target).map { "A press starts this \($0) playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify: choose Allow." }
+                       ?? "This is not a Spotify link. In Spotify choose Share › Copy link, then paste it here.")
+            case .searchCopied:
+                Picker("", selection: $action.target) {
+                    ForEach(SearchKeys.Engine.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("searchPicker")
+                note("Opens your browser with a search for the text you copied last. A copied web address opens as it is. Of a long text only the first 300 letters are searched. The text goes only to the search site you pick here.")
+            case .counter:
+                note("Every press counts one more, shown as a large number on the key. Hold the key down (a long press) to set it back to 0. The number is kept when the Mac restarts, and every counter key has its own.")
+            case .stopwatch:
+                note("A press starts it and the key shows the time running. Another press pauses it, the next one goes on. Hold the key down (a long press) to set it back to 0. It keeps running when AMS Deck Mate restarts, and every stopwatch key has its own time.")
+            case .zero: note("Sets a counter or a stopwatch back to 0.")
             case .folder: folderFields
             case .profile: profileFields
             case .multi: StepsEditor(action: $action, deck: deck, profile: profile)
@@ -286,6 +318,7 @@ struct ActionFields: View {
             })) {
                 Text("Dark mode").tag(SwitchKeys.dark)
                 Text("Mute the sound").tag(SwitchKeys.mute)
+                Text("Keep the Mac awake").tag(SwitchKeys.awake)
                 Text("Two things in turn").tag("own")
             }
             .labelsHidden()
@@ -310,6 +343,8 @@ struct ActionFields: View {
                 note("The key remembers whether it is on or off, also after a restart.")
             } else if action.target == SwitchKeys.dark {
                 note("Switches the Mac between its light and its dark look. The first time, the Mac asks once whether AMS Deck Mate may control “System Events”: choose Allow.")
+            } else if action.target == SwitchKeys.awake {
+                note("While it is on, the Mac and its screen do not go to sleep by themselves. Press again to switch it off. It is off again after AMS Deck Mate quits or the Mac restarts.")
             } else {
                 note("Mutes the Mac’s sound, and brings it back.")
             }
@@ -564,6 +599,76 @@ struct DeskFields: View {
             }
             Text("Remembers the apps that have a window on screen right now (up to eight), with the place and size of each one’s front window. A press opens them and puts every window back. Moving windows needs the Mac’s Accessibility yes, the same one the shortcut keys use.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// An "On the Mac" key: what it does, whether it asks first, and for "Quit all apps" the apps that stay open.
+struct MacDoFields: View {
+    @Binding var action: DeckAction
+
+    var body: some View {
+        let what = MacDoKeys.what(action.target)
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("", selection: Binding(get: { what.rawValue }, set: { new in
+                // Another thing to do: its own start, asking first.
+                if new != action.target { action = DeckAction(type: .macDo, target: new) }
+            })) {
+                ForEach(MacDo.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+            }
+            .labelsHidden()
+            .accessibilityIdentifier("macDoPicker")
+            if what.canAsk {
+                Toggle("Ask first", isOn: Binding(get: { !action.quiet }, set: { action.quiet = !$0 }))
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("macDoAsk")
+            }
+            if what == .quitAll {
+                FieldLabel("Stays open")
+                let spared = QuitKeys.spared(action)
+                ForEach(Array(spared.enumerated()), id: \.offset) { index, app in
+                    HStack(spacing: 6) {
+                        Text(KeyArt.appName(app)).lineLimit(1)
+                        Spacer(minLength: 4)
+                        Button("Take out") {
+                            action.steps = spared.enumerated().filter { $0.offset != index }.map { DeckAction(type: .app, target: $0.element) }
+                        }
+                        .buttonStyle(PlainButton())
+                        .accessibilityIdentifier("spareRemove-\(index)")
+                    }
+                    .font(.callout)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                }
+                HStack {
+                    Button("Add app…") {
+                        guard let picked = Chooser.app(), !spared.contains(picked) else { return }
+                        action.steps = (spared + [picked]).map { DeckAction(type: .app, target: $0) }
+                    }
+                    .buttonStyle(PlainButton())
+                    .accessibilityIdentifier("spareAdd")
+                    Spacer()
+                }
+            }
+            Text(words(what)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func words(_ what: MacDo) -> String {
+        switch what {
+        case .lock:
+            return "Locks the screen at once. You need your password or Touch ID to get back in."
+        case .desktop:
+            return "Moves all windows aside so the desktop shows. A second press brings them back."
+        case .quitAll:
+            return "Quits every open app except the Finder, AMS Deck Mate and the apps listed under “Stays open”. It asks first and names the apps; an app with unsaved work still asks you itself. From the iPhone or iPad the question opens on the Mac."
+        case .emptyBin:
+            return "Empties the bin for good. It asks first and says how many things are in it. If your Finder is set to warn before emptying, the Finder asks once more; take the tick off here to see only the Finder’s question. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder: choose Allow."
+        case .ejectAll:
+            return "Ejects every plugged-in disk, card, stick and disk picture, never the Mac’s own disk and never a share on another computer. It asks first and names the disks, and tells you when one is still in use."
+        case .pastePlain:
+            return "Pastes the text you copied without its font, size and colour. It needs the Mac’s Accessibility yes, the same one the shortcut keys use."
         }
     }
 }

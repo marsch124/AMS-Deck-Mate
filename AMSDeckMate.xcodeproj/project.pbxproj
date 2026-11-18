@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00FCE55168B6F6A070298A8D /* ActionFields.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A487AF008BC5BB7FFBE6BD /* ActionFields.swift */; };
 		03E53A68CBAD200344C371C9 /* DeckScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACD6565181DB47E69CFAA61 /* DeckScreenTests.swift */; };
+		05213B5B03C30967F7E540CA /* MacActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D72E884D49BA853B41CDCBE /* MacActions.swift */; };
 		090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */; };
 		0BABDD98B4A56B44FACEC6EF /* MacSwitches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F82B9F0242F6F6008BD9F89 /* MacSwitches.swift */; };
 		1299E87862CE7E6F4603A897 /* PhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3762868082154D49F518F35B /* PhoneApp.swift */; };
@@ -58,6 +59,7 @@
 		24229BE64894202451537757 /* Core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Core; path = Core; sourceTree = SOURCE_ROOT; };
 		25F4A172CE57401656C065E8 /* LinkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkClient.swift; sourceTree = "<group>"; };
 		292EECF9A27600E43A77F562 /* LiveWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWatch.swift; sourceTree = "<group>"; };
+		2D72E884D49BA853B41CDCBE /* MacActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacActions.swift; sourceTree = "<group>"; };
 		3762868082154D49F518F35B /* PhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneApp.swift; sourceTree = "<group>"; };
 		3C0D9C2764FF86C3866F8DB1 /* DeckScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckScreen.swift; sourceTree = "<group>"; };
 		3D4D729F81F0D52A25801405 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 				23E6227D8C44A9DFC3F2FA1A /* KeyGrid.swift */,
 				292EECF9A27600E43A77F562 /* LiveWatch.swift */,
 				10F54CE7221A8B17D5AC8DDE /* Look.swift */,
+				2D72E884D49BA853B41CDCBE /* MacActions.swift */,
 				3F82B9F0242F6F6008BD9F89 /* MacSwitches.swift */,
 				EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */,
 				BA62F3E5031DFF998CEDD376 /* main.swift */,
@@ -369,6 +372,7 @@
 				26D75374A396705120CCC51C /* KeyGrid.swift in Sources */,
 				B890E8F56E2436126E698529 /* LiveWatch.swift in Sources */,
 				5258AB390D63E2C32EE5A792 /* Look.swift in Sources */,
+				05213B5B03C30967F7E540CA /* MacActions.swift in Sources */,
 				0BABDD98B4A56B44FACEC6EF /* MacSwitches.swift in Sources */,
 				500391B2DF457863220FB440 /* MacWatch.swift in Sources */,
 				090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */,
@@ -495,7 +499,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -503,7 +507,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.12;
+				MARKETING_VERSION = 0.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;
@@ -644,7 +648,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -652,7 +656,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.12;
+				MARKETING_VERSION = 0.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;

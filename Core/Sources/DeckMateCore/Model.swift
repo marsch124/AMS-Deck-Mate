@@ -35,6 +35,16 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// `MacNowKeys.Number`); worldClock = the time in a town (target); sunTimes = the next sunrise or sunset
     /// in a town (target); freeUntil = how long until the next event (target = the app a press opens).
     case garmin, macNow, worldClock, sunTimes, freeUntil
+    /// Things done on the Mac (see MacActions.swift): macDo = lock it, show the desktop, quit all apps, empty
+    /// the bin, eject all disks, paste as plain text (target: see `MacDo`; `quiet` = without asking; the steps
+    /// of "quit all apps" = the apps that stay open); joinMeeting = opens the video link of the next meeting;
+    /// playlist = plays a Spotify link (target); searchCopied = searches the web for the copied text
+    /// (target: see `SearchKeys.Engine`); counter = counts its presses; stopwatch = runs and pauses
+    /// (target of both = a name of the key's own).
+    case macDo, joinMeeting, playlist, searchCopied, counter, stopwatch
+    /// Sets a counter or a stopwatch back to 0 (target = its name). Not something to pick for a key: it is
+    /// what a long press of such a key does when the key has no long press of its own.
+    case zero
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -174,6 +184,11 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .macNow, .worldClock: return KeyKind(rawValue: name) ?? .move
         case .sunTimes: return .text
         case .freeUntil: return KeyKind(rawValue: name) ?? .app
+        case .macDo: return .shortcut
+        case .joinMeeting: return .app
+        case .playlist: return .media
+        case .searchCopied: return .web
+        case .counter, .stopwatch, .zero: return .text
         }
     }
 
@@ -205,7 +220,9 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .profile: return "deck-profile"
         case .multi: return "deck-multi"
         case .timer: return "app-timer"
-        case .toggle: return target == SwitchKeys.dark ? "app-moon" : target == SwitchKeys.mute ? "deck-mute" : "deck-multi"
+        case .toggle:
+            return target == SwitchKeys.dark ? "app-moon" : target == SwitchKeys.mute ? "deck-mute"
+                : target == SwitchKeys.awake ? "coffee" : "deck-multi"
         case .appleShortcut: return "deck-script"
         case .list: return "control-list"
         case .running: return "deck-app"
@@ -222,6 +239,12 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .worldClock: return "globe"
         case .sunTimes: return "app-sunrise"
         case .freeUntil: return "app-calendar"
+        case .macDo: return MacDoKeys.what(target).icon
+        case .joinMeeting: return "deck-video"
+        case .playlist: return "headphones"
+        case .searchCopied: return "app-search"
+        case .counter: return "control-addCircle"
+        case .stopwatch, .zero: return "stopwatch"
         }
     }
 }
@@ -261,12 +284,14 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         if long, hasHeld, let held { return held }
         // A weather key without a long press of its own asks for another town.
         if long, action.type.hasTown { return DeckAction(type: .weatherTown, target: id.uuidString) }
+        // A counter or a stopwatch without a long press of its own goes back to 0.
+        if long, action.type.countsUp { return DeckAction(type: .zero, target: action.target) }
         return action
     }
 
     /// True when holding the key does something else than pressing it: a long press of its own, or
-    /// a weather key (which then asks for another town).
-    public var actsOnHold: Bool { hasHeld || action.type.hasTown }
+    /// a weather key (which then asks for another town), a counter or a stopwatch (back to 0).
+    public var actsOnHold: Bool { hasHeld || action.type.hasTown || action.type.countsUp }
 
     public var shownIcon: String { icon.isEmpty ? action.autoIcon : icon }
 

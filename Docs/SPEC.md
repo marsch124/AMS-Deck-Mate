@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.12 (build 20), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.13 (build 21), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -12,6 +12,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.11 (Mac, round 2 of 3 of his picked ideas): six new kinds of key (Next event, Weather, Due today, Album cover, Body Battery, Desk; 29 kinds instead of 23), five of them showing a value at a glance (sections 56 to 62). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
+- Since 0.13 (Mac, second round of his picks): six new kinds of key (On the Mac, Join the meeting, Spotify playlist, Search for the copied text, Counter, Stopwatch; 40 kinds instead of 34), one new choice of the Switch key (Keep the Mac awake), two new drawings (eject, video camera; 256 in all) and a page of the new keys in the made-up sample keys (sections 71 to 78). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
 - Since 0.12 (Mac, first round of his 28 picks from 50 new ideas): five new kinds of key (Garmin number, Mac at a glance, World clock, Sunrise and sunset, Free until; 34 kinds instead of 29) showing eleven more things at a glance, and a glance key can change its colour with its value (sections 63 to 68). The town on a World clock or Sunrise and sunset key can be changed by a long press like Weather (section 58). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
 - Since 0.10 (Mac, round 1 of 3 of his 25 picked ideas): six new kinds of key (Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 23 kinds instead of 17), the Wait step, Find a key on the keys on screen, Settings > Key use and four ready-made page groups (sections 46 to 55). 254 drawings (252 before). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.9.4 (Mac): one more drawing to choose for a key, Drawer (`drawer.svg`), 252 in all instead of 251; his GridFit key now shows it instead of Autodesk Fusion's icon. Shows on the Stream Deck, on screen keys and on the iPhone and iPad with no update there (history below). iPhone and iPad stay 0.16 (build 21).
@@ -86,7 +87,7 @@ The icon opens a menu:
 - 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk, and since 0.12 garmin, macNow, worldClock, sunTimes and freeUntil (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk, and since 0.12 garmin, macNow, worldClock, sunTimes and freeUntil, and since 0.13 macDo, joinMeeting, playlist, searchCopied, counter and stopwatch, and zero (not offered in the pickers: what a long press of a counter or stopwatch key runs) (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -123,7 +124,16 @@ The icon opens a menu:
 | Mac at a glance (0.12) | `macNow`; "battery", "space" or "busy" | opens Battery, Storage (System Settings) or Activity Monitor; see 65 |
 | World clock (0.12) | `worldClock`; the town as typed | opens the Mac's Clock; see 66 |
 | Sunrise and sunset (0.12) | `sunTimes`; the town as typed | opens the Mac's Weather; see 67 |
-| Free until (0.12) | `freeUntil`; an app's bundle id, or empty for Calendar | opens that app; see 68 || Nothing | none | nothing |
+| Free until (0.12) | `freeUntil`; an app's bundle id, or empty for Calendar | opens that app; see 68 |
+| On the Mac (0.13) | `macDo`; "lock", "desktop", "quitAll", "emptyBin", "ejectAll" or "pastePlain"; `quiet` = without asking; for quitAll `steps` = the apps that stay open | see 71 |
+| Join the meeting (0.13) | `joinMeeting` | opens the video link; see 72 |
+| Spotify playlist (0.13) | `playlist`; the pasted link | plays it in Spotify; see 73 |
+| Search for the copied text (0.13) | `searchCopied`; "google", "duckduckgo", "bing", "wikipedia" or "youtube" | opens the search; see 74 |
+| Counter (0.13) | `counter`; the key's own id | counts one more; see 75 |
+| Stopwatch (0.13) | `stopwatch`; the key's own id | start, pause, go on; see 76 |
+| Zero (0.13), never picked | `zero`; the key's own id | what a long press of a counter or stopwatch key runs; see 75 and 76 |
+| Switch, "Keep the Mac awake" (0.13) | `toggle`; "awake" | see 77 |
+| Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
 
@@ -181,6 +191,7 @@ Not yet tried on the real box (see the warning at the top).
 - Accessibility, asked once, for keys that press a shortcut, type text or control music and sound. Settings shows whether it is allowed and has an "Allow…" button.
 - The Mac may ask for Input Monitoring when the box is first plugged in.
 - New in 0.11: Calendars, full access (`NSCalendarsFullAccessUsageDescription`), asked once at the first press of a Next event key; read only. OmniFocus control (Automation, Apple events), asked once at the first press of a Due today key; counts only. Accessibility is also used by the Album cover key (play or pause) and the Desk key (window places). `NSAllowsLocalNetworking` in Info.plist lets the Body Battery key read `http://127.0.0.1:7788` (the AMS Garmin Bridge Board on this Mac).
+- New in 0.13: Join the meeting uses the same calendar access as Next event (read only). Empty the bin: Automation (Apple events) for the Finder, asked once at the first press. Spotify playlist: Automation for Spotify, asked once at the first press. Paste as plain text uses Accessibility. Lock the Mac, Show the desktop, Quit all apps, Eject all disks, Search for the copied text, Counter, Stopwatch and Keep the Mac awake ask the Mac nothing.
 - New in 0.12: no new permission. The Free until key uses the same calendar access as Next event (asked once at the first press of either; "Press to allow" until then). The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing.
 ## 12. Settings
 Three tabs: Settings, How it works, What's new. The version, Quit and Done are at the bottom.
@@ -207,6 +218,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.13: new data tests in `Core/Tests/DeckMateCoreTests/MacActionsTests.swift` for the rules of sections 71 to 77 (`MacDoKeys`, `QuitKeys`, `BinKeys`, `EjectKeys`, `MeetingKeys`, `PlaylistKeys`, `SearchKeys`, `CounterKeys`, `StopwatchKeys`).
 - New in 0.12: 20 new data tests, 112 in all (92 before), in `Core/Tests/DeckMateCoreTests/GlanceMoreTests.swift` for the rules of sections 63 to 68.
 - New in 0.11.1: 3 new data tests, 92 in all (89 before), in `GlanceKindsTests.swift`: a weather key answers a long press with `weatherTown` (and keeps its own `held`), `actsOnHold`, and the town list `remembered` (newest first, once, at most 6) with `town(ofKey:)` and `setTown`.
 - New in 0.11: 21 new data tests, 89 in all (68 before), in `Core/Tests/DeckMateCoreTests/GlanceKindsTests.swift` for the rules of sections 56 to 62 (next event and its words, weather words and answers, due count, battery level and colour, track name and cover address, desk capture and steps, the new `ActionType` cases reading back).
@@ -228,6 +240,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.13 (Mac, build 21, 18 Nov 2026).** Second round of his picks: six new kinds of key (sections 71 to 76: On the Mac, Join the meeting, Spotify playlist, Search for the copied text, Counter, Stopwatch; 34 kinds before, 40 now), a fourth choice of the Switch key (77), two new drawings (78). New `ActionType` cases `macDo, joinMeeting, playlist, searchCopied, counter, stopwatch, zero`. Rules in `Core/Sources/DeckMateCore/MacActions.swift`, tests in `MacActionsTests.swift` (26 tests). 256 drawings (254 before). The made-up sample keys got a page with the new keys. iPhone and iPad stay 0.16 (build 21). Not proven yet: no key was pressed for real.
 
 **0.12 (Mac, build 20, 18 Nov 2026).** First round of his 28 picks from 50 new ideas: five new kinds of key (sections 63 to 68: Garmin number, Mac at a glance, World clock, Sunrise and sunset, Free until; 29 kinds before, 34 now). New `ActionType` cases `garmin, macNow, worldClock, sunTimes, freeUntil`. Rules in `Core/Sources/DeckMateCore/GlanceMore.swift`, Mac side in `App/Sources/Glances.swift`. `Glance` gained `tone`. 20 new data tests (112 in all). iPhone and iPad stay 0.16 (build 21). Not proven yet: no key was pressed on a real screen or the real box.
 
@@ -494,7 +508,8 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
 - Not proven yet: on a real iPhone held on its side.
 
-## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11, 0.11.1 and 0.12)
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11, 0.11.1, 0.12 and 0.13)
+- 0.13: none of the new keys was pressed for real before the release; they were checked with small tests only. Not tried: the questions of Quit all apps, Empty the bin and Eject all disks on a real Mac (also from the iPhone and iPad), the Finder and Spotify questions at the first press, the plain paste (Accessibility), the calendar read of Join the meeting with real meetings, a long press on a counter or stopwatch on the real box, and Keep the Mac awake over a real night.
 - 0.12: the five new kinds were checked with real data from the Mac and from the board, and with small tests. Not pressed on a real screen: any of the keys, the calendar question at the first press of Free until, the long press on a World clock or Sunrise and sunset key, and the town look-ups at Open-Meteo from the keys. The box is at home until January 2027.
 - 0.11.1: the long press on a Weather key (the "Weather key" window, from the box, the keys on screen and the iPhone and iPad) was checked with small tests only; not pressed on the real box. The box is at home until January 2027.
 - 0.11: the six new kinds were checked with made-up data and small tests only. Not pressed on a real screen: the calendar question (Allow Full Access) and the OmniFocus question at the first press, the weather from Open-Meteo, the Spotify notice and cover look-up, the board on port 7788, and the desk put back with real windows (Accessibility). The box is at home until January 2027.
@@ -755,3 +770,46 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 
 ## 70. Due today key replaced later
 - The "Due today" key (section 59) counts OmniFocus tasks and will be replaced by a key for PARAGON in a later round, because his tasks are in PARAGON.
+
+## 71. On the Mac key (Mac 0.13)
+- `ActionType.macDo`; `target` = a `MacDo` raw name: "lock", "desktop", "quitAll", "emptyBin", "ejectAll", "pastePlain" (`MacDoKeys.what`; anything odd counts as "desktop", the harmless one). Colour: purple, like shortcut keys. Titles in the list (`MacDo.title`): Lock the Mac, Show the desktop, Quit all apps, Empty the bin, Eject all disks, Paste as plain text. Words on a key without a title (`MacDo.short`): Lock, Desktop, Quit all, Empty bin, Eject, Paste plain. Drawings: app-lock, laptop, control-closeCircle, app-bin, deck-eject, deck-clipboard.
+- Lock the Mac: locks the screen at once; the password or Touch ID is needed to come back.
+- Show the desktop: moves all windows aside; a second press brings them back.
+- Quit all apps: quits every open app except the Finder (`QuitKeys.finder`, `com.apple.finder`), AMS Deck Mate itself and the apps that stay open (`QuitKeys.spared`: the key's `steps`, each of type `app`; in Set up keys the list "Stays open" with the button "Add app…" and a remove button on each). `QuitKeys.toQuit` leaves out those, empty names and doubles. Question first: "Quit 6 apps?" (one app: "Quit <name>?") with Quit and Cancel; the words list the apps (`Listing.words`: "A", "A and B", "A, B and C", at most 6 names then "and N more") and say they will quit, that an app with unsaved work asks you itself, and "Stays open: …". Nothing to quit: no question. An app with unsaved work asks for itself.
+- Empty the bin: question first (`BinKeys.question`): "Empty the bin?" with "12 things will be gone for good. This cannot be undone." ("1 thing" for one) with Empty and Cancel. If the Finder is set to warn before emptying, the Finder asks once more after that (Deck Mate never switches the Finder's own warning off); with "Ask first" off only the Finder's question shows. With both off the bin is emptied at once. An empty bin: the key says so and does nothing. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder (section 11); the answer is Allow.
+- Eject all disks: ejects every plugged-in disk, card, stick and disk picture (`EjectKeys.toEject`: local, under /Volumes, and ejectable or not built in); never the Mac's own disk, never a share on another computer. Question first (`EjectKeys.question`): "Eject 2 disks?" (one: "Eject <name>?"), with the names, Eject and Cancel. A disk still in use stays and the key names it (`EjectKeys.stayed`: "<names> is still in use and could not be ejected. Close what uses it, then press the key again."). No disk plugged in: the key says so.
+- Paste as plain text: pastes the copied text without its font, size and colour. Needs Accessibility (section 11).
+- "Ask first": for quitAll, emptyBin and ejectAll (`MacDo.canAsk`) the key asks on the Mac before it acts. `quiet` = without asking; the tick "Ask first" is on at first (`quiet` false) and can be taken off. `MacDoKeys.asks` says whether a key asks.
+- Pressed from the iPhone or iPad, the question opens on the Mac. In the question, Return does it and Escape cancels. The iPhone's note on what ran (`MacDoKeys.done`): "Asks on the Mac: quit all apps", or "Locked the Mac", "Showed the desktop", "Quit all apps", "Emptied the bin", "Ejected the disks", "Pasted as plain text".
+- Also works as a long press and as a step of "Several things in a row".
+
+## 72. Join the meeting key (Mac 0.13)
+- `ActionType.joinMeeting`; no target. Colour: blue. Source: EventKit, the same calendar access as Next event (section 57); read only.
+- `MeetingKeys.pick`: of the events that have a video link, the one that starts within ten minutes (`soon` = 600 s), else the one going on (the one that began last), else the next one within a day (`ahead` = 86,400 s). Events already over are left out.
+- Links (`MeetingKeys.link`): the first link in the event's link, place and notes, in that order, whose host is Zoom (zoom.us, zoom.com), Microsoft Teams (teams.microsoft.com, teams.live.com), Google Meet (meet.google.com), Webex (webex.com), FaceTime (facetime.apple.com), Whereby (whereby.com), Jitsi (meet.jit.si), GoTo (gotomeeting.com, gotomeet.me, goto.com), and also BlueJeans (bluejeans.com) and Chime (chime.aws); a host also counts with a sub-domain. Closing marks and points after a link are cut off. No link found: the key says so.
+
+## 73. Spotify playlist key (Mac 0.13)
+- `ActionType.playlist`; `target` = the pasted link. Colour: green. In Set up keys: a field for the link; in Spotify, Share > Copy link. The note under it says what it is: playlist, album, artist, song, podcast or podcast episode (`PlaylistKeys.kind`).
+- `PlaylistKeys.uri`: a link of open.spotify.com (also with a language part, "intl-de/album/ID", or "user/x/playlist/ID") or Spotify's own short form becomes `spotify:<kind>:<id>` with kind playlist, album, artist, track, show or episode and an id of letters and digits. A press plays that in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify (section 11); the answer is Allow.
+- Not a proper Spotify link: the key is broken (red corner, the reason in Set up keys).
+
+## 74. Search for the copied text key (Mac 0.13)
+- `ActionType.searchCopied`; `target` = the search site (`SearchKeys.Engine`): "google" (the start choice, also for anything odd), "duckduckgo", "bing", "wikipedia", "youtube". Colour: teal. Opens the browser at `SearchKeys.address`: https://www.google.com/search?q=, https://duckduckgo.com/?q=, https://www.bing.com/search?q=, https://en.wikipedia.org/w/index.php?search=, https://www.youtube.com/results?search_query=, followed by the text, percent-coded.
+- The text is the last copied text, with white space made into single spaces. A copied web address (one word starting with http:// or https://) opens as it is. Of a long text only the first 300 letters are searched (`SearchKeys.longest`). Nothing copied: nothing happens. The text goes only to the site picked.
+
+## 75. Counter key (Mac 0.13)
+- `ActionType.counter`; `target` = the key's own id (`CounterKeys.newID`, a new id for each new counter key, so two keys never share a number). Colour: amber. The number is the large word on the key.
+- A press counts one more (`CounterKeys.pressed`); it stops at 99,999 (`CounterKeys.most`). A long press runs `ActionType.zero` (`ActionType.countsUp`: counter or stopwatch) and sets it back to 0 (`CounterKeys.reset`). `zero` is never offered in a picker. A key's own long press (`held`) wins over it.
+- Kept in UserDefaults `counters` (a name-to-number list), so the numbers stay after a restart of the Mac.
+
+## 76. Stopwatch key (Mac 0.13)
+- `ActionType.stopwatch`; `target` = the key's own id (`StopwatchKeys.newID`). Colour: amber. The key shows the time running as the large word.
+- A press starts it; another press pauses it and keeps its time; the next press goes on (`StopwatchKeys.pressed`). A long press runs `zero` and sets it back to 0 (`StopwatchKeys.reset`). `StopwatchKeys.State` holds `banked` (seconds gathered before the last pause, by stopwatch) and `since` (the moment each running one began); `seconds` gives the whole seconds shown now.
+- Kept in UserDefaults `stopwatches`. It keeps running when AMS Deck Mate restarts, because the start moment is kept.
+
+## 77. Switch key, "Keep the Mac awake" (Mac 0.13)
+- A fourth choice of the Switch key (section 47): `ActionType.toggle` with `target` "awake". While it is on, the Mac and its screen do not go to sleep by themselves. Another press switches it off. It is off again after AMS Deck Mate quits or the Mac restarts. Without a title the key says "Awake" or "May sleep". Colour: purple, with the switch mark of section 47.
+
+## 78. Drawings and sample keys (Mac 0.13)
+- Two new drawings to pick for a key: eject (`deck-eject.svg`) and video camera (`deck-video.svg`). 256 drawings to pick from (254 before).
+- The made-up sample keys got a page with the new keys.

@@ -199,8 +199,10 @@ public enum KeyCheck {
             return DeskKeys.spots(of: action).isEmpty ? "No windows taken yet" : nil
         case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
              .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery, .weatherTown,
-             .garmin, .macNow, .freeUntil:
+             .garmin, .macNow, .freeUntil, .macDo, .joinMeeting, .searchCopied, .counter, .stopwatch, .zero:
             return nil
+        case .playlist:
+            return PlaylistKeys.uri(target) == nil ? "No Spotify link yet" : nil
         }
     }
 
@@ -265,7 +267,8 @@ public enum ActionWords {
         case .recentFile: return "No recent file yet"
         case .timer: return "Timer: \(TimerKeys.minutes(action.target)) min"
         case .toggle:
-            return action.target == SwitchKeys.dark ? "Switched dark mode" : action.target == SwitchKeys.mute ? "Switched the sound" : "Switched"
+            return action.target == SwitchKeys.dark ? "Switched dark mode" : action.target == SwitchKeys.mute ? "Switched the sound"
+                : action.target == SwitchKeys.awake ? "Switched keep awake" : "Switched"
         case .appleShortcut: return action.target.isEmpty ? "No Shortcut picked" : "Ran the Shortcut “\(action.target)”"
         case .list: return "Pick from the list on the Mac"
         case .running: return "No app in that place"
@@ -288,6 +291,13 @@ public enum ActionWords {
         case .desk:
             let count = DeskKeys.spots(of: action).count
             return count == 0 ? "No windows taken yet" : count == 1 ? "Set up the desk: 1 app" : "Set up the desk: \(count) apps"
+        case .macDo: return MacDoKeys.done(action)
+        case .joinMeeting: return "Join the meeting"
+        case .playlist: return "Played on Spotify"
+        case .searchCopied: return "Searched for the copied text"
+        case .counter: return "Counted one more"
+        case .stopwatch: return "Stopwatch"
+        case .zero: return "Back to 0"
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait: return "Done"
         }
     }

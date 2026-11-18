@@ -25,14 +25,14 @@ targets:
       path: App/Config/Info.plist
       properties:
         CFBundleDisplayName: AMS Deck Mate
-        CFBundleShortVersionString: "0.12"
-        CFBundleVersion: "20"
+        CFBundleShortVersionString: "0.13"
+        CFBundleVersion: "21"
         CFBundleIconFile: AppIcon
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
-        NSAppleEventsUsageDescription: AMS Deck Mate asks other apps to quit or open only when a key of yours says so.
+        NSAppleEventsUsageDescription: AMS Deck Mate asks other apps to do something (empty the bin, play a playlist, quit) only when a key of yours says so.
         NSLocalNetworkUsageDescription: AMS Deck Mate offers your keys to your iPhone when it is close by.
-        NSCalendarsFullAccessUsageDescription: AMS Deck Mate shows your next event on a key. It only reads your calendar and never changes it.
+        NSCalendarsFullAccessUsageDescription: AMS Deck Mate shows your next event on a key and opens the video link of your meeting. It only reads your calendar and never changes it.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         NSBonjourServices: [_amsdeckmate._tcp, _amsdeckdirect._tcp]
@@ -42,8 +42,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_BUNDLE_IDENTIFIER: com.schabbauer.AMSDeckMate
         SWIFT_VERSION: "5.0"
-        MARKETING_VERSION: "0.12"
-        CURRENT_PROJECT_VERSION: "20"
+        MARKETING_VERSION: "0.13"
+        CURRENT_PROJECT_VERSION: "21"
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: Apple Development
         DEVELOPMENT_TEAM: D24ENP83QQ
