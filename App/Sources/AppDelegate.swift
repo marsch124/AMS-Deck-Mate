@@ -304,6 +304,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         _ = add(deckPanel?.isVisible == true ? "Hide keys on screen" : "Show keys on screen", #selector(toggleDeck),
                 key: "d", mask: [.control, .option])
         _ = add("Set up keys…", #selector(openSetup))
+        let from = add("New key from…", nil)
+        let fromMenu = NSMenu()
+        let choices = model.newKeyChoices()
+        for choice in choices {
+            let entry = NSMenuItem(title: choice.title, action: #selector(newKeyFrom(_:)), keyEquivalent: "")
+            entry.target = self
+            entry.representedObject = choice.key
+            fromMenu.addItem(entry)
+        }
+        if choices.isEmpty {
+            let none = NSMenuItem(title: "Nothing to make a key from yet", action: nil, keyEquivalent: "")
+            none.isEnabled = false
+            fromMenu.addItem(none)
+        }
+        from.submenu = fromMenu
         menu.addItem(.separator())
         let place = model.profile?.name ?? "none"
         _ = add("Page group: \(place)" + (model.pinned == nil ? " (automatic)" : " (locked)"), nil)
@@ -363,6 +378,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         let id = parts.count > 1 ? UUID(uuidString: parts[1]) : nil
         model.change { $0.assign(app: app, to: id) }
         if model.pinned == nil { model.pin(nil) }      // show it now
+    }
+
+    /// "New key from…": the key goes on the first empty place of the page showing now.
+    @objc private func newKeyFrom(_ sender: NSMenuItem) {
+        guard let key = sender.representedObject as? DeckKey else { return }
+        switch model.addKeyHere(key) {
+        case let .placed(words): model.ranEvents.send((words, true))
+        case .full, .nowhere:
+            let alert = NSAlert()
+            alert.messageText = "This page is full."
+            alert.informativeText = "Show a page with an empty place, or clear a key, then choose “New key from…” again. Nothing was changed."
+            NSApp.activate(ignoringOtherApps: true)
+            alert.runModal()
+        }
     }
 
     @objc private func quit() {
@@ -591,6 +620,19 @@ enum Snapshots {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let model = AppModel(sample: Sample.deck())
         let phone = PhoneServer(sampleFor: model)
+        var laneDeck = Sample.deck()
+        if let group = laneDeck.profiles.first, let page = group.topPages.first, let g = laneDeck.profiles.firstIndex(where: { $0.id == group.id }),
+           let p = laneDeck.profiles[g].pages.firstIndex(where: { $0.id == page.id }) {
+            laneDeck.profiles[g].pages[p].keys[0] = DeckKey(title: "Example", action: DeckAction(type: .link, target: "example.com"))
+            laneDeck.profiles[g].pages[p].keys[1] = DeckKey(title: "Notes", action: DeckAction(type: .link, target: "my notes"))
+            laneDeck.profiles[g].pages[p].keys[2] = DeckKey(title: "Tool", action: DeckAction(type: .raycast, target: "raycast://extensions/him/tool/gone"))
+            laneDeck.profiles[g].pages[p].keys[3] = DeckKey(title: "Music", action: DeckAction(type: .playlist, target: "hello"))
+            laneDeck.profiles[g].pages[p].keys[4] = DeckKey(title: "Clock", action: DeckAction(type: .worldClock, target: "Lisbon"))
+        }
+        let laneModel = AppModel(sample: laneDeck)
+        if let data = MainActor.assumeIsolated({ KeysPDF.data(for: model.deck, note: { $0.apps.isEmpty ? "By hand" : "With apps" }) }) {
+            try? data.write(to: folder.appendingPathComponent("keys.pdf"))
+        }
         for (name, look) in [("day", NSAppearance.Name.aqua), ("night", NSAppearance.Name.darkAqua)] {
             shot(ScreenDeckView(model: model).padding(16), "deck-\(name)", look, folder)
             model.keyboardOn = true
@@ -658,6 +700,12 @@ enum Snapshots {
             // 0.15: the kinds of key under headings with a search field, and pressing keys from Raycast.
             shot(KindList(current: .timer, allowed: { _ in true }, pick: { _ in }, close: {}), "kinds-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .links), "settings-links-\(name)", look, folder)
+            // 0.16: wrong input said at once, the suggestion card, the keys as a PDF.
+            shot(SetupView(model: laneModel, startSlot: 0), "setup-link-bare-\(name)", look, folder)
+            shot(SetupView(model: laneModel, startSlot: 1), "setup-link-bad-\(name)", look, folder)
+            shot(SetupView(model: laneModel, startSlot: 2), "setup-raycast-gone-\(name)", look, folder)
+            shot(SetupView(model: laneModel, startSlot: 3), "setup-playlist-bad-\(name)", look, folder)
+            shot(SetupView(model: laneModel, startSlot: 4), "setup-town-\(name)", look, folder)
         }
         for size in [ScreenSize.small, .large] {
             var deck = Sample.deck()

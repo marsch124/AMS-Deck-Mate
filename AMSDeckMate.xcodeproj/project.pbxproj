@@ -35,6 +35,7 @@
 		A7FA39D2512E3E6990EF8E49 /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884B2B68338DE11AE6C9F9D /* Guide.swift */; };
 		AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769601D7D405BCA33D04C661 /* Store.swift */; };
 		B890E8F56E2436126E698529 /* LiveWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292EECF9A27600E43A77F562 /* LiveWatch.swift */; };
+		CADBF45B4838B8A4D4D94024 /* SetupLaneViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F687C21B68404436C4430A /* SetupLaneViews.swift */; };
 		D1AB1A8CC15E29A1F052F335 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A350CF35FC73A197CECBAA /* AppDelegate.swift */; };
 		D21A48CA32E29820EBA8EDE8 /* LinkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F4A172CE57401656C065E8 /* LinkClient.swift */; };
 		D4957990805AD31915C212CF /* KeyArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD91C2A2EE1636B6BA7A5CA3 /* KeyArt.swift */; };
@@ -91,6 +92,7 @@
 		CC5304A926380E265BD2D024 /* PhoneGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneGuide.swift; sourceTree = "<group>"; };
 		D2A487AF008BC5BB7FFBE6BD /* ActionFields.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionFields.swift; sourceTree = "<group>"; };
 		D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneServer.swift; sourceTree = "<group>"; };
+		D9F687C21B68404436C4430A /* SetupLaneViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupLaneViews.swift; sourceTree = "<group>"; };
 		E5908A62B4CCFDC9F6533D68 /* CopiedList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedList.swift; sourceTree = "<group>"; };
 		EACD6565181DB47E69CFAA61 /* DeckScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckScreenTests.swift; sourceTree = "<group>"; };
 		EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWatch.swift; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 				597FD3445474A6E4FD56E384 /* Outside.swift */,
 				D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */,
 				AC9085CF6126FF6B11B8514D /* SettingsView.swift */,
+				D9F687C21B68404436C4430A /* SetupLaneViews.swift */,
 				3D4D729F81F0D52A25801405 /* SetupView.swift */,
 				769601D7D405BCA33D04C661 /* Store.swift */,
 			);
@@ -385,6 +388,7 @@
 				773935AF491D4D900B7C9012 /* Outside.swift in Sources */,
 				090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */,
 				6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */,
+				CADBF45B4838B8A4D4D94024 /* SetupLaneViews.swift in Sources */,
 				1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */,
 				AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */,
 				4A781AC1BFD7A07BC72A82A3 /* main.swift in Sources */,

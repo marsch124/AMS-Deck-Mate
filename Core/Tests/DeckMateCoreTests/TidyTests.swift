@@ -71,7 +71,7 @@ final class TidyTests: XCTestCase {
         XCTAssertNil(check(DeckAction(type: .raycast, target: "raycast://extensions/raycast/ai/ai-chat")), "Raycast's own")
         XCTAssertNil(check(DeckAction(type: .raycast, target: "raycast://extensions/him/tool/run")))
         XCTAssertEqual(check(DeckAction(type: .raycast, target: "raycast://extensions/else/tool/run?launchType=background")),
-                       "The Raycast extension is not installed")
+                       "This Raycast command is not on this Mac")
         XCTAssertEqual(check(DeckAction(type: .folder, target: UUID().uuidString)), "Its folder is gone")
         XCTAssertEqual(check(DeckAction(type: .multi, steps: [DeckAction(type: .media, target: "mute"),
                                                                DeckAction(type: .profile, target: "x")])), "Its page group is gone")

@@ -224,9 +224,7 @@ struct ActionFields: View {
                 .accessibilityIdentifier("macNowPicker")
                 note("Shows the Mac’s battery, the free space on its disk, or how hard it is working, and changes colour when it needs a look: amber, then red. A press opens Battery or Storage in System Settings, or Activity Monitor.")
             case .worldClock, .sunTimes:
-                TextField("Town", text: $action.target)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier("townField")
+                TownField(text: $action.target, identifier: "townField")
                 note(action.type == .worldClock
                      ? "Shows the time in this town, and “tomorrow” or “yesterday” when it is another day there. A press opens the Mac’s Clock. The free service Open-Meteo gets the town’s name once, to find its time zone. Hold the key down to give it another town."
                      : "Shows the next sunrise or sunset in this town, on the town’s own clock. A press opens the Mac’s Weather. The free service Open-Meteo gets the town’s name once, and after that only its place. Hold the key down to give it another town.")
@@ -254,9 +252,7 @@ struct ActionFields: View {
                 }
                 note("Shows your next event that has a time: “Now” while it goes on, the minutes in its last hour before the start, its time later today, or its weekday. It looks seven days ahead and leaves out all-day events. The first press makes the Mac ask once whether AMS Deck Mate may see your calendar: choose “Allow Full Access”. It only reads, and never changes an event.")
             case .weather:
-                TextField("Town", text: $action.target)
-                    .textFieldStyle(.roundedBorder)
-                    .accessibilityIdentifier("weatherTown")
+                TownField(text: $action.target, identifier: "weatherTown")
                 note("Shows the temperature and the sky of this town, asked again every 20 minutes. A press opens the Mac’s Weather. The free weather service Open-Meteo gets the town’s name once, to find its place, and after that only the place. With more than one weather key, give each its town as the title. Hold the key down (a long press) to give it another town without opening this window.")
             case .dueToday:
                 note("Shows how many PARAGON tasks are due today; overdue ones are named in small words and turn the key red. A press opens Today in PARAGON. The numbers come from the small file PARAGON on this Mac writes for its own widget, read every minute: they are as fresh as PARAGON’s last look at your notes here. A file from an earlier day shows “–” and “Open PARAGON”.")
@@ -281,10 +277,15 @@ struct ActionFields: View {
                 TextField("Spotify link", text: $action.target)
                     .textFieldStyle(.roundedBorder)
                     .accessibilityIdentifier("playlistLink")
-                note(action.target.trimmingCharacters(in: .whitespaces).isEmpty
-                     ? "Paste a Spotify link: in Spotify choose Share › Copy link on a playlist, an album, an artist, a song or a podcast."
-                     : PlaylistKeys.kind(action.target).map { "The key shows this \($0)’s own cover, unless you chose a drawing or a picture for it. A press starts it playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify: choose Allow." }
-                       ?? "This is not a Spotify link. In Spotify choose Share › Copy link, then paste it here.")
+                if !action.target.trimmingCharacters(in: .whitespaces).isEmpty, PlaylistKeys.kind(action.target) == nil {
+                    Text("This is not a Spotify link. In Spotify choose Share › Copy link, then paste it here.")
+                        .font(.caption).foregroundStyle(Color(red: 0.86, green: 0.16, blue: 0.14)).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("playlistNotSpotify")
+                } else {
+                    note(action.target.trimmingCharacters(in: .whitespaces).isEmpty
+                         ? "Paste a Spotify link: in Spotify choose Share › Copy link on a playlist, an album, an artist, a song or a podcast."
+                         : PlaylistKeys.kind(action.target).map { "The key shows this \($0)’s own cover, unless you chose a drawing or a picture for it. A press starts it playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify: choose Allow." } ?? "")
+                }
             case .searchCopied:
                 Picker("", selection: $action.target) {
                     ForEach(SearchKeys.Engine.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
@@ -386,6 +387,17 @@ struct ActionFields: View {
                 }
                 .buttonStyle(PlainButton())
                 Spacer()
+            }
+            switch LinkText.kind(action.target) {
+            case .bad:
+                Text("This is not a web address or a file. Check it for spaces, or choose a file with the button.")
+                    .font(.caption).foregroundStyle(Color(red: 0.86, green: 0.16, blue: 0.14)).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("linkBad")
+            case let .bare(address):
+                note("“\(action.target.trimmingCharacters(in: .whitespacesAndNewlines))” opens as \(address) when the key is pressed.")
+                    .accessibilityIdentifier("linkBare")
+            default:
+                EmptyView()
             }
             note("A web page, a folder or a file. This is also how a Raycast quicklink goes on a key.")
         }
