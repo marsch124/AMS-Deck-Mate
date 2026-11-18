@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.15 (build 23), 18 Nov 2026; iPhone and iPad app 0.17 (build 22)
+# AMS Deck Mate, specification, version 0.16 (build 24), 18 Nov 2026; iPhone and iPad app 0.18 (build 23)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -13,6 +13,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.11 (Mac, round 2 of 3 of his picked ideas): six new kinds of key (Next event, Weather, Due today, Album cover, Body Battery, Desk; 29 kinds instead of 23), five of them showing a value at a glance (sections 56 to 62). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.13 (Mac, second round of his picks): six new kinds of key (On the Mac, Join the meeting, Spotify playlist, Search for the copied text, Counter, Stopwatch; 40 kinds instead of 34), one new choice of the Switch key (Keep the Mac awake), two new drawings (eject, video camera; 256 in all) and a page of the new keys in the made-up sample keys (sections 71 to 78). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
+- Since 0.16 (Mac) and 0.18 (iPhone and iPad): three new kinds of key, 45 in all instead of 42 (Breathing pacer `breath` section 98, Progress bar `bar` 99, Often used `often` 100), the PARAGON choice "Now on my plan" (101), timers in whole minutes and one softer sound (102, and section 46), wrong input said at once (103), "New key from…" (104), the suggested key (105), "Save as PDF…" (106), darker amber and green (107), hours for a page group (108), evening dimming of the box (109), actions for Apple's Shortcuts app (110), the ready-made page group "My AMS apps" (111), the Keychain for the secrets of allowed phones (112), a failed save told, the key pictures in the iCloud copy and the format number 3 (113), scripts with a time limit, closing and quitting (114), Cancel is the Return key (115), small repairs (116), keys that rest and checks that pause (117), PARAGON's format check (118), and on the phone link and screen (119). Section 40 and 85 are corrected.
 - Since 0.15 (Mac) and 0.17 (iPhone and iPad): safety copies that last longer (section 83), self-repair from iCloud and for a new Mac (84), unknown kinds kept and format number 2 (85), the outside door for key presses closed (86), no password copies (87), limits for strangers (88), calmer colours (89), Garmin board off, old numbers and gym numbers (90), declined events (91), the list of kinds (92), drop on a key (93), Raycast commands and links (94), box wake-up and diary (95), link version 8 (96). The guide's sentence about Elgato's app now says it should be quit (section 10).
 - Since 0.14 (Mac, third and fourth round of his picks, plus two ideas): two new kinds of key (PARAGON, Focus rounds (PomoTimer); 42 kinds instead of 40), the Due today key counts PARAGON instead of OmniFocus, the Spotify playlist key shows the cover, and Quit all apps fills its "Stays open" list (sections 79 to 82; section 70 and section 59 changed). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
 - Since 0.12 (Mac, first round of his 28 picks from 50 new ideas): five new kinds of key (Garmin number, Mac at a glance, World clock, Sunrise and sunset, Free until; 34 kinds instead of 29) showing eleven more things at a glance, and a glance key can change its colour with its value (sections 63 to 68). The town on a World clock or Sunrise and sunset key can be changed by a long press like Weather (section 58). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
@@ -246,6 +247,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.16 (Mac, build 24, 18 Nov 2026; iPhone and iPad 0.18, build 23).** Round of new keys, calm, safer saving and a deck that works by itself: sections 98 to 119. Mac: Breathing pacer (98), Progress bar (99), Often used (100), Now on my plan (101), whole-minute timers and the softer sound (102), wrong input (103), New key from… (104), the suggested key (105), Save as PDF (106), darker amber and green (107), hours (108), evening dimming (109), Shortcuts actions (110), My AMS apps (111), Keychain (112), failed save, pictures in the iCloud copy, format number 3 (113), scripts, closing, quitting (114), Cancel is Return (115), repairs (116), power saving (117), PARAGON format check (118). iPhone and iPad 0.18 (119). `Deck.currentVersion` is 3. New `ActionType` cases `breath, bar, often`; new `ParagonKeys.What.plan`. Rules in `Core/Sources/DeckMateCore`: `Pacer.swift`, `OftenKeys.swift`, `BoxEvening.swift`, `SetupLane.swift`, `SafetyLane.swift`, `KindGroups.swift`, `PhoneEvening.swift`; the app side in `SetupLaneViews.swift`, `SmartViews.swift`, `DeckIntents.swift`, `SafeAsk.swift`, `PairedKeychain.swift`. Not yet tried for real: the evening dimming of the box, the Shortcuts actions run from the Shortcuts app, the Keychain move across a future new build, and everything on the real box. The phone app 0.17 keeps working with Mac 0.16, and the phone app 0.18 with Mac 0.15.
 
 **0.15 (Mac, build 23, 18 Nov 2026; iPhone and iPad 0.17, build 22).** Safety, calmer colours and easier keys: sections 83 to 96. Mac: safety copies (83), repair (84), unknown kinds and format number 2 (85), outside door closed (86), password copies (87), stranger limits (88), calmer colours (89), Garmin board off and gym numbers (90), declined events (91), the list of kinds (92), drop on a key (93), Raycast commands and links (94), box wake-up and diary (95). Link version 8 (96), shared by the Mac and the iPhone and iPad app 0.17. New data tests for the new rules. Not yet tried for real: the box wake-up, the Raycast commands in a real Raycast, the link check with real devices.
 
@@ -580,6 +583,7 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - The first time macOS asks once whether AMS Deck Mate may use iCloud Drive (answer Allow).
 - "Bring back an earlier state…" (section 37) also lists the iCloud copies, marked "iCloud" (`Store.Copy.inCloud`).
 - Only the keys file goes there: no copied texts, no `pairedPhones`.
+- Since 0.16 the copy also holds the key pictures (section 113). The sentence in Settings now says the weekly copy holds the keys and their pictures.
 
 ## 41. "A list to pick from" (Mac 0.9)
 - `copied` gains the `target` "list" beside "1", "2", "3". Shown in Set up keys as "A list to pick from". An older Mac reads the unknown target as no choice.
@@ -622,8 +626,8 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 ## 46. Timer key (Mac 0.10)
 - `ActionType.timer`; `target` = the minutes as text. Offered in Set up keys: 1, 2, 3, 5, 10, 15, 20, 25, 30, 45, 60 (`TimerKeys.choices`). A new key starts on "5". Anything odd reads as 5; the value is kept between 1 and 600 (`TimerKeys.minutes`).
 - A press (`TimerKeys.pressed`): a finished timer ("Done") is put away; a running one stops; an idle one starts. Two keys with the same minutes are the same timer (the state is kept by the minutes).
-- The key counts down second by second as a clock, "4:59", from an hour "1:05:00" (`TimerKeys.clock`). A key without a title shows "5 min" (its minutes). Colour: amber (the kind of typed text). Drawing: `app-timer`.
-- When the time is up (`TimerKeys.tick`) the Mac plays a sound twice, once per finished timer, and the key says "Done" for 60 seconds (`TimerKeys.doneStays`) or until pressed.
+- Until 0.15 the key counted down second by second as a clock, "4:59", from an hour "1:05:00" (`TimerKeys.clock`). Since 0.16 it shows whole minutes, see section 102. A key without a title shows "5 min" (its minutes). Colour: amber (the kind of typed text). Drawing: `app-timer`.
+- When the time is up (`TimerKeys.tick`) the Mac plays a sound once (until 0.15: twice, 1.2 s apart; section 102), once per finished timer, and the key says "Done" for 60 seconds (`TimerKeys.doneStays`) or until pressed.
 - The countdown shows on the box, on the keys on screen and on the iPhone and iPad (the Mac draws it). A timer is not saved: it is forgotten when Deck Mate quits.
 
 ## 47. Switch key (Mac 0.10)
@@ -790,7 +794,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Eject all disks: ejects every plugged-in disk, card, stick and disk picture (`EjectKeys.toEject`: local, under /Volumes, and ejectable or not built in); never the Mac's own disk, never a share on another computer. Question first (`EjectKeys.question`): "Eject 2 disks?" (one: "Eject <name>?"), with the names, Eject and Cancel. A disk still in use stays and the key names it (`EjectKeys.stayed`: "<names> is still in use and could not be ejected. Close what uses it, then press the key again."). No disk plugged in: the key says so.
 - Paste as plain text: pastes the copied text without its font, size and colour. Needs Accessibility (section 11).
 - "Ask first": for quitAll, emptyBin and ejectAll (`MacDo.canAsk`) the key asks on the Mac before it acts. `quiet` = without asking; the tick "Ask first" is on at first (`quiet` false) and can be taken off. `MacDoKeys.asks` says whether a key asks.
-- Pressed from the iPhone or iPad, the question opens on the Mac. In the question, Return does it and Escape cancels. The iPhone's note on what ran (`MacDoKeys.done`): "Asks on the Mac: quit all apps", or "Locked the Mac", "Showed the desktop", "Quit all apps", "Emptied the bin", "Ejected the disks", "Pasted as plain text".
+- Pressed from the iPhone or iPad, the question opens on the Mac. In the question, Return and Escape both cancel and the action needs a click (until 0.15 Return did it; section 115). The iPhone's note on what ran (`MacDoKeys.done`): "Asks on the Mac: quit all apps", or "Locked the Mac", "Showed the desktop", "Quit all apps", "Emptied the bin", "Ejected the disks", "Pasted as plain text".
 - Also works as a long press and as a step of "Several things in a row".
 
 ## 72. Join the meeting key (Mac 0.13)
@@ -860,7 +864,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 
 ## 85. Unknown kinds kept, format number 2 (Mac 0.15)
 - A key whose `type` this version does not know decodes as an empty key that does nothing, but its original data is kept and written back exactly as read, so a newer Deck Mate finds it again. Before: it became an empty key for good at the next save.
-- The file's format number (`version`) is 2 and is never lowered. A file from a newer format is read, kept as read, and the app says so at the start.
+- The file's format number (`version`) is 2 (3 since 0.16, section 113) and is never lowered. A file from a newer format is read, kept as read, and the app says so at the start.
 
 ## 86. Outside key presses closed (Mac 0.15)
 - Before: the app had a door for checks through which other programs on the Mac could press keys by a message. It is closed. The app as it is used listens to no such message.
@@ -894,7 +898,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - `EKEvent.isOn` (App/Sources/MacActions.swift; false when `status == .canceled`, or when the attendee that is the current user has `participantStatus == .declined`): Next event (section 57), Free until (section 68) and Join the meeting (section 72) leave out events that were cancelled and events the user declined. Before: a declined meeting could show as the next one.
 
 ## 92. The list of kinds (Mac 0.15)
-- Set up keys: the field "What it does" is a button that opens a list with a search field on top and the 42 kinds under 8 coloured headings: Open, Type and press, Music and sound, Time, At a glance, On the Mac, Moving around, Nothing. Before: one long menu of 42 lines.
+- Set up keys: the field "What it does" is a button that opens a list with a search field on top and the 42 kinds under 8 coloured headings: Open, Type and press, Music and sound, Time, At a glance, On the Mac, Moving around, Nothing. Before: one long menu of 42 lines. Since 0.16 there are 45 kinds (`breath` and `bar` under Time, `often` under Open; `KindGroups`).
 - Typing filters the list, by the kind's name and by a few other words (for example "countdown" finds Timer). Return takes the first one shown. Escape closes the list.
 
 ## 93. Drop it on a key (Mac 0.15)
@@ -922,3 +926,100 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - `GlanceWatch.readParagon` reads `widget-snapshot.json` on its own queue (`paragonQueue`), one read at a time, and hands the result to the main thread. Before: the read ran on the main thread at the start, and the first read by a new build makes macOS ask "would like to access data from other apps"; the whole app stood still (no menu, no keys, no iPhone link) until that question was answered. Now the app works while the question is open, and the PARAGON keys fill in once it is allowed.
 - A press of the Inbox or Next task key uses the snapshot already read (`paragonShot`); it never reads the file on the main thread.
 - Raycast's commands (section 94) are also written once at the start, not only after the first change to the keys.
+
+## 98. Breathing pacer key (Mac 0.16)
+- `ActionType.breath` (`BreathKeys`, `Pacer.swift`); heading Time in `KindGroups`. `target` = "in-out-breaths", for example "4-6-6" (`BreathKeys.target`, `setting`). Rhythms offered (`BreathKeys.rhythms`): 4 in · 6 out (the default `standard`), 4 · 4, 5 · 5, 4 in · 8 out. Breaths (`counts`): 6 (default), 10, 20. Anything odd reads as the standard.
+- Idle: the key's drawing and `idleWords` "Breathe". A press starts a round, a second press stops it (`BreathKeys.pressed`). While it runs, a white rounded column fills from the bottom while breathing in and empties while breathing out; icon prefix `bar:` (`barPrefix`, `level`); small words `inWords` "Breathe in" and `outWords` "Breathe out". Colour: green (media). Redrawn once a second.
+- After the last breath the key returns to idle: no sound, no "Done", no numbers. The run is kept in memory only. Shows on the box, on screen and on the iPhone and iPad (the Mac draws it). The Mac asks nothing.
+
+## 99. Progress bar key (Mac 0.16)
+- `ActionType.bar` (`BarKeys`, `Pacer.swift`); heading Time. `target` = "place/count", for example "2/5" (`BarKeys.target`, `parse`): this key is part 2 of 5. Several bar keys side by side make one bar; each part's share of the whole is `BarKeys.share(place:of:progress:)`.
+- What the bar follows (`BarKeys.now`): the whole focus round that runs (purple); else the timer that ends last (amber); else nothing, and the parts are empty (dark, thin outline). A part is redrawn only when its whole percent changes (icon prefix `fill:`, `percent`).
+- Set up keys, with a bar key picked: the button "Fill this row with the bar" (`BarKeys.filledRow`): the EMPTY places of that row become bar parts numbered 1…n; a key that is there is never replaced.
+
+## 100. Often used key (Mac 0.16)
+- `ActionType.often` (`OftenKeys`); heading Open. `target` "1" to "5" (`number`; the editor says "1 (most)", 2, 3, 4, 5). Shows the picture and words of the key it stands for (`showing`); a press presses the real key and the press is counted for the real key (`counted`). Unfilled: the key's drawing and `notYet` "Not yet".
+- Ranking (`OftenKeys.ranked`): keys pressed within the last `KeyUse.quietDays` (30) days, ordered by their total count (`KeyUse` keeps only the total and the last press). Left out: folders, Back, page keys, page group switches, other often used keys and keys that only show something.
+- Button "Add an “Often used” folder" (under "Add an “Open apps” folder"): a folder (`OftenKeys.folder`) with Back and five often used keys, opened by a folder key "Often used" on the first free place; a full page says so and changes nothing.
+
+## 101. PARAGON "Now on my plan" (Mac 0.16)
+- `ParagonKeys.What.plan` (title "Now on my plan", short title "My plan", drawing `app-calendar`); `shows` is true. Read from the `plan` list in PARAGON's little file (blocks with a name, a start and an end).
+- During a block: large "14:30" (the end), small "until <name>". Otherwise: the next block's start large, its name small. Nothing more planned: "Free" and `nothingPlannedWords` "Nothing more planned". A press opens Today in PARAGON. Colour: purple like the other PARAGON keys.
+
+## 102. Timers in whole minutes, one softer sound (Mac 0.16)
+- Timer and focus keys (`TimerKeys`, `FocusKeys`): more than 60 s left shows "21 min" ("75 min" from an hour); exactly 60 s "1:00"; only in the last minute seconds, "0:59". Focus keeps the step's name in the small words. The stopwatch keeps its seconds. The end, the sound and "Done" are on time. A 25-minute timer changes its picture 84 times instead of 1,500.
+- A timer's end plays "Glass" once at volume 0.6 (before: twice, 1.2 s apart). Focus rounds play no sound in Deck Mate; PomoTimer plays its own.
+
+## 103. Wrong input said at once (Mac 0.16)
+- Link key (`LinkText.kind`, `SetupLane.swift`): text that is neither a file nor an address (for example it has a space) shows in red "This is not a web address or a file. Check it for spaces, or choose a file with the button." and the key counts as broken (the key's problem line is `badWords`, "This is not a web address or a file. It has a space or is not an address."). A bare name such as "example.com" gets a grey note that it opens as https://example.com.
+- Town fields (Weather, World clock, Sunrise and sunset): on leaving the field, Return or Save, the town is looked up the way the keys do (Open-Meteo): red "Town not found. Check the spelling." or grey "Lisbon, Portugal". With no network nothing is shown.
+- Spotify playlist: non-empty text that is no Spotify link shows in red "This is not a Spotify link. In Spotify choose Share › Copy link, then paste it here." (key problem "This is not a Spotify link"). Empty stays "No Spotify link yet".
+
+## 104. New key from… (Mac 0.16)
+- Rule `KeyFrom` in `SetupLane.swift`; the menu is built in `AppDelegate.swift`.
+- Menu bar menu: up to three choices with their names: "App: <name>" (the app in front), "Link: <host>" (a copied web address; never a copy a password manager marked secret), "File: <name>" (the file opened last; only offered while a "Recent file" key exists somewhere). Nothing to offer: a grey "Nothing to make a key from yet".
+- The key goes on the first empty place of the page showing now. Command-Z in Set up keys takes it back. A full page says "This page is full. … Nothing was changed."
+
+## 105. The deck suggests a key (Mac 0.16)
+- Settings › Key use, one calm card on top: "A key for <App>?" with "You used it on 9 of the last 14 days and it has no key.", a full-colour "Add a key" (says where it went: "Added as key N on …") and a quiet "Not this one" (remembered for good).
+- Rule (`AppDays` in `SetupLane.swift`; `window` 14 days, `atLeast` 5): the app used on the most days; never an app that has a key (`appsWithKeys`), is a favourite or has its own page group; never Deck Mate or the Finder. Counted in `apps.json` beside the keys file (days only; `SetupLaneViews.swift`). No badge or notification anywhere.
+
+## 106. Save as PDF (Mac 0.16)
+- Set up keys › All pages: the button "Save as PDF…" (`KeysPDF.save`): every page group with its pages as small pictures and names on A4 pages with page numbers. Suggested name "Deck Mate keys.pdf"; the file opens afterwards.
+
+## 107. Darker amber and green (Mac 0.16)
+- Amber 0.73/0.47/0.06 became 0.62/0.38/0.04 (contrast with white 3.63 to 5.04). Green 0.18/0.61/0.31 became 0.14/0.52/0.26 (3.53 to 4.68). The Settings buttons use the same green. Headings are unchanged. Section 4 is corrected by this. On the phone the sample green tile is darker the same way; the phone has no amber tile.
+
+## 108. Hours for a page group (Mac 0.16)
+- Fields `hoursOn`, `hoursFrom`, `hoursTo` (minutes since midnight; default 06:00 to 09:00; the time may pass midnight) on a page group. Set up keys, page group column under "Use with apps": the tick "Show at these hours" and from/to. Grey words: "In these hours it shows instead of the default page group, for apps that have no page group of their own. An app’s own page group, and one you picked by hand, always stay."
+- `Navigator.profile(forApp:in:now:)` takes the first page group whose hours include `now` instead of the default one. Looked at when the front app changes, once a minute and at wake. "Duplicate page group" does not copy hours.
+
+## 109. Evening dimming of the box (Mac 0.16)
+- Fields `eveningDim` (off by default), `eveningFrom` (21:30), `eveningTo` (07:00) and `eveningBrightness` (5 to 100, default 20) in the keys file; rule `BoxEvening` (`within`, `brightness(for:minute:)`). Settings › The box, under Brightness: the tick "Dim in the evening", "From 21:30 to 07:00" and the slider "Evening brightness".
+- Looked at once a minute, at start, at wake and when a setting changes. Untested with the box at hand.
+
+## 110. Actions for Apple's Shortcuts app (Mac 0.16)
+- `DeckIntents.swift`: `PressDeckKeyIntent` ("Press a Deck Mate key"; the key is picked from a list of keys that have words and do something, subtitle "page group › page"), `ShowDeckGroupIntent` ("Show a Deck Mate page group", no lock) and `ToggleDeckKeysIntent` ("Show or hide the Deck Mate keys on screen").
+- "Quit all apps", "Empty the bin" and "Eject all disks" always ask first. With Settings › Raycast and links off the actions fail with "Pressing keys from outside is switched off. Switch it on in AMS Deck Mate: Settings › Raycast and links › “Keys can be pressed from Raycast and by link”." Not yet tried from the Shortcuts app.
+
+## 111. Ready-made page group "My AMS apps" (Mac 0.16)
+- The + in Set up keys offers "My AMS apps – 12 link keys": Tidy Bar (show or hide, show, hide, arrange), Shopping (scan, trip), PARAGON (Inbox, Today, Overdue, Review, Plan), Seedboard (opens the app). Left out for lack of a link: PARAGON start and close the day, Shortcut Overview, Apps Overview. Same rules as the other ready-made groups (0.10): nothing you have is changed; Undo takes it back.
+
+## 112. Keychain for allowed phones (Mac 0.16; iPhone and iPad 0.18)
+- Mac: the secrets of allowed iPhones moved from the app's settings into the Mac's Keychain, service `com.schabbauer.AMSDeckMate.pairedPhones`, one item per phone (`PairedKeychain.swift`); the names stay in the settings. They move over by themselves and no password window shows; if the Keychain cannot be used the secret stays where it was and the box diary notes it. "Forget" removes the item. Not proven across a future re-signed build.
+- iPhone and iPad: the pairing secret moved into the Keychain, this device only, not synced (`MacKeyStore`, service `com.schabbauer.AMSDeckMatePhone.macKeys`); it moves by itself with no new Allow; "Forget this Mac" removes it.
+
+## 113. Failed save, pictures in the iCloud copy, format number 3 (Mac 0.16)
+- A failed save is told once per run of failures: "The last change could not be saved" / "The last change to your keys could not be saved. Your keys keep working, and Deck Mate tries again with every change." It goes into the diary; the next good save clears it.
+- The weekly iCloud copy also holds the key pictures: the folder "Pictures" in the iCloud folder, only new or changed files. Missing pictures come back, never over an existing one, with "Bring back an earlier state" from an iCloud copy, the self-repair from iCloud and the start on a new Mac. Settings › Where your setup is kept: "Apart from the weekly copy in iCloud Drive, which holds the keys and their pictures, nothing leaves the Mac."
+- A restore does NOT bring back: key-use counts, counters, stopwatches and a running focus round, allowed iPhones, the locked page group, window places, recent apps, switch states, and the Settings choices kept outside the keys file.
+- `Deck.currentVersion` is 3 (was 2), because page groups can have hours and the box an evening brightness. Never lowered. An older Deck Mate keeps saying at its start that the file is from a newer one.
+
+## 114. Scripts, closing and quitting (Mac 0.16)
+- Every script the app runs (dark mode, mute, Spotify, the Finder's bin, eject) has a 5-second limit and runs away from the main work; the Finder's "empty the bin" gets 60 s so its own question can be answered. Spotify, the Finder and the calendar no longer wait behind each other. The Mac's volume for the iPhone's music plate is read directly, not by a script every 5 seconds.
+- The red close button of Set up keys asks "Save the changes to this key?" (Save, Don't save, Cancel keeps the window open) when a key is half edited.
+- Typed text is cut at whole characters (`SafetyLane.pieces`), so emoji stay whole, and a long text no longer holds the app up. Quitting waits at most 1 second for a box that does not answer.
+- If Control-Option-D belongs to another app, Settings › Keys on screen says in orange: "Control-Option-D is used by another app, so it does not work here. Use the menu bar icon to show the keys."
+
+## 115. Cancel is the Return key (Mac 0.16)
+- In "Delete the page group", "Delete page", "Bring over" (Elgato) and the questions before "Quit all apps", "Empty the bin" and "Eject all disks" (`SafeAsk.swift`), Return and Escape both cancel; the action needs a click. Until 0.15 Return did the action in the three Mac questions.
+
+## 116. Small repairs (Mac 0.16)
+- A failed Shortcut is told like any failed press: "The Shortcut “X” was not found" (or "… did not finish" / "… could not be started").
+- A Raycast key whose command is no longer on this Mac shows a red corner and "This Raycast command is not on this Mac" (before: nothing happened; old wording "The Raycast extension is not installed"). Raycast's own commands, scripts and AI links are never marked.
+- Weather: a temperature older than 2 hours turns the key grey-blue and says "As of 14:20". Album cover: a failed look-up is tried again at the next change. A town's time zone that the town search did not give is no longer stored (before: the Mac's own zone was kept).
+
+## 117. Keys that rest, checks that pause (Mac 0.16)
+- One clock wakes only when a key needs a new picture (`Pacer.swift`, `wake`; `shortest` 0.05 s, `unseen` 60 s). Seconds tick only when the Mac's page now has a timer, focus, stopwatch, breathing or bar key (`showsSeconds`), or an iPhone or iPad is connected; otherwise once a minute and at a timer's end. App names are remembered instead of being looked up for every picture (cleared when an app starts or quits).
+- The check every 4 seconds (may it press keys, does Elgato's app run) and the 5-second look for the music plate pause while the Mac's screen sleeps, and run once at wake.
+
+## 118. PARAGON format check (Mac 0.16)
+- PARAGON's little file may carry a format number (missing = 1). A number higher than `ParagonKeys.knownFormat` (1) makes every PARAGON key and "Due today" show "–" and "Update Deck Mate". PARAGON itself is not changed yet: it needs one line for the format number in its next build (pick 52 waits for that).
+
+## 119. iPhone and iPad 0.18 (build 23)
+- A note about a key that did NOT work always shows, also with "The note on what a key did" off (above the keys on an iPad; over the top of the left panel on an iPhone on its side). Line under the switch: "A key that did not work always shows its note, also when this is off."
+- A tap that shows the keys while the Mac sleeps keeps the screen awake until 2 minutes after the last touch. A line lost while "Mac asleep" with none back within 10 minutes: "Looking for your Mac…". Waiting for Allow: after 30 s "Nothing yet? Wake your Mac and look for the window “… wants to use your keys”." and a full-colour "Ask again".
+- Settings: Favourites row, Music button, Mac at a glance and the navigation picture moved into the Showing card; the long-press note is in the Touch card; "Swipe up or down changes page group" (was "profile").
+- While the resting clock shows, the screen dims to a quarter of the brightness (never below 5 %), restored on a tap, at the end of the clock and when the app is not active; keys are not drawn while resting. Settings › Clock: "Rest sooner in the evening" (off by default; `PhoneEvening`, from 21:30 to 07:00, may pass midnight): inside it the resting clock comes after 1 minute without a touch, also when Resting clock says Never.
+- Looking for the Mac backs off (`PhoneBackoff`): 1, 2, 4, 8, 15, then 30 s between failed tries (before: every second for ever); back to 1 s after a line that worked, on coming to the front, "Ask again", "Forget this Mac" and when the Mac's offer newly appears.
+- Works with Mac 0.16; the phone app 0.17 keeps working with Mac 0.16 and the phone app 0.18 with Mac 0.15. Nothing here was run on a device or simulator yet.
