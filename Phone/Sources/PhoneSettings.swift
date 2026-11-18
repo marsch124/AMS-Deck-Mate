@@ -40,6 +40,15 @@ struct PhoneSettings: View {
     @AppStorage("showMusic") private var showMusic = true
     @AppStorage("showGlance") private var showGlance = true
     @AppStorage("showMap") private var showMap = true
+    @AppStorage("eveningRest") private var eveningRest = false
+    @AppStorage("eveningFrom") private var eveningFrom = PhoneEvening.defaultFrom
+    @AppStorage("eveningTo") private var eveningTo = PhoneEvening.defaultTo
+
+    /// A time of day kept as minutes since midnight.
+    private func minutesBinding(_ minutes: Binding<Int>) -> Binding<Date> {
+        Binding(get: { Calendar.current.date(bySettingHour: minutes.wrappedValue / 60, minute: minutes.wrappedValue % 60, second: 0, of: Date()) ?? Date() },
+                set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); minutes.wrappedValue = (c.hour ?? 0) * 60 + (c.minute ?? 0) })
+    }
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -132,15 +141,6 @@ struct PhoneSettings: View {
                         note("Automatic follows the app in front on the Mac. Pick a page group to lock it: it then stays, on the Mac too, until you choose Automatic.")
                     }
                 }
-                Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")
-                note("Five keys under the others that stay in place on every page and in every page group. You fill them on the Mac, in Set up keys.")
-                Toggle("Music button", isOn: $showMusic).accessibilityIdentifier("showMusic")
-                note("A small round button at the top right. Tap it for what is playing on the Mac (Spotify or Music), with play, next and volume.")
-                Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
-                note("The app in front on the Mac, in one small pill at the very bottom.")
-                Toggle("Navigation picture", isOn: $showMap).accessibilityIdentifier("showMap")
-                note("On an iPad or iPhone held on its side: every page group and page as a small picture on the left. Tap one to go there.")
-                note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
                 if link.macName != nil, !link.newMac {
                     Text("Needs AMS Deck Mate 0.5 on the Mac")
                         .font(.callout.weight(.semibold))
@@ -178,16 +178,36 @@ struct PhoneSettings: View {
                 row("Resting clock") {
                     chips(PhonePrefs.restChoices, $restAfter, "box", "rest") { $0 == 0 ? "Never" : "\($0) min" }
                 }
-                note("After that long without a touch only a dimmed clock shows, like a desk clock. One tap brings the keys back.")
+                note("After that long without a touch only a dimmed clock shows, like a desk clock, and the screen gets dim too. One tap brings the keys and the light back.")
+                Toggle("Rest sooner in the evening", isOn: $eveningRest).accessibilityIdentifier("eveningRest")
+                if eveningRest {
+                    DatePicker("From", selection: minutesBinding($eveningFrom), displayedComponents: .hourAndMinute)
+                        .accessibilityIdentifier("eveningFrom")
+                    DatePicker("To", selection: minutesBinding($eveningTo), displayedComponents: .hourAndMinute)
+                        .accessibilityIdentifier("eveningTo")
+                }
+                note("Between these times the resting clock comes after 1 minute without a touch, also when Resting clock says Never.")
             }
             card("Touch", "raycast") {
                 Toggle("Tap buzz", isOn: $tapBuzz).accessibilityIdentifier("tapBuzz")
                 Toggle("Click sound", isOn: $tapClick).accessibilityIdentifier("tapClick")
-                Toggle("Swipe up or down changes profile", isOn: $swipeProfiles).accessibilityIdentifier("swipeProfiles")
+                Toggle("Swipe up or down changes page group", isOn: $swipeProfiles).accessibilityIdentifier("swipeProfiles")
                 note("Swiping left or right for pages always works.")
+                note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
             }
             card("Showing", "settings") {
                 Toggle("The note on what a key did", isOn: $showNote).accessibilityIdentifier("showNote")
+                note("A key that did not work always shows its note, also when this is off.")
+                Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")
+                note("Five keys under the others that stay in place on every page and in every page group. You fill them on the Mac, in Set up keys.")
+                Toggle("Music button", isOn: $showMusic).accessibilityIdentifier("showMusic")
+                note(DeckScreen.device == "iPad"
+                     ? "A small round button at the bottom left. Tap it for what is playing on the Mac (Spotify or Music), with play, next and volume."
+                     : "A small round button in the column beside the keys. Tap it for what is playing on the Mac (Spotify or Music), with play, next and volume.")
+                Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
+                note("The app in front on the Mac, in one small pill.")
+                Toggle("Navigation picture", isOn: $showMap).accessibilityIdentifier("showMap")
+                note("Every page group and page as a small picture on the left. Tap one to go there.")
                 Toggle("Page dots", isOn: $showDots).accessibilityIdentifier("showDots")
                 Toggle("Keep the screen awake while connected", isOn: $stayAwake).accessibilityIdentifier("stayAwake")
                 Toggle("Warn when the battery is low", isOn: $warnBattery).accessibilityIdentifier("batteryWarningSwitch")

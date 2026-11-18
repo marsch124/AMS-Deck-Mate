@@ -10,7 +10,7 @@ struct DeckMatePhoneApp: App {
 
     private func keepAwake() {
         // While the Mac sleeps (and the screen goes dark with it) the iPhone or iPad may lock itself.
-        if case .connected = link.state { UIApplication.shared.isIdleTimerDisabled = stayAwake && !(darkWhenMacSleeps && link.macAsleep) } else {
+        if case .connected = link.state { UIApplication.shared.isIdleTimerDisabled = stayAwake && !(darkWhenMacSleeps && link.macAsleep && !link.asleepKeysShown) } else {
             UIApplication.shared.isIdleTimerDisabled = false
         }
     }
@@ -23,6 +23,7 @@ struct DeckMatePhoneApp: App {
                 .onChange(of: link.state, initial: true) { _, _ in keepAwake() }
                 .onChange(of: stayAwake) { _, _ in keepAwake() }
                 .onChange(of: link.macAsleep) { _, _ in keepAwake() }
+                .onChange(of: link.asleepKeysShown) { _, _ in keepAwake() }
                 .onChange(of: darkWhenMacSleeps) { _, _ in keepAwake() }
         }
     }
