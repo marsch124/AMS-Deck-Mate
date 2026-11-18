@@ -10,6 +10,9 @@ enum PairedKeychain {
     static let service = "com.schabbauer.AMSDeckMate.pairedPhones"
 
     private static func base(_ id: String) -> [String: Any] {
+        // The login keychain must never put a window on screen for this (process-wide; the app
+        // uses the keychain for nothing else).
+        SecKeychainSetUserInteractionAllowed(false)
         let context = LAContext()
         context.interactionNotAllowed = true
         return [kSecClass as String: kSecClassGenericPassword,
@@ -90,7 +93,9 @@ enum PairedStore {
     static func save(_ key: String, names: [String: String], secrets: [String: String]) {
         var paired: [String: [String: String]] = [:]
         for (id, name) in names {
-            guard let secret = secrets[id] else { continue }
+            // A secret that could not be read this time keeps its name: it may be readable at the
+            // next start, and dropping it would make him allow that iPhone again for nothing.
+            guard let secret = secrets[id] else { paired[id] = ["name": name]; continue }
             if PairedKeychain.write(id, secret) {
                 paired[id] = ["name": name]
             } else {
