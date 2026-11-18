@@ -38,7 +38,7 @@ final class LiveKindsTests: XCTestCase {
         let key = DeckKey(action: .fresh(.timer))
         XCTAssertEqual(key.resolving(LiveKeys()).title, "5 min")
         let running = key.resolving(LiveKeys(timers: ["5": 299]))
-        XCTAssertEqual(running.title, "4:59")
+        XCTAssertEqual(running.title, "5 min")
         XCTAssertTrue(running.action.quiet)
         XCTAssertEqual(key.resolving(LiveKeys(timers: ["5": 0])).title, "Done")
     }

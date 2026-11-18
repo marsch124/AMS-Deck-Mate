@@ -202,7 +202,9 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .micLight: return quiet ? .raycast : .move
         case .wait: return .empty
         case .nextEvent, .desk: return .app
-        case .weather, .weatherTown: return .web
+        // A temperature that is too old turns grey-blue: the name then holds the colour.
+        case .weather: return KeyKind(rawValue: name) ?? .web
+        case .weatherTown: return .web
         case .dueToday, .paragon: return KeyKind(rawValue: name) ?? .shortcut
         case .focus: return KeyKind(rawValue: name) ?? .text
         case .cover: return .media

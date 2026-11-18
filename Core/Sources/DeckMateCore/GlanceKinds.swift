@@ -179,6 +179,20 @@ public enum WeatherKeys {
         now.map { Glance(big: degrees($0.temperature), words: sky($0.code)) }
     }
 
+    /// A temperature older than this turns the key grey-blue and says when it is from.
+    public static let staleAfter: TimeInterval = 2 * 3600
+
+    /// The glance with its age: older than two hours = grey-blue, with "As of 14:20" in the small words.
+    public static func glance(_ now: Now?, fetched: Date?, at current: Date, calendar: Calendar = .current) -> Glance? {
+        guard var glance = glance(now) else { return nil }
+        if let fetched, current.timeIntervalSince(fetched) > staleAfter {
+            let parts = calendar.dateComponents([.hour, .minute], from: fetched)
+            glance.words = String(format: "As of %02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+            glance.tone = .move
+        }
+        return glance
+    }
+
     /// Where the service is asked for a town's place. Only the town's name goes out.
     public static func searchURL(_ town: String) -> URL? {
         var parts = URLComponents(string: "https://geocoding-api.open-meteo.com/v1/search")

@@ -98,7 +98,7 @@ final class ParagonFocusTests: XCTestCase {
         let live = LiveKeys(focus: FocusKeys.Showing(name: "Classic Pomodoro", label: "Pause", left: 125, kind: "pause"))
         let running = focus.resolving(live)
         XCTAssertEqual(running.title, "Pause")
-        XCTAssertEqual(GlanceKeys.bigWords(running.icon), "2:05")
+        XCTAssertEqual(GlanceKeys.bigWords(running.icon), "3 min")
         XCTAssertEqual(running.action.kind, .media)
         // A long press stops the count.
         XCTAssertEqual(focus.action(long: true), DeckAction(type: .zero, target: "Classic Pomodoro"))

@@ -32,7 +32,7 @@ final class GlanceWatch {
         for (number, glance) in macGlances { all[GlanceKeys.mac(number)] = glance }
         for town in towns {
             let name = WeatherKeys.name(town)
-            if let glance = WeatherKeys.glance(weather[name]) {
+            if let glance = WeatherKeys.glance(weather[name], fetched: weatherAt[name], at: now) {
                 all[GlanceKeys.weather(town)] = glance
             } else if missingTowns.contains(name) {
                 all[GlanceKeys.weather(town)] = Glance(words: "Town not found")
@@ -43,7 +43,8 @@ final class GlanceWatch {
         }
         if paragonOn {
             for what in ParagonKeys.What.allCases {
-                if let glance = ParagonKeys.glance(what, snapshot: paragonShot, today: GlanceWatch.today, installed: paragonHere) {
+                if let glance = ParagonKeys.glance(what, snapshot: paragonShot, today: GlanceWatch.today, installed: paragonHere,
+                                              minute: GlanceWatch.minuteOfDay(now)) {
                     all[ParagonKeys.glanceName(what)] = glance
                 }
             }
@@ -272,8 +273,11 @@ final class GlanceWatch {
             var places = UserDefaults.standard.dictionary(forKey: GlanceWatch.placesKey) as? [String: String] ?? [:]
             places[name] = place.text
             UserDefaults.standard.set(places, forKey: GlanceWatch.placesKey)
-            self.zones[name] = ClockKeys.zone(fromSearch: data) ?? TimeZone.current.identifier
-            UserDefaults.standard.set(self.zones, forKey: GlanceWatch.zonesKey)
+            // A zone the search did not give is not made up: the town is asked again next time.
+            if let zone = ClockKeys.zone(fromSearch: data) {
+                self.zones[name] = zone
+                UserDefaults.standard.set(self.zones, forKey: GlanceWatch.zonesKey)
+            }
             done(place)
         }
     }
@@ -375,11 +379,18 @@ final class GlanceWatch {
         return (user + system + nice, user + system + idle + nice)
     }
 
+    /// When each town's temperature was fetched, for telling an old one (a failed fetch keeps the last temperature).
+    private var weatherAt: [String: Date] = [:]
+
     private func readWeather(_ name: String, at place: WeatherKeys.Place) {
         fetch(WeatherKeys.weatherURL(place)) { [weak self] data in
-            guard let self, let now = data.flatMap(WeatherKeys.now(fromWeather:)),
-                  self.towns.contains(where: { WeatherKeys.name($0) == name }) else { return }
+            guard let self, self.towns.contains(where: { WeatherKeys.name($0) == name }) else { return }
+            guard let now = data.flatMap(WeatherKeys.now(fromWeather:)) else {
+                self.tell()         // no answer: the old temperature stays, and turns grey-blue once it is too old
+                return
+            }
             self.weather[name] = now
+            self.weatherAt[name] = Date()
             self.tell()
         }
     }
@@ -395,6 +406,12 @@ final class GlanceWatch {
     /// PARAGON is on this Mac when something opens its links.
     static var paragonInstalled: Bool {
         URL(string: ParagonKeys.anyLink).flatMap { NSWorkspace.shared.urlForApplication(toOpen: $0) } != nil
+    }
+
+    /// Minutes since midnight, for the "Now on my plan" key.
+    static func minuteOfDay(_ date: Date) -> Int {
+        let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
     }
 
     static var today: ParagonKeys.Day {
@@ -450,7 +467,7 @@ final class GlanceWatch {
         }
         let what = ParagonKeys.what(action.target)
         switch what {
-        case .inbox, .next:
+        case .inbox, .next, .plan:
             openParagon(ParagonKeys.openLink(what, snapshot: paragonShot, today: GlanceWatch.today), inFront: true)
         case .copiedTask:
             guard let link = ParagonKeys.captureLink(text: ClipboardWatch.copiedText(), note: false) else {
@@ -548,9 +565,12 @@ final class GlanceWatch {
         if asked.count > 200 { asked = [track] }
         // The picture comes from Spotify's open look-up, by the track's name only.
         fetch(CoverKeys.lookupURL(track)) { [weak self] data in
-            guard let self, let address = data.flatMap(CoverKeys.pictureURL(fromLookup:)) else { return }
+            guard let self, let address = data.flatMap(CoverKeys.pictureURL(fromLookup:)) else {
+                self?.asked.remove(track)       // no answer: tried again at the next change
+                return
+            }
             self.fetch(address) { data in
-                guard let data, let picture = NSImage(data: data), picture.isValid else { return }
+                guard let data, let picture = NSImage(data: data), picture.isValid else { self.asked.remove(track); return }
                 KeyArt.keep(cover: picture, for: track)
                 self.tell()
             }
@@ -641,6 +661,8 @@ final class GlanceWatch {
         GlanceKeys.due: Glance(big: "3", words: "1 overdue", tone: .raycast),
         ParagonKeys.glanceName(.inbox): Glance(big: "4", words: "Inbox", tone: .text),
         ParagonKeys.glanceName(.next): Glance(big: "today", words: "Book the flights"),
+        ParagonKeys.glanceName(.plan): Glance(big: "14:30", words: "until Design review"),
+        GlanceKeys.weather("Oslo"): Glance(big: "4°", words: "As of 14:20", tone: .move),
         GlanceKeys.battery: Glance(big: "62", words: BatteryKeys.words),
         GlanceKeys.garmin(.steps): Glance(big: "8 412", words: "Steps today"),
         GlanceKeys.garmin(.sleep): Glance(big: "7:24", words: "Good"),

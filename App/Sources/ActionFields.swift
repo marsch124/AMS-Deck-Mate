@@ -258,10 +258,8 @@ struct ActionFields: View {
                 note("Shows how many PARAGON tasks are due today; overdue ones are named in small words and turn the key red. A press opens Today in PARAGON. The numbers come from the small file PARAGON on this Mac writes for its own widget, read every minute: they are as fresh as PARAGON’s last look at your notes here. A file from an earlier day shows “–” and “Open PARAGON”.")
             case .paragon: ParagonFields(action: $action)
             case .focus: FocusFields(action: $action)
-            case .breath:
-                note("A calm bar that rises while you breathe in and falls while you breathe out.")
-            case .bar:
-                note("One part of a progress bar that several keys in a row make together.")
+            case .breath: BreathFields(action: $action)
+            case .bar: BarFields(action: $action)
             case .often: OftenFields(action: $action)
             case .cover:
                 note("Shows the cover of the song Spotify plays, with the song’s name. A press plays or pauses. The cover appears with the next song change after AMS Deck Mate starts. The picture comes from Spotify’s own open look-up, by the track only.")
@@ -727,6 +725,8 @@ struct ParagonFields: View {
             return "Puts the text you copied last into PARAGON’s Inbox as a task. PARAGON stays in the background. With nothing copied the Mac beeps."
         case .note:
             return "Opens a small window on the Mac for a few words, with Cancel and Save. Save puts them into PARAGON’s Inbox as a note. From the iPhone or iPad the window opens on the Mac."
+        case .plan:
+            return "Shows the block of today’s plan that goes on now: when it ends, and its name. Between blocks it shows the next one’s start and name, and with nothing more planned it says “Free”. A press opens Today in PARAGON." + file
         }
     }
 }

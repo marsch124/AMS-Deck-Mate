@@ -33,12 +33,19 @@ public struct LiveKeys: Equatable, Sendable {
     public var focus: FocusKeys.Showing?
     /// The playlist covers that are here, by their names (`PlaylistKeys.coverName`).
     public var covers: Set<String>
+    /// The breathing round going on (which key, in or out, how high the bar stands).
+    public var breath: BreathKeys.Showing?
+    /// What the progress bar keys follow right now; nil = nothing runs.
+    public var bar: BarKeys.Now?
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
                 timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
                 glances: [String: Glance] = [:], battery: Int? = nil, cover: CoverKeys.Now? = nil,
                 coverReady: Bool = false, counts: [String: Int] = [:], watches: [String: Int] = [:],
-                watchesRunning: Set<String> = [], focus: FocusKeys.Showing? = nil, covers: Set<String> = []) {
+                watchesRunning: Set<String> = [], focus: FocusKeys.Showing? = nil, covers: Set<String> = [],
+                breath: BreathKeys.Showing? = nil, bar: BarKeys.Now? = nil) {
+        self.breath = breath
+        self.bar = bar
         self.covers = covers
         self.focus = focus
         self.counts = counts
@@ -176,7 +183,7 @@ extension DeckKey {
         case .timer:
             let minutes = TimerKeys.minutes(key.action.target)
             if let left = live.timers[String(minutes)] {
-                key.title = left == 0 ? "Done" : TimerKeys.clock(left)
+                key.title = left == 0 ? "Done" : TimerKeys.shown(left)
                 key.action.quiet = true
             } else if key.title.isEmpty {
                 key.title = "\(minutes) min"
@@ -267,13 +274,26 @@ extension DeckKey {
         case .focus:
             if let now = live.focus, now.name == key.action.target {
                 // While it runs the key says the step and its time, whatever the key is called.
-                if !now.done { key.icon = GlanceKeys.textPrefix + TimerKeys.clock(now.left) }
+                if !now.done { key.icon = GlanceKeys.textPrefix + TimerKeys.shown(now.left) }
                 key.title = now.label
                 key.action.quiet = true
                 key.action.name = FocusKeys.tone(now.kind).rawValue
             } else if key.title.isEmpty {
                 key.title = key.action.target.isEmpty ? "Focus" : key.action.target
             }
+        case .breath:
+            if let now = live.breath, now.key == key.id {
+                key.icon = BreathKeys.barPrefix + String(now.level)
+                key.title = now.breathingIn ? BreathKeys.inWords : BreathKeys.outWords
+                key.action.quiet = true
+            } else if key.title.isEmpty {
+                key.title = BreathKeys.idleWords
+            }
+        case .bar:
+            let part = BarKeys.parse(key.action.target)
+            let progress = live.bar?.progress ?? 0
+            key.icon = BarKeys.fillPrefix + String(BarKeys.share(place: part.place, of: part.count, progress: progress))
+            key.action.name = (live.bar?.tone ?? .move).rawValue
         default:
             break
         }

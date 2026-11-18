@@ -688,6 +688,11 @@ struct SetupView: View {
                         ActionFields(action: $draft.action, deck: model.deck, profile: profile) { title in
                             if draft.title.isEmpty { draft.title = title }
                         }
+                        if draft.action.type == .bar, favourite == nil {
+                            Button("Fill this row with the bar") { fillBarRow() }
+                                .buttonStyle(PlainButton())
+                                .accessibilityIdentifier("fillBarRow")
+                        }
                         FieldLabel("Long press")
                         Picker("", selection: heldType) {
                             ForEach(ActionType.forLongPress, id: \.self) { Text($0.title).tag($0) }
@@ -759,6 +764,23 @@ struct SetupView: View {
 
     private var heldAction: Binding<DeckAction> {
         Binding(get: { draft.held ?? .none }, set: { draft.held = $0 })
+    }
+
+    /// Turns the empty places of this key's row into parts of the bar and numbers the row's bar keys
+    /// left to right. A place that holds a key is never replaced; this key is saved as a bar part first.
+    private func fillBarRow() {
+        guard let slot, favourite == nil, let profile, let page else { return }
+        var keys = page.keys
+        keys[slot] = draft
+        let filled = BarKeys.filledRow(keys, row: slot / 5)
+        edit(profile) { item in
+            guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
+            item.pages[index].keys = filled
+        }
+        if let now = filled[slot] {
+            draft = now
+            saved = now
+        }
     }
 
     private func tryDraft() {

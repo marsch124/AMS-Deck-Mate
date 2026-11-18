@@ -5,7 +5,7 @@ import DeckMateCore
 /// The living state of the app: the setup, where the deck is right now, and the box.
 final class AppModel: ObservableObject {
     @Published private(set) var deck: Deck
-    @Published private(set) var position: DeckPosition?
+    @Published private(set) var position: DeckPosition? { didSet { if position != oldValue { scheduleTick() } } }
     @Published private(set) var box: DeckDevice.State = .absent
     /// Keys held down right now (for the pressed look on screen).
     @Published private(set) var pressed: Set<Int> = []
@@ -67,7 +67,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var counts: [String: Int] = [:]
     /// The stopwatches that were started. Kept across restarts, so a running one goes on.
     @Published private(set) var watches = StopwatchKeys.State()
-    private var watchTick: Timer?
+    /// The one clock for everything that changes by itself: it wakes only when a key needs a new picture.
+    private var liveTick: Timer?
+    /// The breathing round going on. In memory only.
+    @Published private(set) var breathRun: BreathKeys.Run?
+    /// The key just pressed (for the breathing key, which must know which one it is).
+    private var pressedKeyID: UUID?
+    /// An iPhone or iPad is connected: it may show any page, so seconds are counted for it too.
+    var phoneConnected = false { didSet { if phoneConnected != oldValue { scheduleTick() } } }
     private static let countsKey = "counters"
     private static let watchesKey = "stopwatches"
     /// The focus run going on. Kept across restarts.
@@ -82,7 +89,6 @@ final class AppModel: ObservableObject {
     @Published var finding = false
     @Published var findWords = ""
     @Published var findPick = 0
-    private var timerTick: Timer?
     private var lookTimer: Timer?
     private var useTimer: Timer?
     private var liveWatchers: [NSObjectProtocol] = []
@@ -119,7 +125,10 @@ final class AppModel: ObservableObject {
             switchedOn = [SwitchKeys.dark]
             micInUse = true
             let day = Date(timeIntervalSince1970: 1_794_800_000)
-            timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259)])
+            timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259), "5": day.addingTimeInterval(45)])
+            if let breathing = sample.profiles.flatMap(\.pages).flatMap({ $0.keys.values }).first(where: { $0.action.type == .breath && $0.action.target == "5-5-10" }) {
+                breathRun = BreathKeys.Run(key: breathing.id, began: day.addingTimeInterval(-3), setting: BreathKeys.setting("5-5-10"))
+            }
             sampleNow = day
             counts = ["sampleCount": 12]
             watches = StopwatchKeys.State(banked: ["sampleWatch": 154], since: ["sampleWatch": day.addingTimeInterval(-600)])
@@ -205,6 +214,7 @@ final class AppModel: ObservableObject {
         switchedOn = Set((UserDefaults.standard.stringArray(forKey: AppModel.switchesKey) ?? []).filter(SwitchKeys.isOwn))
         ActionRunner.live = { [weak self] in self?.liveNow ?? LiveKeys() }
         ActionRunner.timerPressed = { [weak self] in self?.timerPressed($0) }
+        ActionRunner.breathPressed = { [weak self] in self?.breathPressed($0) }
         ActionRunner.switchPressed = { [weak self] in self?.switchPressed($0) }
         ActionRunner.glancePressed = { [weak self] in self?.glance.pressed($0) }
         ActionRunner.boardPressed = { [weak self] in self?.glance.openBoard() }
@@ -288,7 +298,9 @@ final class AppModel: ObservableObject {
                  counts: counts, watches: StopwatchKeys.seconds(watches, now: sampleNow ?? Date()),
                  watchesRunning: Set(watches.since.keys),
                  focus: FocusKeys.showing(focusRun, now: sampleNow ?? Date()),
-                 covers: glance.coversReady)
+                 covers: glance.coversReady,
+                 breath: BreathKeys.showing(breathRun, now: sampleNow ?? Date()),
+                 bar: BarKeys.now(focus: focusRun, timers: timers, at: sampleNow ?? Date()))
     }
     /// Pictures with made-up keys stand still at this moment.
     var sampleNow: Date?
@@ -302,6 +314,7 @@ final class AppModel: ObservableObject {
 
     /// The clipboard and the list of opened files are only looked at while a key needs them.
     private func watchLive() {
+        scheduleTick()
         guard !isSample else { return }
         glance.watch(deck)
         clipboard.isOn = deck.uses(.copied)
@@ -359,27 +372,65 @@ final class AppModel: ObservableObject {
         bump()
     }
 
-    /// The clock of the timers ticks only while one is going or still says "Done".
-    private func runTimers() {
-        if timers.isIdle {
-            timerTick?.invalidate()
-            timerTick = nil
-        } else if timerTick == nil {
-            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.tickTimers() }
-            RunLoop.main.add(timer, forMode: .common)
-            timerTick = timer
-        }
-    }
+    /// The timers need a look again (one was pressed).
+    private func runTimers() { scheduleTick() }
 
-    private func tickTimers() {
+    /// The one clock woke: timers that ended are finished (sound, "Done"), a focus round or a breathing round
+    /// that is over is put away, the keys are drawn, and the clock is set for the next time one needs it.
+    private func tickFired() {
+        liveTick = nil
         let next = TimerKeys.tick(timers, now: Date())
         timers = next.state
         for name in next.finished {
             ranEvents.send(("Timer done: \(name) min", true))
             MacSwitches.timerSound()
         }
-        runTimers()
+        if focusRun != nil, FocusKeys.showing(focusRun, now: Date()) == nil { setFocusOver() }
+        if breathRun != nil, BreathKeys.showing(breathRun, now: Date()) == nil { breathRun = nil }
         bump()
+        scheduleTick()
+    }
+
+    /// A breathing key was pressed: it starts a round, or stops the one that goes on.
+    func breathPressed(_ action: DeckAction) {
+        guard let key = pressedKeyID else { return }
+        breathRun = BreathKeys.pressed(breathRun, key: key, target: action.target, now: Date())
+        scheduleTick()
+        bump()
+    }
+
+    /// True when a key on the page the Mac shows counts seconds or fills a bar, or an iPhone or iPad is connected.
+    private var secondsSeen: Bool {
+        if phoneConnected { return true }
+        guard let position else { return false }
+        return Navigator.keys(at: position, in: deck).values.contains { LiveTick.showsSeconds($0.action.type) }
+    }
+
+    /// The most parts of a progress bar in the setup; nil = there is none.
+    private var barParts: Int? {
+        let bars = deck.profiles.flatMap(\.pages).flatMap { $0.keys.values }.filter { $0.action.type == .bar }
+        return bars.map { BarKeys.parse($0.action.target).count }.max()
+    }
+
+    /// Sets the one clock for the next moment a key needs a new picture: the minute of a timer, its last
+    /// seconds (only when they are seen), its end, a stopwatch, a breath, a bar. Nothing going = no clock.
+    private func scheduleTick() {
+        liveTick?.invalidate()
+        liveTick = nil
+        guard !isSample else { return }
+        let now = Date()
+        let seen = secondsSeen
+        var waits: [Double] = []
+        if let wait = LiveTick.wake(timers: timers, now: now, seconds: seen) { waits.append(wait) }
+        if let wait = LiveTick.wake(focus: focusRun, now: now, seconds: seen) { waits.append(wait) }
+        if watches.isRunning { waits.append(seen ? 1 : LiveTick.unseen) }
+        if let run = breathRun { waits.append(seen ? 1 : max(LiveTick.shortest, run.end.timeIntervalSince(now))) }
+        if seen, let parts = barParts,
+           let wait = LiveTick.wake(bar: BarKeys.now(focus: focusRun, timers: timers, at: now), parts: parts) { waits.append(wait) }
+        guard let delay = waits.min() else { return }
+        let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in self?.tickFired() }
+        RunLoop.main.add(timer, forMode: .common)
+        liveTick = timer
     }
 
     // MARK: Counters and stopwatches (0.13)
@@ -438,21 +489,16 @@ final class AppModel: ObservableObject {
         bump()
     }
 
-    /// The keys are drawn again each second only while a stopwatch runs.
+    /// A focus round that is over is put away.
+    private func setFocusOver() {
+        focusRun = nil
+        UserDefaults.standard.removeObject(forKey: AppModel.focusKey)
+    }
+
+    /// The keys are drawn again each second only while a stopwatch runs and is seen (see `scheduleTick`).
     private func runWatches() {
-        if focusRun != nil, FocusKeys.showing(focusRun, now: Date()) == nil { focusRun = nil; UserDefaults.standard.removeObject(forKey: AppModel.focusKey) }
-        if !watches.isRunning && focusRun == nil {
-            watchTick?.invalidate()
-            watchTick = nil
-        } else if watchTick == nil {
-            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
-                guard let self else { return }
-                if self.focusRun != nil, FocusKeys.showing(self.focusRun, now: Date()) == nil { self.runWatches() }
-                self.bump()
-            }
-            RunLoop.main.add(timer, forMode: .common)
-            watchTick = timer
-        }
+        if focusRun != nil, FocusKeys.showing(focusRun, now: Date()) == nil { setFocusOver() }
+        scheduleTick()
     }
 
     /// A switch key was pressed.
@@ -630,6 +676,7 @@ final class AppModel: ObservableObject {
             }
         }
         tell(run, in: deck.profile(position.profile))
+        pressedKeyID = (favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index])?.id
         ActionRunner.run(run)
         if outcome.run.contains(where: ActionRunner.needsKeys) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
@@ -1033,8 +1080,25 @@ enum Sample {
                       4: DeckKey(action: DeckAction(type: .dueToday)),
                       5: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[0])),
                       6: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[4])),
+                      7: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.plan.rawValue)),
+                      13: key("Next page", DeckAction(type: .nextPage)),
                       14: key("Back a page", DeckAction(type: .previousPage))]
-        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, fifth, sixth, folder])
+        // 0.16: live keys: plan, breathing, an old temperature, whole minutes, a bar across a row.
+        var seventh = DeckPage(name: "Page 7")
+        seventh.keys = [0: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.plan.rawValue)),
+                        1: DeckKey(action: DeckAction(type: .breath)),
+                        2: DeckKey(action: DeckAction(type: .breath, target: "5-5-10")),
+                        3: DeckKey(action: DeckAction(type: .weather, target: "Oslo")),
+                        4: DeckKey(action: DeckAction(type: .timer, target: "25")),
+                        5: DeckKey(action: DeckAction(type: .bar, target: "1/5")),
+                        6: DeckKey(action: DeckAction(type: .bar, target: "2/5")),
+                        7: DeckKey(action: DeckAction(type: .bar, target: "3/5")),
+                        8: DeckKey(action: DeckAction(type: .bar, target: "4/5")),
+                        9: DeckKey(action: DeckAction(type: .bar, target: "5/5")),
+                        10: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[0])),
+                        11: DeckKey(action: DeckAction(type: .timer, target: "5")),
+                        14: key("Back a page", DeckAction(type: .previousPage))]
+        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, fifth, sixth, seventh, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])
         writing.pages[0].keys = [0: key("Bold", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 11, command: true, keyName: "B"))),
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]

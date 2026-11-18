@@ -31,16 +31,37 @@ enum KeyArt {
         return picture
     }
 
+    /// Where an app was found and what it is called, kept so the Mac's list of apps is not asked on
+    /// every drawing. Forgotten when an app is opened or quit (and so after an install, which is opened).
+    private static var foundApps: [String: URL?] = [:]
+    private static var foundNames: [String: String] = [:]
+    private static let watchApps: [NSObjectProtocol] = [NSWorkspace.didLaunchApplicationNotification,
+                                                        NSWorkspace.didTerminateApplicationNotification].map { name in
+        NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { _ in
+            foundApps.removeAll()
+            foundNames.removeAll()
+        }
+    }
+
     /// The app a key opens, as a file on this Mac.
     static func appURL(_ target: String) -> URL? {
         if target.hasPrefix("/") { return URL(fileURLWithPath: target) }
         if target.isEmpty { return nil }
-        return NSWorkspace.shared.urlForApplication(withBundleIdentifier: target)
+        _ = watchApps
+        if let hit = foundApps[target] { return hit }
+        let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: target)
+        if foundApps.count > 400 { foundApps.removeAll() }
+        foundApps[target] = .some(url)
+        return url
     }
 
     static func appName(_ target: String) -> String {
         guard let url = appURL(target) else { return target.isEmpty ? "" : target }
-        return FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
+        if let hit = foundNames[target] { return hit }
+        let name = FileManager.default.displayName(atPath: url.path).replacingOccurrences(of: ".app", with: "")
+        if foundNames.count > 400 { foundNames.removeAll() }
+        foundNames[target] = name
+        return name
     }
 
     private static func appIcon(_ target: String) -> NSImage? {
@@ -132,6 +153,45 @@ enum KeyArt {
                                               .foregroundColor: NSColor.white, .paragraphStyle: style])
     }
 
+    /// The breathing bar: a soft rounded column that fills from the bottom, in white on the key's calm colour.
+    private static func drawBreath(_ level: Int, size: CGFloat, hasTitle: Bool) {
+        let k = size / 72
+        let height = 38 * k
+        let width = 22 * k
+        let box = CGRect(x: (size - width) / 2, y: hasTitle ? size - 8 * k - height : (size - height) / 2, width: width, height: height)
+        let round = width / 2
+        NSColor.white.withAlphaComponent(0.28).setFill()
+        NSBezierPath(roundedRect: box, xRadius: round, yRadius: round).fill()
+        let filled = max(width, height * CGFloat(level) / 100)
+        NSGraphicsContext.saveGraphicsState()
+        NSBezierPath(roundedRect: box, xRadius: round, yRadius: round).addClip()
+        NSColor.white.withAlphaComponent(0.92).setFill()
+        CGRect(x: box.minX, y: box.minY, width: width, height: level == 0 ? 0 : filled).fill()
+        NSGraphicsContext.restoreGraphicsState()
+    }
+
+    /// One part of a progress bar across keys: full = the full colour of the key, empty = the dark empty
+    /// look with a thin outline, in between = the colour from the left up to its share.
+    private static func drawPart(_ percent: Int, kind: KeyKind, size: CGFloat) {
+        let k = size / 72
+        let whole = CGRect(x: 0, y: 0, width: size, height: size)
+        if percent >= 100 {
+            Palette.tile(kind).setFill()
+            whole.fill()
+            return
+        }
+        Palette.tile(.empty).setFill()
+        whole.fill()
+        if percent > 0 {
+            Palette.tile(kind).setFill()
+            CGRect(x: 0, y: 0, width: size * CGFloat(percent) / 100, height: size).fill()
+        }
+        NSColor.white.withAlphaComponent(0.22).setStroke()
+        let outline = NSBezierPath(rect: whole.insetBy(dx: 0.5 * k, dy: 0.5 * k))
+        outline.lineWidth = 1 * k
+        outline.stroke()
+    }
+
     private static func draw(_ key: DeckKey, size: CGFloat) {
         let k = size / 72
         let title = Self.title(key)
@@ -145,7 +205,11 @@ enum KeyArt {
         let iconMid = CGPoint(x: size / 2, y: hasTitle ? size - 27 * k : size / 2)
         let iconRect = CGRect(x: iconMid.x - iconSide / 2, y: iconMid.y - iconSide / 2, width: iconSide, height: iconSide)
 
-        if let words = GlanceKeys.bigWords(key.icon) {
+        if let level = BreathKeys.level(key.icon) {
+            drawBreath(level, size: size, hasTitle: hasTitle)
+        } else if let percent = BarKeys.percent(key.icon) {
+            drawPart(percent, kind: key.action.kind, size: size)
+        } else if let words = GlanceKeys.bigWords(key.icon) {
             // A glance key: large words where the drawing would be, made smaller until they fit.
             var font = NSFont.systemFont(ofSize: (hasTitle ? 25 : 30) * k, weight: .bold)
             var extent = (words as NSString).size(withAttributes: [.font: font])
