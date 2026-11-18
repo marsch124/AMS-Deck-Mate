@@ -658,6 +658,31 @@ enum Snapshots {
             // 0.15: the kinds of key under headings with a search field, and pressing keys from Raycast.
             shot(KindList(current: .timer, allowed: { _ in true }, pick: { _ in }, close: {}), "kinds-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .links), "settings-links-\(name)", look, folder)
+            // 0.16, the smart lane: evening dimming, hours of a page group, "Often used" keys, the ready-made group for his own apps.
+            var smart = Sample.deck()
+            smart.eveningDim = true
+            if let id = smart.profiles.first?.id {
+                smart.profiles[0].hoursOn = true
+                if let page = smart.profiles[0].topPages.first {
+                    let folderPage = OftenKeys.folder(parent: page.id)
+                    smart.profiles[0].pages.append(folderPage)
+                    if let place = page.firstFreePlace, let at = smart.profiles[0].pages.firstIndex(where: { $0.id == page.id }) {
+                        smart.profiles[0].pages[at].keys[place] = DeckKey(title: "Often used", action: DeckAction(type: .folder, target: folderPage.id.uuidString))
+                    }
+                    let smartModel = AppModel(sample: smart)
+                    shot(SettingsView(model: smartModel, phone: phone, startTab: .settings, startPart: .box), "settings-box-\(name)", look, folder)
+                    smartModel.show(profile: id, page: folderPage.id)
+                    shot(ScreenDeckView(model: smartModel).padding(16), "deck-often-\(name)", look, folder)
+                    shot(SetupView(model: smartModel, startSlot: 1), "setup-often-\(name)", look, folder)
+                }
+                var ready = Sample.deck()
+                ready.profiles.append(Templates.profile(from: Templates.ownApps, in: ready))
+                if let own = ready.profiles.last, let page = own.topPages.first {
+                    let readyModel = AppModel(sample: ready)
+                    readyModel.show(profile: own.id, page: page.id)
+                    shot(ScreenDeckView(model: readyModel).padding(16), "deck-ownapps-\(name)", look, folder)
+                }
+            }
         }
         for size in [ScreenSize.small, .large] {
             var deck = Sample.deck()

@@ -194,6 +194,7 @@ struct SettingsView: View {
                     .accessibilityIdentifier("brightness")
                     Text("\(Int(brightness)) %").monospacedDigit().frame(width: 44, alignment: .trailing)
                 }
+                EveningDimRows(model: model)
                 if model.elgatoRunning {
                     HStack(alignment: .firstTextBaseline) {
                         Text("Elgato’s app is running. Only one app can hold the box, so quit it before you plug the box in.")

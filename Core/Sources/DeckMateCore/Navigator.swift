@@ -132,10 +132,16 @@ public enum Navigator {
     }
 
     /// The profile that belongs to an app: the first one that lists it, else the default profile.
-    public static func profile(forApp bundleID: String?, in deck: Deck) -> UUID? {
+    /// With `now` (minutes since midnight), an app without a profile of its own gets the first profile
+    /// whose hours include `now` instead of the default one; without `now`, or with no such profile,
+    /// nothing changes.
+    public static func profile(forApp bundleID: String?, in deck: Deck, now: Int? = nil) -> UUID? {
         if let bundleID, !bundleID.isEmpty,
            let own = deck.profiles.first(where: { $0.apps.contains(bundleID) }) {
             return own.id
+        }
+        if let now, let timed = deck.profiles.first(where: { $0.hoursOn && DayMinutes.within(now, from: $0.hoursFrom, to: $0.hoursTo) }) {
+            return timed.id
         }
         return deck.fallbackProfile?.id
     }
@@ -144,11 +150,11 @@ public enum Navigator {
     /// different profile than the app before it, so a profile picked by hand stays while he moves
     /// between apps that share one.
     public static func follow(app: String?, previousApp: String?, at position: DeckPosition?,
-                              in deck: Deck) -> DeckPosition? {
+                              in deck: Deck, now: Int? = nil) -> DeckPosition? {
         guard let position = repair(position, in: deck) else { return start(in: deck) }
         guard deck.autoSwitch else { return position }
-        let wanted = profile(forApp: app, in: deck)
-        let before = profile(forApp: previousApp, in: deck)
+        let wanted = profile(forApp: app, in: deck, now: now)
+        let before = profile(forApp: previousApp, in: deck, now: now)
         guard let wanted, wanted != before, wanted != position.profile else { return position }
         return start(in: deck, profile: wanted) ?? position
     }

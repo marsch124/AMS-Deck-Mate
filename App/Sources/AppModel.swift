@@ -173,7 +173,7 @@ final class AppModel: ObservableObject {
         if let pinned, deck.profile(pinned) == nil { self.pinned = nil }
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         frontApp = front == AppInfo.bundleID ? nil : front
-        position = Navigator.start(in: deck, profile: pinned ?? Navigator.profile(forApp: frontApp, in: deck))
+        position = Navigator.start(in: deck, profile: pinned ?? Navigator.profile(forApp: frontApp, in: deck, now: DayMinutes.of(Date())))
         recentApps = RecentApps.after(UserDefaults.standard.stringArray(forKey: "recentApps") ?? [], front: frontApp,
                                       skip: AppInfo.bundleID)
 
@@ -248,6 +248,7 @@ final class AppModel: ObservableObject {
         let timer = Timer(timeInterval: 4, repeats: true) { [weak self] _ in self?.refreshStatus() }
         RunLoop.main.add(timer, forMode: .common)
         statusTimer = timer
+        startSmartLane()
     }
 
     // MARK: Where the deck is
@@ -270,14 +271,14 @@ final class AppModel: ObservableObject {
                  covers: glance.coversReady)
     }
     /// Pictures with made-up keys stand still at this moment.
-    private var sampleNow: Date?
+    var sampleNow: Date?
     private static let switchesKey = "switchedOn"
     private var useFile: URL { store.folder.appendingPathComponent("use.json") }
 
     /// Keys as they show now: a "Recent app" key turns into its app, a "Recent file" key into its
     /// file, a "Last copied text" key shows the first words of its text.
-    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] { let now = liveNow; return keys.mapValues { $0.resolving(now) } }
-    func live(_ key: DeckKey?) -> DeckKey? { key?.resolving(liveNow) }
+    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] { let now = liveNow; return keys.mapValues { oftenShown($0, live: now) } }
+    func live(_ key: DeckKey?) -> DeckKey? { key.map { oftenShown($0, live: liveNow) } }
 
     /// The clipboard and the list of opened files are only looked at while a key needs them.
     private func watchLive() {
@@ -539,8 +540,9 @@ final class AppModel: ObservableObject {
         frontApp = id
         let recent = RecentApps.after(recentApps, front: id, skip: AppInfo.bundleID)
         if recent != recentApps { recentApps = recent; refreshBox() }
+        noteHours(for: id)
         guard pinned == nil else { return }
-        move(to: Navigator.follow(app: id, previousApp: before, at: position, in: deck))
+        move(to: Navigator.follow(app: id, previousApp: before, at: position, in: deck, now: DayMinutes.of(Date())))
     }
 
     private func move(to new: DeckPosition?) {
@@ -570,7 +572,7 @@ final class AppModel: ObservableObject {
     func pin(_ id: UUID?) {
         pinned = id
         UserDefaults.standard.set(id?.uuidString, forKey: AppModel.pinnedKey)
-        move(to: Navigator.start(in: deck, profile: id ?? Navigator.profile(forApp: frontApp, in: deck)))
+        move(to: Navigator.start(in: deck, profile: id ?? Navigator.profile(forApp: frontApp, in: deck, now: DayMinutes.of(Date()))))
     }
 
     // MARK: Pressing
@@ -596,12 +598,15 @@ final class AppModel: ObservableObject {
         let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long)
                                 : Navigator.press(index, at: position, in: deck, long: long)
         let now = liveNow
-        let run = outcome.run.map { $0.resolving(now) }.map { careful ? $0.askingFirst : $0 }
+        let run = outcome.run.map { oftenAction($0).resolving(now) }.map { careful ? $0.askingFirst : $0 }
         // Count the press, for Settings › Key use (only keys that do something on the Mac).
         if !outcome.run.isEmpty, !isSample,
            let key = favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index] {
-            use.record(key.id, now: Date())
-            saveUseSoon()
+            // An "Often used" key counts the press for the key it stands for (none yet = nothing).
+            if let counted = OftenKeys.counted(key, long: long, in: deck, use: use, now: Date()) {
+                use.record(counted.id, now: Date())
+                saveUseSoon()
+            }
         }
         tell(run, in: deck.profile(position.profile))
         ActionRunner.run(run)
@@ -729,7 +734,7 @@ final class AppModel: ObservableObject {
         box = state
         shown = []
         if case .connected = state {
-            device.setBrightness(deck.brightness)
+            device.setBrightness(boxBrightness)
             refreshBox()
         }
         refreshStatus()
@@ -741,7 +746,7 @@ final class AppModel: ObservableObject {
         guard device.isConnected else { return }
         BoxLog.note("the Mac woke: brightness and all pictures sent again")
         shown = []
-        device.setBrightness(deck.brightness)
+        device.setBrightness(boxBrightness)
         refreshBox()
     }
 
@@ -760,7 +765,7 @@ final class AppModel: ObservableObject {
     func setBrightness(_ percent: Int) {
         guard percent != deck.brightness else { return }
         deck.brightness = min(100, max(0, percent))
-        device.setBrightness(deck.brightness)
+        device.setBrightness(boxBrightness)
         saveSoon()
     }
 

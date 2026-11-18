@@ -376,6 +376,11 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
     /// Bundle identifiers of the apps this profile belongs to: it shows when one of them comes to the front.
     public var apps: [String]
     public var pages: [DeckPage]
+    /// Hours: when on, this page group shows from `hoursFrom` to `hoursTo` (minutes since midnight, may
+    /// pass midnight) for an app that has no page group of its own (see `Navigator.profile(forApp:in:now:)`).
+    public var hoursOn = false
+    public var hoursFrom = 6 * 60
+    public var hoursTo = 9 * 60
 
     public init(id: UUID = UUID(), name: String = "", apps: [String] = [], pages: [DeckPage] = []) {
         self.id = id
@@ -390,6 +395,9 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
         name = c.value(.name, "")
         apps = c.value(.apps, [])
         pages = c.value(.pages, [])
+        hoursOn = c.value(.hoursOn, false)
+        hoursFrom = min(DayMinutes.perDay - 1, max(0, c.value(.hoursFrom, 6 * 60)))
+        hoursTo = min(DayMinutes.perDay - 1, max(0, c.value(.hoursTo, 9 * 60)))
     }
 
     /// The pages in order, without the folders.
@@ -419,6 +427,12 @@ public struct Deck: Codable, Equatable, Sendable {
     /// The favourites row of the iPhone and iPad: up to five keys (places 0–4) that belong to no
     /// page and no profile, so they stay in place everywhere.
     public var favourites: [Int: DeckKey]
+    /// Dim the box in the evening (see `BoxEvening`): from and to as minutes since midnight, and the
+    /// brightness (0 to 100) it gets inside that window.
+    public var eveningDim = false
+    public var eveningFrom = BoxEvening.defaultFrom
+    public var eveningTo = BoxEvening.defaultTo
+    public var eveningBrightness = BoxEvening.defaultBrightness
 
     public init(version: Int = 1, profiles: [DeckProfile] = [], defaultProfile: UUID? = nil,
                 brightness: Int = 70, autoSwitch: Bool = true, screenAtPointer: Bool = false,
@@ -448,6 +462,10 @@ public struct Deck: Codable, Equatable, Sendable {
         favourites = c.value(.favourites, [:]).filter {
             (0..<PhoneLink.favouriteCount).contains($0.key) && $0.value.action.type.fitsFavourite
         }
+        eveningDim = c.value(.eveningDim, false)
+        eveningFrom = min(DayMinutes.perDay - 1, max(0, c.value(.eveningFrom, BoxEvening.defaultFrom)))
+        eveningTo = min(DayMinutes.perDay - 1, max(0, c.value(.eveningTo, BoxEvening.defaultTo)))
+        eveningBrightness = min(100, max(0, c.value(.eveningBrightness, BoxEvening.defaultBrightness)))
     }
 
     public func profile(_ id: UUID) -> DeckProfile? { profiles.first { $0.id == id } }
