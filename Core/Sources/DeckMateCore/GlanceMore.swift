@@ -301,6 +301,13 @@ extension Deck {
             .filter { !$0.isEmpty && seen.insert(WeatherKeys.name($0)).inserted }
     }
 
+    /// The Spotify links of the playlist keys, each once.
+    public var playlistLinks: [String] {
+        var seen = Set<String>()
+        return allActions.filter { $0.type == .playlist }.map(\.target)
+            .filter { link in PlaylistKeys.coverName(link).map { seen.insert($0).inserted } ?? false }
+    }
+
     /// Every town on a key of any kind, each once.
     public var allTowns: [String] {
         var seen = Set<String>()

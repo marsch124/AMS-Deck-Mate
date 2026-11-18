@@ -238,6 +238,17 @@ public enum PlaylistKeys {
         return "spotify:\(parts[at].lowercased()):\(id)"
     }
 
+    /// The name the link's cover goes by ("list-playlist-<id>"); nil = not a Spotify link.
+    public static func coverName(_ text: String) -> String? {
+        uri(text).map { "list-" + $0.split(separator: ":").dropFirst().joined(separator: "-") }
+    }
+
+    /// Where Spotify's open lookup says which picture belongs to the link.
+    public static func lookupURL(_ text: String) -> URL? {
+        guard let parts = uri(text)?.split(separator: ":"), parts.count == 3 else { return nil }
+        return URL(string: "https://open.spotify.com/oembed?url=https://open.spotify.com/\(parts[1])/\(parts[2])")
+    }
+
     /// What the link is, in a word, for the note under the field: "playlist", "album", "song"…
     public static func kind(_ text: String) -> String? {
         guard let uri = uri(text) else { return nil }
@@ -369,5 +380,5 @@ public enum StopwatchKeys {
 
 extension ActionType {
     /// A counter or a stopwatch: holding the key down sets it back to 0.
-    public var countsUp: Bool { self == .counter || self == .stopwatch }
+    public var countsUp: Bool { self == .counter || self == .stopwatch || self == .focus }
 }

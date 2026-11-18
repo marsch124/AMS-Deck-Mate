@@ -15,7 +15,7 @@ enum KeyArt {
     static func cover(_ track: String) -> NSImage? { covers[track] }
 
     static func keep(cover: NSImage, for track: String) {
-        if covers.count >= 12 { covers.removeAll() }
+        if covers.count >= 60 { covers.removeAll() }
         covers[track] = cover
     }
 

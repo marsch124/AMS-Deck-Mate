@@ -77,17 +77,6 @@ final class GlanceKindsTests: XCTestCase {
         XCTAssertEqual(items.first { $0.name == "name" }?.value, "Norrköping")
     }
 
-    func testDueCountAndGlance() {
-        XCTAssertEqual(DueKeys.count("3"), 3)
-        XCTAssertEqual(DueKeys.count("3.0"), 3)
-        XCTAssertEqual(DueKeys.count(" 7\n"), 7)
-        XCTAssertNil(DueKeys.count("many"))
-        XCTAssertNil(DueKeys.count("-2"))
-        XCTAssertNil(DueKeys.count(nil))
-        XCTAssertEqual(DueKeys.glance(3), Glance(big: "3", words: "Due today"))
-        XCTAssertNil(DueKeys.glance(nil))
-    }
-
     func testBatteryLevelFromBoard() {
         XCTAssertEqual(BatteryKeys.level(fromBoard: data(#"{"today":{"bodyBattery":{"latest":62}}}"#)), 62)
         XCTAssertNil(BatteryKeys.level(fromBoard: data(#"{"today":{"bodyBattery":{"latest":140}}}"#)))

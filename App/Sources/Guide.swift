@@ -52,7 +52,8 @@ enum Guide {
             "There are 256 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
             "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free.",
             "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number. New in 0.12: a glance key can also change its colour with its value. The five new kinds are Garmin number (teal), Mac at a glance (grey-blue), World clock (grey-blue), Sunrise and sunset (amber) and Free until (green or red, by your calendar).",
-            "New in 0.13: \"On the Mac\" keys are purple like shortcut keys. \"Join the meeting\" is blue, \"Spotify playlist\" is green, \"Search for the copied text\" is teal, and \"Counter\" and \"Stopwatch\" are amber. Two new drawings to pick: an eject mark and a video camera, so there are 256 to choose from."
+            "New in 0.13: \"On the Mac\" keys are purple like shortcut keys. \"Join the meeting\" is blue, \"Spotify playlist\" is green, \"Search for the copied text\" is teal, and \"Counter\" and \"Stopwatch\" are amber. Two new drawings to pick: an eject mark and a video camera, so there are 256 to choose from.",
+            "New in 0.14: \"PARAGON\" keys are purple, like shortcut keys. \"Focus rounds (PomoTimer)\" keys are amber while nothing runs, then red during a focus step, green during a pause or long break, and amber again during start-up, preparation and cool-down. \"Due today\" turns red when something is overdue. A \"Spotify playlist\" key shows the playlist's own cover once it is found."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
@@ -60,6 +61,7 @@ enum Guide {
             "New in 0.11: six more kinds under \"What it does\": \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". The Weather key has a field for the town, and the Desk key has the button \"Take the desk as it is now\" and a list of the apps it holds.",
             "New in 0.12: five more kinds under \"What it does\": \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". Garmin number and Mac at a glance have a list to pick the number from. World clock and Sunrise and sunset have a field for the town.",
             "New in 0.13: six more kinds under \"What it does\": \"On the Mac\", \"Join the meeting\", \"Spotify playlist\", \"Search for the copied text\", \"Counter\" and \"Stopwatch\". \"On the Mac\" has a list of six choices. \"Spotify playlist\" has a field for the link, and \"Search for the copied text\" has a list of five search sites. \"Switch (on or off)\" has a fourth choice, \"Keep the Mac awake\".",
+            "New in 0.14: two more kinds under \"What it does\": \"PARAGON\" (a menu of four choices: Inbox, Next task, Task from the copied text, Quick note) and \"Focus rounds (PomoTimer)\" (a menu of five ready-made plans, and a button to read your own templates). \"Quit all apps\" now fills its list \"Stays open\" for you, with a button \"Take the apps open now\".",
             "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
             "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\". For a key that shows a picture, the Icon button says \"Own picture\". Picking a drawing, or \"Automatic\", replaces the picture.",
@@ -106,6 +108,7 @@ enum Guide {
             "Since 0.11, six more kinds: \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". That makes 29 kinds of key, instead of 23. See the parts after \"Ready-made page groups\".",
             "Since 0.12, five more kinds: \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". That makes 34 kinds of key, instead of 29. See the parts after \"Body Battery key\".",
             "Since 0.13, six more kinds: \"On the Mac\", \"Join the meeting\", \"Spotify playlist\", \"Search for the copied text\", \"Counter\" and \"Stopwatch\". That makes 40 kinds of key, instead of 34. \"Switch (on or off)\" also has a new choice, \"Keep the Mac awake\". See the parts after \"Desk key\".",
+            "Since 0.14, two more kinds: \"PARAGON\" and \"Focus rounds (PomoTimer)\". That makes 42 kinds of key, instead of 40. \"Due today\" now counts PARAGON tasks. See \"PARAGON keys\" and \"Focus rounds key\" after \"Stopwatch key\".",
             "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
             "Since 0.8, two more: \"Last copied text\" and \"Recent file\". See the two parts after \"Ask AI about copied text\".",
             "Nothing leaves the key empty.",
@@ -254,12 +257,12 @@ enum Guide {
             "Privacy: the free weather service Open-Meteo gets the town's name once, to find its place. After that it gets only that place (its position on the map). Nothing else about you goes out. There is no account and no key, and the Mac asks nothing."
         ]),
         Section(id: "dueToday", title: "Due today key", part: "keys", lines: [
-            "New in 0.11. In Set up keys, under \"What it does\", choose \"Due today\". The key is purple with a tick drawing.",
-            "The large words are the number of OmniFocus tasks that are due today or overdue. Tasks that are completed or dropped are not counted. The small words say \"Due today\".",
-            "Deck Mate counts only while OmniFocus is open. Otherwise the key says \"OmniFocus closed\". Deck Mate never opens OmniFocus just to count. It counts again every 2 minutes.",
-            "A press opens OmniFocus on its Forecast.",
-            "The \"Due today\" key counts OmniFocus tasks. It will be replaced by a key for PARAGON in a later round, because your tasks are in PARAGON.",
-            "The first time, the Mac asks once whether AMS Deck Mate may control OmniFocus. Until then the key says \"Press to allow\". Choose Allow, or OK.",
+            "New in 0.11, changed in 0.14. In Set up keys, under \"What it does\", choose \"Due today (PARAGON)\". The key is purple with a tick drawing.",
+            "Before (0.11 to 0.13): the key counted OmniFocus tasks, only while OmniFocus was open. Now: it counts the tasks in PARAGON that are due today. Your tasks are in PARAGON.",
+            "The large words are the number of PARAGON tasks due today. When some are overdue, the small words say how many, for example \"2 overdue\", and the key turns red. Otherwise the small words say \"Due today\".",
+            "A press opens Today in PARAGON.",
+            "The numbers come from the small file PARAGON writes for its own widget, read every 60 seconds. They are as fresh as PARAGON's last reload on this Mac. See \"PARAGON keys\".",
+            "A \"Due today\" key you already have changes by itself. There is nothing to set up. The question the Mac asked about controlling OmniFocus is not needed any more.",
             "Deck Mate only counts. It never changes a task."
         ]),
         Section(id: "albumCover", title: "Album cover key", part: "keys", lines: [
@@ -329,7 +332,7 @@ enum Guide {
             "New in 0.13. In Set up keys, under \"What it does\", choose \"On the Mac\" and pick one of six things from the list. The key is purple, like a shortcut key.",
             "\"Lock the Mac\" locks the screen at once. You need your password or Touch ID to get back in.",
             "\"Show the desktop\" moves all windows aside so the desktop shows. A second press brings them back.",
-            "\"Quit all apps\" quits every open app except the Finder, AMS Deck Mate itself and the apps you list under \"Stays open\". Use the button \"Add app…\" to add one; each has a remove button. It asks first on the Mac and names the apps, for example \"Quit 6 apps?\" with Quit and Cancel. An app with unsaved work still asks you itself.",
+            "\"Quit all apps\" quits every open app except the Finder, AMS Deck Mate itself and the apps you list under \"Stays open\". Use the button \"Add app…\" to add one; each has a remove button. New in 0.14: the list starts filled with the apps open at that moment (without the Finder and Deck Mate, which always stay), and the button \"Take the apps open now\" fills it again; remove what should quit. A key you already have is not changed by itself. It asks first on the Mac and names the apps, for example \"Quit 6 apps?\" with Quit and Cancel. An app with unsaved work still asks you itself.",
             "\"Empty the bin\" asks first and says how many things are in the bin, for example \"12 things will be gone for good. This cannot be undone.\" with Empty and Cancel. If your Finder is set to warn before emptying, the Finder asks once more after that. Take the tick off \"Ask first\" to see only the Finder's question. With an empty bin the key says so and does nothing. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder. Choose Allow.",
             "\"Eject all disks\" asks first and names the disks, for example \"Eject 2 disks?\" with Eject and Cancel. It ejects every plugged-in disk, card, stick and disk picture. It never ejects the Mac's own disk and never a share on another computer. A disk that is still in use stays, and the key tells you which one. With no disk plugged in, it says so.",
             "For \"Quit all apps\", \"Empty the bin\" and \"Eject all disks\" there is a tick \"Ask first\" (on at first). You can take it off, and the key then acts at once.",
@@ -346,7 +349,9 @@ enum Guide {
             "New in 0.13. In Set up keys, under \"What it does\", choose \"Spotify playlist\" and paste a Spotify link. The key is green.",
             "The link can be a playlist, an album, an artist, a song or a podcast. In Spotify, use Share, then Copy link.",
             "A press starts it playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify. Choose Allow.",
-            "A key without a proper Spotify link shows the red corner of a broken key."
+            "A key without a proper Spotify link shows the red corner of a broken key.",
+            "New in 0.14: the key shows the cover. Before: a green key with headphones. Now: once a link is pasted, the key shows the playlist's (or album's, artist's, song's or podcast's) own cover across the whole key. It is fetched once from Spotify's public look-up, the same one the Album cover key uses. Only the link is sent. The cover is kept.",
+            "A key with a picture or a drawing you chose yourself keeps yours. With no internet, the headphones stay until it works."
         ]),
         Section(id: "searchKey", title: "Search for the copied text key", part: "keys", lines: [
             "New in 0.13. In Set up keys, under \"What it does\", choose \"Search for the copied text\". The key is teal.",
@@ -365,6 +370,26 @@ enum Guide {
             "A press starts it and the key shows the time running. Another press pauses it. The next press goes on.",
             "Hold the key down (a long press) to set it back to 0.",
             "It keeps running when AMS Deck Mate restarts. Each stopwatch key has its own time."
+        ]),
+        Section(id: "paragonKeys", title: "PARAGON keys", part: "keys", lines: [
+            "New in 0.14. In Set up keys, under \"What it does\", choose \"PARAGON\" and pick one of four things from the menu. The key is purple, like a shortcut key.",
+            "\"Inbox\": the large words are the number of lines waiting in PARAGON's Inbox, with \"Inbox\" under it. A press opens PARAGON's Inbox.",
+            "\"Next task\": the key shows the first task on PARAGON's list, the same one PARAGON's widget shows first. The large words say when it is due, for example \"today\" or \"2 days over\"; the task's own words stand small underneath. An overdue task turns the key red. A press opens that task's note in PARAGON. With nothing on the list the key says \"Nothing next\".",
+            "\"Task from the copied text\": a press puts the text you copied last into PARAGON's Inbox as a task. PARAGON does not come to the front. If nothing is copied, or what you copied is not text, the Mac beeps and nothing is saved.",
+            "\"Quick note\": a press opens a small window on the Mac, \"Note for PARAGON\", with one text field and Cancel and Save. Return saves and Escape cancels. Save puts the words into PARAGON's Inbox as a note line. PARAGON does not come to the front. Pressed from the iPhone or iPad, the window opens on the Mac.",
+            "Where the numbers come from: each time PARAGON on the Mac reloads its notes, it writes a small file for its own widget. Deck Mate only reads that file, every 60 seconds. It never opens your notes folder and writes nothing there.",
+            "So the numbers are as fresh as PARAGON's last reload on this Mac. If the file is from an earlier day, the key shows \"–\" and \"Open PARAGON\"; a press opens PARAGON, which writes the file anew. If PARAGON is not on this Mac, the key says \"No PARAGON\".",
+            "Adding a task or a note uses PARAGON's own capture link, so nothing had to change in PARAGON. The Mac asks nothing new for these keys.",
+            "Not changed: Deck Mate never reads or changes a task by itself. It only counts, shows and adds."
+        ]),
+        Section(id: "focusKey", title: "Focus rounds key", part: "keys", lines: [
+            "New in 0.14. In Set up keys, under \"What it does\", choose \"Focus rounds (PomoTimer)\". The key is amber while nothing runs.",
+            "The menu offers PomoTimer's five ready-made plans: Classic Pomodoro (2 + 3 + 25 + 5 + 25 + 5 minutes), Four Pomodoros, Deep Work 50/10, Short Burst and Single Pomodoro. Your own templates come after the button \"Read my templates from a PomoTimer backup file…\". Choose the backup file PomoTimer saves. It is read once and kept in Deck Mate. Press the button again after you change templates in PomoTimer.",
+            "A press opens AMS PomoTimer in the browser and starts that template there. The key counts along: the step's name (\"Pomodoro\", \"Pause\") and the minutes and seconds left. It is red during focus steps, green during pauses and long breaks, and amber during start-up, preparation and cool-down. At the end it shows \"Done\" for 60 seconds.",
+            "While it runs, a press brings PomoTimer back to the front. A long press stops the count on the key. It does not stop PomoTimer.",
+            "Only one focus run at a time. It goes on after Deck Mate restarts.",
+            "Good to know: the key counts by itself from the moment of the press. If you pause or skip a step in PomoTimer, the key does not know. A template set to wait between steps in PomoTimer runs ahead on the key.",
+            "The session lands in PomoTimer's history as always. Nothing had to change in PomoTimer."
         ]),
         Section(id: "raycast", title: "Raycast keys", part: "raycast", lines: [
             "A folder of Raycast commands is a good start: one key \"Raycast\" that opens a page with Back and your favourite commands.",
@@ -411,7 +436,7 @@ enum Guide {
             "New in 0.4 (the Mac must be at 0.4 too): the keys sit low on the iPhone, near your thumb, with the place line on top. Swipe left or right on the keys to change page. Small dots under the keys show which page you are on. There are no dots inside a folder or when there is one page.",
             "Tap the top line (the name of the page group) for a menu: \"Automatic\", or hold one of the page groups, the same as the Mac's menu.",
             "A key you press lights up on the iPhone, whether you pressed it on the box, on the keys on the Mac screen or on the iPhone.",
-            "After a tap, a short note at the bottom says what ran, for example \"Opened OmniFocus\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
+            "After a tap, a short note at the bottom says what ran, for example \"Opened Mail\" or \"Raycast: Clipboard history\". If the Mac could not do it, the note is red with a warning drawing, for example \"The app is not on this Mac\" or \"The Mac has not allowed key presses yet\".",
             "The iPhone screen follows day and night: light grey by day, dark by night. The keys stay as drawn.",
             "After 20 seconds of \"Looking for your Mac…\" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. It has the button \"Open Settings\" and a close (x) button that hides the hint.",
             "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network.",
@@ -444,9 +469,10 @@ enum Guide {
         Section(id: "permissions", title: "What the Mac asks for", part: "settings", lines: [
             "Accessibility, once, for keys that press a keyboard shortcut, type text, paste a last copied text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
             "The Mac may also ask for Input Monitoring when the box is first plugged in.",
-            "New in 0.11: \"Next event\" makes the Mac ask once whether Deck Mate may see your calendar (Allow Full Access; it only reads). \"Due today\" makes the Mac ask once whether Deck Mate may control OmniFocus (it only counts). The \"Desk\" key and the \"Album cover\" key use the Accessibility yes. Weather, Album cover and Body Battery ask the Mac nothing.",
+            "New in 0.11: \"Next event\" makes the Mac ask once whether Deck Mate may see your calendar (Allow Full Access; it only reads). \"Due today\" made the Mac ask once whether Deck Mate may control OmniFocus (until 0.13; not needed since 0.14). The \"Desk\" key and the \"Album cover\" key use the Accessibility yes. Weather, Album cover and Body Battery ask the Mac nothing.",
             "New in 0.12: nothing new is asked. \"Free until\" uses the same calendar yes as \"Next event\". The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing.",
-            "New in 0.13: \"Join the meeting\" uses the same calendar yes as \"Next event\" and only reads. \"Empty the bin\" makes the Mac ask once whether Deck Mate may control the Finder. \"Spotify playlist\" makes the Mac ask once whether Deck Mate may control Spotify. \"Paste as plain text\" uses the Accessibility yes. Choose Allow each time. The other new keys ask the Mac nothing."
+            "New in 0.13: \"Join the meeting\" uses the same calendar yes as \"Next event\" and only reads. \"Empty the bin\" makes the Mac ask once whether Deck Mate may control the Finder. \"Spotify playlist\" makes the Mac ask once whether Deck Mate may control Spotify. \"Paste as plain text\" uses the Accessibility yes. Choose Allow each time. The other new keys ask the Mac nothing.",
+            "New in 0.14: nothing new is asked. The PARAGON keys and \"Due today\" only read a small file of PARAGON and open PARAGON. \"Focus rounds\" opens PomoTimer in the browser. \"Due today\" no longer needs the question about controlling OmniFocus. A \"Spotify playlist\" cover only needs the internet."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
@@ -473,6 +499,32 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.14", date: "18 Nov 2026", new: [
+            "Two new things a key can do. This is the third and fourth round of the ideas you picked, plus two ideas of mine. Before: 40 kinds of key. Now: 42. They are in Set up keys, under \"What it does\".",
+            "New kind \"PARAGON\" (purple, like shortcut keys) with a menu of four choices. Before: no key could show or add anything in PARAGON. Now: one key each.",
+            "PARAGON, \"Inbox\": the key shows how many lines wait in PARAGON's Inbox, with \"Inbox\" under the number. A press opens PARAGON's Inbox.",
+            "PARAGON, \"Next task\": the key shows the first task on PARAGON's list (the same one PARAGON's widget shows first): when it is due in large words, for example \"today\" or \"2 days over\", and the task's own words small underneath. An overdue task turns the key red. A press opens the task's note in PARAGON. With nothing on the list the key says \"Nothing next\".",
+            "PARAGON, \"Task from the copied text\": a press puts the text you copied last into PARAGON's Inbox as a task. PARAGON does not come to the front. If nothing, or no text, is copied, the Mac beeps and nothing is saved.",
+            "PARAGON, \"Quick note\": a press opens a small window on the Mac, \"Note for PARAGON\", with one text field and Cancel and Save (Return saves, Escape cancels). Save puts the words into PARAGON's Inbox as a note line. PARAGON does not come to the front. Pressed from the iPhone or iPad, the window opens on the Mac.",
+            "Where the PARAGON numbers come from: PARAGON on the Mac writes a small file for its own widget each time it reloads its notes. Deck Mate only reads it, every 60 seconds. It never opens your notes folder and writes nothing there. Limits: the numbers are as fresh as PARAGON's last reload on this Mac. If the file is from an earlier day, the key shows \"–\" and \"Open PARAGON\", and a press opens PARAGON, which writes it anew. If PARAGON is not on the Mac, the key says \"No PARAGON\".",
+            "Adding a task or a note uses PARAGON's own capture link, so nothing had to change in PARAGON. The Mac asks nothing new for these keys.",
+            "The \"Due today\" key counts PARAGON now. Before: \"Due today (OmniFocus)\" counted OmniFocus tasks, only while OmniFocus was open. Now: \"Due today (PARAGON)\" shows the number of PARAGON tasks due today. When tasks are overdue, the small words say for example \"2 overdue\" and the key turns red. A press opens Today in PARAGON. A \"Due today\" key you already have changes by itself; nothing to set up. The question the Mac asked about controlling OmniFocus is not needed any more.",
+            "New kind \"Focus rounds (PomoTimer)\" (amber while nothing runs). Its menu has PomoTimer's five ready-made plans: Classic Pomodoro (2 + 3 + 25 + 5 + 25 + 5 minutes), Four Pomodoros, Deep Work 50/10, Short Burst and Single Pomodoro. Your own templates come after the button \"Read my templates from a PomoTimer backup file…\": choose the backup file PomoTimer saves. It is read once and kept in Deck Mate; press the button again after you change templates in PomoTimer.",
+            "Focus rounds, the press: it opens AMS PomoTimer in the browser and starts that template there. The key counts along: the step's name (\"Pomodoro\", \"Pause\") and the minutes and seconds left. Red during focus steps, green during pauses and long breaks, amber during start-up, preparation and cool-down. At the end it shows \"Done\" for 60 seconds.",
+            "Focus rounds, while it runs: a press brings PomoTimer back to the front. A long press stops the count on the key (it does not stop PomoTimer). Only one focus run at a time. It goes on after Deck Mate restarts. The session lands in PomoTimer's history as always.",
+            "Focus rounds, limits: the key counts by itself from the moment of the press. If you pause or skip a step in PomoTimer, the key does not know. A template set to wait between steps in PomoTimer runs ahead on the key. Nothing had to change in PomoTimer.",
+            "The \"Spotify playlist\" key shows the cover. Before: a green key with headphones. Now: once a link is pasted, the key shows the playlist's (album's, artist's, song's, podcast's) own cover across the whole key. It is fetched once from Spotify's public look-up (the same one the Album cover key uses; only the link is sent) and kept. A key with a picture or drawing you chose yourself keeps yours. With no internet, the headphones stay until it works.",
+            "\"Quit all apps\", \"Stays open\": Before: the list started empty. Now: when you choose \"Quit all apps\" for a key, the list starts filled with the apps open at that moment (without the Finder and Deck Mate, which always stay), and a button \"Take the apps open now\" fills it again. Remove what should quit. A key you already have is not changed by itself.",
+            "New check \"--paragon\": it says what the PARAGON and focus keys would show right now, and does nothing else.",
+            "New data tests for the PARAGON and focus rules.",
+            "Not yet tried for real: none of these keys was pressed for real before this release."
+        ], changed: [
+            "There are 42 kinds of key to choose from, instead of 40.",
+            "\"Due today\" counts PARAGON instead of OmniFocus (see above).",
+            "The Mac asks nothing new for these keys, and the OmniFocus question is gone.",
+            "How it works has new parts: \"PARAGON keys\" and \"Focus rounds key\", a rewritten \"Due today key\", and new lines in \"The look of a key\", \"Set up keys\", \"What a key can do\", \"Spotify playlist key\", \"On the Mac keys\" and \"What the Mac asks for\".",
+            "The Mac app is now 0.14 (build 22). The iPhone and iPad app stays 0.16 (build 21) and shows the new keys without an update, because the Mac draws the keys."
+        ], fixed: []),
         Release(id: "0.13", date: "18 Nov 2026", new: [
             "Twelve new things a key can do. This is the second round of the ideas you picked. Before: 34 kinds of key. Now: 40, and \"Switch (on or off)\" has a fourth choice. They are in Set up keys, under \"What it does\".",
             "New kind \"On the Mac\" (purple, like shortcut keys) with six choices. Before: no key could lock the Mac, quit apps, empty the bin or eject disks. Now: one key each.",

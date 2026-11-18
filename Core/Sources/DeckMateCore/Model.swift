@@ -23,7 +23,7 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     case timer, toggle, appleShortcut, list, running, micLight, wait
     /// Keys that show something at a glance (see GlanceKinds.swift): nextEvent = the next event of the calendar
     /// (target = the app a press opens; empty = Calendar); weather = temperature and sky of a town (target);
-    /// dueToday = how many OmniFocus tasks are due; cover = the album cover of what Spotify plays (a press =
+    /// dueToday = how many PARAGON tasks are due today; cover = the album cover of what Spotify plays (a press =
     /// play or pause); bodyBattery = the latest Body Battery from the Garmin board on this Mac;
     /// desk = opens apps and puts their windows in place (its steps, see `DeskKeys`).
     case nextEvent, weather, dueToday, cover, bodyBattery, desk
@@ -45,6 +45,10 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// Sets a counter or a stopwatch back to 0 (target = its name). Not something to pick for a key: it is
     /// what a long press of such a key does when the key has no long press of its own.
     case zero
+    /// The 0.14 kinds (see ParagonFocus.swift): paragon = a PARAGON key (target: see `ParagonKeys.What`);
+    /// focus = starts a template in AMS PomoTimer and counts along (target = the template's name, its
+    /// steps = the plan, see `FocusKeys`). Since 0.14 `dueToday` counts PARAGON's tasks.
+    case paragon, focus
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -175,7 +179,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .wait: return .empty
         case .nextEvent, .desk: return .app
         case .weather, .weatherTown: return .web
-        case .dueToday: return .shortcut
+        case .dueToday, .paragon: return KeyKind(rawValue: name) ?? .shortcut
+        case .focus: return KeyKind(rawValue: name) ?? .text
         case .cover: return .media
         // On a key as it shows right now the target is the level: green, amber or red.
         case .bodyBattery: return BatteryKeys.kind(Int(target))
@@ -245,6 +250,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .searchCopied: return "app-search"
         case .counter: return "control-addCircle"
         case .stopwatch, .zero: return "stopwatch"
+        case .paragon: return ParagonKeys.what(target).icon
+        case .focus: return "app-hourglass"
         }
     }
 }
@@ -284,7 +291,7 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         if long, hasHeld, let held { return held }
         // A weather key without a long press of its own asks for another town.
         if long, action.type.hasTown { return DeckAction(type: .weatherTown, target: id.uuidString) }
-        // A counter or a stopwatch without a long press of its own goes back to 0.
+        // A counter, a stopwatch or a focus key without a long press of its own goes back to 0 (stops counting).
         if long, action.type.countsUp { return DeckAction(type: .zero, target: action.target) }
         return action
     }

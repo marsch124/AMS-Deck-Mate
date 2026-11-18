@@ -199,8 +199,10 @@ public enum KeyCheck {
             return DeskKeys.spots(of: action).isEmpty ? "No windows taken yet" : nil
         case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
              .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery, .weatherTown,
-             .garmin, .macNow, .freeUntil, .macDo, .joinMeeting, .searchCopied, .counter, .stopwatch, .zero:
+             .garmin, .macNow, .freeUntil, .macDo, .joinMeeting, .searchCopied, .counter, .stopwatch, .zero, .paragon:
             return nil
+        case .focus:
+            return FocusKeys.plan(of: action).steps.isEmpty ? "No template chosen yet" : nil
         case .playlist:
             return PlaylistKeys.uri(target) == nil ? "No Spotify link yet" : nil
         }
@@ -285,7 +287,7 @@ public enum ActionWords {
         case .worldClock: return "Opened Clock"
         case .sunTimes: return "Opened Weather"
         case .freeUntil: return "Opened the calendar"
-        case .dueToday: return "Opened OmniFocus"
+        case .dueToday: return "Opened PARAGON"
         case .cover: return MediaKey.playPause.title
         case .bodyBattery: return "Opened the Garmin board"
         case .desk:
@@ -298,6 +300,13 @@ public enum ActionWords {
         case .counter: return "Counted one more"
         case .stopwatch: return "Stopwatch"
         case .zero: return "Back to 0"
+        case .paragon:
+            switch ParagonKeys.what(action.target) {
+            case .inbox, .next: return "Opened PARAGON"
+            case .copiedTask: return "Task added to PARAGON"
+            case .note: return "Note for PARAGON"
+            }
+        case .focus: return "Focus rounds"
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait: return "Done"
         }
     }

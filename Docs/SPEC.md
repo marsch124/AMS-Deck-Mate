@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.13 (build 21), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.14 (build 22), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -13,6 +13,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.11 (Mac, round 2 of 3 of his picked ideas): six new kinds of key (Next event, Weather, Due today, Album cover, Body Battery, Desk; 29 kinds instead of 23), five of them showing a value at a glance (sections 56 to 62). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.13 (Mac, second round of his picks): six new kinds of key (On the Mac, Join the meeting, Spotify playlist, Search for the copied text, Counter, Stopwatch; 40 kinds instead of 34), one new choice of the Switch key (Keep the Mac awake), two new drawings (eject, video camera; 256 in all) and a page of the new keys in the made-up sample keys (sections 71 to 78). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
+- Since 0.14 (Mac, third and fourth round of his picks, plus two ideas): two new kinds of key (PARAGON, Focus rounds (PomoTimer); 42 kinds instead of 40), the Due today key counts PARAGON instead of OmniFocus, the Spotify playlist key shows the cover, and Quit all apps fills its "Stays open" list (sections 79 to 82; section 70 and section 59 changed). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
 - Since 0.12 (Mac, first round of his 28 picks from 50 new ideas): five new kinds of key (Garmin number, Mac at a glance, World clock, Sunrise and sunset, Free until; 34 kinds instead of 29) showing eleven more things at a glance, and a glance key can change its colour with its value (sections 63 to 68). The town on a World clock or Sunrise and sunset key can be changed by a long press like Weather (section 58). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
 - Since 0.10 (Mac, round 1 of 3 of his 25 picked ideas): six new kinds of key (Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 23 kinds instead of 17), the Wait step, Find a key on the keys on screen, Settings > Key use and four ready-made page groups (sections 46 to 55). 254 drawings (252 before). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.9.4 (Mac): one more drawing to choose for a key, Drawer (`drawer.svg`), 252 in all instead of 251; his GridFit key now shows it instead of Autodesk Fusion's icon. Shows on the Stream Deck, on screen keys and on the iPhone and iPad with no update there (history below). iPhone and iPad stay 0.16 (build 21).
@@ -87,7 +88,7 @@ The icon opens a menu:
 - 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk, and since 0.12 garmin, macNow, worldClock, sunTimes and freeUntil, and since 0.13 macDo, joinMeeting, playlist, searchCopied, counter and stopwatch, and zero (not offered in the pickers: what a long press of a counter or stopwatch key runs) (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk, and since 0.12 garmin, macNow, worldClock, sunTimes and freeUntil, and since 0.13 macDo, joinMeeting, playlist, searchCopied, counter and stopwatch, and since 0.14 paragon and focus, and zero (not offered in the pickers: what a long press of a counter or stopwatch key runs) (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -116,7 +117,7 @@ The icon opens a menu:
 | Wait (0.10), a step only | `wait`; seconds | see 52 |
 | Next event (0.11) | `nextEvent`; an app's bundle id, or empty for Calendar | opens that app; see 57 |
 | Weather (0.11) | `weather`; the town as typed | opens the Mac's Weather; see 58 |
-| Due today (0.11) | `dueToday` | opens OmniFocus on its Forecast; see 59 |
+| Due today (0.11; PARAGON since 0.14) | `dueToday` | opens Today in PARAGON (`amspara:///list/today`); see 59 |
 | Album cover (0.11) | `cover` | play or pause; see 60 |
 | Body Battery (0.11) | `bodyBattery` | opens the board in the browser; see 61 |
 | Desk (0.11) | `desk`; the apps are `steps` | puts the windows back; see 62 |
@@ -133,6 +134,8 @@ The icon opens a menu:
 | Stopwatch (0.13) | `stopwatch`; the key's own id | start, pause, go on; see 76 |
 | Zero (0.13), never picked | `zero`; the key's own id | what a long press of a counter or stopwatch key runs; see 75 and 76 |
 | Switch, "Keep the Mac awake" (0.13) | `toggle`; "awake" | see 77 |
+| PARAGON (0.14) | `paragon`; "inbox", "next", "copiedTask" or "note" | see 79 |
+| Focus rounds (PomoTimer) (0.14) | `focus`; the plan rides in `steps` | opens PomoTimer and starts the template; see 80 |
 | Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
@@ -190,7 +193,8 @@ Not yet tried on the real box (see the warning at the top).
 ## 11. Permissions
 - Accessibility, asked once, for keys that press a shortcut, type text or control music and sound. Settings shows whether it is allowed and has an "Allow…" button.
 - The Mac may ask for Input Monitoring when the box is first plugged in.
-- New in 0.11: Calendars, full access (`NSCalendarsFullAccessUsageDescription`), asked once at the first press of a Next event key; read only. OmniFocus control (Automation, Apple events), asked once at the first press of a Due today key; counts only. Accessibility is also used by the Album cover key (play or pause) and the Desk key (window places). `NSAllowsLocalNetworking` in Info.plist lets the Body Battery key read `http://127.0.0.1:7788` (the AMS Garmin Bridge Board on this Mac).
+- New in 0.11: Calendars, full access (`NSCalendarsFullAccessUsageDescription`), asked once at the first press of a Next event key; read only. OmniFocus control (Automation, Apple events), asked once at the first press of a Due today key; counts only (not needed since 0.14: Due today counts PARAGON). Accessibility is also used by the Album cover key (play or pause) and the Desk key (window places). `NSAllowsLocalNetworking` in Info.plist lets the Body Battery key read `http://127.0.0.1:7788` (the AMS Garmin Bridge Board on this Mac).
+- New in 0.14: nothing new is asked. The PARAGON keys and Due today read one small file of PARAGON (section 79) and open PARAGON through its own links; Focus rounds opens PomoTimer in the browser; the playlist cover only needs the internet. Due today no longer needs Automation for OmniFocus (asked in 0.11 to 0.13).
 - New in 0.13: Join the meeting uses the same calendar access as Next event (read only). Empty the bin: Automation (Apple events) for the Finder, asked once at the first press. Spotify playlist: Automation for Spotify, asked once at the first press. Paste as plain text uses Accessibility. Lock the Mac, Show the desktop, Quit all apps, Eject all disks, Search for the copied text, Counter, Stopwatch and Keep the Mac awake ask the Mac nothing.
 - New in 0.12: no new permission. The Free until key uses the same calendar access as Next event (asked once at the first press of either; "Press to allow" until then). The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing.
 ## 12. Settings
@@ -218,6 +222,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.14: new data tests in `Core/Tests/DeckMateCoreTests/ParagonFocusTests.swift` for the rules of sections 79 to 82 (`ParagonKeys`, `FocusKeys`, the playlist cover, the "Stays open" start list). New check `--paragon` on the app: says what the PARAGON and focus keys would show right now and does nothing else.
 - New in 0.13: new data tests in `Core/Tests/DeckMateCoreTests/MacActionsTests.swift` for the rules of sections 71 to 77 (`MacDoKeys`, `QuitKeys`, `BinKeys`, `EjectKeys`, `MeetingKeys`, `PlaylistKeys`, `SearchKeys`, `CounterKeys`, `StopwatchKeys`).
 - New in 0.12: 20 new data tests, 112 in all (92 before), in `Core/Tests/DeckMateCoreTests/GlanceMoreTests.swift` for the rules of sections 63 to 68.
 - New in 0.11.1: 3 new data tests, 92 in all (89 before), in `GlanceKindsTests.swift`: a weather key answers a long press with `weatherTown` (and keeps its own `held`), `actsOnHold`, and the town list `remembered` (newest first, once, at most 6) with `town(ofKey:)` and `setTown`.
@@ -240,6 +245,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.14 (Mac, build 22, 18 Nov 2026).** Third and fourth round of his picks and two ideas: two new kinds of key (sections 79 and 80: PARAGON, Focus rounds (PomoTimer); 40 kinds before, 42 now), Due today now counts PARAGON (sections 59 and 70), the Spotify playlist key shows the cover (81) and Quit all apps fills its "Stays open" list (82). New `ActionType` cases `paragon, focus`. Rules in `Core/Sources/DeckMateCore/ParagonFocus.swift` (`ParagonKeys`, `FocusKeys`), tests in `ParagonFocusTests.swift`. New check `--paragon`. No change was needed in PARAGON or PomoTimer. iPhone and iPad stay 0.16 (build 21). Not proven yet: no key was pressed for real.
 
 **0.13 (Mac, build 21, 18 Nov 2026).** Second round of his picks: six new kinds of key (sections 71 to 76: On the Mac, Join the meeting, Spotify playlist, Search for the copied text, Counter, Stopwatch; 34 kinds before, 40 now), a fourth choice of the Switch key (77), two new drawings (78). New `ActionType` cases `macDo, joinMeeting, playlist, searchCopied, counter, stopwatch, zero`. Rules in `Core/Sources/DeckMateCore/MacActions.swift`, tests in `MacActionsTests.swift` (26 tests). 256 drawings (254 before). The made-up sample keys got a page with the new keys. iPhone and iPad stay 0.16 (build 21). Not proven yet: no key was pressed for real.
 
@@ -294,7 +301,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 - `waiting`: the Mac is asking its user; the iPhone shows that it waits.
 - `welcome(token, mac)`: allowed. The Mac sends the token to keep and its own name.
 - `refused`: not allowed (the user chose Don't Allow, or the checkbox is off). The iPhone shows "Ask again".
-- `keys(place, keys[index, title, PNG])`: `place` is the position (the line on top of the keys, as the Mac shows it: the group's name, plus " · " and the page's name when the page group has more than one page (e.g. "OmniFocus · Page 2") as shown on the Mac); each key has its place 0 to 14, the title shown (see `shownTitle`) and its picture as PNG, drawn by the Mac (so app keys have the real app icon). The Mac sends `keys` first when the iPhone is allowed, then again whenever the position or the setup changes.
+- `keys(place, keys[index, title, PNG])`: `place` is the position (the line on top of the keys, as the Mac shows it: the group's name, plus " · " and the page's name when the page group has more than one page (e.g. "Mail · Page 2") as shown on the Mac); each key has its place 0 to 14, the title shown (see `shownTitle`) and its picture as PNG, drawn by the Mac (so app keys have the real app icon). The Mac sends `keys` first when the iPhone is allowed, then again whenever the position or the setup changes.
 - `press(index)`: the iPhone tapped a key.
 
 **Version rule (0.6).** `PhoneLink.currentVersion` is 4 (it was 3 in 0.5). The navigation picture (section 29) needs the Mac at 0.6 and the iPhone and iPad app at 0.8; its new messages go only to a side that announced version 4. With an older Mac the picture stays hidden and everything else works as before.
@@ -353,7 +360,7 @@ The iPhone needs the Mac at 0.4 for the new parts (marked *).
 - Pages: swipe left or right on the keys for the next or previous page. Page dots under the keys show which page; no dots inside a folder or with one page.
 - Page group lock (changed in 0.10, section 34): the name at the top is only a heading, with no menu and no lock drawing. The lock is the row "Page group" in Settings, Keys card: chips "Automatic" and one per page group. Before 0.10 a tap on the top line opened a menu "Automatic" / "Lock one" and the lock showed beside the name (0.5.2). *
 - Pressed keys light up: a key pressed on the box, on the keys on the Mac screen or on the iPhone shows pressed on the iPhone. *
-- What ran: after a tap a short note at the bottom, for example "Opened OmniFocus" or "Raycast: Clipboard history". When the Mac could not do it the note is red with the warning drawing, for example "The app is not on this Mac" or "The Mac has not allowed key presses yet". *
+- What ran: after a tap a short note at the bottom, for example "Opened Mail" or "Raycast: Clipboard history". When the Mac could not do it the note is red with the warning drawing, for example "The app is not on this Mac" or "The Mac has not allowed key presses yet". *
 - Day look: the iPhone screen follows day and night (light grey by day, dark by night); the keys stay as drawn.
 - Hotspot hint: after 20 seconds of "Looking for your Mac…" a card explains: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. Button "Open Settings"; the close (x) button hides the hint.
 - The app uses its own warning and close drawings; the 22 hand-drawn deck drawings are also in the AMS Icon Library as app marks.
@@ -463,7 +470,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 
 ## 30. The key screen's top (iPhone and iPad 0.8.1)
 Made after 0.7 on a real iPad, where the top was too crowded. Only the key screen changes; the Mac app is unchanged (0.6, build 8).
-- Heading: the place (for example "OmniFocus · OF Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. Since 0.10 it is only a heading: no menu on a tap and no lock drawing beside it (section 34).
+- Heading: the place (for example "Mail · Mail Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. Since 0.10 it is only a heading: no menu on a tap and no lock drawing beside it (section 34).
 - Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected (since 0.15 the same green as the settings gear; before, its own brighter green). Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to the Mac") and what the colours mean. Since 0.8.2 the card has a solid background (the card colour), not see-through glass. The big message card in the middle while there is no Mac is unchanged.
 - Music: one small round button at the top right, beside the settings button (since 0.13 at the bottom left on its side, section 43); the plate it opens is in section 28. The Settings switch is called "Music button".
 - The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27); 0.13 had two pills, since 0.14 one small pill with the app in front, green since 0.15 (section 43). Same switch.
@@ -508,7 +515,8 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
 - Not proven yet: on a real iPhone held on its side.
 
-## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11, 0.11.1, 0.12 and 0.13)
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11, 0.11.1, 0.12, 0.13 and 0.14)
+- 0.14: none of the new keys was pressed for real before the release. Not tried: the PARAGON keys against PARAGON's real file and links, the quick note window, a whole focus run against PomoTimer in the browser (also after a restart of Deck Mate), reading a real PomoTimer backup file, the playlist cover with real links, and the filled "Stays open" list.
 - 0.13: none of the new keys was pressed for real before the release; they were checked with small tests only. Not tried: the questions of Quit all apps, Empty the bin and Eject all disks on a real Mac (also from the iPhone and iPad), the Finder and Spotify questions at the first press, the plain paste (Accessibility), the calendar read of Join the meeting with real meetings, a long press on a counter or stopwatch on the real box, and Keep the Mac awake over a real night.
 - 0.12: the five new kinds were checked with real data from the Mac and from the board, and with small tests. Not pressed on a real screen: any of the keys, the calendar question at the first press of Free until, the long press on a World clock or Sunrise and sunset key, and the town look-ups at Open-Meteo from the keys. The box is at home until January 2027.
 - 0.11.1: the long press on a Weather key (the "Weather key" window, from the box, the keys on screen and the iPhone and iPad) was checked with small tests only; not pressed on the real box. The box is at home until January 2027.
@@ -698,12 +706,11 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Rules in `Core/Sources/DeckMateCore/GlanceKinds.swift`: `Deck.town(ofKey:)`, `Deck.setTown(_:forKey:)` (an undo step for Set up keys), `WeatherKeys.remembered(_:adding:)` (newest first, each town once whatever its capitals, at most 6). Towns used are kept in UserDefaults `weatherTownsUsed`.
 - The window is an alert with a combo box (`AppDelegate.askTown`), titled "Weather key": a field for the town with the remembered towns as its list; Save (Return), Cancel (Escape). It always opens on the Mac, whether the press came from the box, the keys on screen (mouse held) or the iPhone and iPad (note there: "Type the town on the Mac"). The new weather shows within a few seconds.
 
-## 59. Due today key (Mac 0.11)
-- `ActionType.dueToday`. Colour: purple. Drawing: tick. Large words: the number of OmniFocus tasks due today or overdue, not completed and not dropped; small words "Due today" (`DueKeys.glance`).
-- Source: one AppleScript call to OmniFocus (`evaluate javascript`); the answer is read by `DueKeys.count` ("3" or "3.0"; a non-number is nothing). OmniFocus is `DueKeys.apps` (`com.omnigroup.OmniFocus4`, then `3`).
-- Only while OmniFocus is running; otherwise "OmniFocus closed". Deck Mate never opens OmniFocus to count. Again every `everySeconds` = 120.
-- A press opens `omnifocus:///forecast`.
-- Access: the first press makes macOS ask once whether Deck Mate may control OmniFocus (Automation). Until then "Press to allow". Counts only; never changes a task.
+## 59. Due today key (Mac 0.11; PARAGON since 0.14)
+- `ActionType.dueToday`. Colour: purple (red while something is overdue). Drawing: tick. Since 0.14 it counts PARAGON, not OmniFocus (before: OmniFocus tasks, only while OmniFocus was open, via AppleScript, `DueKeys`, refreshed every 120 s, press opened `omnifocus:///forecast`, Automation asked once).
+- Large words: the number of PARAGON tasks due today (`ParagonKeys`, from the widget file of section 79). Small words: "Due today", or when some are overdue "2 overdue" and the key is red.
+- A press opens `amspara:///list/today`. Existing Due today keys change by themselves; nothing to set up. The title in the picker is "Due today (PARAGON)".
+- Source and limits: as section 79 (file read every 60 seconds; "–" and "Open PARAGON" when the file is from an earlier day; "No PARAGON" without PARAGON). Counts only; never changes a task. The Mac asks nothing.
 
 ## 60. Album cover key (Mac 0.11)
 - `ActionType.cover`. Colour: green. Drawing: music note until a cover is there. A press = play or pause (the media key; needs Accessibility, section 11).
@@ -769,7 +776,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - The long press of section 58 now works on World clock and Sunrise and sunset keys too (`ActionType.hasTown`). The window is called "Town for this key" (it was "Weather key" in 0.11.1) and offers the towns used on any of these kinds (`Deck.allTowns`; kept in UserDefaults `weatherTownsUsed`, at most 6).
 
 ## 70. Due today key replaced later
-- The "Due today" key (section 59) counts OmniFocus tasks and will be replaced by a key for PARAGON in a later round, because his tasks are in PARAGON.
+- Done in 0.14: the "Due today" key (section 59) counts PARAGON tasks instead of OmniFocus, because his tasks are in PARAGON.
 
 ## 71. On the Mac key (Mac 0.13)
 - `ActionType.macDo`; `target` = a `MacDo` raw name: "lock", "desktop", "quitAll", "emptyBin", "ejectAll", "pastePlain" (`MacDoKeys.what`; anything odd counts as "desktop", the harmless one). Colour: purple, like shortcut keys. Titles in the list (`MacDo.title`): Lock the Mac, Show the desktop, Quit all apps, Empty the bin, Eject all disks, Paste as plain text. Words on a key without a title (`MacDo.short`): Lock, Desktop, Quit all, Empty bin, Eject, Paste plain. Drawings: app-lock, laptop, control-closeCircle, app-bin, deck-eject, deck-clipboard.
@@ -813,3 +820,26 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 ## 78. Drawings and sample keys (Mac 0.13)
 - Two new drawings to pick for a key: eject (`deck-eject.svg`) and video camera (`deck-video.svg`). 256 drawings to pick from (254 before).
 - The made-up sample keys got a page with the new keys.
+
+## 79. PARAGON keys (Mac 0.14)
+- `ActionType.paragon`; `target` = "inbox", "next", "copiedTask" or "note" (`ParagonKeys.what`). Menu titles: Inbox, Next task, Task from the copied text, Quick note. Colour: purple, like shortcut keys.
+- Inbox: large words = the number of lines waiting in PARAGON's Inbox, small words "Inbox". A press opens `amspara:///list/inbox`.
+- Next task: the first task on PARAGON's list (the one its widget shows first): large words = its due words ("today", "2 days over"; none = the drawing stays), small words = the task's title; red when overdue. The Inbox key is amber while something waits. A press opens the task's note in PARAGON. Nothing on the list: "Nothing next".
+- Task from the copied text: a press sends the last copied text to PARAGON's capture link `amspara://capture?text=<text>&target=inbox`, as a task. PARAGON does not come to the front. Nothing copied, or not text: the Mac beeps and nothing is saved.
+- Quick note: a press opens a small window on the Mac, "Note for PARAGON", one text field, Cancel and Save (Return saves, Escape cancels). Save sends `amspara://capture?text=<text>&target=inbox&note=1`. PARAGON does not come to the front. From the iPhone or iPad the window opens on the Mac.
+- Source: PARAGON on the Mac writes a small file for its own widget at each reload of its notes: `~/Library/Group Containers/D24ENP83QQ.group.com.schabbauer.amspara/widget-snapshot.json`. Deck Mate only reads it, every 60 seconds. It never opens the notes folder and writes nothing there.
+- Limits: the numbers are as fresh as PARAGON's last reload on this Mac. A file from an earlier day: the key shows "–" and "Open PARAGON"; a press opens PARAGON, which writes the file anew. PARAGON not on the Mac: "No PARAGON". No change in PARAGON was needed. The Mac asks nothing new. Rules: `Core/Sources/DeckMateCore/ParagonFocus.swift` (`ParagonKeys`).
+
+## 80. Focus rounds key (Mac 0.14)
+- `ActionType.focus`; colour amber while idle. In Set up keys a menu with PomoTimer's five ready-made plans: Classic Pomodoro (2 + 3 + 25 + 5 + 25 + 5 min), Four Pomodoros, Deep Work 50/10, Short Burst, Single Pomodoro; then the user's own templates after the button "Read my templates from a PomoTimer backup file…" (the backup file PomoTimer saves; read once, kept in UserDefaults `pomoPlans`; press the button again after changing templates in PomoTimer).
+- The plan rides in the key's `steps`: each step has `target` = "<kind>:<seconds>" and `name` = its label (`FocusKeys`, file `ParagonFocus.swift`).
+- A press opens AMS PomoTimer in the browser and starts the template with PomoTimer's own start link `?action=start&template=<name>`. The key counts along: the step's name ("Pomodoro", "Pause") and the minutes and seconds left. Red during focus steps, green during pauses and long breaks, amber during start-up, preparation and cool-down. At the end "Done" for 60 seconds.
+- While it runs a press brings PomoTimer to the front; a long press stops the count on the key (not PomoTimer). One focus run at a time. The run is kept in UserDefaults `focusRun`, so it goes on after Deck Mate restarts.
+- Limits: the key counts by itself from the moment of the press; a pause or skip in PomoTimer is not known to it; a template set to wait between steps in PomoTimer runs ahead on the key. The session lands in PomoTimer's history as always. No change in PomoTimer was needed.
+
+## 81. Spotify playlist cover (Mac 0.14)
+- Before: the Spotify playlist key (section 73) was a green key with headphones. Now, once a link is pasted, the key shows the playlist's (album's, artist's, song's, podcast's) own cover across the whole key.
+- The cover is fetched once from Spotify's public look-up (`https://open.spotify.com/oembed?url=<the link>`, the one the Album cover key uses, section 60); only the link is sent; the picture is kept in memory until Deck Mate quits and fetched again at the next start. A key with a picture or drawing the user chose keeps it. No internet: the headphones stay until it works.
+
+## 82. Quit all apps, "Stays open" start list (Mac 0.14)
+- Before: the "Stays open" list of Quit all apps (section 71) started empty. Now, when "Quit all apps" is chosen for a key, the list starts filled with the apps open at that moment, without the Finder and Deck Mate (they always stay), and a button "Take the apps open now" fills it again. Remove what should quit. An existing key is not changed by itself.

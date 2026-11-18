@@ -29,12 +29,18 @@ public struct LiveKeys: Equatable, Sendable {
     public var watches: [String: Int]
     /// The stopwatches that run right now.
     public var watchesRunning: Set<String>
+    /// The focus run going on (or just over), for the key of its template.
+    public var focus: FocusKeys.Showing?
+    /// The playlist covers that are here, by their names (`PlaylistKeys.coverName`).
+    public var covers: Set<String>
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
                 timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
                 glances: [String: Glance] = [:], battery: Int? = nil, cover: CoverKeys.Now? = nil,
                 coverReady: Bool = false, counts: [String: Int] = [:], watches: [String: Int] = [:],
-                watchesRunning: Set<String> = []) {
+                watchesRunning: Set<String> = [], focus: FocusKeys.Showing? = nil, covers: Set<String> = []) {
+        self.covers = covers
+        self.focus = focus
         self.counts = counts
         self.watches = watches
         self.watchesRunning = watchesRunning
@@ -192,7 +198,7 @@ extension DeckKey {
                 key.showing(live.glances[GlanceKeys.weather(town)], else: town)
             }
         case .dueToday:
-            key.showing(live.glances[GlanceKeys.due], else: DueKeys.words)
+            key.showing(live.glances[GlanceKeys.due], else: ParagonKeys.dueWords)
         case .bodyBattery:
             key.action.target = live.battery.map(String.init) ?? ""
             key.showing(live.glances[GlanceKeys.battery], else: BatteryKeys.words)
@@ -227,7 +233,13 @@ extension DeckKey {
         case .joinMeeting:
             if key.title.isEmpty { key.title = "Join" }
         case .playlist:
-            if key.title.isEmpty { key.title = "Playlist" }
+            // The link's own cover, unless the key has a drawing or a picture he chose.
+            if key.icon.isEmpty, let name = PlaylistKeys.coverName(key.action.target), live.covers.contains(name) {
+                key.icon = GlanceKeys.coverPrefix + name
+                key.action.quiet = true
+            } else if key.title.isEmpty {
+                key.title = "Playlist"
+            }
         case .searchCopied:
             if key.title.isEmpty { key.title = "Search" }
         case .counter:
@@ -244,6 +256,23 @@ extension DeckKey {
                 if key.title.isEmpty { key.title = running ? "Running" : "Paused" }
             } else if key.title.isEmpty {
                 key.title = "Stopwatch"
+            }
+        case .paragon:
+            let what = ParagonKeys.what(key.action.target)
+            if what.shows {
+                key.showing(live.glances[ParagonKeys.glanceName(what)], else: what.short)
+            } else if key.title.isEmpty {
+                key.title = what.short
+            }
+        case .focus:
+            if let now = live.focus, now.name == key.action.target {
+                // While it runs the key says the step and its time, whatever the key is called.
+                if !now.done { key.icon = GlanceKeys.textPrefix + TimerKeys.clock(now.left) }
+                key.title = now.label
+                key.action.quiet = true
+                key.action.name = FocusKeys.tone(now.kind).rawValue
+            } else if key.title.isEmpty {
+                key.title = key.action.target.isEmpty ? "Focus" : key.action.target
             }
         default:
             break

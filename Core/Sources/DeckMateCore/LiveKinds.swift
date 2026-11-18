@@ -17,6 +17,8 @@ extension DeckAction {
         case .searchCopied: return DeckAction(type: type, target: SearchKeys.Engine.google.rawValue)
         case .counter: return DeckAction(type: type, target: CounterKeys.newID())
         case .stopwatch: return DeckAction(type: type, target: StopwatchKeys.newID())
+        case .paragon: return DeckAction(type: type, target: ParagonKeys.What.inbox.rawValue)
+        case .focus: return FocusKeys.action(for: FocusKeys.builtIn[0])
         default: return DeckAction(type: type)
         }
     }

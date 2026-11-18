@@ -98,6 +98,12 @@ enum MacDoer {
         return (going, stays)
     }
 
+    /// The apps open right now, without the Finder and Deck Mate: what "Stays open" starts with.
+    static func openNow() -> [String] {
+        let open = NSWorkspace.shared.runningApplications.filter { $0.activationPolicy == .regular }.compactMap(\.bundleIdentifier)
+        return QuitKeys.toQuit(open: open, spared: [], own: Bundle.main.bundleIdentifier ?? "")
+    }
+
     static func quitAll(_ action: DeckAction) {
         let plan = quitPlan(action)
         let names = plan.going.map { $0.localizedName ?? "an app" }

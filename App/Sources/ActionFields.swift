@@ -33,7 +33,7 @@ extension ActionType {
         case .wait: return "Wait"
         case .nextEvent: return "Next event"
         case .weather: return "Weather"
-        case .dueToday: return "Due today (OmniFocus)"
+        case .dueToday: return "Due today (PARAGON)"
         case .cover: return "Album cover (Spotify)"
         case .bodyBattery: return "Body Battery"
         case .desk: return "Desk (windows in place)"
@@ -50,22 +50,24 @@ extension ActionType {
         case .counter: return "Counter"
         case .stopwatch: return "Stopwatch"
         case .zero: return "Back to 0"
+        case .paragon: return "PARAGON"
+        case .focus: return "Focus rounds (PomoTimer)"
         }
     }
 
     static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
-                                        .macDo, .searchCopied, .media, .playlist, .timer, .stopwatch, .counter, .toggle, .micLight,
-                                        .joinMeeting,
+                                        .macDo, .searchCopied, .media, .playlist, .timer, .focus, .stopwatch, .counter, .toggle, .micLight,
+                                        .joinMeeting, .paragon,
                                         .nextEvent, .freeUntil, .weather, .worldClock, .sunTimes, .bodyBattery, .garmin, .macNow,
                                         .dueToday, .cover, .desk, .list, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder or only show something.
     static let forLongPress: [ActionType] = [.none, .app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut,
                                              .text, .copied, .macDo, .searchCopied, .media, .playlist, .timer, .stopwatch, .counter,
-                                             .toggle, .joinMeeting, .desk, .list, .multi,
+                                             .toggle, .joinMeeting, .paragon, .focus, .desk, .list, .multi,
                                              .back, .nextPage, .previousPage, .profile]
     static let forSteps: [ActionType] = [.app, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
-                                         .macDo, .searchCopied, .media, .playlist, .timer, .toggle, .joinMeeting, .desk, .wait]
+                                         .macDo, .searchCopied, .media, .playlist, .timer, .toggle, .joinMeeting, .paragon, .focus, .desk, .wait]
     /// What an entry of a list to pick from, or one side of a switch of his own, can do.
     static let forEntries: [ActionType] = [.app, .link, .raycast, .shortcut, .appleShortcut, .text, .media]
 }
@@ -260,7 +262,9 @@ struct ActionFields: View {
                     .accessibilityIdentifier("weatherTown")
                 note("Shows the temperature and the sky of this town, asked again every 20 minutes. A press opens the Mac’s Weather. The free weather service Open-Meteo gets the town’s name once, to find its place, and after that only the place. With more than one weather key, give each its town as the title. Hold the key down (a long press) to give it another town without opening this window.")
             case .dueToday:
-                note("Shows how many OmniFocus tasks are due today or overdue, counted every two minutes while OmniFocus is open. A press opens OmniFocus on its Forecast. The first press makes the Mac ask once whether AMS Deck Mate may control OmniFocus: choose Allow. It only counts, and never changes a task.")
+                note("Shows how many PARAGON tasks are due today; overdue ones are named in small words and turn the key red. A press opens Today in PARAGON. The numbers come from the small file PARAGON on this Mac writes for its own widget, read every minute: they are as fresh as PARAGON’s last look at your notes here. A file from an earlier day shows “–” and “Open PARAGON”.")
+            case .paragon: ParagonFields(action: $action)
+            case .focus: FocusFields(action: $action)
             case .cover:
                 note("Shows the cover of the song Spotify plays, with the song’s name. A press plays or pauses. The cover appears with the next song change after AMS Deck Mate starts. The picture comes from Spotify’s own open look-up, by the track only.")
             case .bodyBattery:
@@ -276,7 +280,7 @@ struct ActionFields: View {
                     .accessibilityIdentifier("playlistLink")
                 note(action.target.trimmingCharacters(in: .whitespaces).isEmpty
                      ? "Paste a Spotify link: in Spotify choose Share › Copy link on a playlist, an album, an artist, a song or a podcast."
-                     : PlaylistKeys.kind(action.target).map { "A press starts this \($0) playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify: choose Allow." }
+                     : PlaylistKeys.kind(action.target).map { "The key shows this \($0)’s own cover, unless you chose a drawing or a picture for it. A press starts it playing in Spotify. The first press makes the Mac ask once whether AMS Deck Mate may control Spotify: choose Allow." }
                        ?? "This is not a Spotify link. In Spotify choose Share › Copy link, then paste it here.")
             case .searchCopied:
                 Picker("", selection: $action.target) {
@@ -612,7 +616,11 @@ struct MacDoFields: View {
         VStack(alignment: .leading, spacing: 6) {
             Picker("", selection: Binding(get: { what.rawValue }, set: { new in
                 // Another thing to do: its own start, asking first.
-                if new != action.target { action = DeckAction(type: .macDo, target: new) }
+                // "Quit all apps" starts with the apps open right now under "Stays open".
+                if new != action.target {
+                    action = DeckAction(type: .macDo, target: new,
+                                        steps: new == MacDo.quitAll.rawValue ? MacDoer.openNow().map { DeckAction(type: .app, target: $0) } : [])
+                }
             })) {
                 ForEach(MacDo.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
             }
@@ -648,6 +656,11 @@ struct MacDoFields: View {
                     }
                     .buttonStyle(PlainButton())
                     .accessibilityIdentifier("spareAdd")
+                    Button("Take the apps open now") {
+                        action.steps = MacDoer.openNow().map { DeckAction(type: .app, target: $0) }
+                    }
+                    .buttonStyle(PlainButton())
+                    .accessibilityIdentifier("spareNow")
                     Spacer()
                 }
             }
@@ -662,7 +675,7 @@ struct MacDoFields: View {
         case .desktop:
             return "Moves all windows aside so the desktop shows. A second press brings them back."
         case .quitAll:
-            return "Quits every open app except the Finder, AMS Deck Mate and the apps listed under “Stays open”. It asks first and names the apps; an app with unsaved work still asks you itself. From the iPhone or iPad the question opens on the Mac."
+            return "Quits every open app except the Finder, AMS Deck Mate and the apps listed under “Stays open”. That list starts with the apps open when you chose this; take out what should quit. It asks first and names the apps; an app with unsaved work still asks you itself. From the iPhone or iPad the question opens on the Mac."
         case .emptyBin:
             return "Empties the bin for good. It asks first and says how many things are in it. If your Finder is set to warn before emptying, the Finder asks once more; take the tick off here to see only the Finder’s question. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder: choose Allow."
         case .ejectAll:
@@ -670,6 +683,111 @@ struct MacDoFields: View {
         case .pastePlain:
             return "Pastes the text you copied without its font, size and colour. It needs the Mac’s Accessibility yes, the same one the shortcut keys use."
         }
+    }
+}
+
+/// A PARAGON key: which of the four.
+struct ParagonFields: View {
+    @Binding var action: DeckAction
+
+    var body: some View {
+        let what = ParagonKeys.what(action.target)
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("", selection: $action.target) {
+                ForEach(ParagonKeys.What.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+            }
+            .labelsHidden()
+            .accessibilityIdentifier("paragonPicker")
+            Text(words(what)).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func words(_ what: ParagonKeys.What) -> String {
+        let file = " The numbers come from the small file PARAGON on this Mac writes for its own widget, read every minute: they are as fresh as PARAGON’s last look at your notes here. A file from an earlier day shows “–” and “Open PARAGON”."
+        switch what {
+        case .inbox:
+            return "Shows how many lines wait in PARAGON’s Inbox. A press opens the Inbox." + file
+        case .next:
+            return "Shows the first task on PARAGON’s list, the one its widget shows first, with when it is due. A press opens its note in PARAGON." + file
+        case .copiedTask:
+            return "Puts the text you copied last into PARAGON’s Inbox as a task. PARAGON stays in the background. With nothing copied the Mac beeps."
+        case .note:
+            return "Opens a small window on the Mac for a few words, with Cancel and Save. Save puts them into PARAGON’s Inbox as a note. From the iPhone or iPad the window opens on the Mac."
+        }
+    }
+}
+
+/// A focus rounds key: which PomoTimer template it starts.
+struct FocusFields: View {
+    @Binding var action: DeckAction
+    @State private var own = FocusPlans.own
+    @State private var said = ""
+
+    var body: some View {
+        let plans = FocusKeys.choices(own: own)
+        let plan = FocusKeys.plan(of: action)
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("", selection: Binding(get: { action.target }, set: { name in
+                if let picked = plans.first(where: { $0.name == name }) { action = FocusKeys.action(for: picked) }
+            })) {
+                // A template that is no longer in the list stays on the key as it is.
+                if !plans.contains(where: { $0.name == action.target }) { Text(action.target).tag(action.target) }
+                ForEach(plans, id: \.name) { Text($0.name).tag($0.name) }
+            }
+            .labelsHidden()
+            .accessibilityIdentifier("focusPicker")
+            HStack {
+                Button("Read my templates from a PomoTimer backup file…") {
+                    guard let found = FocusPlans.readBackup() else { return }
+                    own = FocusPlans.own
+                    said = found == 0 ? "No templates in that file." : found == 1 ? "1 template read." : "\(found) templates read."
+                    // The key takes the template's latest steps along.
+                    if let same = FocusKeys.choices(own: own).first(where: { $0.name == action.target }) { action = FocusKeys.action(for: same) }
+                }
+                .buttonStyle(PlainButton())
+                .accessibilityIdentifier("focusRead")
+                Text(said).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+            }
+            Text(FocusPlans.words(plan) + " A press opens AMS PomoTimer in your browser and starts this template there, and the key counts along: the step’s name and its time left, red while you focus, green in a pause. While it counts, a press brings PomoTimer back; hold the key down to stop the count on the key. The key counts by itself: when you pause or skip in PomoTimer, it does not know.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// The PomoTimer templates read from a backup file, kept by Deck Mate.
+enum FocusPlans {
+    private static let key = "pomoPlans"
+
+    static var own: [FocusKeys.Plan] {
+        UserDefaults.standard.data(forKey: key).flatMap { try? JSONDecoder().decode([FocusKeys.Plan].self, from: $0) } ?? []
+    }
+
+    /// Keeps the templates of a backup file; how many it held. PomoTimer's ready-made ones are in it too.
+    @discardableResult
+    static func keep(fromBackup file: URL) -> Int {
+        let plans = (try? Data(contentsOf: file)).map(FocusKeys.plans(fromBackup:)) ?? []
+        guard !plans.isEmpty, let data = try? JSONEncoder().encode(plans) else { return 0 }
+        UserDefaults.standard.set(data, forKey: key)
+        return plans.count
+    }
+
+    /// Asks for the backup file; nil = cancelled.
+    static func readBackup() -> Int? {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.canChooseDirectories = false
+        panel.prompt = "Read"
+        panel.message = "Choose a backup file AMS PomoTimer saved."
+        guard panel.runModal() == .OK, let url = panel.url else { return nil }
+        return keep(fromBackup: url)
+    }
+
+    /// "6 steps, 65 min: 2 + 3 + 25 + 5 + 25 + 5."
+    static func words(_ plan: FocusKeys.Plan) -> String {
+        guard !plan.steps.isEmpty else { return "No template chosen yet." }
+        let minutes = plan.steps.map { String(($0.seconds + 59) / 60) }.joined(separator: " + ")
+        return "\(plan.steps.count) steps, \((plan.seconds + 59) / 60) min: \(minutes)."
     }
 }
 

@@ -215,30 +215,6 @@ public enum WeatherKeys {
     }
 }
 
-/// "Due today" keys: how many OmniFocus tasks are due today or overdue.
-public enum DueKeys {
-    /// OmniFocus by its names on a Mac, newest first.
-    public static let apps = ["com.omnigroup.OmniFocus4", "com.omnigroup.OmniFocus3"]
-    /// What a press opens: OmniFocus on its Forecast.
-    public static let forecastLink = "omnifocus:///forecast"
-    /// OmniFocus is asked again after this many seconds, while it is open.
-    public static let everySeconds = 120.0
-    public static let words = "Due today"
-    public static let askWords = "Press to allow"
-    public static let closedWords = "OmniFocus closed"
-
-    /// The count in OmniFocus's answer ("3", "3.0"); nil when it is not a number.
-    public static func count(_ answer: String?) -> Int? {
-        guard let text = answer?.trimmingCharacters(in: .whitespacesAndNewlines), let number = Double(text),
-              number >= 0, number < 100_000 else { return nil }
-        return Int(number)
-    }
-
-    public static func glance(_ count: Int?) -> Glance? {
-        count.map { Glance(big: String($0), words: words) }
-    }
-}
-
 /// "Body Battery" keys: the latest Body Battery from the AMS Garmin Bridge Board on this Mac.
 public enum BatteryKeys {
     /// The board's page on this Mac: what a press opens.

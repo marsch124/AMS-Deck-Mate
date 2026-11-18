@@ -70,6 +70,9 @@ final class AppModel: ObservableObject {
     private var watchTick: Timer?
     private static let countsKey = "counters"
     private static let watchesKey = "stopwatches"
+    /// The focus run going on. Kept across restarts.
+    @Published private(set) var focusRun: FocusKeys.Run?
+    private static let focusKey = "focusRun"
     /// Goes up whenever a key that changes by itself looks different: each second of a timer, a
     /// switch, an app opened or quit. The iPhone link sends the keys again then.
     @Published private(set) var liveStamp = 0
@@ -121,6 +124,8 @@ final class AppModel: ObservableObject {
             counts = ["sampleCount": 12]
             watches = StopwatchKeys.State(banked: ["sampleWatch": 154], since: ["sampleWatch": day.addingTimeInterval(-600)])
             GlanceWatch.keepSampleCover()
+            // Twelve minutes into the first Pomodoro of the classic plan.
+            focusRun = FocusKeys.Run(plan: FocusKeys.builtIn[0], began: day.addingTimeInterval(-1020))
             var counted = KeyUse(since: day.addingTimeInterval(-41 * 86_400))
             for (slot, presses) in [(0, 212), (1, 97), (2, 64), (9, 31), (13, 12), (5, 3)] {
                 guard let key = sample.profiles.first?.pages.first?.keys[slot] else { continue }
@@ -196,6 +201,11 @@ final class AppModel: ObservableObject {
         ActionRunner.counterPressed = { [weak self] in self?.counterPressed($0) }
         ActionRunner.stopwatchPressed = { [weak self] in self?.stopwatchPressed($0) }
         ActionRunner.zeroPressed = { [weak self] in self?.zeroPressed($0) }
+        ActionRunner.focusPressed = { [weak self] in self?.focusPressed($0) }
+        if let data = UserDefaults.standard.data(forKey: AppModel.focusKey),
+           let kept = try? JSONDecoder().decode(FocusKeys.Run.self, from: data), FocusKeys.showing(kept, now: Date()) != nil {
+            focusRun = kept
+        }
         MacDoer.calendarAllowed = { [weak self] in self?.glance.calendarAllowed() }
         runWatches()
         glance.onChange = { [weak self] in self?.bump() }
@@ -238,7 +248,9 @@ final class AppModel: ObservableObject {
                  cover: isSample ? GlanceWatch.sampleCover : glance.cover,
                  coverReady: isSample || glance.coverReady,
                  counts: counts, watches: StopwatchKeys.seconds(watches, now: sampleNow ?? Date()),
-                 watchesRunning: Set(watches.since.keys))
+                 watchesRunning: Set(watches.since.keys),
+                 focus: FocusKeys.showing(focusRun, now: sampleNow ?? Date()),
+                 covers: glance.coversReady)
     }
     /// Pictures with made-up keys stand still at this moment.
     private var sampleNow: Date?
@@ -352,7 +364,34 @@ final class AppModel: ObservableObject {
         counts = CounterKeys.reset(counts, id: id)
         UserDefaults.standard.set(counts, forKey: AppModel.countsKey)
         watches = StopwatchKeys.reset(watches, id: id)
+        if focusRun?.plan.name == id { setFocus(nil) }
         saveWatches()
+    }
+
+    // MARK: Focus rounds (0.14)
+
+    /// A focus key was pressed: PomoTimer starts its template and the key counts along. While it
+    /// counts, a press only brings PomoTimer back.
+    func focusPressed(_ action: DeckAction) {
+        let plan = FocusKeys.plan(of: action)
+        if let now = FocusKeys.showing(focusRun, now: Date()), now.name == plan.name, !now.done {
+            if let url = URL(string: FocusKeys.app) { NSWorkspace.shared.open(url) }
+            return
+        }
+        guard !plan.steps.isEmpty, let url = FocusKeys.startLink(plan.name) else { return }
+        NSWorkspace.shared.open(url)
+        setFocus(FocusKeys.Run(plan: plan, began: Date()))
+    }
+
+    private func setFocus(_ run: FocusKeys.Run?) {
+        focusRun = run
+        if let run, let data = try? JSONEncoder().encode(run) {
+            UserDefaults.standard.set(data, forKey: AppModel.focusKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: AppModel.focusKey)
+        }
+        runWatches()
+        bump()
     }
 
     private func saveWatches() {
@@ -363,11 +402,16 @@ final class AppModel: ObservableObject {
 
     /// The keys are drawn again each second only while a stopwatch runs.
     private func runWatches() {
-        if !watches.isRunning {
+        if focusRun != nil, FocusKeys.showing(focusRun, now: Date()) == nil { focusRun = nil; UserDefaults.standard.removeObject(forKey: AppModel.focusKey) }
+        if !watches.isRunning && focusRun == nil {
             watchTick?.invalidate()
             watchTick = nil
         } else if watchTick == nil {
-            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.bump() }
+            let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+                guard let self else { return }
+                if self.focusRun != nil, FocusKeys.showing(self.focusRun, now: Date()) == nil { self.runWatches() }
+                self.bump()
+            }
             RunLoop.main.add(timer, forMode: .common)
             watchTick = timer
         }
@@ -899,8 +943,18 @@ enum Sample {
                       10: DeckKey(action: DeckAction(type: .stopwatch, target: "sampleWatch")),
                       11: DeckKey(action: DeckAction(type: .stopwatch, target: "sampleIdle")),
                       12: DeckKey(action: DeckAction(type: .toggle, target: SwitchKeys.awake)),
+                      13: key("Next page", DeckAction(type: .nextPage)),
                       14: key("Back a page", DeckAction(type: .previousPage))]
-        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, fifth, folder])
+        var sixth = DeckPage(name: "Page 6")
+        sixth.keys = [0: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.inbox.rawValue)),
+                      1: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.next.rawValue)),
+                      2: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.copiedTask.rawValue)),
+                      3: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.note.rawValue)),
+                      4: DeckKey(action: DeckAction(type: .dueToday)),
+                      5: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[0])),
+                      6: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[4])),
+                      14: key("Back a page", DeckAction(type: .previousPage))]
+        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, fifth, sixth, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])
         writing.pages[0].keys = [0: key("Bold", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 11, command: true, keyName: "B"))),
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]

@@ -45,6 +45,8 @@ enum ActionRunner {
     /// A counter key, a stopwatch key was pressed, or one of them was held down: its name (set by the app at start).
     static var counterPressed: ((String) -> Void)?
     static var stopwatchPressed: ((String) -> Void)?
+    /// A focus rounds key was pressed.
+    static var focusPressed: ((DeckAction) -> Void)?
     static var zeroPressed: ((String) -> Void)?
 
     /// A weather key was held down: ask for its town (the key's id; set by the app at start).
@@ -118,7 +120,7 @@ enum ActionRunner {
         case .running:
             let now = action.resolving(live())
             if now.type == .app { run(now) }
-        case .nextEvent, .weather, .dueToday, .desk, .macNow, .worldClock, .sunTimes, .freeUntil:
+        case .nextEvent, .weather, .dueToday, .paragon, .desk, .macNow, .worldClock, .sunTimes, .freeUntil:
             glancePressed?(action)
         case .weatherTown:
             townAsked?(action.target)
@@ -141,6 +143,8 @@ enum ActionRunner {
             stopwatchPressed?(action.target)
         case .zero:
             zeroPressed?(action.target)
+        case .focus:
+            focusPressed?(action)
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
             break       // moving around is the Navigator's work; a light only shows; a wait only waits
         }

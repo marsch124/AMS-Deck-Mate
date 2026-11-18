@@ -38,7 +38,16 @@ final class GlanceWatch {
                 all[GlanceKeys.weather(town)] = Glance(words: "Town not found")
             }
         }
-        if dueOn { all[GlanceKeys.due] = dueGlance }
+        if dueOn {
+            all[GlanceKeys.due] = ParagonKeys.dueGlance(snapshot: paragonShot, today: GlanceWatch.today, installed: paragonHere)
+        }
+        if paragonOn {
+            for what in ParagonKeys.What.allCases {
+                if let glance = ParagonKeys.glance(what, snapshot: paragonShot, today: GlanceWatch.today, installed: paragonHere) {
+                    all[ParagonKeys.glanceName(what)] = glance
+                }
+            }
+        }
         if let glance = BatteryKeys.glance(battery) { all[GlanceKeys.battery] = glance }
         return all
     }
@@ -48,13 +57,14 @@ final class GlanceWatch {
         var battery: Int?
         var cover: CoverKeys.Now?
         var coverReady: Bool
+        var covers: Set<String>
     }
 
     private var shown: Shown?
 
     /// Tells the app when something a key shows has changed, and only then.
     private func tell() {
-        let now = Shown(glances: glances, battery: battery, cover: cover, coverReady: coverReady)
+        let now = Shown(glances: glances, battery: battery, cover: cover, coverReady: coverReady, covers: coversReady)
         guard now != shown else { return }
         shown = now
         onChange?()
@@ -90,7 +100,8 @@ final class GlanceWatch {
         setWeather(deck.towns(of: .weather))
         setClocks(deck.towns(of: .worldClock), suns: deck.towns(of: .sunTimes))
         setMac(deck.macNumbers)
-        setDue(deck.uses(.dueToday))
+        setParagon(due: deck.uses(.dueToday), keys: deck.uses(.paragon))
+        setPlaylists(deck.playlistLinks)
         setCover(deck.uses(.cover))
         setBattery(deck.uses(.bodyBattery) || deck.uses(.garmin))
         tell()
@@ -112,7 +123,7 @@ final class GlanceWatch {
         case .weather:
             refreshWeather()
             open(app: WeatherKeys.weatherApp)
-        case .dueToday: duePressed()
+        case .dueToday, .paragon: paragonPressed(action)
         case .desk: Desk.arrange(DeskKeys.spots(of: action))
         default: break
         }
@@ -372,101 +383,118 @@ final class GlanceWatch {
         }
     }
 
-    // MARK: Due today (OmniFocus)
-
-    private enum DueState { case noApp, closed, ask, refused, counted }
+    // MARK: PARAGON (the file it writes for its own widget)
 
     private var dueOn = false
-    private var dueState = DueState.closed
-    private var due: Int?
-    private var dueTimer: Timer?
-    private var dueWatchers: [NSObjectProtocol] = []
-    private static let scripts = DispatchQueue(label: "glance scripts")
+    private var paragonOn = false
+    private var paragonShot: ParagonKeys.Snapshot?
+    private var paragonHere = false
+    private var paragonTimer: Timer?
 
-    private static var omniFocus: String? {
-        DueKeys.apps.first { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0) != nil }
+    /// PARAGON is on this Mac when something opens its links.
+    static var paragonInstalled: Bool {
+        URL(string: ParagonKeys.anyLink).flatMap { NSWorkspace.shared.urlForApplication(toOpen: $0) } != nil
     }
 
-    private static func isOpen(_ app: String) -> Bool {
-        !NSRunningApplication.runningApplications(withBundleIdentifier: app).isEmpty
+    static var today: ParagonKeys.Day {
+        let parts = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        return ParagonKeys.Day(year: parts.year ?? 0, month: parts.month ?? 0, day: parts.day ?? 0)
     }
 
-    private var dueGlance: Glance {
-        switch dueState {
-        case .noApp: return Glance(words: "No OmniFocus")
-        case .closed: return Glance(words: DueKeys.closedWords)
-        case .ask: return Glance(words: DueKeys.askWords)
-        case .refused: return Glance(words: "OmniFocus not allowed")
-        case .counted: return DueKeys.glance(due) ?? Glance(words: DueKeys.words)
-        }
+    /// PARAGON's file as it is now. Only read, never written; the notes themselves are never opened.
+    static func paragonSnapshot() -> ParagonKeys.Snapshot? {
+        let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(ParagonKeys.file)
+        return (try? Data(contentsOf: file)).flatMap(ParagonKeys.snapshot(from:))
     }
 
-    private func setDue(_ on: Bool) {
-        guard on != dueOn else { return }
-        dueOn = on
-        dueTimer?.invalidate()
-        dueTimer = nil
-        dueWatchers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
-        dueWatchers = []
-        due = nil
+    private func setParagon(due: Bool, keys: Bool) {
+        dueOn = due
+        paragonOn = keys
+        let on = due || keys
+        guard on != (paragonTimer != nil) else { return }
+        paragonTimer?.invalidate()
+        paragonTimer = nil
+        paragonShot = nil
         guard on else { return }
-        dueTimer = every(DueKeys.everySeconds) { [weak self] in self?.readDue(ask: false) }
-        for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
-            dueWatchers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
-                let app = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier ?? ""
-                guard DueKeys.apps.contains(app) else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { self?.readDue(ask: false) }
-            })
-        }
-        readDue(ask: false)
+        paragonTimer = every(ParagonKeys.everySeconds) { [weak self] in self?.readParagon() }
+        readParagon()
     }
 
-    /// Whether the Mac lets Deck Mate ask this app things. `ask` = show the Mac's question when it was never answered.
-    private static func mayAsk(_ app: String, ask: Bool) -> DueState {
-        let target = NSAppleEventDescriptor(bundleIdentifier: app)
-        let answer = AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, ask)
-        switch answer {
-        case noErr: return .counted
-        case OSStatus(errAEEventWouldRequireUserConsent): return .ask
-        case OSStatus(procNotFound): return .closed
-        default: return .refused
+    private func readParagon() {
+        paragonHere = GlanceWatch.paragonInstalled
+        paragonShot = GlanceWatch.paragonSnapshot()
+        tell()
+    }
+
+    /// A PARAGON key was pressed.
+    private func paragonPressed(_ action: DeckAction) {
+        if action.type == .dueToday {
+            openParagon(ParagonKeys.todayLink, inFront: true)
+            return
+        }
+        let what = ParagonKeys.what(action.target)
+        switch what {
+        case .inbox, .next:
+            openParagon(ParagonKeys.openLink(what, snapshot: GlanceWatch.paragonSnapshot(), today: GlanceWatch.today), inFront: true)
+        case .copiedTask:
+            guard let link = ParagonKeys.captureLink(text: NSPasteboard.general.string(forType: .string), note: false) else {
+                NSSound.beep()
+                return
+            }
+            openParagon(link.absoluteString, inFront: false)
+        case .note:
+            let alert = NSAlert()
+            alert.messageText = "Note for PARAGON"
+            alert.informativeText = "It goes into PARAGON's Inbox as a note."
+            let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
+            field.placeholderString = "Note"
+            field.setAccessibilityIdentifier("paragonNote")
+            alert.accessoryView = field
+            alert.addButton(withTitle: "Save")
+            alert.addButton(withTitle: "Cancel")
+            alert.window.initialFirstResponder = field
+            NSApp.activate(ignoringOtherApps: true)
+            guard alert.runModal() == .alertFirstButtonReturn,
+                  let link = ParagonKeys.captureLink(text: field.stringValue, note: true) else { return }
+            openParagon(link.absoluteString, inFront: false)
+        }
+        // PARAGON writes its file anew after it took something in.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.paragonTimer != nil else { return }
+            self.readParagon()
         }
     }
 
-    /// Counts the tasks due today or overdue. OmniFocus is only asked while it is open: Deck Mate never opens it to count.
-    private func readDue(ask: Bool, then done: (() -> Void)? = nil) {
-        GlanceWatch.scripts.async { [weak self] in
-            var state = DueState.noApp
-            var count: Int?
-            if let app = GlanceWatch.omniFocus {
-                state = GlanceWatch.isOpen(app) ? GlanceWatch.mayAsk(app, ask: ask) : .closed
-                if state == .counted {
-                    let script = """
-                    tell application id "\(app)" to evaluate javascript "(() => { const end = new Date(); end.setHours(24, 0, 0, 0); return flattenedTasks.filter(t => t.effectiveDueDate && t.effectiveDueDate < end && t.taskStatus !== Task.Status.Completed && t.taskStatus !== Task.Status.Dropped).length; })()"
-                    """
-                    var error: NSDictionary?
-                    let answer = NSAppleScript(source: script)?.executeAndReturnError(&error)
-                    if let error {
-                        BoxLog.note("due today: \(error[NSAppleScript.errorMessage] ?? "OmniFocus could not be asked")")
-                    } else {
-                        count = DueKeys.count(answer?.stringValue) ?? answer.map { Int($0.int32Value) }
-                    }
+    private func openParagon(_ link: String, inFront: Bool) {
+        guard let url = URL(string: link), GlanceWatch.paragonInstalled else { NSSound.beep(); return }
+        let how = NSWorkspace.OpenConfiguration()
+        how.activates = inFront
+        NSWorkspace.shared.open(url, configuration: how)
+    }
+
+    // MARK: Spotify playlist covers
+
+    private var listCovers: [String] = []
+
+    /// The covers of the playlist keys that are here, by their names.
+    var coversReady: Set<String> { Set(listCovers.filter { KeyArt.cover($0) != nil }) }
+
+    private func setPlaylists(_ links: [String]) {
+        listCovers = links.compactMap(PlaylistKeys.coverName)
+        for link in links {
+            guard let name = PlaylistKeys.coverName(link), KeyArt.cover(name) == nil, asked.insert(name).inserted else { continue }
+            // The picture comes from Spotify's open look-up, by the link only.
+            fetch(PlaylistKeys.lookupURL(link)) { [weak self] data in
+                guard let self, let address = data.flatMap(CoverKeys.pictureURL(fromLookup:)) else {
+                    self?.asked.remove(name)       // no answer: asked again when the keys change
+                    return
+                }
+                self.fetch(address) { data in
+                    guard let data, let picture = NSImage(data: data), picture.isValid else { self.asked.remove(name); return }
+                    KeyArt.keep(cover: picture, for: name)
+                    self.tell()
                 }
             }
-            DispatchQueue.main.async {
-                guard let self, self.dueOn else { return }
-                self.dueState = state
-                self.due = state == .counted ? count : nil
-                self.tell()
-                done?()
-            }
-        }
-    }
-
-    /// A press: the Mac's question the first time, then OmniFocus opens on its Forecast.
-    private func duePressed() {
-        readDue(ask: true) {
-            if let url = URL(string: DueKeys.forecastLink), GlanceWatch.omniFocus != nil { NSWorkspace.shared.open(url) }
         }
     }
 
@@ -544,7 +572,9 @@ final class GlanceWatch {
     static let sampleGlances: [String: Glance] = [
         GlanceKeys.event: Glance(big: "14:30", words: "Dentist"),
         GlanceKeys.weather("Lisbon"): Glance(big: "17°", words: "Partly cloudy"),
-        GlanceKeys.due: Glance(big: "3", words: DueKeys.words),
+        GlanceKeys.due: Glance(big: "3", words: "1 overdue", tone: .raycast),
+        ParagonKeys.glanceName(.inbox): Glance(big: "4", words: "Inbox", tone: .text),
+        ParagonKeys.glanceName(.next): Glance(big: "today", words: "Book the flights"),
         GlanceKeys.battery: Glance(big: "62", words: BatteryKeys.words),
         GlanceKeys.garmin(.steps): Glance(big: "8 412", words: "Steps today"),
         GlanceKeys.garmin(.sleep): Glance(big: "7:24", words: "Good"),

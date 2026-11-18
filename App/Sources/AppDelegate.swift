@@ -97,6 +97,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             }
             return
         }
+        // "--read-pomo <file>" keeps the templates of a PomoTimer backup file, like the button in Set up keys.
+        if let index = arguments.firstIndex(of: "--read-pomo"), index + 1 < arguments.count {
+            print("Templates read: \(FocusPlans.keep(fromBackup: URL(fileURLWithPath: arguments[index + 1])))")
+            NSApp.terminate(nil)
+            return
+        }
+        // For checks: "--paragon" says what the PARAGON and focus keys would show right now and does nothing.
+        if arguments.contains("--paragon") {
+            let shot = GlanceWatch.paragonSnapshot()
+            let here = GlanceWatch.paragonInstalled
+            print("PARAGON on this Mac: \(here ? "yes" : "no"); its file: \(shot == nil ? "not readable" : "read")")
+            for what in ParagonKeys.What.allCases where what.shows {
+                let glance = ParagonKeys.glance(what, snapshot: shot, today: GlanceWatch.today, installed: here)
+                print("\(what.title): \(glance?.big ?? "") | \(glance?.words ?? "")")
+            }
+            let due = ParagonKeys.dueGlance(snapshot: shot, today: GlanceWatch.today, installed: here)
+            print("Due today: \(due.big) | \(due.words)")
+            print("Task link: \(ParagonKeys.captureLink(text: "Example", note: false)?.absoluteString ?? "none")")
+            for plan in FocusKeys.choices(own: FocusPlans.own) {
+                print("Focus: \(plan.name): \(FocusPlans.words(plan)) \(FocusKeys.startLink(plan.name)?.absoluteString ?? "")")
+            }
+            NSApp.terminate(nil)
+            return
+        }
         // For checks: "--pages <folder>" writes every page of the setup as one picture of its 15 keys, as the
         // keys really look, and changes nothing ("--data <folder>" picks another setup than the real one).
         if let index = arguments.firstIndex(of: "--pages"), index + 1 < arguments.count {
@@ -604,6 +628,13 @@ enum Snapshots {
                     shot(ScreenDeckView(model: model).padding(16), "deck-mac-\(name)", look, folder)
                     shot(SetupView(model: model, startSlot: 2), "setup-quit-\(name)", look, folder)
                     shot(SetupView(model: model, startSlot: 7), "setup-playlist-\(name)", look, folder)
+                }
+                // 0.14: PARAGON keys and focus rounds (page 6).
+                if let sixth = group.topPages.dropFirst(5).first {
+                    model.show(profile: group.id, page: sixth.id)
+                    shot(ScreenDeckView(model: model).padding(16), "deck-paragon-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 1), "setup-paragon-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 5), "setup-focus-\(name)", look, folder)
                 }
                 model.show(profile: group.id, page: first.id)
             }
