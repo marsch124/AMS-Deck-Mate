@@ -67,6 +67,7 @@ final class EditWindow: NSWindow {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindowDelegate {
+    private var stopSignal: DispatchSourceSignal?
     private var model: AppModel!
     private var item: NSStatusItem?
     private var deckPanel: DeckPanel?
@@ -175,16 +176,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         }
         // Switches "Open at login" on or off from outside, then quits: "--open-at-login on".
         if let index = arguments.firstIndex(of: "--open-at-login"), index + 1 < arguments.count {
-            if arguments[index + 1] == "on" { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
-            print("open at login:", SMAppService.mainApp.status == .enabled ? "on" : "off")
+            let on = arguments[index + 1] == "on"
+            if on { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
+            UserDefaults.standard.set(on, forKey: KeeperJob.wantedKey)
+            if on { KeeperJob.writeFile() } else { KeeperJob.remove() }
+            print("open at login:", SMAppService.mainApp.status == .enabled ? "on" : "off", "· keeper:", KeeperJob.stateWord)
             NSApp.terminate(nil)
             return
         }
-        // Only one copy in the menu bar.
-        if NSRunningApplication.runningApplications(withBundleIdentifier: AppInfo.bundleID).count > 1 {
+        // Only one copy in the menu bar: the one that started first stays. (Before Mac 0.16.1 two copies that
+        // started in the same moment each saw the other and both quit.)
+        if KeeperJob.mustQuitForEarlierCopy() {
             NSApp.terminate(nil)
             return
         }
+        // "Open at login" is on: the app runs as the keeper's copy, so the Mac opens it again when it stops
+        // unexpectedly. A copy opened by hand, or by the Mac's login list, gives way to that copy — before
+        // it touches the box or the keys file. A copy started for checks stands apart.
+        KeeperJob.rememberWish()
+        if Keeper.handsOver(wanted: KeeperJob.wanted, openedByKeeper: KeeperJob.openedByKeeper,
+                            plain: KeeperJob.plain, inApplications: KeeperJob.inApplications) {
+            if KeeperJob.handOver() {
+                NSApp.terminate(nil)
+                return
+            }
+        } else if KeeperJob.openedByKeeper {
+            KeeperJob.writeFile()
+        }
+        // A polite stop from outside (the Mac shutting down, an update) ends the app cleanly, like Quit.
+        signal(SIGTERM, SIG_IGN)
+        let stop = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        stop.setEventHandler { NSApp.terminate(nil) }
+        stop.resume()
+        stopSignal = stop
         // For checks: "--data <folder>" keeps the setup somewhere else than the real one (and makes no iCloud copies).
         var store = Store(cloud: CloudCopy.folder)
         if let index = arguments.firstIndex(of: "--data"), index + 1 < arguments.count {
@@ -653,6 +677,7 @@ enum Snapshots {
             shot(SetupView(model: model, overview: true), "setup-overview-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings), "settings-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .phone), "settings-phone-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .mac), "settings-mac-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .firstTime), "settings-first-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .guide), "guide-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .news), "news-\(name)", look, folder)

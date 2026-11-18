@@ -604,7 +604,11 @@ enum Guide {
             "Since 0.4 \"Settings\" is a short list on the left with one part at a time on the right, instead of one long page. The parts are: The box, First time with the box, Keys on screen, iPhone, Page groups, Check keys, Key use (new in 0.10), Raycast and links (new in 0.15), This Mac, From Elgato and Where it is kept.",
             "They hold the box and brightness, change page group with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions, bring over again and the check for broken keys.",
             "The version number, Quit and Done stay at the bottom.",
-            "New in 0.16, no new parts, but new lines in old ones: the box's evening dimming in \"The box\"; the warning about Control-Option-D in \"Keys on screen\"; the card \"A key for <app>?\" at the top of \"Key use\"; and in \"Where it is kept\" the words about the key pictures in the iCloud copy."
+            "New in 0.16, no new parts, but new lines in old ones: the box's evening dimming in \"The box\"; the warning about Control-Option-D in \"Keys on screen\"; the card \"A key for <app>?\" at the top of \"Key use\"; and in \"Where it is kept\" the words about the key pictures in the iCloud copy.",
+            "\"Open at login\" (in \"This Mac\"): while it is on, the Mac opens AMS Deck Mate every time you log in. New in 0.16.1: the app also keeps a second, separate start order with the Mac, called the keeper. It opens the app at every login even if the Mac's own login list fails, and it opens the app again by itself if it ever stops unexpectedly (usually within a second; the Mac may wait up to 10 seconds). Before, the app stayed gone until you opened it by hand, and so did the box, the keys on screen, the Raycast commands and the iPhone link.",
+            "If you quit the app yourself with \"Quit\", it stays closed until you open it or until the next login. Switching \"Open at login\" off takes the keeper away too. At every start the app checks that the keeper is in place and puts it back if it is missing.",
+            "If you open the app by hand while \"Open at login\" is on, it closes and comes back about a second later. That is normal: it hands itself over to the keeper so it is always protected. A link that opened the app in that very moment (for example a Raycast command while the app was closed) is not carried over, so press it once more.",
+            "In System Settings, General, Login Items & Extensions, AMS Deck Mate now shows in two places: under \"Open at Login\" and under \"Allow in the Background\". Leave both on. The first time, the Mac may show a note \"AMS Deck Mate added items that can run in the background\". That is the keeper."
         ]),
         Section(id: "kept", title: "Where things are kept", part: "settings", lines: [
             "Your setup is one file on this Mac, in the folder \"AMS Deck Mate\" inside Application Support.",
@@ -632,6 +636,25 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.16.1", date: "18 Nov 2026", new: [
+            "Mac only. Before: Mac 0.16 (build 24). Now: Mac 0.16.1 (build 25). The iPhone and iPad app is not changed and stays at 0.18 (build 23).",
+            "Why: the Mac's own login list can fail without saying so. On 17 Nov 2026 a Mac restarted and did not open two menu bar apps of this family, although \"Open at login\" was on: the Mac's login list could not find them. AMS Deck Mate relied on that list alone, so after such a restart the Stream Deck box, the keys on screen, the Raycast commands and the iPhone link would stay dead until the app was opened by hand.",
+            "New: the keeper. While \"Open at login\" is on, the app now keeps a second start order with the Mac, apart from the Mac's login list. It opens the app at every login, even when the Mac's own login list fails. Before: if that list failed, nothing opened the app.",
+            "New: the app comes back by itself. If it ever stops unexpectedly, the keeper opens it again. Measured on other apps of the family: within about a second; the Mac may wait up to 10 seconds. Before: the app stayed gone until you opened it by hand.",
+            "If you quit the app yourself with \"Quit\", it stays closed until you open it or until the next login. Switching \"Open at login\" off removes the keeper too. At every start the app checks that the keeper is in place and puts it back if it is missing.",
+            "New line in Settings, in the \"This Mac\" card, under the \"Open at login\" tick box, in small grey words: \"While this is on, the app also comes back by itself if it ever stops unexpectedly.\" Before: no such line.",
+            "Rule tests: 195, instead of 193. Two are new: \"of two copies the earlier one stays\" and \"the keeper's start order\".",
+            "Checked on 18 Nov 2026 without restarting the Mac: after a sudden stop the app was back in under a second; a second copy closed and the first stayed; started as at login, the app opened by itself; after Quit it stayed closed. Not yet proven: a real restart of the Mac."
+        ], changed: [
+            "Opening the app by hand while \"Open at login\" is on: the app hands itself over to the keeper. It closes and comes back about a second later, before it touches the box or your keys file, so it is always protected. Before: it simply stayed as you opened it, without the keeper. A link that opened the app in that very moment (for example a Raycast command while the app was closed) is not carried over: press it once more.",
+            "In System Settings, General, Login Items & Extensions, AMS Deck Mate now shows in two places: under \"Open at Login\" and under the background list (\"Allow in the Background\"). Leave both on. Before: only under \"Open at Login\". The first time the Mac may show a note \"AMS Deck Mate added items that can run in the background\".",
+            "When the Mac shuts down or an update stops the app, the app now ends cleanly, just as with \"Quit\": the box is left tidy and the last changes are saved. Before: such a stop cut the app off.",
+            "The app now remembers that you want \"Open at login\" in a note of its own, apart from the Mac's list. The first time it takes over what the Mac's list says. Before: it relied on the Mac's list alone.",
+            "For checks: a copy started with \"--checks\", \"--data <folder>\" or \"--plain\" never hands itself over to the keeper and is never the copy the Mac opens at login.",
+            "The iPhone and iPad app is not changed. It stays at 0.18 (build 23) and works with this Mac."
+        ], fixed: [
+            "Only one copy stays. If two copies start in the same moment (the Mac's login list and the keeper), the one that started first stays and the later one closes. Before: each saw the other and both closed, so none was left."
+        ]),
         Release(id: "0.16", date: "18 Nov 2026", new: [
             "Round of new keys, calm, safer saving and a deck that works by itself. Before: Mac 0.15 (build 23) and iPhone and iPad app 0.17 (build 22). Now: Mac 0.16 (build 24) and iPhone and iPad app 0.18 (build 23). The app 0.17 keeps working with Mac 0.16, and the app 0.18 works with Mac 0.15.",
             "New key \"Breathing pacer\" (green, under Time). Before: no key could guide a breath. Now: a press starts a round and a second press stops it. A white rounded column fills while you breathe in and empties while you breathe out, with \"Breathe in\" and \"Breathe out\" under it. After the last breath it goes back quietly: no sound, no \"Done\", no numbers. Rhythm: 4 in · 6 out (at first), 4 · 4, 5 · 5 or 4 in · 8 out. Breaths: 6 (at first), 10 or 20.",

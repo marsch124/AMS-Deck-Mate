@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.16 (build 24), 18 Nov 2026; iPhone and iPad app 0.18 (build 23)
+# AMS Deck Mate, specification, version 0.16.1 (build 25), 18 Nov 2026; iPhone and iPad app 0.18 (build 23), unchanged
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -204,6 +204,7 @@ Three tabs: Settings, How it works, What's new. The version, Quit and Done are a
 Since 0.4 the Settings tab is a list on the left with one part at a time on the right (before: one long scroll). The parts, in order: The box (box, brightness), First time with the box, Keys on screen (Show them, Hide after a key is pressed, Size), iPhone (section 17), Page groups (change page group with the app in front), Check keys, This Mac (open at login, permissions), From Elgato (bring over again), Where it is kept.
 - "First time with the box": the steps for the first day with the real box (quit Elgato's app, plug the box in, allow Input Monitoring if the Mac asks), the box's answer in plain words, and a button to show the box diary (box log). Reminder: the real box is still untried (the author is away until January 2027).
 - "Check keys": the button "Check all keys" lists every broken key as "Page group · Page · key: reason" (section 20).
+- New in 0.16.1: in the "This Mac" card, under the "Open at login" tick box, a small grey line: "While this is on, the app also comes back by itself if it ever stops unexpectedly." (section 120). The tick box itself is unchanged; the wish is now also kept as the setting `wantsOpenAtLogin`.
 - The picture used for checks (sample Settings picture) shows a made-up iPhone, never real data.
 - 0.5: the Mac's Settings have no new switch. The Mac keeps one own place for each connected iPhone or iPad (in memory, for the connection) for "My own keys" (section 26). The new switches are on the iPhone and iPad (section 23).
 
@@ -224,6 +225,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.16.1: 195 rule tests, instead of 193. Two new, in `Core/Tests/DeckMateCoreTests/KeeperTests.swift`: "of two copies the earlier one stays" (`OneCopy.mustQuit`) and "the keeper's start order" (`Keeper.plist`). Section 120.
 - New in 0.14: new data tests in `Core/Tests/DeckMateCoreTests/ParagonFocusTests.swift` for the rules of sections 79 to 82 (`ParagonKeys`, `FocusKeys`, the playlist cover, the "Stays open" start list). New check `--paragon` on the app: says what the PARAGON and focus keys would show right now and does nothing else.
 - New in 0.13: new data tests in `Core/Tests/DeckMateCoreTests/MacActionsTests.swift` for the rules of sections 71 to 77 (`MacDoKeys`, `QuitKeys`, `BinKeys`, `EjectKeys`, `MeetingKeys`, `PlaylistKeys`, `SearchKeys`, `CounterKeys`, `StopwatchKeys`).
 - New in 0.12: 20 new data tests, 112 in all (92 before), in `Core/Tests/DeckMateCoreTests/GlanceMoreTests.swift` for the rules of sections 63 to 68.
@@ -247,6 +249,10 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.16.1 (Mac, build 25, 18 Nov 2026; iPhone and iPad stay 0.18, build 23).** The keeper: the app comes back by itself, section 120. Not yet proven: a real restart of the Mac with the keeper.
 
 **0.16 (Mac, build 24, 18 Nov 2026; iPhone and iPad 0.18, build 23).** Round of new keys, calm, safer saving and a deck that works by itself: sections 98 to 119. Mac: Breathing pacer (98), Progress bar (99), Often used (100), Now on my plan (101), whole-minute timers and the softer sound (102), wrong input (103), New key from… (104), the suggested key (105), Save as PDF (106), darker amber and green (107), hours (108), evening dimming (109), Shortcuts actions (110), My AMS apps (111), Keychain (112), failed save, pictures in the iCloud copy, format number 3 (113), scripts, closing, quitting (114), Cancel is Return (115), repairs (116), power saving (117), PARAGON format check (118). iPhone and iPad 0.18 (119). `Deck.currentVersion` is 3. New `ActionType` cases `breath, bar, often`; new `ParagonKeys.What.plan`. Rules in `Core/Sources/DeckMateCore`: `Pacer.swift`, `OftenKeys.swift`, `BoxEvening.swift`, `SetupLane.swift`, `SafetyLane.swift`, `KindGroups.swift`, `PhoneEvening.swift`; the app side in `SetupLaneViews.swift`, `SmartViews.swift`, `DeckIntents.swift`, `SafeAsk.swift`, `PairedKeychain.swift`. Not yet tried for real: the evening dimming of the box, the Shortcuts actions run from the Shortcuts app, the Keychain move across a future new build, and everything on the real box. The phone app 0.17 keeps working with Mac 0.16, and the phone app 0.18 with Mac 0.15.
 
@@ -1023,3 +1029,19 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - While the resting clock shows, the screen dims to a quarter of the brightness (never below 5 %), restored on a tap, at the end of the clock and when the app is not active; keys are not drawn while resting. Settings › Clock: "Rest sooner in the evening" (off by default; `PhoneEvening`, from 21:30 to 07:00, may pass midnight): inside it the resting clock comes after 1 minute without a touch, also when Resting clock says Never.
 - Looking for the Mac backs off (`PhoneBackoff`): 1, 2, 4, 8, 15, then 30 s between failed tries (before: every second for ever); back to 1 s after a line that worked, on coming to the front, "Ask again", "Forget this Mac" and when the Mac's offer newly appears.
 - Works with Mac 0.16; the phone app 0.17 keeps working with Mac 0.16 and the phone app 0.18 with Mac 0.15. Nothing here was run on a device or simulator yet.
+
+## 120. Comes back by itself: the keeper (Mac 0.16.1)
+- **Why.** On 17 Nov 2026 a Mac restarted and did not open two menu bar apps of this family although "Open at login" was on: the Mac's own login list (`SMAppService.mainApp`) could not find them. Deck Mate relied on that list alone, so after such a restart the box, the keys on screen, the Raycast commands and the iPhone link stayed dead until the app was opened by hand.
+- **The keeper.** While "Open at login" is on, the app keeps a second, independent start order with the Mac: the file `~/Library/LaunchAgents/com.schabbauer.AMSDeckMate.keeper.plist` (label `com.schabbauer.AMSDeckMate.keeper`). It runs the app's own program with `--keeper`; `RunAtLoad` is on; `KeepAlive` only after an unsuccessful exit (so a normal Quit stays closed); Aqua session; `AssociatedBundleIdentifiers` = the app, so the Mac lists it under the app's name. It opens the app at every login even when the Mac's list fails, and again if the app stops unexpectedly (measured on other apps of the family: within about a second; the Mac may wait up to 10 seconds). A Quit by the user keeps the app closed until it is opened or the next login. Switching "Open at login" off removes the keeper too. At every start the app checks the keeper is in place and writes it again if missing.
+- **Hand-over.** An app opened by hand while "Open at login" is on hands itself over to the keeper (`Keeper.handsOver`): it closes and is opened again about a second later by the keeper, before it touches the box or the keys file. A link that opened the app in that moment (for example a Raycast command while it was closed) is not carried over; it must be pressed once more.
+- **Only one copy.** If two copies start in the same moment (the login list and the keeper), `OneCopy.mustQuit` compares the start time, then the process number: the earlier one stays, the later one quits. Before, each saw the other and both quit, so none was left.
+- **System Settings.** General, Login Items & Extensions: the app shows under "Open at Login" and under "Allow in the Background". Both must stay on. The first time the Mac may show "AMS Deck Mate added items that can run in the background".
+- **Clean end.** When the Mac shuts down or an update stops the app (SIGTERM), the app ends as with Quit: the box is left tidy and the last changes are saved. Before, such a stop cut it off.
+- **The remembered wish.** The setting `wantsOpenAtLogin` is the app's own note that the user wants "Open at login", apart from the Mac's list. The first time it takes what the Mac's list says.
+- **Checks.** A copy started with `--checks`, `--data <folder>` or `--plain` never hands itself over to the keeper and is never the copy the Mac opens at login.
+- **Where.** Rules in `Core/Sources/DeckMateCore/Keeper.swift` (`OneCopy.mustQuit`, `Keeper.plist`, `Keeper.handsOver`); app side in `App/Sources/Keeper.swift`; tests in `KeeperTests.swift` (section 14); script `Tools/install.sh` (section 15).
+- **Settings line.** See section 12.
+- **Proven live, 18 Nov 2026, without restarting the Mac.** A hard stop: the app was back in under 1 second. A second copy opened while one runs: the first stays. The start order forgotten and loaded again, as at login: the app starts with `--keeper`. A polite stop: stays stopped, exit code 0, and the keys file was saved on the way out (a safety copy first; 4 page groups, 17 pages, 149 keys before and after). Opened by hand: handed over. Under the keeper the iPhone link came up as before ("ready", "offered" in the box diary).
+- **Check picture.** `--snapshots` now also writes `settings-mac-day.png` and `settings-mac-night.png` (Settings, "This Mac"), looked at by day and by night.
+- **Not yet proven.** A real restart of the Mac with the keeper in place.
+- The iPhone and iPad app is not changed (0.18, build 23).

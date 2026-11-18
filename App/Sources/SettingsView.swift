@@ -313,9 +313,17 @@ struct SettingsView: View {
                     set: { on in
                         if on { try? SMAppService.mainApp.register() } else { try? SMAppService.mainApp.unregister() }
                         openAtLogin = SMAppService.mainApp.status == .enabled
+                        // The keeper follows the tick box: its start order is written or removed with it.
+                        UserDefaults.standard.set(on, forKey: KeeperJob.wantedKey)
+                        if on { KeeperJob.writeFile() } else { KeeperJob.remove() }
                     }))
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("openAtLogin")
+                Text("While this is on, the app also comes back by itself if it ever stops unexpectedly.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("openAtLoginNote")
                 HStack(alignment: .firstTextBaseline) {
                     Text(model.mayPressKeys ? "Pressing shortcuts, typing and music keys: allowed"
                                             : "Pressing shortcuts, typing and music keys: not allowed yet")
