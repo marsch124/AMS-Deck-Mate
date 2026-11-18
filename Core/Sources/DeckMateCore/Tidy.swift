@@ -127,12 +127,16 @@ public struct KeyWorld {
     public var fileExists: (String) -> Bool
     /// Is an extension installed in Raycast: (owner, extension name).
     public var raycastExtension: (String, String) -> Bool
+    /// Is a command of an installed Raycast extension there: (owner, extension, command).
+    public var raycastCommand: (String, String, String) -> Bool
 
     public init(appExists: @escaping (String) -> Bool, fileExists: @escaping (String) -> Bool,
-                raycastExtension: @escaping (String, String) -> Bool) {
+                raycastExtension: @escaping (String, String) -> Bool,
+                raycastCommand: @escaping (String, String, String) -> Bool = { _, _, _ in true }) {
         self.appExists = appExists
         self.fileExists = fileExists
         self.raycastExtension = raycastExtension
+        self.raycastCommand = raycastCommand
     }
 }
 
@@ -155,14 +159,16 @@ public enum KeyCheck {
             return world.appExists(target) ? nil : "The app is not on this Mac"
         case .link:
             if target.isEmpty { return "No link" }
-            if target.hasPrefix("/") || target.hasPrefix("~") {
-                return world.fileExists((target as NSString).expandingTildeInPath) ? nil : "The file or folder is gone"
+            switch LinkText.kind(target) {
+            case .file: return world.fileExists((target as NSString).expandingTildeInPath) ? nil : "The file or folder is gone"
+            case .bad: return LinkText.badWords
+            default: return nil
             }
-            return nil
         case .raycast:
             if target.isEmpty { return "No Raycast command" }
             guard let parts = RaycastLink.parts(target), parts.owner != "raycast" else { return nil }
-            return world.raycastExtension(parts.owner, parts.extensionName) ? nil : "The Raycast extension is not installed"
+            return world.raycastExtension(parts.owner, parts.extensionName)
+                && world.raycastCommand(parts.owner, parts.extensionName, parts.command) ? nil : "This Raycast command is not on this Mac"
         case .folder:
             guard let id = UUID(uuidString: target), profile.page(id) != nil else { return "Its folder is gone" }
             return nil
@@ -204,7 +210,8 @@ public enum KeyCheck {
         case .focus:
             return FocusKeys.plan(of: action).steps.isEmpty ? "No template chosen yet" : nil
         case .playlist:
-            return PlaylistKeys.uri(target) == nil ? "No Spotify link yet" : nil
+            if target.isEmpty { return "No Spotify link yet" }
+            return PlaylistKeys.uri(target) == nil ? "This is not a Spotify link" : nil
         }
     }
 

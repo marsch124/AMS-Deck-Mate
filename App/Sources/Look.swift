@@ -24,8 +24,8 @@ enum Palette {
         case .web: return rgb(0.08, 0.54, 0.48)        // teal
         case .raycast: return rgb(0.86, 0.22, 0.25)    // a clear red, like Raycast's own (his pick, 0.9.1; was red-orange)
         case .shortcut: return rgb(0.48, 0.37, 0.82)   // purple
-        case .text: return rgb(0.73, 0.47, 0.06)       // amber
-        case .media: return rgb(0.18, 0.61, 0.31)      // green
+        case .text: return rgb(0.62, 0.38, 0.04)       // amber (darker in 0.16: white words reach 5.0:1)
+        case .media: return rgb(0.14, 0.52, 0.26)      // green (darker in 0.16: white words reach 4.7:1)
         case .move: return rgb(0.36, 0.42, 0.51)       // grey-blue
         case .empty: return rgb(0.07, 0.07, 0.08)
         }

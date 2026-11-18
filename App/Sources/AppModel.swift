@@ -557,6 +557,7 @@ final class AppModel: ObservableObject {
         guard id != AppInfo.bundleID else { return }       // our own windows never change the profile
         let before = frontApp
         frontApp = id
+        AppDaysKeeper.shared.came(id, model: self)
         let recent = RecentApps.after(recentApps, front: id, skip: AppInfo.bundleID)
         if recent != recentApps { recentApps = recent; refreshBox() }
         guard pinned == nil else { return }
@@ -1055,5 +1056,6 @@ enum KeyWorldOnMac {
             return FileManager.default.fileExists(atPath: url.path)
         },
         fileExists: { FileManager.default.fileExists(atPath: $0) },
-        raycastExtension: { owner, name in RaycastIcons.installed(owner: owner, extensionName: name) })
+        raycastExtension: { owner, name in RaycastIcons.installed(owner: owner, extensionName: name) },
+        raycastCommand: { RaycastInstalled.has($0, $1, $2) })
 }

@@ -92,6 +92,10 @@ struct SetupView: View {
                 Text("All pages").font(.headline).foregroundStyle(Palette.part("keys", scheme))
                 Text("Click a page to change its keys.").font(.caption).foregroundStyle(.secondary)
                 Spacer()
+                Button("Save as PDF…") { KeysPDF.save(deck: model.deck, note: profileNote) }
+                    .buttonStyle(PlainButton())
+                    .help("Every page group with its pages as small pictures, on A4 pages")
+                    .accessibilityIdentifier("savePDF")
                 Button("Back to the keys") { showOverview = false }
                     .buttonStyle(PlainButton())
                     .keyboardShortcut(.cancelAction)
@@ -737,6 +741,7 @@ struct SetupView: View {
     }
 
     private func save() {
+        NotificationCenter.default.post(name: .deckKeySaving, object: nil)
         guard let slot, let profile, let page else { return }
         if favourite != nil {
             let empty = draft.action.type == .none && draft.title.isEmpty && draft.icon.isEmpty
@@ -764,7 +769,7 @@ struct SetupView: View {
 }
 
 /// One page as a small picture of its 15 keys, with its name under it (a folder shows the folder mark).
-private struct MiniPage: View {
+struct MiniPage: View {
     let page: DeckPage
     let current: Bool
     private let side: CGFloat = 24

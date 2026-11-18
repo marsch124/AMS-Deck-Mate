@@ -301,7 +301,10 @@ struct SettingsView: View {
         case .check:
             card("Check keys", "keys") { checkBody }
         case .use:
-            card("Key use", "keys") { useBody }
+            VStack(alignment: .leading, spacing: 10) {
+                AppSuggestionCard(model: model)
+                card("Key use", "keys") { useBody }
+            }
         case .mac:
             card("This Mac", "settings") {
                 Toggle("Open at login", isOn: Binding(
