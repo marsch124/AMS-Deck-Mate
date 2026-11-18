@@ -1,6 +1,7 @@
 import AppKit
 import DeckMateCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Hears a mouse press anywhere on it and says where — also on the very first click on a window
 /// that is not in front (a plain button would only wake the window up).
@@ -245,7 +246,9 @@ struct BrokenCorner: View {
 }
 
 /// In Set up keys: a click picks the key, a drag moves it.
-private struct DragKey: ViewModifier {
+struct DragKey: ViewModifier {
+    /// What a thing dropped from outside starts with, before its path or address.
+    static let outside = "dropped:"
     let page: UUID?
     let index: Int
     let filled: Bool
@@ -258,9 +261,22 @@ private struct DragKey: ViewModifier {
                 .contentShape(Rectangle())
                 .onTapGesture(perform: press)
                 .draggable(filled ? "deckkey:\(page.uuidString):\(index)" : "")
-                .dropDestination(for: String.self) { items, _ in
-                    guard let item = items.first, item.hasPrefix("deckkey:") else { return false }
-                    drop(item)
+                // A key dragged onto a key ("deckkey:…"), or something from outside: an app, a file
+                // or a folder from the Finder, a web address from the browser ("dropped:…").
+                .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText], isTargeted: nil) { providers in
+                    guard let provider = providers.first else { return false }
+                    if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
+                        || provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+                        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                            guard let url else { return }
+                            DispatchQueue.main.async { drop(DragKey.outside + (url.isFileURL ? url.path : url.absoluteString)) }
+                        }
+                        return true
+                    }
+                    _ = provider.loadObject(ofClass: NSString.self) { text, _ in
+                        guard let text = text as? String, !text.isEmpty else { return }
+                        DispatchQueue.main.async { drop(text.hasPrefix("deckkey:") ? text : DragKey.outside + text) }
+                    }
                     return true
                 }
         } else {

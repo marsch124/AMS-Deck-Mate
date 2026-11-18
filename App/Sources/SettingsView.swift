@@ -29,6 +29,8 @@ struct SettingsView: View {
     private var part: Part { pickedPart ?? startPart }
     @State private var checked: [String]?
     @State private var restoring = false
+    @State private var linksOn = Outside.isOn
+    @State private var listedKeys = 0
     @State private var copies: [Store.Copy] = []
     @State private var restoredNote: String?
     @Environment(\.colorScheme) private var scheme
@@ -137,13 +139,13 @@ struct SettingsView: View {
 
     enum Part: String, CaseIterable, Identifiable {
         case box = "The box", firstTime = "First time with the box", screen = "Keys on screen", phone = "iPhone",
-             profiles = "Page groups", check = "Check keys", use = "Key use", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
+             links = "Raycast and links", profiles = "Page groups", check = "Check keys", use = "Key use", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
         var id: String { rawValue }
         var colour: String {
             switch self {
             case .box, .firstTime: return "box"
             case .screen, .kept: return "screen"
-            case .phone: return "raycast"
+            case .phone, .links: return "raycast"
             case .profiles: return "profiles"
             case .check, .use, .elgato: return "keys"
             case .mac: return "settings"
@@ -248,6 +250,37 @@ struct SettingsView: View {
                 }
                 note("Open Deck Mate on the iPhone close to this Mac; on the same Wi-Fi it finds the Mac by itself. The first time, this Mac asks whether to allow it.")
             }
+        case .links:
+            card("Press keys from Raycast", "raycast") {
+                Toggle("Keys can be pressed from Raycast and by link", isOn: Binding(
+                    get: { linksOn },
+                    set: { on in
+                        linksOn = on
+                        UserDefaults.standard.set(!on, forKey: Outside.offKey)
+                        listedKeys = model.writeOutside()
+                    }))
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("linksOn")
+                if linksOn {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(listedKeys == 1 ? "1 key is listed for Raycast" : "\(listedKeys) keys are listed for Raycast")
+                            .accessibilityIdentifier("listedKeys")
+                        Spacer(minLength: 6)
+                        Button("Show the folder") {
+                            model.writeOutside()
+                            NSWorkspace.shared.activateFileViewerSelecting([Outside.folder(model.store)])
+                        }
+                        .buttonStyle(MainButton(part: "raycast"))
+                        .accessibilityIdentifier("showLinksFolder")
+                    }
+                    note("Once, in Raycast: Settings › Extensions › Script Commands › Add Directories, and choose this folder. From then on every key that has words is found in Raycast by its name, under “Deck Mate”. The list follows your keys by itself.")
+                    note("A key pressed this way acts wherever it sits; the keys on screen and the box stay where they are. Quit all apps, Empty the bin and Eject all disks always ask first.")
+                    note("Every link carries this Mac’s own pass, so a web page or another program cannot press your keys.")
+                } else {
+                    note("Off: nothing outside AMS Deck Mate can press a key, and the folder for Raycast is removed.")
+                }
+            }
+            .onAppear { listedKeys = model.writeOutside() }
         case .profiles:
             card("Page groups", "profiles") {
                 Toggle("Change page group with the app in front", isOn: Binding(

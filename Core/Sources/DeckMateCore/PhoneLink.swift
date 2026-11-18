@@ -75,6 +75,13 @@ public enum PhoneLink {
         /// Both ways (version 7), the start of a private line and the only message ever sent readable:
         /// first the iPhone's `promise`, then the Mac's `key`, then the iPhone's `key` (see `SecureLine`).
         case secure(promise: String?, key: String?)
+        /// Mac → iPhone (version 8): only these keys look different now; the others stay as they are.
+        /// A timer's second then sends one small picture instead of all fifteen.
+        case some(place: String, keys: [Key])
+        /// iPhone → Mac (version 8), every few seconds: "are you there?"; the Mac answers `pong`. A line
+        /// that stays quiet is a dead one, however connected it looks.
+        case ping
+        case pong
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -87,6 +94,7 @@ public enum PhoneLink {
             case .asleep: return 5
             case .visit: return 6
             case .secure: return 7
+            case .some, .ping, .pong: return 8
             }
         }
     }
@@ -95,7 +103,30 @@ public enum PhoneLink {
     /// 3 = own keys, long press, favourites, the Mac at a glance and the music strip.
     /// 4 = the navigation picture; 5 = the Mac says when it sleeps; 6 = a swipe shows a page group without locking it.
     /// 7 = the line is private: sealed from its first moment (`SecureLine`); older versions are no longer answered.
-    public static let currentVersion = 7
+    /// 8 = only the keys that changed are sent, and the iPhone asks "are you there?" every few seconds.
+    public static let currentVersion = 8
+
+    /// The iPhone asks "are you there?" this often, and gives the line up when nothing at all came
+    /// from the Mac for `quietLimit` seconds (two answers missed). The Mac closes a line it has not
+    /// heard from for `macQuietLimit` seconds.
+    public static let pingEvery: TimeInterval = 5
+    public static let quietLimit: TimeInterval = 12
+    public static let macQuietLimit: TimeInterval = 20
+
+    /// True when a line has been quiet for too long to still be alive.
+    public static func isDead(lastHeard: Date, now: Date, limit: TimeInterval = quietLimit) -> Bool {
+        now.timeIntervalSince(lastHeard) > limit
+    }
+
+    /// The keys that look different from what the iPhone has; nil = it has none yet (or another
+    /// number of them), so all of them must go.
+    public static func changed(from old: [Key]?, to new: [Key]) -> [Key]? {
+        guard let old, old.count == new.count else { return nil }
+        return zip(old, new).filter { $0 != $1 }.map(\.1)
+    }
+
+    /// No message from an iPhone is larger than this (a hello, a press): the Mac reads nothing bigger.
+    public static let largestFromPhone = 65_536
 
     /// One page group of the navigation picture.
     public struct MapGroup: Codable, Equatable, Sendable {
@@ -209,6 +240,8 @@ public enum PhoneLink {
         private var waiting = Data()
         /// True once something arrived that cannot be a message: the line should be closed.
         public private(set) var broken = false
+        /// A message longer than this breaks the line.
+        public var limit = PhoneLink.largest
 
         public init() {}
 
@@ -224,7 +257,7 @@ public enum PhoneLink {
         public mutating func next(_ session: inout SecureLine.Session?) -> Message? {
             guard !broken, waiting.count >= 4 else { return nil }
             let head = waiting.prefix(4).reduce(0) { ($0 << 8) | Int($1) }
-            guard head <= PhoneLink.largest else { broken = true; return nil }
+            guard head <= limit else { broken = true; return nil }
             guard waiting.count >= 4 + head else { return nil }
             var body = Data(waiting.dropFirst(4).prefix(head))
             waiting = Data(waiting.dropFirst(4 + head))

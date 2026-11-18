@@ -224,18 +224,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             .sink { [weak self] _ in DispatchQueue.main.async { self?.fitDeck() } }
         HotKey.register(keyCode: kVK_ANSI_D, modifiers: controlKey | optionKey) { [weak self] in self?.toggleDeck() }
 
-        // Lets a check from outside open the real windows and press keys.
-        let center = DistributedNotificationCenter.default()
-        center.addObserver(self, selector: #selector(toggleDeck), name: Notification.Name(AppDelegate.note + "toggleDeck"), object: nil)
-        center.addObserver(self, selector: #selector(openSetup), name: Notification.Name(AppDelegate.note + "openSetup"), object: nil)
-        center.addObserver(self, selector: #selector(openSettings), name: Notification.Name(AppDelegate.note + "openSettings"), object: nil)
-        center.addObserver(self, selector: #selector(pressFromOutside(_:)), name: Notification.Name(AppDelegate.note + "press"), object: nil)
+        // Lets a check from outside open the real windows and press keys — only in an app started
+        // with "--checks". The app as he uses it listens to nothing of the kind: any program on the
+        // Mac could otherwise press his keys.
+        if CommandLine.arguments.contains("--checks") {
+            let center = DistributedNotificationCenter.default()
+            center.addObserver(self, selector: #selector(toggleDeck), name: Notification.Name(AppDelegate.note + "toggleDeck"), object: nil)
+            center.addObserver(self, selector: #selector(openSetup), name: Notification.Name(AppDelegate.note + "openSetup"), object: nil)
+            center.addObserver(self, selector: #selector(openSettings), name: Notification.Name(AppDelegate.note + "openSettings"), object: nil)
+            center.addObserver(self, selector: #selector(pressFromOutside(_:)), name: Notification.Name(AppDelegate.note + "press"), object: nil)
+        }
 
         // The very first start shows the keys, so there is something to see.
         if !UserDefaults.standard.bool(forKey: "shownOnce") {
             UserDefaults.standard.set(true, forKey: "shownOnce")
             showDeck()
         }
+    }
+
+    /// A link was opened: "amsdeckmate://press?key=…&pass=…" (Raycast's commands are such links).
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where model?.open(link: url) == true { toggleDeck() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -646,6 +655,9 @@ enum Snapshots {
                  "pick-list-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .use), "settings-use-\(name)", look, folder)
             shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .kept), "settings-kept-\(name)", look, folder)
+            // 0.15: the kinds of key under headings with a search field, and pressing keys from Raycast.
+            shot(KindList(current: .timer, allowed: { _ in true }, pick: { _ in }, close: {}), "kinds-\(name)", look, folder)
+            shot(SettingsView(model: model, phone: phone, startTab: .settings, startPart: .links), "settings-links-\(name)", look, folder)
         }
         for size in [ScreenSize.small, .large] {
             var deck = Sample.deck()

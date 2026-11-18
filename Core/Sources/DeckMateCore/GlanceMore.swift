@@ -21,6 +21,8 @@ extension ActionType {
 public enum GarminKeys {
     public enum Number: String, CaseIterable, Sendable {
         case steps, sleep, pulse, stress, workouts
+        /// From the gym app's sessions, which the board reads: days since the last one, and how many in 7 days.
+        case gymDays, gymWeek
 
         public var title: String {
             switch self {
@@ -29,6 +31,8 @@ public enum GarminKeys {
             case .pulse: return "Resting pulse"
             case .stress: return "Stress today"
             case .workouts: return "Workouts, 7 days"
+            case .gymDays: return "Days since the gym"
+            case .gymWeek: return "Gym, 7 days"
             }
         }
 
@@ -39,6 +43,8 @@ public enum GarminKeys {
             case .pulse: return "heart"
             case .stress: return "pulse"
             case .workouts: return "run"
+            case .gymDays: return "gym"
+            case .gymWeek: return "strength"
             }
         }
     }
@@ -63,21 +69,48 @@ public enum GarminKeys {
         return "\(minutes / 60):" + (minutes % 60 < 10 ? "0" : "") + "\(minutes % 60)"
     }
 
-    /// Garmin's own steps of stress: resting to 25, low to 50, medium to 75, high above.
+    /// Garmin's own steps of stress: resting to 25, low to 50, medium to 75, high above. The body's
+    /// numbers never turn a key red: green while resting, teal for low and medium, amber when high.
     public static func stress(_ level: Int) -> (words: String, tone: KeyKind) {
         switch level {
         case ...25: return ("Resting", .media)
         case 26...50: return ("Low stress", .web)
-        case 51...75: return ("Medium stress", .text)
-        default: return ("High stress", .raycast)
+        case 51...75: return ("Medium stress", .web)
+        default: return ("High stress", .text)
         }
+    }
+
+    /// What every Garmin key shows while the board does not answer.
+    public static let offGlance = Glance(big: "–", words: "Board off")
+    /// Today's numbers count as old once the watch has not sent anything for this long.
+    public static let oldAfter: TimeInterval = 3 * 3600
+
+    /// When the watch last sent its numbers, when that is longer ago than `oldAfter`; nil = fresh, or not said.
+    public static func oldSince(fromBoard data: Data, now: Date) -> Date? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let text = (json["updated"] as? [String: Any])?["watchSyncedAt"] as? String else { return nil }
+        let exact = ISO8601DateFormatter()
+        exact.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let synced = exact.date(from: text) ?? ISO8601DateFormatter().date(from: text),
+              now.timeIntervalSince(synced) > oldAfter else { return nil }
+        return synced
+    }
+
+    /// "As of 06:29": the small words of a number the watch has not renewed for a while.
+    public static func oldWords(_ since: Date, zone: TimeZone = .current) -> String {
+        let clock = DateFormatter()
+        clock.dateFormat = "HH:mm"
+        clock.locale = Locale(identifier: "en_US_POSIX")
+        clock.timeZone = zone
+        return "As of " + clock.string(from: since)
     }
 
     private static func whole(_ value: Any?) -> Int? { (value as? NSNumber).map { Int($0.doubleValue.rounded()) } }
 
     /// What each Garmin key shows, from the board's answer. A number the board does not have is left out.
-    public static func glances(fromBoard data: Data) -> [Number: Glance] {
+    public static func glances(fromBoard data: Data, now: Date = Date(), zone: TimeZone = .current) -> [Number: Glance] {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
+        let old = oldSince(fromBoard: data, now: now)
         let today = json["today"] as? [String: Any] ?? [:]
         var all: [Number: Glance] = [:]
         if let steps = whole(today["steps"]) {
@@ -94,11 +127,11 @@ public enum GarminKeys {
             }
         }
         if let pulse = whole(today["restingHr"]), pulse > 0 {
-            // Against the average of the last seven days: amber from 5 beats over it, red from 8.
+            // Against the average of the last seven days: said in words from 5 beats over it, amber from 8.
             let week = ((json["restingTrend"] as? [String: Any])?["avg7"] as? [[String: Any]])?.last.flatMap { whole($0["bpm"]) }
             let over = week.map { pulse - $0 } ?? 0
             all[.pulse] = Glance(big: String(pulse), words: over >= 5 ? "+\(over) over usual" : Number.pulse.title,
-                                 tone: over >= 8 ? .raycast : over >= 5 ? .text : nil)
+                                 tone: over >= 8 ? .text : nil)
         }
         if let level = whole(today["stressAvg"]), level >= 0 {
             let now = stress(level)
@@ -107,6 +140,29 @@ public enum GarminKeys {
         if let week = (json["recentWorkouts"] as? [String: Any])?["last7"] as? [String: Any], let done = whole(week["count"]) {
             let hours = (whole(week["seconds"]) ?? 0) / 3600
             all[.workouts] = Glance(big: String(done), words: hours > 0 ? "7 days · \(hours) h" : Number.workouts.title)
+        }
+        if let gym = json["gym"] as? [String: Any] {
+            if gym["available"] as? Bool == true {
+                if let days = whole((gym["latest"] as? [String: Any])?["daysAgo"]) {
+                    all[.gymDays] = Glance(big: days == 0 ? "today" : String(days),
+                                           words: days == 0 ? "At the gym" : days == 1 ? "day since the gym" : "days since the gym")
+                }
+                if let week = gym["week"] as? [String: Any], let sessions = whole(week["sessions"]) {
+                    let minutes = whole(week["minutes"]) ?? 0
+                    all[.gymWeek] = Glance(big: String(sessions), words: minutes > 0 ? "7 days · \(minutes) min" : Number.gymWeek.title,
+                                           tone: sessions > 0 ? .media : nil)
+                }
+            } else {
+                // The gym app has not shared its sessions with the board yet.
+                all[.gymDays] = Glance(big: "–", words: "No gym data yet")
+                all[.gymWeek] = Glance(big: "–", words: "No gym data yet")
+            }
+        }
+        // Today's numbers the watch has not renewed for hours: grey-blue, with the time they are from.
+        if let old {
+            for number in [Number.steps, .pulse, .stress] {
+                if let glance = all[number] { all[number] = Glance(big: glance.big, words: oldWords(old, zone: zone), tone: .move) }
+            }
         }
         return all
     }

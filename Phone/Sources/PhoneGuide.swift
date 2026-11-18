@@ -47,7 +47,8 @@ enum PhoneGuide {
             "Since 0.11 the link to the Mac is private: everything is scrambled from the first moment, so on a shared Wi-Fi (hotel, café) nobody can listen in or press your keys. The number is there so nobody can sit in between.",
             "Every iPhone and iPad has to be allowed once more after the update (one click on the Mac). The app 0.11 only talks to a Mac at 0.8 or later. With an older Mac it says \"Update AMS Deck Mate on your Mac\". An older app with the new Mac sees \"said no\".",
             "Since 0.12, while this device is connected, a small lock drawing says the line to the Mac is private. Since 0.15 it is the same green as the settings gear and a little larger. Held upright it sits beside the status dot at the top left. Held on its side it sits in the line with the settings gear and the music button (gear, music, lock): on the iPad at the bottom left, and since 0.16 on the iPhone in a narrow column to the right of the keys, at the bottom, above the music button and the gear. A tap on it shows a small card: \"Private line: nobody else on the Wi-Fi can read your keys or press them.\" A tap on the dot shows the connection card with the same sentence. The dot itself is the same green as the gear when connected, amber while looking or waiting, red when the Mac said no.",
-            "If the Mac was told Don't Allow, the iPhone shows \"Ask again\". Tap it and the Mac asks once more."
+            "If the Mac was told Don't Allow, the iPhone shows \"Ask again\". Tap it and the Mac asks once more.",
+            "New in 0.17: the line \"Update AMS Deck Mate on your Mac\" only comes up when the Mac was reached and did not answer two tries in a row. A sleeping Mac or a Wi-Fi blip no longer brings it up. \"Ask again\", and coming back to the app, start the count afresh."
         ]),
         Section(id: "tapping", title: "Tapping keys", part: "keys", lines: [
             "A tap on a key makes the Mac do it. The keys on the Mac's own screen do not hide because of your tap.",
@@ -140,11 +141,35 @@ enum PhoneGuide {
             "Bring the iPhone close to the Mac.",
             "On the iPhone open Settings, Privacy & Security, Local Network, and make sure Deck Mate is switched on.",
             "On the Mac, in Deck Mate's Settings, the checkbox \"Let an iPhone use these keys\" must be on.",
-            "After 20 seconds a card appears: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. The button \"Open Settings\" takes you to the iPhone's Settings. The close (x) button hides the card."
+            "After 20 seconds a card appears: turn on Personal Hotspot on the iPhone and pick the iPhone in the Mac's Wi-Fi menu. The button \"Open Settings\" takes you to the iPhone's Settings. The close (x) button hides the card.",
+            "New in 0.17: a tap on a key while the app is looking for the Mac now says \"Looking for your Mac\". Before, the tap just vanished."
+        ]),
+        Section(id: "deadline", title: "When the line goes quiet", part: "settings", lines: [
+            "New in 0.17, with a Mac at 0.15. The app asks the Mac \"are you there?\" every 5 seconds, and the Mac answers.",
+            "When nothing at all comes back for 12 seconds, the app stops saying Connected and looks for the Mac again. Before, after a change of Wi-Fi or when the Mac dropped off the Wi-Fi, it could say Connected for ever while taps went nowhere.",
+            "A sleeping Mac is not given up on. The dark \"Mac asleep\" screen stays as it was.",
+            "Only the keys that look different travel now. With a running timer, only that one key's picture arrives each second, instead of all fifteen. That saves battery and Wi-Fi.",
+            "With an older Mac app, everything works as before."
         ])
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.17", date: "18 Nov 2026", new: [
+            "A dead line now shows as dead. With a Mac at 0.15, the app asks the Mac \"are you there?\" every 5 seconds. When nothing at all comes back for 12 seconds, it stops saying Connected and looks for the Mac again. Before: after a change of Wi-Fi, or when the Mac dropped off the Wi-Fi, the app could say Connected for ever while taps went nowhere. Now: within 12 seconds it says it is looking again.",
+            "A sleeping Mac is not given up on. The dark \"Mac asleep\" screen stays exactly as it was.",
+            "A tap while the app is looking for the Mac now says \"Looking for your Mac\". Before: the tap vanished and nothing told you why.",
+            "Only changed keys travel. With a running timer, stopwatch or focus round, the picture of that one key arrives each second, instead of all fifteen keys (about 300 KB for all fifteen, each second). That saves battery and Wi-Fi. This needs AMS Deck Mate 0.15 on the Mac.",
+            "Not yet tried: the new link check on a real iPhone and iPad with the real box, which is at home until January 2027."
+        ], changed: [
+            "The line \"Update AMS Deck Mate on your Mac\" now only comes up when the Mac was reached and did not answer two tries in a row. Before: two failed tries of any kind, for example a sleeping Mac or a Wi-Fi blip, brought it up wrongly. \"Ask again\", and coming back to the app, start the count afresh.",
+            "No screen was moved or redesigned. Keys, buttons, colours and places are exactly as in 0.16.",
+            "With a Mac app older than 0.15, everything works as before: the new link check and the changed-keys-only sending need AMS Deck Mate 0.15 on the Mac. Mac 0.15 also works with the app at 0.16.",
+            "How it works has a new part, \"When the line goes quiet\", and new lines in \"Allowing the iPhone\" and \"When it says Looking for your Mac\". The app is now 0.17 (build 22)."
+        ], fixed: [
+            "Connected for ever: a line that had died could still say Connected. Now it is noticed after 12 seconds.",
+            "A tap that vanished while looking for the Mac now says \"Looking for your Mac\".",
+            "\"Update AMS Deck Mate on your Mac\" no longer shows up wrongly after a sleeping Mac or a Wi-Fi blip."
+        ]),
         Release(id: "0.16", date: "16 Nov 2026", new: [
             "Not yet tried: the new look of the navigation picture and the new row of buttons on a real iPad and a real iPhone held on its side."
         ], changed: [

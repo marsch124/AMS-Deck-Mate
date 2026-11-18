@@ -234,14 +234,16 @@ public enum BatteryKeys {
         return latest
     }
 
-    /// The key's colour: green from 50, amber from 25, red below; grey-blue while there is no number.
+    /// The key's colour: green from 50, teal from 25, amber below (the body's numbers never turn a key
+    /// red); grey-blue while there is no number, or while the number is hours old.
     public static func kind(_ level: Int?) -> KeyKind {
         guard let level else { return .move }
-        return level >= 50 ? .media : level >= 25 ? .text : .raycast
+        return level >= 50 ? .media : level >= 25 ? .web : .text
     }
 
-    public static func glance(_ level: Int?) -> Glance? {
-        level.map { Glance(big: String($0), words: words) }
+    /// `old` = when the watch last sent its numbers, when that is hours ago: the small words say so.
+    public static func glance(_ level: Int?, old: Date? = nil, zone: TimeZone = .current) -> Glance? {
+        level.map { Glance(big: String($0), words: old.map { GarminKeys.oldWords($0, zone: zone) } ?? words) }
     }
 }
 

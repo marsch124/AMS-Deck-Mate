@@ -85,9 +85,9 @@ final class GlanceKindsTests: XCTestCase {
 
     func testBatteryColour() {
         XCTAssertEqual(BatteryKeys.kind(50), .media)
-        XCTAssertEqual(BatteryKeys.kind(49), .text)
-        XCTAssertEqual(BatteryKeys.kind(25), .text)
-        XCTAssertEqual(BatteryKeys.kind(24), .raycast)
+        XCTAssertEqual(BatteryKeys.kind(49), .web)
+        XCTAssertEqual(BatteryKeys.kind(25), .web)
+        XCTAssertEqual(BatteryKeys.kind(24), .text)
         XCTAssertEqual(BatteryKeys.kind(nil), .move)
     }
 
@@ -148,7 +148,7 @@ final class GlanceKindsTests: XCTestCase {
     func testBatteryKeyColourComesFromItsLevel() {
         let key = DeckKey(action: DeckAction(type: .bodyBattery))
         XCTAssertEqual(key.resolving(LiveKeys(battery: 80)).action.kind, .media)
-        XCTAssertEqual(key.resolving(LiveKeys(battery: 10)).action.kind, .raycast)
+        XCTAssertEqual(key.resolving(LiveKeys(battery: 10)).action.kind, .text)
         XCTAssertEqual(key.resolving(LiveKeys()).action.kind, .move)
     }
 

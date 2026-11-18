@@ -93,6 +93,11 @@ final class LinkClient: ObservableObject {
     private var session: SecureLine.Session?
     /// Lines in a row that ended before the Mac answered the start.
     private var unanswered = 0
+    /// True once this line reached the Mac at all (a Mac that is asleep or away never gets this far).
+    private var reached = false
+    /// When the Mac last said anything on this line, and the clock that asks "are you there?".
+    private var lastHeard = Date()
+    private var pingTimer: Timer?
     private var talkingTo = ""
     private var isSample = false
     private var wake: NSObjectProtocol?
@@ -179,8 +184,37 @@ final class LinkClient: ObservableObject {
         if case .refused = state { return }
         connection?.cancel()
         connection = nil
+        stopPinging()
+        unanswered = 0
+        macTooOld = false
         state = .looking
         lookAgain()
+    }
+
+    /// Asks the Mac "are you there?" every few seconds (a Mac from 0.15 on answers). A Mac that
+    /// stays quiet is gone, however connected the line looks: back to looking for it.
+    private func startPinging() {
+        stopPinging()
+        guard macVersion >= 8, !isSample else { return }
+        lastHeard = Date()
+        let timer = Timer(timeInterval: PhoneLink.pingEvery, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.ping() }
+        }
+        timer.tolerance = 0.5
+        RunLoop.main.add(timer, forMode: .common)
+        pingTimer = timer
+    }
+
+    private func stopPinging() {
+        pingTimer?.invalidate()
+        pingTimer = nil
+    }
+
+    private func ping() {
+        guard case .connected = state else { return stopPinging() }
+        // A sleeping Mac is quiet on purpose: it is only asked, never given up on.
+        if !macAsleep, PhoneLink.isDead(lastHeard: lastHeard, now: Date()) { return dropLine() }
+        send(.ping)
     }
 
     private func lookAgain() {
@@ -206,6 +240,7 @@ final class LinkClient: ObservableObject {
         lineKeys = SecureLine.Keys()
         session = nil
         pairCode = nil
+        reached = false
         talkingTo = mac
         state = .connecting(mac)
         line.stateUpdateHandler = { [weak self, weak line] state in
@@ -213,6 +248,7 @@ final class LinkClient: ObservableObject {
                 guard let self, let line, self.connection === line else { return }
                 switch state {
                 case .ready:
+                    self.reached = true
                     // The start of a private line: first only a promise of this line's key.
                     self.sendReadable(.secure(promise: self.lineKeys.promise.base64EncodedString(), key: nil))
                 case .failed, .cancelled:
@@ -256,8 +292,11 @@ final class LinkClient: ObservableObject {
         guard connection === line else { return }
         connection = nil
         pairCode = nil
-        if session == nil {
-            // The Mac never answered the start: after two tries in a row, say that it needs an update.
+        stopPinging()
+        if session == nil, reached {
+            // The line reached the Mac, but the Mac never answered the start: after two such tries in
+            // a row, say that it needs an update. A Mac that is asleep, away or switched off is never
+            // reached at all, so it does not count.
             unanswered += 1
             if unanswered >= 2 { macTooOld = true }
         }
@@ -288,6 +327,7 @@ final class LinkClient: ObservableObject {
     }
 
     private func handle(_ message: PhoneLink.Message) {
+        lastHeard = Date()
         // Before the line is sealed only the Mac's key is listened to; after that it never comes again.
         if case let .secure(_, key) = message { return turnPrivate(with: key) }
         guard let session else { return dropLine() }
@@ -319,6 +359,7 @@ final class LinkClient: ObservableObject {
             if !newMac { favourites = [:]; mac = nil }
             if macVersion < 4 { map = [] }
             state = .connected(talkingTo)
+            startPinging()
             if ownOn { sendOwn() }
         case .refused:
             state = .refused(talkingTo)
@@ -327,6 +368,10 @@ final class LinkClient: ObservableObject {
         case let .keys(place, list):
             self.place = place
             keys = Dictionary(list.map { ($0.index, $0) }, uniquingKeysWith: { $1 })
+        case let .some(place, list):
+            // Only the keys that look different: the others stay as they are.
+            self.place = place
+            for key in list { keys[key.index] = key }
         case let .status(status):
             self.status = status
         case let .pressed(index):
@@ -343,7 +388,7 @@ final class LinkClient: ObservableObject {
         case let .asleep(asleep):
             if let words = PhoneLink.wakeNote(wasAsleep: macAsleep, asleep: asleep) { show(words, ok: true) }
             macAsleep = asleep
-        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit:
+        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit, .ping, .pong:
             break
         }
     }
@@ -397,13 +442,15 @@ final class LinkClient: ObservableObject {
     }
 
     func press(_ index: Int) {
-        guard case .connected = state, !isSample else { return }
+        guard !isSample else { return }
+        guard case .connected = state else { return show("Looking for your Mac", ok: false) }
         send(.press(index: index))
     }
 
     /// A key held for half a second: its long-press action (only a Mac at 0.5 or later knows it).
     func hold(_ index: Int) {
-        guard case .connected = state, !isSample else { return }
+        guard !isSample else { return }
+        guard case .connected = state else { return show("Looking for your Mac", ok: false) }
         send(newMac ? .hold(index: index) : .press(index: index))
     }
 
@@ -425,6 +472,9 @@ final class LinkClient: ObservableObject {
     func retry() {
         connection?.cancel()
         connection = nil
+        stopPinging()
+        unanswered = 0
+        macTooOld = false
         state = .looking
         lookAgain()
     }

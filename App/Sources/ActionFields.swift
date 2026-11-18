@@ -55,12 +55,6 @@ extension ActionType {
         }
     }
 
-    static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
-                                        .macDo, .searchCopied, .media, .playlist, .timer, .focus, .stopwatch, .counter, .toggle, .micLight,
-                                        .joinMeeting, .paragon,
-                                        .nextEvent, .freeUntil, .weather, .worldClock, .sunTimes, .bodyBattery, .garmin, .macNow,
-                                        .dueToday, .cover, .desk, .list, .multi,
-                                        .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder or only show something.
     static let forLongPress: [ActionType] = [.none, .app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut,
                                              .text, .copied, .macDo, .searchCopied, .media, .playlist, .timer, .stopwatch, .counter,

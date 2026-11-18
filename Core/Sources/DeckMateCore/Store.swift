@@ -19,11 +19,9 @@ public struct Store {
     /// Pictures a key can show instead of a drawing (an app's real icon), as <name>.png.
     public var pictures: URL { folder.appendingPathComponent("Pictures", isDirectory: true) }
 
-    /// nil when there is no setup yet (first start), or the file cannot be read at all.
-    public func load() -> Deck? {
-        guard let data = try? Data(contentsOf: file) else { return nil }
-        return try? JSONDecoder().decode(Deck.self, from: data)
-    }
+    /// nil when there is no setup yet (first start), when the file cannot be read at all, or when it
+    /// reads but holds no page group (a file like "{}" is damaged, not an empty setup).
+    public func load() -> Deck? { Store.read(file) }
 
     public var hasFile: Bool { FileManager.default.fileExists(atPath: file.path) }
 
@@ -33,6 +31,8 @@ public struct Store {
         try? files.createDirectory(at: backups, withIntermediateDirectories: true)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        var deck = deck
+        deck.version = max(deck.version, Deck.currentVersion)
         guard let data = try? encoder.encode(deck) else { return false }
         if let old = try? Data(contentsOf: file) {
             if old == data { return true }
@@ -58,12 +58,62 @@ public struct Store {
             extra += 1
         }
         try? data.write(to: backups.appendingPathComponent(name), options: .atomic)
-        let copies = ((try? files.contentsOfDirectory(atPath: backups.path)) ?? [])
-            .filter { $0.hasPrefix("deck ") && $0.hasSuffix(".json") }
-            .sorted()
-        for name in copies.dropLast(Store.keptCopies) {
+        tidyCopies()
+    }
+
+    /// Keeps the file as it is now as a copy that ordinary saving never pushes out: the state just
+    /// before something large (a page or a page group deleted, Elgato's keys brought over, an earlier
+    /// state put back). `why` becomes part of its name. The newest `keptMarked` of these stay.
+    public func keepNow(_ why: String) {
+        guard let data = try? Data(contentsOf: file) else { return }
+        let files = FileManager.default
+        try? files.createDirectory(at: backups, withIntermediateDirectories: true)
+        let words = why.filter { $0.isLetter || $0.isNumber || $0 == " " }
+        try? data.write(to: backups.appendingPathComponent("\(Store.markedPrefix)\(Store.stamp()) \(words).json"), options: .atomic)
+        tidyCopies()
+    }
+
+    private func tidyCopies() {
+        let files = FileManager.default
+        let names = (try? files.contentsOfDirectory(atPath: backups.path)) ?? []
+        for name in Store.copiesToRemove(names, today: Date()) {
             try? files.removeItem(at: backups.appendingPathComponent(name))
         }
+    }
+
+    public static let markedPrefix = "deck kept "
+    public static let keptMarked = 10
+    /// A day's last copy stays this many days.
+    public static let keptDays = 30
+
+    /// The day ("2026-11-18") in the name of a copy written by a save; nil for every other file
+    /// (a copy with a name of its own, a damaged file): those are never removed.
+    static func day(ofSavedCopy name: String) -> String? {
+        guard name.hasPrefix("deck "), name.hasSuffix(".json") else { return nil }
+        let rest = name.dropFirst(5)
+        guard rest.count >= 23, rest.prefix(4).allSatisfy(\.isNumber) else { return nil }
+        let day = String(rest.prefix(10))
+        let parts = day.split(separator: "-")
+        guard parts.count == 3, parts.allSatisfy({ $0.allSatisfy(\.isNumber) }),
+              rest.dropFirst(10).first == " " else { return nil }
+        return day
+    }
+
+    /// Which safety copies go. Kept: the newest `keptCopies` written by a save, the last copy of each
+    /// of the last `keptDays` days (so an hour of editing cannot push out yesterday), and the newest
+    /// `keptMarked` copies made before something large. A file with any other name is never touched.
+    public static func copiesToRemove(_ names: [String], today: Date) -> [String] {
+        let saved = names.filter { day(ofSavedCopy: $0) != nil }.sorted()
+        var keep = Set(saved.suffix(keptCopies))
+        let format = DateFormatter()
+        format.dateFormat = "yyyy-MM-dd"
+        format.locale = Locale(identifier: "en_US_POSIX")
+        let oldest = format.string(from: today.addingTimeInterval(-Double(keptDays) * 86_400))
+        var lastOfDay: [String: String] = [:]
+        for name in saved { lastOfDay[day(ofSavedCopy: name) ?? ""] = name }
+        for (day, name) in lastOfDay where day >= oldest { keep.insert(name) }
+        let marked = names.filter { $0.hasPrefix(markedPrefix) && $0.hasSuffix(".json") }.sorted()
+        return saved.filter { !keep.contains($0) } + marked.dropLast(keptMarked)
     }
 
     private static func stamp() -> String {
@@ -121,8 +171,12 @@ public struct Store {
     }
 
     public func deck(of copy: Copy) -> Deck? {
-        guard let folder = copy.inCloud ? cloud : backups else { return nil }
-        return Store.read(folder.appendingPathComponent(copy.name))
+        url(of: copy).flatMap { Store.read($0) }
+    }
+
+    /// Where a copy is: the Backups folder on this Mac, or the iCloud folder.
+    func url(of copy: Copy) -> URL? {
+        (copy.inCloud ? cloud : backups)?.appendingPathComponent(copy.name)
     }
 
     /// Puts the keys file as it is now into the iCloud folder, named by its day, and keeps the
@@ -164,19 +218,30 @@ public struct Store {
         case recovered(Date)
         /// The file was damaged and no safety copy could be read.
         case lost
+        /// No file on this Mac, but a weekly copy in iCloud Drive: it became the setup (a new Mac).
+        case fromCloud(Date)
     }
 
     /// Reads the setup at start. A damaged file is never thrown away: it is kept in Backups as
     /// "damaged <time>.json", and the newest safety copy that can be read takes its place.
     public func start() -> (deck: Deck?, how: Start) {
-        guard hasFile else { return (nil, .first) }
-        if let deck = load() { return (deck, .loaded) }
         let files = FileManager.default
+        guard hasFile else {
+            // A Mac without a keys file: the newest weekly copy in iCloud Drive, when there is one.
+            for copy in copies() where copy.inCloud {
+                guard let deck = deck(of: copy), let url = url(of: copy), let data = try? Data(contentsOf: url) else { continue }
+                try? files.createDirectory(at: folder, withIntermediateDirectories: true)
+                try? data.write(to: file, options: .atomic)
+                return (deck, .fromCloud(copy.date))
+            }
+            return (nil, .first)
+        }
+        if let deck = load() { return (deck, .loaded) }
         try? files.createDirectory(at: backups, withIntermediateDirectories: true)
         try? files.moveItem(at: file, to: backups.appendingPathComponent("damaged \(Store.stamp()).json"))
+        // The newest copy that can be read, on this Mac or among the weekly ones in iCloud Drive.
         for copy in copies() {
-            guard let deck = deck(of: copy),
-                  let data = try? Data(contentsOf: backups.appendingPathComponent(copy.name)) else { continue }
+            guard let deck = deck(of: copy), let url = url(of: copy), let data = try? Data(contentsOf: url) else { continue }
             try? data.write(to: file, options: .atomic)
             return (deck, .recovered(copy.date))
         }

@@ -28,9 +28,9 @@ final class GlanceMoreTests: XCTestCase {
         XCTAssertEqual(GarminKeys.stress(25).tone, .media)
         XCTAssertEqual(GarminKeys.stress(26).tone, .web)
         XCTAssertEqual(GarminKeys.stress(50).tone, .web)
-        XCTAssertEqual(GarminKeys.stress(51).tone, .text)
-        XCTAssertEqual(GarminKeys.stress(75).tone, .text)
-        XCTAssertEqual(GarminKeys.stress(76).tone, .raycast)
+        XCTAssertEqual(GarminKeys.stress(51).tone, .web)
+        XCTAssertEqual(GarminKeys.stress(75).tone, .web)
+        XCTAssertEqual(GarminKeys.stress(76).tone, .text)
     }
 
     func testGarminNumberFallsBackToSteps() {
@@ -66,9 +66,9 @@ final class GlanceMoreTests: XCTestCase {
 
     func testBoardPulseAgainstUsual() {
         let amber = GarminKeys.glances(fromBoard: board(pulse: 60, avg: 55))[.pulse]
-        XCTAssertEqual(amber?.tone, .text)
+        XCTAssertEqual(amber?.tone, nil)
         XCTAssertEqual(amber?.words, "+5 over usual")
-        XCTAssertEqual(GarminKeys.glances(fromBoard: board(pulse: 63, avg: 55))[.pulse]?.tone, .raycast)
+        XCTAssertEqual(GarminKeys.glances(fromBoard: board(pulse: 63, avg: 55))[.pulse]?.tone, .text)
         XCTAssertNil(GarminKeys.glances(fromBoard: board(pulse: 58, avg: 55))[.pulse]?.tone)
     }
 

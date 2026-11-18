@@ -34,6 +34,8 @@ enum ActionRunner {
     static var live: () -> LiveKeys = { LiveKeys() }
     /// A timer key was pressed: its minutes (set by the app at start).
     static var timerPressed: ((String) -> Void)?
+    /// A Body Battery or Garmin key was pressed: the board's page, or its app while the board is off.
+    static var boardPressed: (() -> Void)?
     /// A switch key was pressed (set by the app at start).
     static var switchPressed: ((DeckAction) -> Void)?
     /// Shows the entries of a "List to pick from" key at the mouse pointer (set by the app at start).
@@ -85,7 +87,7 @@ enum ActionRunner {
             let now = action.resolvingRecent(recentApps)
             if now.type == .app { run(now) }
         case .askAI:
-            let copied = NSPasteboard.general.string(forType: .string)
+            let copied = ClipboardWatch.copiedText()
             guard let url = URL(string: RaycastLink.ask(copied, link: action.target)) else { return }
             NSWorkspace.shared.open(url)
         case .app:
@@ -128,7 +130,7 @@ enum ActionRunner {
             guard mayPressKeys else { askToPressKeys(); return }
             pressMedia(.playPause)
         case .bodyBattery, .garmin:
-            if let url = URL(string: BatteryKeys.board) { NSWorkspace.shared.open(url) }
+            boardPressed?()
         case .macDo:
             MacDoer.run(action)
         case .joinMeeting:

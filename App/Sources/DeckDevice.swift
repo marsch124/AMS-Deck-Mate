@@ -56,6 +56,8 @@ final class DeckDevice {
     private var down = [Bool](repeating: false, count: StreamDeckProtocol.keyCount)
     private let sending = DispatchQueue(label: "box.sending")
     private var loggedFirstReport = false
+    private var loggedFirstPicture = false
+    private var loggedFirstKey = false
     private var started = false
 
     func start() {
@@ -103,6 +105,9 @@ final class DeckDevice {
         device = found
         down = [Bool](repeating: false, count: StreamDeckProtocol.keyCount)
         let serial = (IOHIDDeviceGetProperty(found, kIOHIDSerialNumberKey as CFString) as? String) ?? ""
+        loggedFirstPicture = false
+        loggedFirstKey = false
+        BoxLog.note("box: \(name), serial \(serial.isEmpty ? "not given" : "…" + serial.suffix(4)), reports in \(number(found, kIOHIDMaxInputReportSizeKey)) / out \(number(found, kIOHIDMaxOutputReportSizeKey)) bytes. No key press has been heard yet; if none shows up below after pressing a key, allow AMS Deck Mate under Input Monitoring and open the app again.")
         state = .connected(name: name, serial: serial)
     }
 
@@ -123,6 +128,10 @@ final class DeckDevice {
         }
         guard let states = StreamDeckProtocol.keyStates(fromInput: report) else { return }
         for (index, isDown) in states.enumerated() where isDown != down[index] {
+            if !loggedFirstKey {
+                loggedFirstKey = true
+                BoxLog.note("first key heard: place \(index + 1) (1 = top left) went \(isDown ? "down" : "up")")
+            }
             down[index] = isDown
             onKey?(index, isDown)
         }
@@ -130,12 +139,14 @@ final class DeckDevice {
 
     var isConnected: Bool { device != nil }
 
-    private func send(_ report: Data, _ type: IOHIDReportType, to device: IOHIDDevice, what: String) {
+    @discardableResult
+    private func send(_ report: Data, _ type: IOHIDReportType, to device: IOHIDDevice, what: String) -> Bool {
         let result = report.withUnsafeBytes { raw -> IOReturn in
             guard let bytes = raw.bindMemory(to: UInt8.self).baseAddress else { return kIOReturnError }
             return IOHIDDeviceSetReport(device, type, CFIndex(report[0]), bytes, report.count)
         }
         if result != kIOReturnSuccess { BoxLog.note("\(what) failed: \(String(format: "0x%08X", result))") }
+        return result == kIOReturnSuccess
     }
 
     /// Shows a picture (JPEG, already turned for the box) on a key.
@@ -143,7 +154,13 @@ final class DeckDevice {
         guard let device else { return }
         let packets = StreamDeckProtocol.imagePackets(key: key, jpeg: jpeg)
         sending.async { [weak self] in
-            for packet in packets { self?.send(packet, kIOHIDReportTypeOutput, to: device, what: "picture for key \(key)") }
+            guard let self else { return }
+            var fine = true
+            for packet in packets { fine = self.send(packet, kIOHIDReportTypeOutput, to: device, what: "picture for key \(key)") && fine }
+            if !self.loggedFirstPicture {
+                self.loggedFirstPicture = true
+                BoxLog.note("first picture: place \(key + 1), \(jpeg.count) bytes in \(packets.count) packets, \(fine ? "sent" : "NOT sent")")
+            }
         }
     }
 

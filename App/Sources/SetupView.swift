@@ -218,6 +218,22 @@ struct SetupView: View {
         model.redo()
     }
 
+    /// An app, a file or a folder from the Finder, or a web address, dropped on a place: an empty
+    /// place gets a key for it, which then opens for editing. A key that is there already stays.
+    private func dropOutside(_ thing: String, at index: Int) {
+        guard page != nil, key(at: index) == nil, leaveKey() else { NSSound.beep(); return }
+        let new: DeckKey?
+        if thing.hasPrefix("/") {
+            new = Drops.key(forFile: thing, bundleID: thing.hasSuffix(".app") ? Bundle(path: thing)?.bundleIdentifier : nil)
+        } else {
+            new = Drops.key(forLink: thing)
+        }
+        guard let new else { NSSound.beep(); return }
+        slot = nil
+        put(new, at: index)
+        pick(index)
+    }
+
     /// A key dropped on a key, or on a page chip (then it goes to the same place on that page).
     private func moveKey(_ item: String, to target: (page: UUID, slot: Int)) {
         let bits = item.split(separator: ":")
@@ -394,7 +410,7 @@ struct SetupView: View {
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         slot = nil
-        model.saveNow()
+        model.keepState("before a page group was deleted")
         model.change { deck in
             deck.profiles.removeAll { $0.id == item.id }
             if deck.defaultProfile == item.id { deck.defaultProfile = deck.profiles.first?.id }
@@ -448,7 +464,13 @@ struct SetupView: View {
                 // As the box shows them right now: a timer with its minutes, an "Open app" key with its app.
                 KeyGrid(keys: model.live(page.keys), selected: slot, side: 72, gap: 10,
                         broken: Set(model.problems(on: page, of: profile).keys), dragPage: page.id,
-                        onDrop: { moveKey($0, to: (page.id, $1)) }) { pick($0) }
+                        onDrop: { item, at in
+                            if item.hasPrefix(DragKey.outside) {
+                                dropOutside(String(item.dropFirst(DragKey.outside.count)), at: at)
+                            } else {
+                                moveKey(item, to: (page.id, at))
+                            }
+                        }) { pick($0) }
                     .padding(13)
                     .background(Color(red: 0.11, green: 0.11, blue: 0.115), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 HStack(spacing: 8) {
@@ -482,7 +504,7 @@ struct SetupView: View {
                     Spacer()
                 }
                 favouritesRow
-                Text("Click a key to change it. Drag it onto another key or a page to move it. ⌘C and ⌘V copy a key.")
+                Text("Click a key to change it. Drag it onto another key or a page to move it. Drop an app, a file or a web address on an empty key to make a key for it. ⌘C and ⌘V copy a key.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(width: 426, alignment: .leading)
@@ -542,7 +564,7 @@ struct SetupView: View {
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         slot = nil
-        model.saveNow()
+        model.keepState("before a page was deleted")
         edit(profile) { item in
             var gone: Set<UUID> = [page.id]
             var grew = true
@@ -632,11 +654,7 @@ struct SetupView: View {
                     Spacer()
                 }
                 FieldLabel("What it does")
-                Picker("", selection: actionType) {
-                    ForEach(ActionType.forKeys.filter { favourite == nil || $0.fitsFavourite }, id: \.self) { Text($0.title).tag($0) }
-                }
-                .labelsHidden()
-                .accessibilityIdentifier("actionType")
+                KindChooser(selection: actionType, allowed: { favourite == nil || $0.fitsFavourite })
                 ScrollView {
                     VStack(alignment: .leading, spacing: 7) {
                         ActionFields(action: $draft.action, deck: model.deck, profile: profile) { title in

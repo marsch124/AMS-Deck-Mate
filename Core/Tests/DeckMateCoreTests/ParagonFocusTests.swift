@@ -73,7 +73,7 @@ final class ParagonFocusTests: XCTestCase {
         XCTAssertEqual(FocusKeys.showing(run, now: began.addingTimeInterval(65 * 60 + 10))?.done, true)
         XCTAssertNil(FocusKeys.showing(run, now: began.addingTimeInterval(65 * 60 + 60)))
         XCTAssertNil(FocusKeys.showing(nil, now: began))
-        XCTAssertEqual(FocusKeys.tone("focus"), .raycast)
+        XCTAssertEqual(FocusKeys.tone("focus"), .shortcut)
         XCTAssertEqual(FocusKeys.tone("pause"), .media)
         XCTAssertEqual(FocusKeys.tone("prep"), .text)
     }

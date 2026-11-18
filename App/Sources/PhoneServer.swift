@@ -28,6 +28,13 @@ final class PhoneServer: ObservableObject {
     private var mapDeck: Deck?
     private var sleepWatch: [NSObjectProtocol] = []
     private var macAsleep = false
+    /// The iPhone the "wants to use your keys" window is about right now.
+    private weak var askingPhone: Phone?
+    /// True while that window is on screen.
+    private var alertUp = false
+    /// When he said "Don't Allow" lately: after three in ten minutes nobody new is asked about for a while.
+    private var refusals: [Date] = []
+    private var sweepTimer: Timer?
 
     /// Before 0.8 (permissions that travelled readable): dropped, each iPhone is allowed once more.
     private static let oldAllowedKey = "allowedPhones"
@@ -35,6 +42,11 @@ final class PhoneServer: ObservableObject {
     /// No more lines than this at once, and a line must turn private within this many seconds.
     private static let mostLines = 8
     private static let startTime = 10.0
+    /// Devices he has not allowed: no more than this many lines at once, none longer than `strangerTime`
+    /// seconds unless he is being asked about it, and no more than `mostWaiting` wait to be asked about.
+    private static let mostStrangers = 3
+    private static let strangerTime = 30.0
+    private static let mostWaiting = 2
     private static let offKey = "phoneOff"
     static var macName: String { Host.current().localizedName ?? "Mac" }
 
@@ -48,8 +60,15 @@ final class PhoneServer: ObservableObject {
         var name = "iPhone"
         var token: String?
         var trusted = false
-        var lastSent: Data?
+        /// The keys this iPhone shows now, and the line above them.
+        var lastKeys: [PhoneLink.Key]?
+        var lastPlace: String?
         var lastStatus: Data?
+        /// True once this line asked to be allowed: it is asked about once, not again and again.
+        var asked = false
+        let began = Date()
+        /// When this line last said anything.
+        var heard = Date()
         /// 2 = it understands status, pressed, ran, page and profile.
         var version = 1
         /// "My own keys": this iPhone's own place; nil = it follows the Mac.
@@ -90,6 +109,8 @@ final class PhoneServer: ObservableObject {
                                (NSWorkspace.screensDidWakeNotification, false), (NSWorkspace.didWakeNotification, false)] {
             sleepWatch.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 self?.macAsleep = asleep
+                // The Mac heard nothing while it slept: that says nothing about the lines.
+                if !asleep { self?.phones.values.forEach { $0.heard = Date() } }
                 self?.toPhones(since: 5, .asleep(asleep))
             })
         }
@@ -129,6 +150,26 @@ final class PhoneServer: ObservableObject {
             listeners.append(listener)
         }
         askForLocalNetwork()
+        let sweep = Timer(timeInterval: 10, repeats: true) { [weak self] _ in self?.sweep() }
+        sweep.tolerance = 2
+        RunLoop.main.add(sweep, forMode: .common)
+        sweepTimer = sweep
+    }
+
+    /// Closes the lines nobody needs: a device he has not allowed that just sits there, and an
+    /// allowed iPhone that has gone quiet (it asks "are you there?" every few seconds).
+    private func sweep() {
+        let now = Date()
+        for (id, phone) in phones {
+            let stranger = !phone.trusted && phone !== askingPhone && !waitingToAsk.contains { $0 === phone }
+                && now.timeIntervalSince(phone.began) > PhoneServer.strangerTime
+            let quiet = phone.trusted && phone.version >= 8
+                && PhoneLink.isDead(lastHeard: phone.heard, now: now, limit: PhoneLink.macQuietLimit)
+            guard stranger || quiet else { continue }
+            if quiet { BoxLog.note("iPhone link: “\(phone.name)” went quiet, line closed") }
+            phone.connection.cancel()
+            drop(id)
+        }
     }
 
     /// The Mac only offers the keys nearby once he allowed "find devices on local networks", and it
@@ -161,6 +202,8 @@ final class PhoneServer: ObservableObject {
 
     private func stop(keepOn: Bool) {
         restart?.cancel()
+        sweepTimer?.invalidate()
+        sweepTimer = nil
         listeners.forEach { $0.cancel() }
         listeners = []
         watch = nil
@@ -202,8 +245,12 @@ final class PhoneServer: ObservableObject {
     }
 
     private func accept(_ connection: NWConnection) {
-        guard phones.count < PhoneServer.mostLines else { connection.cancel(); return }
+        // A few lines at most, and only some of them for devices he has not allowed: his own iPhone
+        // and iPad always find room.
+        guard phones.count < PhoneServer.mostLines,
+              phones.values.filter({ !$0.trusted }).count < PhoneServer.mostStrangers else { connection.cancel(); return }
         let phone = Phone(connection)
+        phone.reader.limit = PhoneLink.largestFromPhone
         let id = ObjectIdentifier(phone)
         phones[id] = phone
         connection.stateUpdateHandler = { [weak self] state in
@@ -252,6 +299,8 @@ final class PhoneServer: ObservableObject {
     private func drop(_ id: ObjectIdentifier) {
         guard let phone = phones.removeValue(forKey: id) else { return }
         waitingToAsk.removeAll { $0 === phone }
+        // The device he is being asked about is gone: the question goes with it.
+        if phone === askingPhone, alertUp { NSApp.abortModal() }
         connected = phones.values.first(where: \.trusted)?.name
         lookAtMacIfAsked()
     }
@@ -274,6 +323,7 @@ final class PhoneServer: ObservableObject {
     private func begin(_ message: PhoneLink.Message, from phone: Phone) -> Bool {
         if phone.session != nil {
             if case .secure = message { return false }
+            phone.heard = Date()
             handle(message, from: phone)
             return true
         }
@@ -303,17 +353,31 @@ final class PhoneServer: ObservableObject {
     private func handle(_ message: PhoneLink.Message, from phone: Phone) {
         switch message {
         case let .hello(name, token, version, proof):
-            guard !phone.trusted else { return }
+            // One hello a line: a device cannot ask to be allowed again and again.
+            guard !phone.trusted, !phone.asked else { return }
             phone.version = version ?? 1
             phone.name = name.isEmpty ? "iPhone" : String(name.prefix(60))
             if let token, allowed[token] != nil, let secret = secrets[token],
                phone.session?.checks(proof, secret: secret, by: .phone) == true {
                 welcome(phone, token: token, secret: secret, first: false)
             } else {
+                phone.asked = true
+                let now = Date()
+                refusals.removeAll { now.timeIntervalSince($0) > 600 }
+                guard refusals.count < 3, waitingToAsk.count < PhoneServer.mostWaiting else {
+                    // He said no three times in ten minutes, or others wait already: not asked about.
+                    BoxLog.note("iPhone link: “\(phone.name)” was not asked about (too many requests)")
+                    send(.refused, to: phone)
+                    closeSoon(phone)
+                    return
+                }
                 send(.waiting, to: phone)
                 waitingToAsk.append(phone)
                 askNext()
             }
+        case .ping:
+            guard phone.trusted else { return }
+            send(.pong, to: phone)
         case let .press(index):
             guard phone.trusted, (0..<StreamDeckProtocol.keyCount).contains(index) else { return }
             press(index, long: false, favourite: false, from: phone)
@@ -391,8 +455,15 @@ final class PhoneServer: ObservableObject {
         waitingToAsk.removeFirst()
         guard phones[ObjectIdentifier(phone)] != nil else { return askNext() }
         asking = true
+        askingPhone = phone
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            guard self.phones[ObjectIdentifier(phone)] != nil else {
+                // Gone before the question came up.
+                self.asking = false
+                self.askingPhone = nil
+                return self.askNext()
+            }
             NSApp.activate(ignoringOtherApps: true)
             let alert = NSAlert()
             alert.messageText = "“\(phone.name)” wants to use your keys"
@@ -402,13 +473,19 @@ final class PhoneServer: ObservableObject {
             alert.addButton(withTitle: "Don’t Allow")
             alert.addButton(withTitle: "Allow")
             alert.buttons[1].keyEquivalent = ""
-            let yes = alert.runModal() == .alertSecondButtonReturn
+            self.alertUp = true
+            let answer = alert.runModal()
+            self.alertUp = false
+            let yes = answer == .alertSecondButtonReturn
             self.asking = false
+            self.askingPhone = nil
             if self.phones[ObjectIdentifier(phone)] != nil {
                 if yes {
                     self.welcome(phone, token: UUID().uuidString, secret: SecureLine.newSecret(), first: true)
                 } else {
+                    if answer == .alertFirstButtonReturn { self.refusals.append(Date()) }
                     self.send(.refused, to: phone)
+                    self.closeSoon(phone)
                 }
             }
             self.askNext()
@@ -436,6 +513,15 @@ final class PhoneServer: ObservableObject {
         }
     }
 
+    /// Closes a line once its last word ("not allowed") has gone out.
+    private func closeSoon(_ phone: Phone) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self, weak phone] in
+            guard let self, let phone else { return }
+            phone.connection.cancel()
+            self.drop(ObjectIdentifier(phone))
+        }
+    }
+
     // MARK: Sending
 
     private func send(_ message: PhoneLink.Message, to phone: Phone) {
@@ -458,11 +544,19 @@ final class PhoneServer: ObservableObject {
         let list = (0..<StreamDeckProtocol.keyCount).map { index in
             PhoneLink.Key(index: index, title: KeyArt.title(keys[index]), picture: KeyArt.pngForPhone(keys[index]))
         }
-        let data = PhoneLink.frame(.keys(place: model.placeLine(at: place), keys: list))
-        if data != phone.lastSent {
-            phone.lastSent = data
-            post(data, to: phone)
+        let line = model.placeLine(at: place)
+        // An iPhone app from 0.17 on gets only the keys that look different (a timer's second = one
+        // small picture); an older one gets all fifteen whenever anything changed.
+        let changed = PhoneLink.changed(from: phone.lastKeys, to: list)
+        if let changed, line == phone.lastPlace, changed.isEmpty {
+            // Nothing to say.
+        } else if let changed, phone.version >= 8, changed.count < list.count {
+            send(.some(place: line, keys: changed), to: phone)
+        } else {
+            send(.keys(place: line, keys: list), to: phone)
         }
+        phone.lastKeys = list
+        phone.lastPlace = line
         if phone.version >= 3 {
             let row = (0..<PhoneLink.favouriteCount).map { index in
                 PhoneLink.Key(index: index, title: KeyArt.title(model.live(model.deck.favourites[index])),

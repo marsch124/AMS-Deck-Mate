@@ -134,6 +134,9 @@ public struct DeckAction: Codable, Hashable, Sendable {
     public var quiet: Bool
     /// The words of an entry in a list to pick from; empty = made from what it does.
     public var name: String
+    /// A kind of key from a later version of Deck Mate, as the file names it. Such a key does nothing
+    /// here and shows as empty, but it is written back as it was, so the newer app finds it again.
+    public var laterKind: String?
 
     public init(type: ActionType = .none, target: String = "", combo: KeyCombo? = nil,
                 steps: [DeckAction] = [], quiet: Bool = false, name: String = "") {
@@ -145,9 +148,25 @@ public struct DeckAction: Codable, Hashable, Sendable {
         self.name = name
     }
 
+    enum CodingKeys: String, CodingKey { case type, target, combo, steps, quiet, name }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(type == .none ? (laterKind ?? type.rawValue) : type.rawValue, forKey: .type)
+        try c.encode(target, forKey: .target)
+        try c.encodeIfPresent(combo, forKey: .combo)
+        try c.encode(steps, forKey: .steps)
+        try c.encode(quiet, forKey: .quiet)
+        try c.encode(name, forKey: .name)
+    }
+
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         type = c.value(.type, .none)
+        if type == .none, let raw = try? c.decodeIfPresent(String.self, forKey: .type),
+           !raw.isEmpty, ActionType(rawValue: raw) == nil {
+            laterKind = raw
+        }
         target = c.value(.target, "")
         combo = try? c.decodeIfPresent(KeyCombo.self, forKey: .combo)
         steps = c.value(.steps, [])
@@ -369,6 +388,9 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
 }
 
 public struct Deck: Codable, Equatable, Sendable {
+    /// The number of the file's format as this version writes it. A file with a higher number was
+    /// saved by a later Deck Mate; saving never lowers it.
+    public static let currentVersion = 2
     public var version: Int
     public var profiles: [DeckProfile]
     /// The profile for every app that has no profile of its own.

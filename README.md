@@ -1,6 +1,6 @@
 # AMS Deck Mate
 
-A small Mac menu bar app, version 0.14 (build 22). It drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
+A small Mac menu bar app, version 0.15 (build 23), with Deck Mate for the iPhone and iPad at 0.17 (build 22). It drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
 Each key can open an app, a link or a file, run a Raycast command, press a keyboard shortcut, type text, control music and sound, move to another page or page group, or do several things in a row. The keys change by themselves when another app comes to the front. A floating window on the screen shows the same 15 keys, so the keys also work with no box plugged in. The keys on screen can also work as a virtual deck: press Control-Option-D, the keys appear under the mouse pointer, click one and they are gone. Since 0.3 there is also Deck Mate for the iPhone (TestFlight): it shows the same 15 keys, follows the page group and page the Mac shows, and a tap on a key makes the Mac do it. It finds the Mac by itself on the same Wi-Fi (or with the Mac on the iPhone's hotspot). Since 0.4 the iPhone keys sit low near the thumb, swipe between pages, light up when pressed and say what ran. Since 0.5 (iPhone and iPad app, now 0.8, with settings for look, clock, touch and what shows) Deck Mate is also a proper iPad app, made for the iPad mini: it fills the whole screen in all four ways round, with larger keys that grow as far as the screen or window allows, low and centred. The keys on screen can be used from the keyboard (since 0.4.1 each key shows its letter while the keyboard is theirs), Set up keys can drag, copy, paste, duplicate, undo and redo (since 0.5 an "All pages" button shows every page of every page group as a small picture), and broken keys show red. At first start the keys from Elgato's app are brought over. Since 0.5 a key can have a second action on a long press (marked by a small white dot), a row of 5 favourites stays on every page on the iPhone and iPad, an iPhone or iPad can use its own keys instead of following the Mac, and the iPhone and iPad can show the Mac's battery, the app in front and a music strip (needs iPhone and iPad app 0.7). Since 0.6 (Mac) and 0.8 (iPad), an iPad held on its side also shows a navigation picture on the left: every page group with every page as a small picture, and a tap goes there.
 
@@ -18,6 +18,8 @@ Since 0.13 there are six more kinds of key: On the Mac (lock the Mac, show the d
 
 Since 0.14 there are two more kinds of key: PARAGON (shows the Inbox count or the next task, adds a task from the copied text, or takes a quick note) and Focus rounds (starts a PomoTimer template and counts the steps on the key). Due today now counts PARAGON tasks instead of OmniFocus, the Spotify playlist key shows the cover, and Quit all apps starts with the apps open now. The PARAGON keys only read a small file PARAGON writes for its widget and use its own links.
 
+Since 0.15 the safety copies of your keys last longer (the newest 20, one for each of the last 30 days, and some before big changes), a damaged keys file can also be repaired from the weekly iCloud Drive copy, a copied password is no longer used by the search, AI and PARAGON keys, and strangers on the same Wi-Fi are limited. Red is kept for real trouble (Focus rounds, Body Battery, stress and resting pulse are calmer), the Garmin keys say "Board off" and "As of 06:29", and the Garmin number key has two gym numbers. "What it does" is a list with a search field, you can drop an app, a file, a folder or a web address on an empty key, and every key can be pressed from Raycast or by a link that carries this Mac's own pass. The iPhone and iPad (app 0.17) notice a dead line within 12 seconds, and only changed keys travel.
+
 ## Look
 Flat coloured tiles with white hand-drawn icons, one colour per kind of key: apps blue, links teal, Raycast red-orange, shortcuts purple, text amber, music green, moving around grey-blue.
 
@@ -33,7 +35,7 @@ The installed app is at `~/Applications/AMS Deck Mate.app`. The written specific
 
 ## Folders
 - `App/` the Mac app
-- `Phone/` the iPhone and iPad app (Deck Mate 0.12; 0.5 added the iPad, 0.6 added settings)
+- `Phone/` the iPhone and iPad app (Deck Mate 0.17; 0.5 added the iPad, 0.6 added settings)
 - `Core/` the rules (moving around, Raycast links, how the box is spoken to, the link to the iPhone) and their tests
 - `Docs/` the specification
 

@@ -312,10 +312,11 @@ public enum FocusKeys {
         return Showing(name: run.plan.name, label: "Done", left: 0, kind: "done", done: true)
     }
 
-    /// The key's colour during a step: red while focusing, green in a pause, amber around them.
+    /// The key's colour during a step: purple while focusing (red is kept for real trouble), green in a
+    /// pause, amber around them.
     public static func tone(_ kind: String) -> KeyKind {
         switch kind {
-        case "focus": return .raycast
+        case "focus": return .shortcut
         case "pause", "longbreak", "done": return .media
         default: return .text
         }

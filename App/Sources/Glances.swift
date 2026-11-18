@@ -48,7 +48,7 @@ final class GlanceWatch {
                 }
             }
         }
-        if let glance = BatteryKeys.glance(battery) { all[GlanceKeys.battery] = glance }
+        if let glance = batteryGlance { all[GlanceKeys.battery] = glance }
         return all
     }
 
@@ -188,6 +188,7 @@ final class GlanceWatch {
             let now = Date()
             let ahead = now.addingTimeInterval(Double(EventKeys.daysAhead) * 86_400)
             let found = store.events(matching: store.predicateForEvents(withStart: now.addingTimeInterval(-86_400), end: ahead, calendars: nil))
+                .filter(\.isOn)
                 .map { EventKeys.Event(title: $0.title ?? "", start: $0.startDate, end: $0.endDate, allDay: $0.isAllDay) }
             DispatchQueue.main.async {
                 self?.events = found
@@ -420,10 +421,25 @@ final class GlanceWatch {
         readParagon()
     }
 
+    private let paragonQueue = DispatchQueue(label: "paragon file", qos: .utility)
+    private var paragonReading = false
+
+    /// Reads PARAGON's file away from the main thread: the first time, the Mac asks whether AMS Deck
+    /// Mate may read another app's data, and the read waits for that answer. The app must not wait with it.
     private func readParagon() {
         paragonHere = GlanceWatch.paragonInstalled
-        paragonShot = GlanceWatch.paragonSnapshot()
-        tell()
+        guard !paragonReading else { return }
+        paragonReading = true
+        paragonQueue.async { [weak self] in
+            let shot = GlanceWatch.paragonSnapshot()
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.paragonReading = false
+                guard self.paragonTimer != nil else { return }
+                self.paragonShot = shot
+                self.tell()
+            }
+        }
     }
 
     /// A PARAGON key was pressed.
@@ -435,9 +451,9 @@ final class GlanceWatch {
         let what = ParagonKeys.what(action.target)
         switch what {
         case .inbox, .next:
-            openParagon(ParagonKeys.openLink(what, snapshot: GlanceWatch.paragonSnapshot(), today: GlanceWatch.today), inFront: true)
+            openParagon(ParagonKeys.openLink(what, snapshot: paragonShot, today: GlanceWatch.today), inFront: true)
         case .copiedTask:
-            guard let link = ParagonKeys.captureLink(text: NSPasteboard.general.string(forType: .string), note: false) else {
+            guard let link = ParagonKeys.captureLink(text: ClipboardWatch.copiedText(), note: false) else {
                 NSSound.beep()
                 return
             }
@@ -545,13 +561,22 @@ final class GlanceWatch {
 
     private var batteryTimer: Timer?
     private var garmin: [GarminKeys.Number: Glance] = [:]
+    private var batteryGlance: Glance?
+    /// How many times in a row the board gave no answer. One miss keeps the numbers; from the second
+    /// the keys say "Board off".
+    private var boardMisses = 0
+    /// True while the Garmin keys say "Board off": a press then starts the board.
+    private(set) var boardOff = false
 
     private func setBattery(_ on: Bool) {
         guard on != (batteryTimer != nil) else { return }
         batteryTimer?.invalidate()
         batteryTimer = nil
         battery = nil
+        batteryGlance = nil
         garmin = [:]
+        boardMisses = 0
+        boardOff = false
         guard on else { return }
         batteryTimer = every(Double(BatteryKeys.everyMinutes) * 60) { [weak self] in self?.readBattery() }
         readBattery()
@@ -560,10 +585,51 @@ final class GlanceWatch {
     private func readBattery() {
         fetch(URL(string: BatteryKeys.boardData)) { [weak self] data in
             guard let self, self.batteryTimer != nil else { return }
-            self.battery = data.flatMap(BatteryKeys.level(fromBoard:))
-            self.garmin = data.map(GarminKeys.glances(fromBoard:)) ?? [:]
+            if let data {
+                self.boardMisses = 0
+                self.boardOff = false
+                let old = GarminKeys.oldSince(fromBoard: data, now: Date())
+                let level = BatteryKeys.level(fromBoard: data)
+                // A number that is hours old keeps showing, grey-blue, with the time it is from.
+                self.battery = old == nil ? level : nil
+                self.batteryGlance = BatteryKeys.glance(level, old: old)
+                self.garmin = GarminKeys.glances(fromBoard: data)
+            } else {
+                self.boardMisses += 1
+                guard self.boardMisses >= 2 else {
+                    // One miss: the numbers stay, and the board is asked again in a minute.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 60) { [weak self] in
+                        if self?.boardMisses == 1 { self?.readBattery() }
+                    }
+                    return
+                }
+                self.boardOff = true
+                self.battery = nil
+                self.batteryGlance = GarminKeys.offGlance
+                self.garmin = Dictionary(uniqueKeysWithValues: GarminKeys.Number.allCases.map { ($0, GarminKeys.offGlance) })
+            }
             self.tell()
         }
+    }
+
+    /// A Garmin key was pressed: the board's page, or, while the board is off, the board's own app,
+    /// which starts it. The keys ask again a few seconds later.
+    func openBoard() {
+        if boardOff, let app = GlanceWatch.boardApp {
+            NSWorkspace.shared.openApplication(at: app, configuration: NSWorkspace.OpenConfiguration())
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
+                if self?.batteryTimer != nil { self?.readBattery() }
+            }
+        } else if let url = URL(string: BatteryKeys.board) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    /// The board's own app on this Mac, when it is installed.
+    static var boardApp: URL? {
+        let name = "AMS Garmin Bridge Board.app"
+        let folders = FileManager.default.urls(for: .applicationDirectory, in: [.userDomainMask, .localDomainMask])
+        return folders.map { $0.appendingPathComponent(name) }.first { FileManager.default.fileExists(atPath: $0.path) }
     }
 
     // MARK: Made-up values for pictures
@@ -578,7 +644,7 @@ final class GlanceWatch {
         GlanceKeys.battery: Glance(big: "62", words: BatteryKeys.words),
         GlanceKeys.garmin(.steps): Glance(big: "8 412", words: "Steps today"),
         GlanceKeys.garmin(.sleep): Glance(big: "7:24", words: "Good"),
-        GlanceKeys.garmin(.pulse): Glance(big: "52", words: "+6 over usual", tone: .text),
+        GlanceKeys.garmin(.pulse): Glance(big: "52", words: "+6 over usual"),
         GlanceKeys.garmin(.stress): Glance(big: "18", words: "Resting", tone: .media),
         GlanceKeys.garmin(.workouts): Glance(big: "5", words: "7 days · 6 h"),
         GlanceKeys.mac(.battery): Glance(big: "73%", words: "Mac battery", tone: .media),

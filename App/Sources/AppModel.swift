@@ -145,8 +145,17 @@ final class AppModel: ObservableObject {
         case .lost:
             startNote = "The file with your keys was damaged and no safety copy could be read. Deck Mate starts with empty keys. The damaged file is kept in the Backups folder; “Bring over again” in Settings reads the keys from Elgato’s app."
             BoxLog.note("keys file damaged: no safety copy could be read")
+        case let .fromCloud(date):
+            let when = date.formatted(date: .abbreviated, time: .omitted)
+            startNote = "This Mac had no keys yet. Deck Mate took the weekly copy from iCloud Drive of \(when). Settings › Where your setup is kept › “Bring back an earlier state” lists the others."
+            BoxLog.note("no keys file: took the iCloud copy of \(when)")
         case .first, .loaded:
             break
+        }
+        if deck.version > Deck.currentVersion {
+            let more = "These keys were last saved by a newer AMS Deck Mate. Keys of a kind this version does not know show as empty here and are kept as they are. Update AMS Deck Mate on this Mac to use them."
+            startNote = startNote.map { $0 + "\n\n" + more } ?? more
+            BoxLog.note("keys file is from a newer Deck Mate (format \(deck.version), this app writes \(Deck.currentVersion))")
         }
         if firstStart {
             // First start: bring over the keys from Elgato's app, when it has any for the 15-key box.
@@ -168,6 +177,11 @@ final class AppModel: ObservableObject {
         recentApps = RecentApps.after(UserDefaults.standard.stringArray(forKey: "recentApps") ?? [], front: frontApp,
                                       skip: AppInfo.bundleID)
 
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotification] {
+            NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.boxWoke()
+            }
+        }
         watcher = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
             let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
@@ -193,6 +207,7 @@ final class AppModel: ObservableObject {
         ActionRunner.timerPressed = { [weak self] in self?.timerPressed($0) }
         ActionRunner.switchPressed = { [weak self] in self?.switchPressed($0) }
         ActionRunner.glancePressed = { [weak self] in self?.glance.pressed($0) }
+        ActionRunner.boardPressed = { [weak self] in self?.glance.openBoard() }
         counts = (UserDefaults.standard.dictionary(forKey: AppModel.countsKey) as? [String: Int]) ?? [:]
         if let data = UserDefaults.standard.data(forKey: AppModel.watchesKey),
            let kept = try? JSONDecoder().decode(StopwatchKeys.State.self, from: data) {
@@ -222,6 +237,8 @@ final class AppModel: ObservableObject {
         refreshRunning()
         lookAtMac()
         watchLive()
+        // Raycast's commands for the keys, as they are at the start.
+        DispatchQueue.main.async { [weak self] in self?.writeOutside() }
         cloudCopy.save = { [weak self] in self?.saveNow() }
         cloudCopy.start()
         device.onState = { [weak self] state in self?.boxChanged(state) }
@@ -571,11 +588,15 @@ final class AppModel: ObservableObject {
 
     /// Does on the Mac what a key says, seen from any place, and moves nothing: an iPhone with its
     /// own keys has its own place, and the Mac's keys and the box stay where they are.
-    func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false) -> Navigator.Outcome {
+    /// `careful` = a press that came in by a link: quit all apps, empty the bin and eject then ask
+    /// first, also on a key set to "without asking".
+    @discardableResult
+    func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false,
+             careful: Bool = false) -> Navigator.Outcome {
         let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long)
                                 : Navigator.press(index, at: position, in: deck, long: long)
         let now = liveNow
-        let run = outcome.run.map { $0.resolving(now) }
+        let run = outcome.run.map { $0.resolving(now) }.map { careful ? $0.askingFirst : $0 }
         // Count the press, for Settings › Key use (only keys that do something on the Mac).
         if !outcome.run.isEmpty, !isSample,
            let key = favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index] {
@@ -714,6 +735,16 @@ final class AppModel: ObservableObject {
         refreshStatus()
     }
 
+    /// The Mac (or its screen) woke up: a box that went dark shows nothing until it gets its pictures
+    /// again, so all of them are sent afresh, with the brightness.
+    func boxWoke() {
+        guard device.isConnected else { return }
+        BoxLog.note("the Mac woke: brightness and all pictures sent again")
+        shown = []
+        device.setBrightness(deck.brightness)
+        refreshBox()
+    }
+
     /// Sends the box the keys that changed since the last time.
     private func refreshBox() {
         guard device.isConnected else { return }
@@ -809,6 +840,15 @@ final class AppModel: ObservableObject {
         saveTimer?.invalidate()
         saveTimer = nil
         store.save(deck)
+        writeOutside()
+    }
+
+    /// Saves, then keeps the setup as it is now as a copy that ordinary saving never pushes out
+    /// (before a delete, before Elgato's keys are brought over, before an earlier state is put back).
+    func keepState(_ why: String) {
+        guard !isSample else { return }
+        saveNow()
+        store.keepNow(why)
     }
 
     /// Reads Elgato's keys again and puts them in place of the current profiles. The setup as it was
@@ -817,7 +857,7 @@ final class AppModel: ObservableObject {
     func bringOverFromElgato() -> Bool {
         let found = ElgatoImport.read(folder: AppModel.elgatoProfiles)
         guard !found.profiles.isEmpty else { return false }
-        saveNow()
+        keepState("before Elgato keys were brought over")
         change { deck in
             deck.profiles = found.profiles
             deck.defaultProfile = found.defaultProfile
@@ -835,7 +875,7 @@ final class AppModel: ObservableObject {
     @discardableResult
     func restore(_ copy: Store.Copy) -> Bool {
         guard let old = store.deck(of: copy) else { return false }
-        saveNow()
+        keepState("before an earlier state was put back")
         change { $0 = old }
         pin(nil)
         saveNow()

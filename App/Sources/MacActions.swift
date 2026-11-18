@@ -187,11 +187,14 @@ enum MacDoer {
 
     static func pastePlain() {
         guard ActionRunner.mayPressKeys else { ActionRunner.askToPressKeys(); return }
+        // A paste stays on this Mac, so a password copy is pasted like any other text.
         guard let text = NSPasteboard.general.string(forType: .string), !text.isEmpty else { return }
         ActionRunner.paste(text)
     }
 
     // MARK: Join the meeting
+
+    // (EKEvent.isOn, at the end of this file, leaves out cancelled and declined events.)
 
     private static var store = EKEventStore()
     /// The calendar was just allowed from here: the glance keys read it again (set by the app at start).
@@ -203,7 +206,7 @@ enum MacDoer {
         work.async {
             let found = store.events(matching: store.predicateForEvents(withStart: now.addingTimeInterval(-86_400),
                                                                         end: now.addingTimeInterval(MeetingKeys.ahead), calendars: nil))
-                .filter { !$0.isAllDay }
+                .filter { !$0.isAllDay && $0.isOn }
                 .map { MeetingKeys.Event(title: $0.title ?? "", start: $0.startDate, end: $0.endDate,
                                          texts: [$0.url?.absoluteString ?? "", $0.location ?? "", $0.notes ?? ""]) }
             DispatchQueue.main.async { done(found) }
@@ -258,8 +261,8 @@ enum MacDoer {
     // MARK: Search for the copied text
 
     static func search(_ target: String) {
-        guard let address = SearchKeys.address(SearchKeys.engine(target), text: NSPasteboard.general.string(forType: .string)),
-              let url = URL(string: address) else { return }
+        guard let address = SearchKeys.address(SearchKeys.engine(target), text: ClipboardWatch.copiedText()),
+              let url = URL(string: address) else { NSSound.beep(); return }
         NSWorkspace.shared.open(url)
     }
 
@@ -325,5 +328,14 @@ enum KeepAwake {
             IOPMAssertionRelease(held)
             held = 0
         }
+    }
+}
+
+extension EKEvent {
+    /// False for an event that was cancelled, or one he said no to: such an event is not "next".
+    var isOn: Bool {
+        if status == .canceled { return false }
+        if let me = attendees?.first(where: { $0.isCurrentUser }), me.participantStatus == .declined { return false }
+        return true
     }
 }
