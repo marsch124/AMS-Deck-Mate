@@ -6,7 +6,7 @@ Each key can open an app, a link or a file, run a Raycast command, press a keybo
 
 Since 0.8 there are two more keys, "Last copied text" (pastes one of your last copied texts, kept only in memory) and "Recent file" (opens a file you opened lately); Settings can bring back an earlier safety copy of your setup, and a damaged keys file repairs itself from the newest readable copy. The link to the iPhone and iPad is now private (encrypted) and asks you to check a 4-digit number the first time, so the iPhone and iPad app 0.11 is needed with Mac 0.8.
 
-Since 0.9 the Mac keeps a weekly copy of your keys in iCloud Drive (the newest 8), "Last copied text" has a fourth choice, "A list to pick from", and the iPhone and iPad app 0.16 shows a small lock beside the connection dot while the line is private. The code is public on GitHub and the rule tests run there by themselves at every change.
+Since 0.9 the Mac keeps a weekly copy of your keys in iCloud Drive (the newest 8), "Last copied text" has a fourth choice, "A list to pick from", and the iPhone and iPad app 0.12 shows a small lock beside the connection dot while the line is private. The code is public on GitHub and the rule tests run there by themselves at every change.
 
 Since 0.10 there are six more kinds of key (Timer, Switch for dark mode or mute, Run an Apple Shortcut, List to pick from, Open app, Microphone light), a "Wait" step for chains, a Find a key search on the keys on screen (Space or /), a "Key use" list in Settings, and four ready-made page groups (Finder, Safari, Notion, Fusion).
 
