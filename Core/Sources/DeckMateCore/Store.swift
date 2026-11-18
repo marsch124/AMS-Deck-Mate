@@ -191,6 +191,7 @@ public struct Store {
         } catch {
             return false
         }
+        copyPicturesToCloud()
         let names = ((try? files.contentsOfDirectory(atPath: cloud.path)) ?? [])
             .filter { $0.hasPrefix("deck ") && $0.hasSuffix(".json") }
             .sorted()
@@ -232,6 +233,7 @@ public struct Store {
                 guard let deck = deck(of: copy), let url = url(of: copy), let data = try? Data(contentsOf: url) else { continue }
                 try? files.createDirectory(at: folder, withIntermediateDirectories: true)
                 try? data.write(to: file, options: .atomic)
+                bringBackPictures()
                 return (deck, .fromCloud(copy.date))
             }
             return (nil, .first)
@@ -243,6 +245,7 @@ public struct Store {
         for copy in copies() {
             guard let deck = deck(of: copy), let url = url(of: copy), let data = try? Data(contentsOf: url) else { continue }
             try? data.write(to: file, options: .atomic)
+            if copy.inCloud { bringBackPictures() }
             return (deck, .recovered(copy.date))
         }
         return (nil, .lost)

@@ -217,6 +217,7 @@ final class AppModel: ObservableObject {
         ActionRunner.stopwatchPressed = { [weak self] in self?.stopwatchPressed($0) }
         ActionRunner.zeroPressed = { [weak self] in self?.zeroPressed($0) }
         ActionRunner.focusPressed = { [weak self] in self?.focusPressed($0) }
+        ActionRunner.shortcutFailed = { [weak self] in self?.ranEvents.send(($0, false)) }
         if let data = UserDefaults.standard.data(forKey: AppModel.focusKey),
            let kept = try? JSONDecoder().decode(FocusKeys.Run.self, from: data), FocusKeys.showing(kept, now: Date()) != nil {
             focusRun = kept
@@ -245,6 +246,25 @@ final class AppModel: ObservableObject {
         device.onKey = { [weak self] index, isDown in self?.boxKey(index, isDown) }
         device.start()
         refreshStatus()
+        startStatusTimer()
+        // While the screen sleeps nobody looks: the status check rests, and runs once at wake.
+        for (name, asleep) in [(NSWorkspace.screensDidSleepNotification, true), (NSWorkspace.willSleepNotification, true),
+                               (NSWorkspace.screensDidWakeNotification, false), (NSWorkspace.didWakeNotification, false)] {
+            NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                guard let self else { return }
+                if asleep {
+                    self.statusTimer?.invalidate()
+                    self.statusTimer = nil
+                } else if self.statusTimer == nil {
+                    self.refreshStatus()
+                    self.startStatusTimer()
+                }
+            }
+        }
+    }
+
+    private func startStatusTimer() {
+        statusTimer?.invalidate()
         let timer = Timer(timeInterval: 4, repeats: true) { [weak self] _ in self?.refreshStatus() }
         RunLoop.main.add(timer, forMode: .common)
         statusTimer = timer
@@ -839,9 +859,21 @@ final class AppModel: ObservableObject {
         guard !isSample else { return }
         saveTimer?.invalidate()
         saveTimer = nil
-        store.save(deck)
+        let ok = store.save(deck)
+        if saveWatch.saved(ok) {
+            BoxLog.note("the keys file could not be saved")
+            if !quitting {
+                DispatchQueue.main.async {
+                    MacDoer.tell("The last change could not be saved",
+                                 "The last change to your keys could not be saved. Your keys keep working, and Deck Mate tries again with every change.")
+                }
+            }
+        }
         writeOutside()
     }
+
+    private var saveWatch = SaveWatch()
+    private var quitting = false
 
     /// Saves, then keeps the setup as it is now as a copy that ordinary saving never pushes out
     /// (before a delete, before Elgato's keys are brought over, before an earlier state is put back).
@@ -876,6 +908,7 @@ final class AppModel: ObservableObject {
     func restore(_ copy: Store.Copy) -> Bool {
         guard let old = store.deck(of: copy) else { return false }
         keepState("before an earlier state was put back")
+        if copy.inCloud { store.bringBackPictures() }
         change { $0 = old }
         pin(nil)
         saveNow()
@@ -883,6 +916,7 @@ final class AppModel: ObservableObject {
     }
 
     func willQuit() {
+        quitting = true
         saveNow()
         saveUse()
         device.giveBack()

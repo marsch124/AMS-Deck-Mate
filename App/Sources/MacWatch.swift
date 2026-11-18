@@ -29,6 +29,20 @@ final class MacWatch: ObservableObject {
             self.app = front?.localizedName ?? ""
             self.refresh(slow: false)
         })
+        // While the screen sleeps nobody looks: the 5-second look rests, and runs once at wake.
+        for (name, asleep) in [(NSWorkspace.screensDidSleepNotification, true), (NSWorkspace.willSleepNotification, true),
+                               (NSWorkspace.screensDidWakeNotification, false), (NSWorkspace.didWakeNotification, false)] {
+            observers.append(NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                guard let self else { return }
+                self.asleep = asleep
+                if asleep {
+                    self.stopTimer()
+                } else if self.isWatching, self.timer == nil {
+                    self.refresh(slow: true)
+                    self.startTimer()
+                }
+            })
+        }
         for name in MacWatch.players {
             observers.append(DistributedNotificationCenter.default().addObserver(
                 forName: Notification.Name(name), object: nil, queue: .main) { [weak self] note in
@@ -50,14 +64,24 @@ final class MacWatch: ObservableObject {
     var isWatching = false {
         didSet {
             guard isWatching != oldValue else { return }
-            timer?.invalidate()
-            timer = nil
-            guard isWatching else { return }
+            stopTimer()
+            guard isWatching, !asleep else { return }
             refresh(slow: true)
-            let tick = Timer(timeInterval: 5, repeats: true) { [weak self] _ in self?.refresh(slow: true) }
-            RunLoop.main.add(tick, forMode: .common)
-            timer = tick
+            startTimer()
         }
+    }
+
+    private var asleep = false
+
+    private func startTimer() {
+        let tick = Timer(timeInterval: 5, repeats: true) { [weak self] _ in self?.refresh(slow: true) }
+        RunLoop.main.add(tick, forMode: .common)
+        timer = tick
+    }
+
+    private func stopTimer() {
+        timer?.invalidate()
+        timer = nil
     }
 
     private func refresh(slow: Bool) {
@@ -79,7 +103,7 @@ final class MacWatch: ObservableObject {
     func stepVolume(_ step: Int) {
         guard let level = MacWatch.volume() else { return }
         let new = PhoneLink.MacNow.volume(level, step: step)
-        MacWatch.script("set volume output volume \(new)")
+        MacSwitches.setVolume(new)
         var copy = now
         copy.volume = new
         now = copy
@@ -101,15 +125,7 @@ final class MacWatch: ObservableObject {
 
     /// The Mac's own sound volume, 0–100; nil when the sound output has none (some screens and boxes).
     private static func volume() -> Int? {
-        guard let text = script("output volume of (get volume settings)"), let level = Int(text) else { return nil }
-        return level
-    }
-
-    @discardableResult
-    private static func script(_ source: String) -> String? {
-        var error: NSDictionary?
-        let answer = NSAppleScript(source: source)?.executeAndReturnError(&error)
-        return error == nil ? answer?.stringValue : nil
+        MacSwitches.outputVolume
     }
 
     deinit {

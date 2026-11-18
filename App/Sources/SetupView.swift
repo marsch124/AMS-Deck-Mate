@@ -78,6 +78,7 @@ struct SetupView: View {
         .onAppear {
             model.edit.copy = { copyKey() }
             model.edit.paste = { pasteKey() }
+            SetupGuard.mayLeave = { leaveKey() }
         }
         .accessibilityIdentifier("setup")
     }
@@ -406,9 +407,7 @@ struct SetupView: View {
         let alert = NSAlert()
         alert.messageText = "Delete the page group “\(item.name)”?"
         alert.informativeText = "Its \(keys) keys go with it. The setup as it is now stays as a safety copy."
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard SafeAsk.run(alert, action: "Delete") else { return }
         slot = nil
         model.keepState("before a page group was deleted")
         model.change { deck in
@@ -560,9 +559,7 @@ struct SetupView: View {
         let alert = NSAlert()
         alert.messageText = "Delete “\(page.name)” with its \(page.keys.count) keys?"
         alert.informativeText = "Folders opened from it go too. The setup as it is now stays as a safety copy."
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard SafeAsk.run(alert, action: "Delete") else { return }
         slot = nil
         model.keepState("before a page was deleted")
         edit(profile) { item in

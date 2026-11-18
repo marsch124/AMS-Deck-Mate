@@ -229,6 +229,12 @@ struct SettingsView: View {
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("hideAfterKey")
                 note("Control-Option-D shows or hides them. Right after, 1–5, Q–T and A–G press the keys, the arrows or Tab change the page and Escape hides them. A folder, Back or a page key never hides them: you are not done yet.")
+                if ShortcutState.taken {
+                    Text("Control-Option-D is used by another app, so it does not work here. Use the menu bar icon to show the keys.")
+                        .font(.caption).foregroundStyle(Color.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("shortcutTaken")
+                }
             }
         case .phone:
             card("iPhone", "raycast") {
@@ -336,7 +342,7 @@ struct SettingsView: View {
             }
         case .kept:
             card("Where your setup is kept", "screen") {
-                note("One file on this Mac, with the last \(Store.keptCopies) earlier states beside it as safety copies. Apart from the weekly copy in iCloud Drive, nothing leaves the Mac.")
+                note("One file on this Mac, with the last \(Store.keptCopies) earlier states beside it as safety copies. Apart from the weekly copy in iCloud Drive, which holds the keys and their pictures, nothing leaves the Mac.")
                 HStack {
                     Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([model.store.file]) }
                         .buttonStyle(PlainButton())
@@ -518,9 +524,7 @@ struct SettingsView: View {
         let alert = NSAlert()
         alert.messageText = "Bring over the keys from Elgato again?"
         alert.informativeText = "They take the place of all your page groups here. The setup as it is now stays as a safety copy."
-        alert.addButton(withTitle: "Bring over")
-        alert.addButton(withTitle: "Cancel")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard SafeAsk.run(alert, action: "Bring over") else { return }
         if !model.bringOverFromElgato() {
             let none = NSAlert()
             none.messageText = "Elgato’s app has no keys for a 15-key box on this Mac."

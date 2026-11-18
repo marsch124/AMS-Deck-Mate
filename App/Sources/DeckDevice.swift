@@ -174,6 +174,12 @@ final class DeckDevice {
     func giveBack() {
         guard let device else { return }
         let report = StreamDeckProtocol.resetToLogo()
-        sending.sync { send(report, kIOHIDReportTypeFeature, to: device, what: "reset") }
+        // At most a second: a box that does not answer must not hold up quitting.
+        let sent = DispatchSemaphore(value: 0)
+        sending.async { [self] in
+            send(report, kIOHIDReportTypeFeature, to: device, what: "reset")
+            sent.signal()
+        }
+        _ = sent.wait(timeout: .now() + 1)
     }
 }

@@ -35,12 +35,14 @@
 		A7FA39D2512E3E6990EF8E49 /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884B2B68338DE11AE6C9F9D /* Guide.swift */; };
 		AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769601D7D405BCA33D04C661 /* Store.swift */; };
 		B890E8F56E2436126E698529 /* LiveWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292EECF9A27600E43A77F562 /* LiveWatch.swift */; };
+		BB5931CFBEE929BB3020D0D1 /* PairedKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76FFB18F0DC3AD199897DA57 /* PairedKeychain.swift */; };
 		D1AB1A8CC15E29A1F052F335 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A350CF35FC73A197CECBAA /* AppDelegate.swift */; };
 		D21A48CA32E29820EBA8EDE8 /* LinkClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25F4A172CE57401656C065E8 /* LinkClient.swift */; };
 		D4957990805AD31915C212CF /* KeyArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD91C2A2EE1636B6BA7A5CA3 /* KeyArt.swift */; };
 		D56BBF46D1A11591A630A143 /* PhoneGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC5304A926380E265BD2D024 /* PhoneGuide.swift */; };
 		E686271E607224BFB3B65318 /* ActionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A63C7CEBB25FEEB670001E /* ActionRunner.swift */; };
 		EA6A4503DEDC4DB681A62E31 /* Icons in Resources */ = {isa = PBXBuildFile; fileRef = 81AF782BD024BAB473ADCB48 /* Icons */; };
+		EB796B6F320150F7DF54A820 /* SafeAsk.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27CB649A36E6B79DC4A6A5D /* SafeAsk.swift */; };
 		EE222C5887D4D79DD417E6AE /* PhoneSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881C1DA770F5E89BAA84499D /* PhoneSettings.swift */; };
 		FB8FA2789316833AE2EA0C1C /* DeckScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0D9C2764FF86C3866F8DB1 /* DeckScreen.swift */; };
 /* End PBXBuildFile section */
@@ -77,11 +79,13 @@
 		746B67243A944BBECEE02900 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		7613A567D91FF441F5BE1118 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		769601D7D405BCA33D04C661 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		76FFB18F0DC3AD199897DA57 /* PairedKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairedKeychain.swift; sourceTree = "<group>"; };
 		7884B2B68338DE11AE6C9F9D /* Guide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guide.swift; sourceTree = "<group>"; };
 		8095E39B39479EDAE38E3FAC /* DeckDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDevice.swift; sourceTree = "<group>"; };
 		81AF782BD024BAB473ADCB48 /* Icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Icons; path = App/Resources/Icons; sourceTree = SOURCE_ROOT; };
 		881C1DA770F5E89BAA84499D /* PhoneSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettings.swift; sourceTree = "<group>"; };
 		99A70809CB187F06B052FFC2 /* PhonePrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhonePrefs.swift; sourceTree = "<group>"; };
+		A27CB649A36E6B79DC4A6A5D /* SafeAsk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeAsk.swift; sourceTree = "<group>"; };
 		A6A63C7CEBB25FEEB670001E /* ActionRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionRunner.swift; sourceTree = "<group>"; };
 		A8E776FF15C6691A7E97DAEC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AC9085CF6126FF6B11B8514D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -192,7 +196,9 @@
 				EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */,
 				BA62F3E5031DFF998CEDD376 /* main.swift */,
 				597FD3445474A6E4FD56E384 /* Outside.swift */,
+				76FFB18F0DC3AD199897DA57 /* PairedKeychain.swift */,
 				D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */,
+				A27CB649A36E6B79DC4A6A5D /* SafeAsk.swift */,
 				AC9085CF6126FF6B11B8514D /* SettingsView.swift */,
 				3D4D729F81F0D52A25801405 /* SetupView.swift */,
 				769601D7D405BCA33D04C661 /* Store.swift */,
@@ -383,7 +389,9 @@
 				0BABDD98B4A56B44FACEC6EF /* MacSwitches.swift in Sources */,
 				500391B2DF457863220FB440 /* MacWatch.swift in Sources */,
 				773935AF491D4D900B7C9012 /* Outside.swift in Sources */,
+				BB5931CFBEE929BB3020D0D1 /* PairedKeychain.swift in Sources */,
 				090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */,
+				EB796B6F320150F7DF54A820 /* SafeAsk.swift in Sources */,
 				6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */,
 				1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */,
 				AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */,

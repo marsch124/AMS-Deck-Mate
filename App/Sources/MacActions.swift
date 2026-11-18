@@ -6,7 +6,10 @@ import IOKit.pwr_mgt
 /// What the 0.13 keys do on the Mac: lock it, show the desktop, quit all apps, empty the bin, eject
 /// all disks, paste as plain text, join a meeting, play a Spotify link, search for the copied text.
 enum MacDoer {
-    private static let work = DispatchQueue(label: "mac actions")
+    /// Each kind of slow work has its own line, so one stuck app never holds up the others.
+    private static let work = DispatchQueue(label: "mac actions finder")
+    private static let calendarWork = DispatchQueue(label: "mac actions calendar")
+    private static let spotifyWork = DispatchQueue(label: "mac actions spotify")
 
     static func run(_ action: DeckAction) {
         switch MacDoKeys.what(action.target) {
@@ -21,15 +24,13 @@ enum MacDoer {
 
     // MARK: Questions and notes
 
-    /// A question on the Mac before something that is not taken back with a press. Return does it, Escape cancels.
+    /// A question on the Mac before something that is not taken back with a press. Return and Escape both cancel; the action takes a click.
     static func ask(_ title: String, _ words: String, button: String) -> Bool {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = words
-        alert.addButton(withTitle: button)
-        alert.addButton(withTitle: "Cancel")
         NSApp.activate(ignoringOtherApps: true)
-        return alert.runModal() == .alertFirstButtonReturn
+        return SafeAsk.run(alert, action: button)
     }
 
     /// A short note when a key had nothing to do, or could not do it.
@@ -118,9 +119,10 @@ enum MacDoer {
 
     // MARK: Empty the bin
 
-    private static func finder(_ lines: String) -> (result: NSAppleEventDescriptor?, error: Int?) {
+    /// 5 seconds at most; the step that makes the Finder ask its own question gets longer, to be answered.
+    private static func finder(_ lines: String, seconds: Int = 5) -> (result: NSAppleEventDescriptor?, error: Int?) {
         var error: NSDictionary?
-        let result = NSAppleScript(source: "tell application \"Finder\"\n\(lines)\nend tell")?.executeAndReturnError(&error)
+        let result = NSAppleScript(source: Scripts.limited("tell application \"Finder\"\n\(lines)\nend tell", seconds: seconds))?.executeAndReturnError(&error)
         return (result, error.map { ($0[NSAppleScript.errorNumber] as? Int) ?? -1 })
     }
 
@@ -143,7 +145,7 @@ enum MacDoer {
                 if asks, !ask(question.title, question.words, button: "Empty") { return }
                 work.async {
                     // The Finder comes forward only when it will ask its own question, so that one is seen.
-                    let done = finder((warns ? "activate\n" : "") + "empty trash")
+                    let done = finder((warns ? "activate\n" : "") + "empty trash", seconds: warns ? 60 : 5)
                     // -128 = he said no to the Finder's question; -1712 = the question stood there too long.
                     if let error = done.error, error != -128, error != -1712 { BoxLog.note("empty the bin: error \(error)") }
                 }
@@ -203,7 +205,7 @@ enum MacDoer {
     /// The events a "Join the meeting" key looks at; all-day events are left out.
     static func meetings(now: Date, _ done: @escaping ([MeetingKeys.Event]) -> Void) {
         let store = store
-        work.async {
+        calendarWork.async {
             let found = store.events(matching: store.predicateForEvents(withStart: now.addingTimeInterval(-86_400),
                                                                         end: now.addingTimeInterval(MeetingKeys.ahead), calendars: nil))
                 .filter { !$0.isAllDay && $0.isOn }
@@ -248,10 +250,10 @@ enum MacDoer {
             tell("Spotify is not on this Mac", "The key plays its link in the Spotify app.")
             return
         }
-        work.async {
+        spotifyWork.async {
             var error: NSDictionary?
             // The link holds only letters, numbers and colons (see `PlaylistKeys.uri`).
-            NSAppleScript(source: "tell application id \"\(spotify)\" to play track \"\(uri)\"")?.executeAndReturnError(&error)
+            NSAppleScript(source: Scripts.limited("tell application id \"\(spotify)\" to play track \"\(uri)\""))?.executeAndReturnError(&error)
             guard error != nil, let url = URL(string: uri) else { return }
             // Spotify would not be told (not allowed, or still starting): at least open the link in it.
             DispatchQueue.main.async { NSWorkspace.shared.open(url) }

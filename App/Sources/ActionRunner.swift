@@ -43,6 +43,9 @@ enum ActionRunner {
     /// Shows the entries of a "List to pick from" key at the mouse pointer (set by the app at start).
     static var showPickList: ((DeckAction) -> Void)?
 
+    /// An Apple Shortcut could not be run (deleted, renamed): the words to tell him (set by the app at start).
+    static var shortcutFailed: ((String) -> Void)?
+
     /// A glance key or a desk key was pressed (set by the app at start).
     static var glancePressed: ((DeckAction) -> Void)?
 
@@ -184,20 +187,24 @@ enum ActionRunner {
     }
 
     private static func type(_ text: String) {
-        let source = CGEventSource(stateID: .hidSystemState)
-        let units = Array(text.utf16)
-        var start = 0
-        while start < units.count {
-            let chunk = Array(units[start..<min(start + 16, units.count)])
-            for isDown in [true, false] {
-                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: isDown) else { continue }
-                event.flags = []
-                event.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: chunk)
-                event.post(tap: .cghidEventTap)
+        // Pieces of whole characters, one after the other beside the main work, so a long text
+        // does not hold the app up.
+        let pieces = TypedText.pieces(text)
+        typing.async {
+            let source = CGEventSource(stateID: .hidSystemState)
+            for chunk in pieces {
+                for isDown in [true, false] {
+                    guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: isDown) else { continue }
+                    event.flags = []
+                    event.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: chunk)
+                    event.post(tap: .cghidEventTap)
+                }
+                usleep(1_000)
             }
-            start += chunk.count
         }
     }
+
+    private static let typing = DispatchQueue(label: "typing text")
 
     /// The music and sound keys of an Apple keyboard.
     private static func pressMedia(_ key: MediaKey) {

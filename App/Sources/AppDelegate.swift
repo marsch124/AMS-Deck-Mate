@@ -222,7 +222,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         // The list of found keys under the keys makes the floating window taller, and shorter again.
         findWatch = model.$finding.combineLatest(model.$findWords).dropFirst()
             .sink { [weak self] _ in DispatchQueue.main.async { self?.fitDeck() } }
-        HotKey.register(keyCode: kVK_ANSI_D, modifiers: controlKey | optionKey) { [weak self] in self?.toggleDeck() }
+        if !HotKey.register(keyCode: kVK_ANSI_D, modifiers: controlKey | optionKey, { [weak self] in self?.toggleDeck() }) {
+            ShortcutState.taken = true
+            BoxLog.note("Control-Option-D could not be taken: another app uses it")
+        }
 
         // Lets a check from outside open the real windows and press keys — only in an app started
         // with "--checks". The app as he uses it listens to nothing of the kind: any program on the
@@ -510,6 +513,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         // Only a place he dragged it to is remembered, not the place under the pointer.
         guard let window = notification.object as? NSWindow, window === deckPanel, !model.deck.screenAtPointer else { return }
         UserDefaults.standard.set(NSStringFromPoint(window.frame.origin), forKey: "deckOrigin")
+    }
+
+    /// The red button of Set up keys asks about a half-edited key first (Save / Don't save / Cancel keeps it open).
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender === setupWindow else { return true }
+        return SetupGuard.mayLeave?() ?? true
     }
 
     func windowWillClose(_ notification: Notification) {

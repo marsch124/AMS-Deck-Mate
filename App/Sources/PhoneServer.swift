@@ -82,9 +82,9 @@ final class PhoneServer: ObservableObject {
     init(model: AppModel) {
         self.model = model
         UserDefaults.standard.removeObject(forKey: PhoneServer.oldAllowedKey)
-        let paired = UserDefaults.standard.dictionary(forKey: PhoneServer.pairedKey) as? [String: [String: String]] ?? [:]
-        allowed = paired.compactMapValues { $0["name"] }
-        secrets = paired.compactMapValues { $0["secret"] }
+        let paired = PairedStore.load(PhoneServer.pairedKey)
+        allowed = paired.names
+        secrets = paired.secrets
         isOn = !UserDefaults.standard.bool(forKey: PhoneServer.offKey)
     }
 
@@ -229,6 +229,7 @@ final class PhoneServer: ObservableObject {
     func forget(_ token: String) {
         allowed[token] = nil
         secrets[token] = nil
+        PairedKeychain.delete(token)
         keepPaired()
         for (id, phone) in phones where phone.token == token {
             phone.connection.cancel()
@@ -239,9 +240,7 @@ final class PhoneServer: ObservableObject {
     // MARK: One iPhone
 
     private func keepPaired() {
-        var paired: [String: [String: String]] = [:]
-        for (id, name) in allowed { if let secret = secrets[id] { paired[id] = ["name": name, "secret": secret] } }
-        UserDefaults.standard.set(paired, forKey: PhoneServer.pairedKey)
+        PairedStore.save(PhoneServer.pairedKey, names: allowed, secrets: secrets)
     }
 
     private func accept(_ connection: NWConnection) {

@@ -16,7 +16,7 @@ enum MacSwitches {
     static func setDark(_ on: Bool) {
         scripts.async {
             var error: NSDictionary?
-            NSAppleScript(source: "tell application \"System Events\" to tell appearance preferences to set dark mode to \(on)")?
+            NSAppleScript(source: Scripts.limited("tell application \"System Events\" to tell appearance preferences to set dark mode to \(on)"))?
                 .executeAndReturnError(&error)
             if let error { BoxLog.note("dark mode switch: \(error[NSAppleScript.errorMessage] ?? "could not be done")") }
         }
@@ -51,7 +51,29 @@ enum MacSwitches {
     static func setMuted(_ on: Bool) {
         scripts.async {
             var error: NSDictionary?
-            NSAppleScript(source: "set volume output muted \(on)")?.executeAndReturnError(&error)
+            NSAppleScript(source: Scripts.limited("set volume output muted \(on)"))?.executeAndReturnError(&error)
+        }
+    }
+
+    /// The Mac's sound volume, 0–100, read through CoreAudio (no script, so it is safe on the main thread);
+    /// nil when the sound output has none (some screens and boxes).
+    static var outputVolume: Int? {
+        guard let output = device(kAudioHardwarePropertyDefaultOutputDevice) else { return nil }
+        // "Virtual main volume" ('vmvc'): the one the Mac's own volume keys move.
+        var address = AudioObjectPropertyAddress(mSelector: 0x766D_7663, mScope: kAudioDevicePropertyScopeOutput,
+                                                 mElement: kAudioObjectPropertyElementMain)
+        var level: Float32 = 0
+        var size = UInt32(MemoryLayout<Float32>.size)
+        guard AudioObjectHasProperty(output, &address),
+              AudioObjectGetPropertyData(output, &address, 0, nil, &size, &level) == noErr else { return nil }
+        return min(100, max(0, Int((level * 100).rounded())))
+    }
+
+    /// Sets the volume (0–100) beside the main work, with a time limit.
+    static func setVolume(_ level: Int) {
+        scripts.async {
+            var error: NSDictionary?
+            NSAppleScript(source: Scripts.limited("set volume output volume \(level)"))?.executeAndReturnError(&error)
         }
     }
 
@@ -62,10 +84,11 @@ enum MacSwitches {
         return flag(input, kAudioDevicePropertyDeviceIsRunningSomewhere, kAudioObjectPropertyScopeGlobal) ?? false
     }
 
-    /// The sound of a timer that is up: twice, so it is not missed.
+    /// The sound of a timer that is up: once, a little softer.
     static func timerSound() {
-        NSSound(named: "Glass")?.play()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { NSSound(named: "Glass")?.play() }
+        let sound = NSSound(named: "Glass")
+        sound?.volume = 0.6
+        sound?.play()
     }
 }
 
@@ -99,8 +122,20 @@ enum AppleShortcuts {
         process.executableURL = tool
         process.arguments = ["run", wanted]
         process.standardOutput = Pipe()
-        process.standardError = Pipe()
-        do { try process.run() } catch { BoxLog.note("Apple Shortcut “\(wanted)” could not be started") }
+        let problems = Pipe()
+        process.standardError = problems
+        process.terminationHandler = { finished in
+            guard finished.terminationStatus != 0 else { return }
+            let said = String(decoding: problems.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self).lowercased()
+            let notFound = said.contains("couldn") || said.contains("not found") || said.contains("find")
+            let words = notFound ? "The Shortcut “\(wanted)” was not found" : "The Shortcut “\(wanted)” did not finish"
+            BoxLog.note("Apple Shortcut “\(wanted)” failed (\(finished.terminationStatus))")
+            DispatchQueue.main.async { ActionRunner.shortcutFailed?(words) }
+        }
+        do { try process.run() } catch {
+            BoxLog.note("Apple Shortcut “\(wanted)” could not be started")
+            DispatchQueue.main.async { ActionRunner.shortcutFailed?("The Shortcut “\(wanted)” could not be started") }
+        }
     }
 }
 
