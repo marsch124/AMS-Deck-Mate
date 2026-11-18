@@ -51,12 +51,13 @@ enum Guide {
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
             "There are 254 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
             "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free.",
-            "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number."
+            "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number. New in 0.12: a glance key can also change its colour with its value. The five new kinds are Garmin number (teal), Mac at a glance (grey-blue), World clock (grey-blue), Sunrise and sunset (amber) and Free until (green or red, by your calendar)."
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
             "New in 0.10: the + beside \"Page groups\" now opens a small list: \"Empty page group\" and four ready-made ones. See \"Ready-made page groups\" below. Under the page's buttons there is also \"Add an “Open apps” folder\". See \"Open app keys\" below.",
             "New in 0.11: six more kinds under \"What it does\": \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". The Weather key has a field for the town, and the Desk key has the button \"Take the desk as it is now\" and a list of the apps it holds.",
+            "New in 0.12: five more kinds under \"What it does\": \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". Garmin number and Mac at a glance have a list to pick the number from. World clock and Sunrise and sunset have a field for the town.",
             "In the middle are the 15 keys, with the pages and folders of the page group above them. You can add and delete pages.",
             "Since 0.5, \"All pages\" (top right of the Keys column) shows every page group with every page and folder as a small picture of its 15 keys. Under each picture are its name and the number of keys; a folder has the folder mark; the page you are editing has a coloured frame. Click a page to open it for editing. \"Back to the keys\", or Escape, goes back.",
             "Click a key to edit it on the right: Title, Icon and \"What it does\". For a key that shows a picture, the Icon button says \"Own picture\". Picking a drawing, or \"Automatic\", replaces the picture.",
@@ -100,6 +101,7 @@ enum Guide {
             "Switch page group changes the page group. Several things in a row runs steps one after another, a third of a second apart, unless you put a \"Wait\" step between two of them (since 0.10). See \"Several things in a row and Wait\".",
             "Since 0.10, six more kinds: \"Timer\", \"Switch (on or off)\", \"Run an Apple Shortcut\", \"List to pick from\", \"Open app\" and \"Microphone light\". That makes 23 kinds of key, instead of 17. See the parts after \"Recent file key\".",
             "Since 0.11, six more kinds: \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". That makes 29 kinds of key, instead of 23. See the parts after \"Ready-made page groups\".",
+            "Since 0.12, five more kinds: \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". That makes 34 kinds of key, instead of 29. See the parts after \"Body Battery key\".",
             "Since 0.7, two more: \"Recent app\" (the app you used before the one in front) and \"Ask AI (copied text)\" (opens Raycast AI Chat with your copied text). See the next two parts.",
             "Since 0.8, two more: \"Last copied text\" and \"Recent file\". See the two parts after \"Ask AI about copied text\".",
             "Nothing leaves the key empty.",
@@ -216,6 +218,8 @@ enum Guide {
         ]),
         Section(id: "glance", title: "Keys that show something at a glance", part: "keys", lines: [
             "New in 0.11. Five new kinds of key show a value: Next event, Weather, Due today, Album cover and Body Battery. You find them in Set up keys, under \"What it does\".",
+            "New in 0.12. Eleven more things to show at a glance, as five new kinds of key: Garmin number (five numbers to pick from), Mac at a glance (three numbers to pick from), World clock, Sunrise and sunset, and Free until. They are in Set up keys, under \"What it does\", and they look and work like the five above: the value in large white words where the drawing is, small words under it (your own title replaces the small words), and the drawing until a value is there.",
+            "New in 0.12: a glance key can change its colour with its value, for example green when all is well and red when something needs you. Each part below says when.",
             "The value stands on the key in large white words, where the drawing normally is, with small words under it. If you gave the key a title, your title replaces the small words.",
             "Until a value is there, the key shows its drawing.",
             "They show on the box, on the keys on screen and on the iPhone and iPad (the Mac draws them), so the iPhone and iPad app needs no update.",
@@ -239,6 +243,7 @@ enum Guide {
             "You can have several Weather keys with different towns. Give each key the town as its title to tell them apart. The title then shows instead of the sky.",
             "The weather is asked for again every 20 minutes. A press opens the Mac's Weather app.",
             "New in 0.11.1. Hold a Weather key down (a long press, half a second) to give it another town. A small window \"Weather key\" opens on the Mac with a field for the town. Type one, or pick one of up to six towns you used before from the list in the same field. Save (Return) or Cancel (Escape). The key shows the new town's weather within a few seconds. Undo in Set up keys takes it back.",
+            "New in 0.12: the same long press now works for World clock and Sunrise and sunset keys too. The small window is now called \"Town for this key\" instead of \"Weather key\", and its list offers the towns you used on any of these three kinds of key.",
             "It works from the box, from the keys on screen (hold the mouse button) and from the iPhone and iPad (a long press there). The window always opens on the Mac; the iPhone and iPad say \"Type the town on the Mac\".",
             "If the Weather key has a long press of its own (set in Set up keys), that long press is kept instead. A Weather key does not show the small white dot for this; the dot still means a long press of your own. Like every key with a long press, a Weather key acts when you let go, so a short press opens Weather on release.",
             "Privacy: the free weather service Open-Meteo gets the town's name once, to find its place. After that it gets only that place (its position on the map). Nothing else about you goes out. There is no account and no key, and the Mac asks nothing."
@@ -248,6 +253,7 @@ enum Guide {
             "The large words are the number of OmniFocus tasks that are due today or overdue. Tasks that are completed or dropped are not counted. The small words say \"Due today\".",
             "Deck Mate counts only while OmniFocus is open. Otherwise the key says \"OmniFocus closed\". Deck Mate never opens OmniFocus just to count. It counts again every 2 minutes.",
             "A press opens OmniFocus on its Forecast.",
+            "The \"Due today\" key counts OmniFocus tasks. It will be replaced by a key for PARAGON in a later round, because your tasks are in PARAGON.",
             "The first time, the Mac asks once whether AMS Deck Mate may control OmniFocus. Until then the key says \"Press to allow\". Choose Allow, or OK.",
             "Deck Mate only counts. It never changes a task."
         ]),
@@ -266,6 +272,44 @@ enum Guide {
             "The key is green from 50, amber from 25 to 49 and red below 25. It is grey-blue while there is no number.",
             "It asks again every 10 minutes. A press opens the board in the browser.",
             "Nothing leaves the Mac, and the Mac asks nothing. If the board is not running, the key just shows its drawing."
+        ]),
+        Section(id: "garminKey", title: "Garmin number key", part: "keys", lines: [
+            "New in 0.12. In Set up keys, under \"What it does\", choose \"Garmin number\" and pick one of five numbers from the list. The key is teal unless it says otherwise below.",
+            "All five come from your AMS Garmin Bridge Board, which runs on this Mac from login, the same place the Body Battery key gets its number. One look at the board feeds all five keys and Body Battery. It asks again every 10 minutes. Nothing leaves the Mac, and the Mac asks nothing. If the board is not running, the key shows its drawing.",
+            "\"Steps today\": your steps so far, for example \"8 412\", with \"Steps today\" under it. The key turns green once you have reached your step goal for the day.",
+            "\"Sleep last night\": the hours and minutes, for example \"7:24\", with Garmin's own word for the night under it, for example \"Good\". If the watch was not worn, the key shows a dash and \"No sleep recorded\".",
+            "\"Resting pulse\": today's resting pulse, with \"Resting pulse\" under it. It is compared with the average of your last 7 days. From 5 beats over it, the small words say for example \"+6 over usual\" and the key turns amber. From 8 over it, the key turns red.",
+            "\"Stress today\": today's average stress number, with Garmin's own steps in words under it: up to 25 \"Resting\" (green), up to 50 \"Low stress\" (teal), up to 75 \"Medium stress\" (amber), above that \"High stress\" (red).",
+            "\"Workouts, 7 days\": how many workouts you did in the last seven days, with the hours under it, for example \"7 days · 15 h\".",
+            "A press opens the board in the browser."
+        ]),
+        Section(id: "macNowKey", title: "Mac at a glance key", part: "keys", lines: [
+            "New in 0.12. In Set up keys, under \"What it does\", choose \"Mac at a glance\" and pick one of three numbers from the list. The key is grey-blue unless it says otherwise below.",
+            "The Mac looks every 5 seconds, and only while such a key exists in your setup. The Mac asks nothing and nothing leaves the Mac.",
+            "\"Mac battery\": the charge, for example \"73%\", with \"Mac battery\" under it, or \"Charging\" while the cable is in. Green from 40 %, amber from 20 %, red below. A Mac without a battery says \"No battery\". A press opens Battery in System Settings.",
+            "\"Free space\": the room left on the Mac's disk, for example \"212 GB\" (\"8.4 GB\" under ten, \"1.2 TB\" from a thousand), with \"Free space\" under it. The key turns amber under 25 GB or when a tenth is free, and red under 10 GB or when a twentieth is free. A press opens Storage in System Settings.",
+            "\"Mac busy light\": how hard the Mac's processors work, in steps of 5 %, for example \"35%\", so the key does not flicker. Under it: \"Mac calm\"; from 60 % \"Mac busy\" (amber); from 85 % \"Mac very busy\" (red). A press opens Activity Monitor."
+        ]),
+        Section(id: "worldClock", title: "World clock key", part: "keys", lines: [
+            "New in 0.12. In Set up keys, under \"What it does\", choose \"World clock\" and type a town. The key is grey-blue with a globe drawing.",
+            "The large words are the time there, for example \"14:05\". The town stands under it. When it is another day there than here, the small words say \"tomorrow\" or \"yesterday\" instead. The key follows the time every minute.",
+            "You can have several World clock keys with different towns. Without a town the key says \"Set a town\".",
+            "Privacy: the free service Open-Meteo gets the town's name once, to find its time zone. After that nothing goes out. The Mac asks nothing.",
+            "A press opens the Mac's Clock. Hold the key down to give it another town (see \"Weather key\")."
+        ]),
+        Section(id: "sunTimes", title: "Sunrise and sunset key", part: "keys", lines: [
+            "New in 0.12. In Set up keys, under \"What it does\", choose \"Sunrise and sunset\" and type a town. The key is amber with a sunrise drawing.",
+            "It shows whichever comes next, on the town's own clock: the large words are the time, for example \"16:42\", and under it \"Sunset\" (or \"Sunrise\").",
+            "The times are asked for again every 6 hours. Privacy: Open-Meteo gets the town's name once, to find its place. After that it gets only that place, on the map. The Mac asks nothing.",
+            "A press opens the Mac's Weather. Hold the key down to give it another town (see \"Weather key\")."
+        ]),
+        Section(id: "freeUntil", title: "Free until key", part: "keys", lines: [
+            "New in 0.12. In Set up keys, under \"What it does\", choose \"Free until\". It uses your calendars, like \"Next event\".",
+            "While an event goes on, the key is red: \"Busy\" with \"until 15:00\" under it.",
+            "Before the next event of today that has a time, the key is green: how long you are free, for example \"1 h 20\" or \"45 min\", with \"Free until 14:30\" under it.",
+            "With nothing more today, the key is green and says \"Free\" with \"Rest of the day\" under it. All-day events are left out.",
+            "It needs the same yes as \"Next event\" to see your calendar. The Mac asks once, at the first press of either key, and until then the key says \"Press to allow\". Deck Mate only reads and never changes an event.",
+            "The key follows changes in your calendar at once and looks again every minute. A press opens Calendar, or the app you chose with \"Choose app…\"."
         ]),
         Section(id: "deskKey", title: "Desk key", part: "keys", lines: [
             "New in 0.11. In Set up keys, under \"What it does\", choose \"Desk\". The key is blue with a window drawing. Without a title it says \"Desk\".",
@@ -354,7 +398,8 @@ enum Guide {
         Section(id: "permissions", title: "What the Mac asks for", part: "settings", lines: [
             "Accessibility, once, for keys that press a keyboard shortcut, type text, paste a last copied text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
             "The Mac may also ask for Input Monitoring when the box is first plugged in.",
-            "New in 0.11: \"Next event\" makes the Mac ask once whether Deck Mate may see your calendar (Allow Full Access; it only reads). \"Due today\" makes the Mac ask once whether Deck Mate may control OmniFocus (it only counts). The \"Desk\" key and the \"Album cover\" key use the Accessibility yes. Weather, Album cover and Body Battery ask the Mac nothing."
+            "New in 0.11: \"Next event\" makes the Mac ask once whether Deck Mate may see your calendar (Allow Full Access; it only reads). \"Due today\" makes the Mac ask once whether Deck Mate may control OmniFocus (it only counts). The \"Desk\" key and the \"Album cover\" key use the Accessibility yes. Weather, Album cover and Body Battery ask the Mac nothing.",
+            "New in 0.12: nothing new is asked. \"Free until\" uses the same calendar yes as \"Next event\". The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing."
         ]),
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open it from the menu. It has three tabs: \"Settings\", \"How it works\" and \"What's new\".",
@@ -381,6 +426,31 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.12", date: "18 Nov 2026", new: [
+            "Five new kinds of key in Set up keys, under \"What it does\". Before: 29 kinds of key. Now: 34. This is the first round of the 28 ideas you picked from 50 new ones. Together they show eleven new things at a glance. Like the five glance keys of 0.11, the value stands on the key in large white words, where the drawing normally is, with small words under it. If you gave the key a title, your title replaces the small words. Until a value is there, the key shows its drawing. They show on the box, on the keys on screen and on the iPhone and iPad.",
+            "New for all glance keys: a key can change its colour with its value. Before: only Body Battery did. Now: Garmin number, Mac at a glance and Free until do too, as told below.",
+            "\"Garmin number\" (teal): you pick one of five numbers in Set up keys. All come from your AMS Garmin Bridge Board on this Mac, the same source as Body Battery. One look at the board, every 10 minutes, feeds all of them. Nothing leaves the Mac and the Mac asks nothing. A press opens the board in the browser. If the board is not running, the key shows its drawing.",
+            "Garmin number, \"Steps today\": for example \"8 412\" with \"Steps today\" under it. The key turns green once the day's step goal is reached.",
+            "Garmin number, \"Sleep last night\": the hours and minutes, for example \"7:24\", with Garmin's word for the night under it, for example \"Good\". When the watch was not worn: a dash and \"No sleep recorded\".",
+            "Garmin number, \"Resting pulse\": today's number with \"Resting pulse\" under it. It is compared with the average of the last 7 days. From 5 beats over it, the small words say for example \"+6 over usual\" and the key turns amber. From 8 over, it turns red.",
+            "Garmin number, \"Stress today\": today's average, with Garmin's own steps under it: up to 25 \"Resting\" (green), up to 50 \"Low stress\" (teal), up to 75 \"Medium stress\" (amber), above that \"High stress\" (red).",
+            "Garmin number, \"Workouts, 7 days\": how many workouts in the last seven days, with the hours under it, for example \"7 days · 15 h\".",
+            "\"Mac at a glance\" (grey-blue): you pick one of three numbers. The Mac looks every 5 seconds, only while such a key exists in your setup. The Mac asks nothing and nothing leaves it.",
+            "Mac at a glance, \"Mac battery\": for example \"73%\" with \"Mac battery\" under it, or \"Charging\". Green from 40 %, amber from 20 %, red below. \"No battery\" on a Mac without one. A press opens Battery in System Settings.",
+            "Mac at a glance, \"Free space\": the room left on the Mac's disk, for example \"212 GB\" (\"8.4 GB\" under ten, \"1.2 TB\" from a thousand). Amber under 25 GB or when a tenth is free, red under 10 GB or when a twentieth is free. A press opens Storage in System Settings.",
+            "Mac at a glance, \"Mac busy light\": how hard the Mac's processors work, in steps of 5 %. Under it \"Mac calm\"; from 60 % \"Mac busy\" (amber); from 85 % \"Mac very busy\" (red). A press opens Activity Monitor.",
+            "\"World clock\" (grey-blue, globe drawing): you type a town. The key shows the time there, for example \"14:05\", with the town under it, or \"tomorrow\" or \"yesterday\" when it is another day there than here. It follows the time every minute. The free service Open-Meteo gets the town's name once, to find its time zone. After that nothing goes out. A press opens the Mac's Clock.",
+            "\"Sunrise and sunset\" (amber, sunrise drawing): you type a town. The key shows whichever comes next, on the town's own clock: for example \"16:42\" with \"Sunset\" (or \"Sunrise\") under it. It asks again every 6 hours. Open-Meteo gets the town's name once, then only its place. A press opens the Mac's Weather.",
+            "\"Free until\" (your calendar): uses the same calendar yes as \"Next event\", which the Mac asks once at the first press of either; until then \"Press to allow\". While an event goes on, the key is red: \"Busy\" with \"until 15:00\". Before the next event of today that has a time, it is green: how long you are free, for example \"1 h 20\" or \"45 min\", with \"Free until 14:30\". With nothing more today: green \"Free\" with \"Rest of the day\". All-day events are left out. A press opens Calendar, or the app you chose with \"Choose app…\".",
+            "Holding a key down to change its town (new in 0.11.1 for Weather) now works for World clock and Sunrise and sunset too. The small window is now called \"Town for this key\" and offers the towns you used on any of these keys.",
+            "Good to know: the \"Due today\" key counts OmniFocus tasks. It will be replaced by a key for PARAGON in a later round, because your tasks are in PARAGON.",
+            "Checked by the maker with real data from the Mac and from the board, and with 20 new data tests. Not yet tried for real: no key was pressed on a real screen or on the real box yet."
+        ], changed: [
+            "There are 34 kinds of key to choose from, instead of 29.",
+            "The Mac asks for nothing new. \"Free until\" uses the calendar yes that \"Next event\" already needs.",
+            "How it works has new parts: \"Garmin number key\", \"Mac at a glance key\", \"World clock key\", \"Sunrise and sunset key\" and \"Free until key\", and new lines in \"Keys that show something at a glance\", \"The look of a key\", \"Set up keys\", \"Weather key\", \"Due today key\" and \"What the Mac asks for\".",
+            "The Mac app is now 0.12 (build 20). The iPhone and iPad app stays 0.16 (build 21) and shows the new keys without an update, because the Mac draws the keys."
+        ], fixed: []),
         Release(id: "0.11.1", date: "18 Nov 2026", new: [
             "Hold a Weather key down to give it another town. Before: the town could only be changed in Set up keys. Now: a long press (half a second) on a Weather key opens a small window called \"Weather key\" on the Mac, with a field for the town. Type a town, or pick one of up to six towns you used before from the list in the same field. Save (Return) or Cancel (Escape). The key shows the new town's weather within a few seconds. Undo in Set up keys takes it back.",
             "It works from the box, from the keys on screen (hold the mouse button) and from the iPhone and iPad (a long press there). The window always opens on the Mac. On the iPhone and iPad a small note says \"Type the town on the Mac\".",

@@ -125,7 +125,7 @@ extension DeckAction {
             return DeckAction(type: .app, target: app)
         case .cover:
             return DeckAction(type: .media, target: MediaKey.playPause.rawValue)
-        case .bodyBattery:
+        case .bodyBattery, .garmin:
             return DeckAction(type: .link, target: BatteryKeys.board)
         default:
             return self
@@ -196,6 +196,22 @@ extension DeckKey {
             }
         case .desk:
             if key.title.isEmpty { key.title = "Desk" }
+        case .garmin:
+            let number = GarminKeys.number(key.action.target)
+            key.showing(live.glances[GlanceKeys.garmin(number)], else: number.title)
+        case .macNow:
+            let number = MacNowKeys.number(key.action.target)
+            key.showing(live.glances[GlanceKeys.mac(number)], else: number.title)
+        case .worldClock, .sunTimes:
+            let town = key.action.target.trimmingCharacters(in: .whitespacesAndNewlines)
+            if town.isEmpty {
+                if key.title.isEmpty { key.title = WeatherKeys.noTownWords }
+            } else {
+                let name = key.action.type == .worldClock ? GlanceKeys.clock(town) : GlanceKeys.sun(town)
+                key.showing(live.glances[name], else: town)
+            }
+        case .freeUntil:
+            key.showing(live.glances[GlanceKeys.free], else: "Free until")
         default:
             break
         }
@@ -209,6 +225,7 @@ extension DeckKey {
     /// become the title of a key that has none. No glance yet = the drawing stays, with `words`.
     mutating func showing(_ glance: Glance?, else words: String) {
         if let glance, !glance.big.isEmpty { icon = GlanceKeys.textPrefix + glance.big }
+        if let tone = glance?.tone, action.type != .bodyBattery { action.name = tone.rawValue }
         if title.isEmpty { title = glance.map { $0.words.isEmpty ? words : $0.words } ?? words }
     }
 }

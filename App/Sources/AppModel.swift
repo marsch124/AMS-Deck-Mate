@@ -335,7 +335,7 @@ final class AppModel: ObservableObject {
     /// The towns to offer when a weather key asks for its town: the ones typed before and the ones on the keys now.
     var townsUsed: [String] {
         let kept = UserDefaults.standard.stringArray(forKey: AppModel.townsKey) ?? []
-        return deck.weatherTowns.reversed().reduce(kept) { list, town in
+        return deck.allTowns.reversed().reduce(kept) { list, town in
             list.contains { WeatherKeys.name($0) == WeatherKeys.name(town) } ? list : list + [town]
         }
     }
@@ -803,8 +803,21 @@ enum Sample {
                           DeskKeys.step(DeskKeys.Spot(app: "com.apple.Safari", x: 0, y: 25, width: 1200, height: 800)),
                           DeskKeys.step(DeskKeys.Spot(app: "com.apple.Notes", x: 1200, y: 25, width: 528, height: 800)),
                           DeskKeys.step(DeskKeys.Spot(app: "com.apple.mail", x: 200, y: 120, width: 980, height: 640))])),
-                      14: key("Back a page", DeckAction(type: .previousPage))]
-        let main = DeckProfile(name: "Default", pages: [first, second, third, folder])
+                      6: DeckKey(action: DeckAction(type: .garmin, target: "steps")),
+                      7: DeckKey(action: DeckAction(type: .garmin, target: "sleep")),
+                      8: DeckKey(action: DeckAction(type: .garmin, target: "pulse")),
+                      9: DeckKey(action: DeckAction(type: .garmin, target: "stress")),
+                      10: DeckKey(action: DeckAction(type: .garmin, target: "workouts")),
+                      11: DeckKey(action: DeckAction(type: .macNow, target: "battery")),
+                      12: DeckKey(action: DeckAction(type: .macNow, target: "space")),
+                      13: DeckKey(action: DeckAction(type: .macNow, target: "busy")),
+                      14: key("Next page", DeckAction(type: .nextPage))]
+        var fourth = DeckPage(name: "Page 4")
+        fourth.keys = [0: DeckKey(action: DeckAction(type: .worldClock, target: "Tokyo")),
+                       1: DeckKey(action: DeckAction(type: .sunTimes, target: "Lisbon")),
+                       2: DeckKey(action: DeckAction(type: .freeUntil)),
+                       14: key("Back a page", DeckAction(type: .previousPage))]
+        let main = DeckProfile(name: "Default", pages: [first, second, third, fourth, folder])
         var writing = DeckProfile(name: "Writing", apps: ["com.apple.Notes"], pages: [DeckPage(name: "Page 1")])
         writing.pages[0].keys = [0: key("Bold", DeckAction(type: .shortcut, combo: KeyCombo(keyCode: 11, command: true, keyName: "B"))),
                                  1: key("Default", DeckAction(type: .profile, target: main.id.uuidString))]

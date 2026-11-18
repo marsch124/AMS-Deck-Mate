@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.11.1 (build 19), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
+# AMS Deck Mate, specification, version 0.12 (build 20), 18 Nov 2026; iPhone and iPad app 0.16 (build 21)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -12,6 +12,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.11 (Mac, round 2 of 3 of his picked ideas): six new kinds of key (Next event, Weather, Due today, Album cover, Body Battery, Desk; 29 kinds instead of 23), five of them showing a value at a glance (sections 56 to 62). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
+- Since 0.12 (Mac, first round of his 28 picks from 50 new ideas): five new kinds of key (Garmin number, Mac at a glance, World clock, Sunrise and sunset, Free until; 34 kinds instead of 29) showing eleven more things at a glance, and a glance key can change its colour with its value (sections 63 to 68). The town on a World clock or Sunrise and sunset key can be changed by a long press like Weather (section 58). iPhone and iPad stay 0.16 (build 21) and show the new keys without an update.
 - Since 0.10 (Mac, round 1 of 3 of his 25 picked ideas): six new kinds of key (Timer, Switch, Run an Apple Shortcut, List to pick from, Open app, Microphone light; 23 kinds instead of 17), the Wait step, Find a key on the keys on screen, Settings > Key use and four ready-made page groups (sections 46 to 55). 254 drawings (252 before). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
 - Since 0.9.4 (Mac): one more drawing to choose for a key, Drawer (`drawer.svg`), 252 in all instead of 251; his GridFit key now shows it instead of Autodesk Fusion's icon. Shows on the Stream Deck, on screen keys and on the iPhone and iPad with no update there (history below). iPhone and iPad stay 0.16 (build 21).
 - Since 0.9.3 (Mac): a key can show a picture of its own instead of a white drawing (section 4 and history below); 10 web-app keys of "My Apps" show their app's real icon. iPhone and iPad stay 0.16 (build 21).
@@ -85,7 +86,7 @@ The icon opens a menu:
 - 0.4 additions (details in section 20): drag to move or swap keys, drop on a page chip; copy and paste; Duplicate page; Duplicate page group; Undo and Redo; red marks for broken keys.
 
 ## 6. Key actions
-`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
+`ActionType`: none, app, link, raycast, shortcut, text, media, folder, back, nextPage, previousPage, page group, multi, and since 0.10 timer, toggle, appleShortcut, list, running, micLight and wait, and since 0.11 nextEvent, weather, dueToday, cover, bodyBattery and desk, and since 0.12 garmin, macNow, worldClock, sunTimes and freeUntil (also recent, askAI, copied, recentFile since 0.7 and 0.8). An unknown name decodes as none, and since 0.11.1 weatherTown (what a long press of a weather key runs; never offered in the pickers).
 
 | Action | `target` | What happens |
 |---|---|---|
@@ -118,7 +119,11 @@ The icon opens a menu:
 | Album cover (0.11) | `cover` | play or pause; see 60 |
 | Body Battery (0.11) | `bodyBattery` | opens the board in the browser; see 61 |
 | Desk (0.11) | `desk`; the apps are `steps` | puts the windows back; see 62 |
-| Nothing | none | nothing |
+| Garmin number (0.12) | `garmin`; "steps", "sleep", "pulse", "stress" or "workouts" | opens the board in the browser; see 64 |
+| Mac at a glance (0.12) | `macNow`; "battery", "space" or "busy" | opens Battery, Storage (System Settings) or Activity Monitor; see 65 |
+| World clock (0.12) | `worldClock`; the town as typed | opens the Mac's Clock; see 66 |
+| Sunrise and sunset (0.12) | `sunTimes`; the town as typed | opens the Mac's Weather; see 67 |
+| Free until (0.12) | `freeUntil`; an app's bundle id, or empty for Calendar | opens that app; see 68 || Nothing | none | nothing |
 
 A shortcut (`KeyCombo`) holds keyCode, command, control, option, shift and keyName; it is recorded by pressing the keys. Its label is written as the Mac does: control, option, shift, command, key (for example ⌃⌥D).
 
@@ -176,7 +181,7 @@ Not yet tried on the real box (see the warning at the top).
 - Accessibility, asked once, for keys that press a shortcut, type text or control music and sound. Settings shows whether it is allowed and has an "Allow…" button.
 - The Mac may ask for Input Monitoring when the box is first plugged in.
 - New in 0.11: Calendars, full access (`NSCalendarsFullAccessUsageDescription`), asked once at the first press of a Next event key; read only. OmniFocus control (Automation, Apple events), asked once at the first press of a Due today key; counts only. Accessibility is also used by the Album cover key (play or pause) and the Desk key (window places). `NSAllowsLocalNetworking` in Info.plist lets the Body Battery key read `http://127.0.0.1:7788` (the AMS Garmin Bridge Board on this Mac).
-
+- New in 0.12: no new permission. The Free until key uses the same calendar access as Next event (asked once at the first press of either; "Press to allow" until then). The Garmin, Mac at a glance, World clock and Sunrise and sunset keys ask the Mac nothing.
 ## 12. Settings
 Three tabs: Settings, How it works, What's new. The version, Quit and Done are at the bottom.
 Since 0.4 the Settings tab is a list on the left with one part at a time on the right (before: one long scroll). The parts, in order: The box (box, brightness), First time with the box, Keys on screen (Show them, Hide after a key is pressed, Size), iPhone (section 17), Page groups (change page group with the app in front), Check keys, This Mac (open at login, permissions), From Elgato (bring over again), Where it is kept.
@@ -202,6 +207,7 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 | Combo | keyCode, command, control, option, shift, keyName |
 
 ## 14. Tests
+- New in 0.12: 20 new data tests, 112 in all (92 before), in `Core/Tests/DeckMateCoreTests/GlanceMoreTests.swift` for the rules of sections 63 to 68.
 - New in 0.11.1: 3 new data tests, 92 in all (89 before), in `GlanceKindsTests.swift`: a weather key answers a long press with `weatherTown` (and keeps its own `held`), `actsOnHold`, and the town list `remembered` (newest first, once, at most 6) with `town(ofKey:)` and `setTown`.
 - New in 0.11: 21 new data tests, 89 in all (68 before), in `Core/Tests/DeckMateCoreTests/GlanceKindsTests.swift` for the rules of sections 56 to 62 (next event and its words, weather words and answers, due count, battery level and colour, track name and cover address, desk capture and steps, the new `ActionType` cases reading back).
 - New in 0.10: 16 new data tests, 68 in all (52 before): `LiveKindsTests.swift` (13: timer clock, minutes, start and stop; timer finishes once and "Done" goes away; timer key shows itself; switch steps; open apps keep their order; first free place; step timing with Wait; microphone light; pressing the new kinds runs them; key check for the new kinds; key finder; key use counts and quiet list; an old keys file still reads) and `TemplatesTests.swift` (3: every ready-made page group is well formed, the key table, a page group made from a template).
@@ -222,6 +228,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 3. Quit the app if it runs.
 4. `ditto` the built app to `~/Applications`.
 5. Open it.
+
+**0.12 (Mac, build 20, 18 Nov 2026).** First round of his 28 picks from 50 new ideas: five new kinds of key (sections 63 to 68: Garmin number, Mac at a glance, World clock, Sunrise and sunset, Free until; 29 kinds before, 34 now). New `ActionType` cases `garmin, macNow, worldClock, sunTimes, freeUntil`. Rules in `Core/Sources/DeckMateCore/GlanceMore.swift`, Mac side in `App/Sources/Glances.swift`. `Glance` gained `tone`. 20 new data tests (112 in all). iPhone and iPad stay 0.16 (build 21). Not proven yet: no key was pressed on a real screen or the real box.
 
 **0.11.1 (Mac, build 19, 18 Nov 2026).** Long press on a Weather key gives it another town (section 58). New `ActionType` case `weatherTown`. 3 new data tests, 92 in all (89 before). iPhone and iPad stay 0.16 (build 21). Not proven yet: not pressed on the real box.
 
@@ -486,7 +494,8 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Test: the phone screen test finds the chips by `lockGroup-<name>` and `lockGroup-Automatic` and the panel by `sidePanel`.
 - Not proven yet: on a real iPhone held on its side.
 
-## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11 and 0.11.1)
+## Not proven yet (0.5, 0.6, 0.7, 0.8.1, 0.9, 0.10, 0.11, 0.11.1 and 0.12)
+- 0.12: the five new kinds were checked with real data from the Mac and from the board, and with small tests. Not pressed on a real screen: any of the keys, the calendar question at the first press of Free until, the long press on a World clock or Sunrise and sunset key, and the town look-ups at Open-Meteo from the keys. The box is at home until January 2027.
 - 0.11.1: the long press on a Weather key (the "Weather key" window, from the box, the keys on screen and the iPhone and iPad) was checked with small tests only; not pressed on the real box. The box is at home until January 2027.
 - 0.11: the six new kinds were checked with made-up data and small tests only. Not pressed on a real screen: the calendar question (Allow Full Access) and the OmniFocus question at the first press, the weather from Open-Meteo, the Spotify notice and cover look-up, the board on port 7788, and the desk put back with real windows (Accessibility). The box is at home until January 2027.
 - 0.10: everything was checked with made-up keys and small tests. Dark mode's one-time question ("System Events"), a real Apple Shortcut run and the timer on the real box are not tried yet. The box is at home until January 2027.
@@ -699,3 +708,50 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - A press opens every app of the desk and puts each one's front window back in its place and size through Accessibility, waiting up to about 8 seconds for an app that is still opening. Needs Accessibility (section 11); the Mac asks at the first press if it was never given.
 - Also works as a long press and as a step of "Several things in a row".
 - Key check: an app that is no longer on this Mac makes the desk broken, "An app of the desk is not on this Mac"; a desk with no steps says "No windows taken yet".
+
+## 63. Keys that show more at a glance (Mac 0.12)
+- Five new kinds, eleven things to show: Garmin number (five numbers), Mac at a glance (three), World clock, Sunrise and sunset, Free until. Rules in `Core/Sources/DeckMateCore/GlanceMore.swift`: `GarminKeys`, `MacNowKeys`, `ClockKeys`, `SunKeys`, `EventKeys.freeGlance` and `EventKeys.length`. Mac side in `App/Sources/Glances.swift`.
+- New `ActionType` cases: `garmin`, `macNow`, `worldClock`, `sunTimes`, `freeUntil`. Kinds of key: 34 (29 before).
+- Look as in section 56: the value in large white words, small words under it (a title replaces them), the drawing until a value is there.
+- New: a glance can change its colour. `Glance.tone` is a `KeyKind` (green `media`, teal `web`, amber `text`, red `raycast`, grey-blue `move`; none = the kind's own colour). On a key as it shows now, `action.name` carries the tone and `DeckAction.kind` reads it.
+- Glance names in `LiveKeys.glances`: "garmin:<number>" (`GlanceKeys.garmin`), "mac:<number>" (`GlanceKeys.mac`), "clock:<town>" (`GlanceKeys.clock`), "sun:<town>" (`GlanceKeys.sun`), "free" (`GlanceKeys.free`).
+- Helpers: `ActionType.hasTown` (weather, world clock, sunrise and sunset), `Deck.towns(of:)` (the towns of the keys of one kind, each once), `Deck.allTowns`, `Deck.macNumbers` (the Mac numbers the setup shows).
+- Each watcher runs only while a key of its kind exists in the setup. The keys show on the box, on screen keys and on the iPhone and iPad (the Mac draws them), so the iPhone and iPad need no update.
+
+## 64. Garmin number key (Mac 0.12)
+- `ActionType.garmin`; `target` = "steps", "sleep", "pulse", "stress" or "workouts" (`GarminKeys.Number`; anything else counts as steps). Colour: teal unless the tone says otherwise. Drawings: shoes, sleep, heart, pulse, run. A press opens `http://127.0.0.1:7788/`.
+- Source: the AMS Garmin Bridge Board, as for Body Battery (section 61). One fetch feeds Body Battery and all five numbers (`GarminKeys.glances(fromBoard:)`), asked every 10 minutes. Nothing leaves the Mac; the Mac asks nothing. A number the board does not have is left out, and the key shows its drawing.
+- Steps today: `today.steps` as "8 412" (`count`, a space between thousands); small words "Steps today"; green once `today.stepGoal` is reached.
+- Sleep last night: `sleep.seconds` as "7:24" (`hours(seconds:)`), small words Garmin's own word (`sleep.qualifier`, "Good"); when `sleep.recorded` is not true: a dash and "No sleep recorded".
+- Resting pulse: `today.restingHr`, small words "Resting pulse". Against the latest of `restingTrend.avg7` (the 7-day average): from 5 beats over it the small words say "+<n> over usual" and the tone is amber; from 8 over, red.
+- Stress today: `today.stressAvg`; the words and tone from Garmin's own steps (`GarminKeys.stress`): to 25 "Resting" (green), to 50 "Low stress" (teal), to 75 "Medium stress" (amber), above "High stress" (red).
+- Workouts, 7 days: `recentWorkouts.last7.count`; small words "7 days · <h> h" (whole hours of `seconds`), or "Workouts, 7 days" when under an hour.
+
+## 65. Mac at a glance key (Mac 0.12)
+- `ActionType.macNow`; `target` = "battery", "space" or "busy" (`MacNowKeys.Number`). Colour: grey-blue unless the tone says otherwise. Drawings: battery, folder, multi.
+- Looked at every 5 seconds, only while such a key exists (`Deck.macNumbers`). The Mac asks nothing; nothing leaves it.
+- Mac battery (`MacNowKeys.battery`): from the IOKit power sources; "73%", small words "Mac battery" or "Charging"; green from 40 %, amber from 20 %, red below; no battery: "No battery". A press opens `x-apple.systempreferences:com.apple.Battery-Settings.extension`.
+- Free space (`MacNowKeys.space`, `room`): the start-up disk's "available for important usage"; "212 GB", "8.4 GB" under ten, "1.2 TB" from a thousand; amber under 25 GB or a tenth free, red under 10 GB or a twentieth free. A press opens `x-apple.systempreferences:com.apple.settings.Storage`.
+- Mac busy light (`MacNowKeys.load`, `busy`): the share of the processors at work between two readings of their tick counters, shown in steps of 5 %. Small words "Mac calm"; from 60 % "Mac busy" (amber); from 85 % "Mac very busy" (red). A press opens Activity Monitor (`com.apple.ActivityMonitor`).
+
+## 66. World clock key (Mac 0.12)
+- `ActionType.worldClock`; `target` = the town as typed. Colour: grey-blue. Drawing: globe. A press opens the Mac's Clock (`ClockKeys.clockApp`, `com.apple.clock`).
+- Large words: the time in the town's zone ("14:05"). Small words: the town (the key's own words); "tomorrow" or "yesterday" when the day there differs from the day here (`ClockKeys.glance`). No town: "Set a town".
+- Service: Open-Meteo, step 1 once per town (`ClockKeys.zone(fromSearch:)`, the geocoding search of section 58 gives `timezone`). Only the town's name goes out. Town to place stays in UserDefaults `weatherPlaces`, town to time zone in `townZones`. After that nothing goes out.
+- A one-minute timer redraws the clock, sunrise and sunset and free-until keys.
+
+## 67. Sunrise and sunset key (Mac 0.12)
+- `ActionType.sunTimes`; `target` = the town as typed. Colour: amber. Drawing: sunrise. A press opens the Mac's Weather.
+- Source: Open-Meteo, `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&daily=sunrise,sunset&timezone=auto&forecast_days=2` (`SunKeys.url`, `times(fromAnswer:)`). Only the place goes out; the town's name goes out once to find the place (section 58). Asked again every `SunKeys.everyHours` = 6.
+- Shows whichever of today's and tomorrow's sunrise and sunset comes next (`SunKeys.glance`), on the town's own clock (`utc_offset_seconds`): "16:42" with "Sunset" or "Sunrise" under it.
+
+## 68. Free until key (Mac 0.12)
+- `ActionType.freeUntil`; `target` = the bundle id of the app a press opens; empty = Calendar (as Next event, section 57). Source: EventKit, as Next event; the same calendar access (asked once at the first press of either; "Press to allow" until then, "Calendar not allowed" if refused). Read only.
+- `EventKeys.freeGlance`: an event going on: red, "Busy" with "until 15:00"; else before the next event of today that has a time: green, the time free ("1 h 20" or "45 min", `EventKeys.length`) with "Free until 14:30"; else green "Free" with "Rest of the day". All-day events are left out.
+- Follows calendar changes at once; the one-minute timer redraws it.
+
+## 69. Long press for the town (Mac 0.12)
+- The long press of section 58 now works on World clock and Sunrise and sunset keys too (`ActionType.hasTown`). The window is called "Town for this key" (it was "Weather key" in 0.11.1) and offers the towns used on any of these kinds (`Deck.allTowns`; kept in UserDefaults `weatherTownsUsed`, at most 6).
+
+## 70. Due today key replaced later
+- The "Due today" key (section 59) counts OmniFocus tasks and will be replaced by a key for PARAGON in a later round, because his tasks are in PARAGON.

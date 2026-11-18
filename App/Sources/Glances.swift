@@ -16,7 +16,20 @@ final class GlanceWatch {
     /// What the keys show right now, by their names in `GlanceKeys`.
     var glances: [String: Glance] {
         var all: [String: Glance] = [:]
-        if calendarOn { all[GlanceKeys.event] = eventGlance }
+        if nextOn { all[GlanceKeys.event] = eventGlance }
+        if freeOn { all[GlanceKeys.free] = freeGlance }
+        let now = Date()
+        for town in clockTowns {
+            guard let zone = zones[WeatherKeys.name(town)].flatMap(TimeZone.init(identifier:)) else { continue }
+            all[GlanceKeys.clock(town)] = ClockKeys.glance(zone: zone, now: now, here: .current)
+        }
+        for town in sunTowns {
+            if let glance = SunKeys.glance(sun[WeatherKeys.name(town)], now: now) { all[GlanceKeys.sun(town)] = glance }
+        }
+        for town in clockTowns where missingTowns.contains(WeatherKeys.name(town)) { all[GlanceKeys.clock(town)] = Glance(words: "Town not found") }
+        for town in sunTowns where missingTowns.contains(WeatherKeys.name(town)) { all[GlanceKeys.sun(town)] = Glance(words: "Town not found") }
+        for (number, glance) in garmin { all[GlanceKeys.garmin(number)] = glance }
+        for (number, glance) in macGlances { all[GlanceKeys.mac(number)] = glance }
         for town in towns {
             let name = WeatherKeys.name(town)
             if let glance = WeatherKeys.glance(weather[name]) {
@@ -71,18 +84,31 @@ final class GlanceWatch {
 
     /// The setup changed: each part is switched on or off with the keys that need it.
     func watch(_ deck: Deck) {
-        setCalendar(deck.uses(.nextEvent))
-        setWeather(deck.weatherTowns)
+        nextOn = deck.uses(.nextEvent)
+        freeOn = deck.uses(.freeUntil)
+        setCalendar(nextOn || freeOn)
+        setWeather(deck.towns(of: .weather))
+        setClocks(deck.towns(of: .worldClock), suns: deck.towns(of: .sunTimes))
+        setMac(deck.macNumbers)
         setDue(deck.uses(.dueToday))
         setCover(deck.uses(.cover))
-        setBattery(deck.uses(.bodyBattery))
+        setBattery(deck.uses(.bodyBattery) || deck.uses(.garmin))
         tell()
     }
 
     /// A glance key was pressed.
     func pressed(_ action: DeckAction) {
         switch action.type {
-        case .nextEvent: eventPressed(action)
+        case .nextEvent, .freeUntil: eventPressed(action)
+        case .worldClock: open(app: ClockKeys.clockApp)
+        case .sunTimes: open(app: WeatherKeys.weatherApp)
+        case .macNow:
+            let number = MacNowKeys.number(action.target)
+            if number == .busy {
+                open(app: number.opens)
+            } else if let url = URL(string: number.opens) {
+                NSWorkspace.shared.open(url)
+            }
         case .weather:
             refreshWeather()
             open(app: WeatherKeys.weatherApp)
@@ -101,7 +127,9 @@ final class GlanceWatch {
 
     private var store = EKEventStore()
     private var calendarOn = false
-    private var event: EventKeys.Event?
+    private var nextOn = false
+    private var freeOn = false
+    private var events: [EventKeys.Event] = []
     private var eventTimer: Timer?
     private var storeWatch: NSObjectProtocol?
     private let reading = DispatchQueue(label: "glance calendar")
@@ -111,7 +139,15 @@ final class GlanceWatch {
     private var eventGlance: Glance {
         switch EKEventStore.authorizationStatus(for: .event) {
         case .notDetermined: return Glance(words: EventKeys.askWords)
-        case .fullAccess: return EventKeys.glance(event, now: Date(), calendar: .current)
+        case .fullAccess: return EventKeys.glance(EventKeys.next(events, now: Date()), now: Date(), calendar: .current)
+        default: return Glance(words: EventKeys.refusedWords)
+        }
+    }
+
+    private var freeGlance: Glance {
+        switch EKEventStore.authorizationStatus(for: .event) {
+        case .notDetermined: return Glance(words: EventKeys.askWords)
+        case .fullAccess: return EventKeys.freeGlance(events, now: Date(), calendar: .current)
         default: return Glance(words: EventKeys.refusedWords)
         }
     }
@@ -123,7 +159,7 @@ final class GlanceWatch {
         eventTimer = nil
         if let storeWatch { NotificationCenter.default.removeObserver(storeWatch) }
         storeWatch = nil
-        event = nil
+        events = []
         guard on else { return }
         // The words on the key change with the clock ("12 min"), so it is read again every minute.
         eventTimer = every(60) { [weak self] in self?.readEvents() }
@@ -142,9 +178,8 @@ final class GlanceWatch {
             let ahead = now.addingTimeInterval(Double(EventKeys.daysAhead) * 86_400)
             let found = store.events(matching: store.predicateForEvents(withStart: now.addingTimeInterval(-86_400), end: ahead, calendars: nil))
                 .map { EventKeys.Event(title: $0.title ?? "", start: $0.startDate, end: $0.endDate, allDay: $0.isAllDay) }
-            let next = EventKeys.next(found, now: now)
             DispatchQueue.main.async {
-                self?.event = next
+                self?.events = found
                 self?.tell()
             }
         }
@@ -178,7 +213,6 @@ final class GlanceWatch {
         towns = new
         let names = Set(new.map(WeatherKeys.name))
         weather = weather.filter { names.contains($0.key) }
-        missingTowns = missingTowns.intersection(names)
         weatherTimer?.invalidate()
         weatherTimer = nil
         weatherSoon?.invalidate()
@@ -192,28 +226,135 @@ final class GlanceWatch {
     }
 
     private func refreshWeather() {
-        var places = UserDefaults.standard.dictionary(forKey: GlanceWatch.placesKey) as? [String: String] ?? [:]
         for town in towns {
-            let name = WeatherKeys.name(town)
-            if let place = places[name].flatMap(WeatherKeys.Place.init(text:)) {
-                readWeather(name, at: place)
-                continue
+            find(town) { [weak self] place in self?.readWeather(WeatherKeys.name(town), at: place) }
+        }
+    }
+
+    private static let zonesKey = "townZones"
+    /// The time zone of each town looked up so far, by the town's name.
+    private var zones = UserDefaults.standard.dictionary(forKey: GlanceWatch.zonesKey) as? [String: String] ?? [:]
+
+    /// A town's place and time zone. They are asked for once (only the town's name goes out) and kept.
+    private func find(_ town: String, _ done: @escaping (WeatherKeys.Place) -> Void) {
+        let name = WeatherKeys.name(town)
+        let places = UserDefaults.standard.dictionary(forKey: GlanceWatch.placesKey) as? [String: String] ?? [:]
+        if let place = places[name].flatMap(WeatherKeys.Place.init(text:)), zones[name] != nil {
+            done(place)
+            return
+        }
+        fetch(WeatherKeys.searchURL(town)) { [weak self] data in
+            guard let self, let data else { return }
+            guard let place = WeatherKeys.place(fromSearch: data) else {
+                self.missingTowns.insert(name)
+                self.tell()
+                return
             }
-            // The town's place is asked for once and kept; after that only the place goes out.
-            fetch(WeatherKeys.searchURL(town)) { [weak self] data in
-                guard let self, let data else { return }
-                guard let place = WeatherKeys.place(fromSearch: data) else {
-                    self.missingTowns.insert(name)
+            self.missingTowns.remove(name)
+            var places = UserDefaults.standard.dictionary(forKey: GlanceWatch.placesKey) as? [String: String] ?? [:]
+            places[name] = place.text
+            UserDefaults.standard.set(places, forKey: GlanceWatch.placesKey)
+            self.zones[name] = ClockKeys.zone(fromSearch: data) ?? TimeZone.current.identifier
+            UserDefaults.standard.set(self.zones, forKey: GlanceWatch.zonesKey)
+            done(place)
+        }
+    }
+
+    // MARK: World clock, sunrise and sunset
+
+    private var clockTowns: [String] = []
+    private var sunTowns: [String] = []
+    private var sun: [String: SunKeys.Times] = [:]
+    private var clockTimer: Timer?
+    private var sunTimer: Timer?
+    private var townsSoon: Timer?
+
+    private func setClocks(_ clocks: [String], suns: [String]) {
+        guard clocks != clockTowns || suns != sunTowns else { return }
+        clockTowns = clocks
+        sunTowns = suns
+        let names = Set(suns.map(WeatherKeys.name))
+        sun = sun.filter { names.contains($0.key) }
+        [clockTimer, sunTimer, townsSoon].forEach { $0?.invalidate() }
+        clockTimer = nil
+        sunTimer = nil
+        townsSoon = nil
+        guard !clocks.isEmpty || !suns.isEmpty else { return }
+        // The time on these keys moves with the clock: looked at four times a minute, redrawn only on a change.
+        clockTimer = every(15) { [weak self] in self?.tell() }
+        if !suns.isEmpty { sunTimer = every(Double(SunKeys.everyHours) * 3600) { [weak self] in self?.refreshTowns() } }
+        let soon = Timer(timeInterval: 2, repeats: false) { [weak self] _ in self?.refreshTowns() }
+        RunLoop.main.add(soon, forMode: .common)
+        townsSoon = soon
+    }
+
+    private func refreshTowns() {
+        for town in clockTowns { find(town) { [weak self] _ in self?.tell() } }
+        for town in sunTowns {
+            let name = WeatherKeys.name(town)
+            find(town) { [weak self] place in
+                self?.fetch(SunKeys.url(place)) { data in
+                    guard let self, let times = data.flatMap(SunKeys.times(fromAnswer:)),
+                          self.sunTowns.contains(where: { WeatherKeys.name($0) == name }) else { return }
+                    self.sun[name] = times
                     self.tell()
-                    return
                 }
-                self.missingTowns.remove(name)
-                places = UserDefaults.standard.dictionary(forKey: GlanceWatch.placesKey) as? [String: String] ?? [:]
-                places[name] = place.text
-                UserDefaults.standard.set(places, forKey: GlanceWatch.placesKey)
-                self.readWeather(name, at: place)
             }
         }
+    }
+
+    // MARK: The Mac at a glance
+
+    private var macNumbers: Set<MacNowKeys.Number> = []
+    private var macGlances: [MacNowKeys.Number: Glance] = [:]
+    private var macTimer: Timer?
+    private var macLooks = 0
+    private var ticks: (busy: UInt64, all: UInt64)?
+
+    private func setMac(_ numbers: Set<MacNowKeys.Number>) {
+        guard numbers != macNumbers else { return }
+        macNumbers = numbers
+        macTimer?.invalidate()
+        macTimer = nil
+        macGlances = [:]
+        macLooks = 0
+        ticks = nil
+        guard !numbers.isEmpty else { return }
+        macTimer = every(5) { [weak self] in self?.readMac() }
+        readMac()
+    }
+
+    /// Battery and load every five seconds, the free space once a minute. Nothing here needs a permission.
+    private func readMac() {
+        if macNumbers.contains(.battery) {
+            let power = MacWatch.battery()
+            macGlances[.battery] = MacNowKeys.battery(percent: power?.percent, charging: power?.charging ?? false)
+        }
+        if macNumbers.contains(.space), macLooks % 12 == 0 {
+            let room = try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey])
+            macGlances[.space] = MacNowKeys.space(free: room?.volumeAvailableCapacityForImportantUsage, total: room?.volumeTotalCapacity.map(Int64.init))
+        }
+        if macNumbers.contains(.busy) {
+            let now = GlanceWatch.processorTicks()
+            if let now, let before = ticks { macGlances[.busy] = MacNowKeys.busy(MacNowKeys.load(before: before, after: now)) }
+            ticks = now
+        }
+        macLooks += 1
+        tell()
+    }
+
+    /// The clocks of the Mac's processors: the ticks spent working, and all ticks.
+    private static func processorTicks() -> (busy: UInt64, all: UInt64)? {
+        var info = host_cpu_load_info()
+        var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.stride / MemoryLayout<integer_t>.stride)
+        let result = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &count)
+            }
+        }
+        guard result == KERN_SUCCESS else { return nil }
+        let user = UInt64(info.cpu_ticks.0), system = UInt64(info.cpu_ticks.1), idle = UInt64(info.cpu_ticks.2), nice = UInt64(info.cpu_ticks.3)
+        return (user + system + nice, user + system + idle + nice)
     }
 
     private func readWeather(_ name: String, at place: WeatherKeys.Place) {
@@ -369,12 +510,14 @@ final class GlanceWatch {
     // MARK: Body Battery (the Garmin board on this Mac)
 
     private var batteryTimer: Timer?
+    private var garmin: [GarminKeys.Number: Glance] = [:]
 
     private func setBattery(_ on: Bool) {
         guard on != (batteryTimer != nil) else { return }
         batteryTimer?.invalidate()
         batteryTimer = nil
         battery = nil
+        garmin = [:]
         guard on else { return }
         batteryTimer = every(Double(BatteryKeys.everyMinutes) * 60) { [weak self] in self?.readBattery() }
         readBattery()
@@ -384,6 +527,7 @@ final class GlanceWatch {
         fetch(URL(string: BatteryKeys.boardData)) { [weak self] data in
             guard let self, self.batteryTimer != nil else { return }
             self.battery = data.flatMap(BatteryKeys.level(fromBoard:))
+            self.garmin = data.map(GarminKeys.glances(fromBoard:)) ?? [:]
             self.tell()
         }
     }
@@ -396,6 +540,17 @@ final class GlanceWatch {
         GlanceKeys.weather("Lisbon"): Glance(big: "17°", words: "Partly cloudy"),
         GlanceKeys.due: Glance(big: "3", words: DueKeys.words),
         GlanceKeys.battery: Glance(big: "62", words: BatteryKeys.words),
+        GlanceKeys.garmin(.steps): Glance(big: "8 412", words: "Steps today"),
+        GlanceKeys.garmin(.sleep): Glance(big: "7:24", words: "Good"),
+        GlanceKeys.garmin(.pulse): Glance(big: "52", words: "+6 over usual", tone: .text),
+        GlanceKeys.garmin(.stress): Glance(big: "18", words: "Resting", tone: .media),
+        GlanceKeys.garmin(.workouts): Glance(big: "5", words: "7 days · 6 h"),
+        GlanceKeys.mac(.battery): Glance(big: "73%", words: "Mac battery", tone: .media),
+        GlanceKeys.mac(.space): Glance(big: "212 GB", words: "Free space"),
+        GlanceKeys.mac(.busy): Glance(big: "85%", words: "Mac very busy", tone: .raycast),
+        GlanceKeys.clock("Tokyo"): Glance(big: "22:05"),
+        GlanceKeys.sun("Lisbon"): Glance(big: "17:21", words: "Sunset"),
+        GlanceKeys.free: Glance(big: "1 h 20", words: "Free until 14:30", tone: .media),
     ]
     static let sampleCover = CoverKeys.Now(track: "sample", song: "Morning Light", artist: "The Samples", playing: true)
 

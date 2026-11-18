@@ -11,6 +11,8 @@ extension DeckAction {
         case .recent, .copied, .recentFile, .running, .wait: return DeckAction(type: type, target: "1")
         case .timer: return DeckAction(type: type, target: "5")
         case .toggle: return DeckAction(type: type, target: SwitchKeys.dark)
+        case .garmin: return DeckAction(type: type, target: GarminKeys.Number.steps.rawValue)
+        case .macNow: return DeckAction(type: type, target: MacNowKeys.Number.battery.rawValue)
         default: return DeckAction(type: type)
         }
     }

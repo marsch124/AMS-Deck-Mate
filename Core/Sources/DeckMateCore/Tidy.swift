@@ -192,13 +192,14 @@ public enum KeyCheck {
             }
             return SwitchKeys.step(of: action, isOn: false) == nil && SwitchKeys.step(of: action, isOn: true) == nil
                 ? "Nothing to switch yet" : nil
-        case .weather:
+        case .weather, .worldClock, .sunTimes:
             return target.isEmpty ? "No town yet" : nil
         case .desk:
             for spot in DeskKeys.spots(of: action) where !world.appExists(spot.app) { return "An app of the desk is not on this Mac" }
             return DeskKeys.spots(of: action).isEmpty ? "No windows taken yet" : nil
         case .none, .back, .nextPage, .previousPage, .media, .recent, .askAI, .copied, .recentFile,
-             .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery, .weatherTown:
+             .timer, .running, .micLight, .wait, .nextEvent, .dueToday, .cover, .bodyBattery, .weatherTown,
+             .garmin, .macNow, .freeUntil:
             return nil
         }
     }
@@ -271,6 +272,16 @@ public enum ActionWords {
         case .nextEvent: return "Opened the calendar"
         case .weather: return "Opened Weather"
         case .weatherTown: return "Type the town on the Mac"
+        case .garmin: return "Opened the Garmin board"
+        case .macNow:
+            switch MacNowKeys.number(action.target) {
+            case .battery: return "Opened Battery settings"
+            case .space: return "Opened Storage settings"
+            case .busy: return "Opened Activity Monitor"
+            }
+        case .worldClock: return "Opened Clock"
+        case .sunTimes: return "Opened Weather"
+        case .freeUntil: return "Opened the calendar"
         case .dueToday: return "Opened OmniFocus"
         case .cover: return MediaKey.playPause.title
         case .bodyBattery: return "Opened the Garmin board"

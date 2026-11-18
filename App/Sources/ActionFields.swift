@@ -38,12 +38,18 @@ extension ActionType {
         case .bodyBattery: return "Body Battery"
         case .desk: return "Desk (windows in place)"
         case .weatherTown: return "Change the town"
+        case .garmin: return "Garmin number"
+        case .macNow: return "Mac at a glance"
+        case .worldClock: return "World clock"
+        case .sunTimes: return "Sunrise and sunset"
+        case .freeUntil: return "Free until (calendar)"
         }
     }
 
     static let forKeys: [ActionType] = [.app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
                                         .media, .timer, .toggle, .micLight,
-                                        .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk, .list, .multi,
+                                        .nextEvent, .freeUntil, .weather, .worldClock, .sunTimes, .bodyBattery, .garmin, .macNow,
+                                        .dueToday, .cover, .desk, .list, .multi,
                                         .folder, .back, .nextPage, .previousPage, .profile, .none]
     /// A long press can do anything a key does, except open a new folder or only show something.
     static let forLongPress: [ActionType] = [.none, .app, .running, .recent, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut,
@@ -195,6 +201,38 @@ struct ActionFields: View {
                 }
                 .labelsHidden()
                 note("Waits before the next step, for an app that needs a moment to open.")
+            case .garmin:
+                Picker("", selection: $action.target) {
+                    ForEach(GarminKeys.Number.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("garminPicker")
+                note("Shows one number from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes. Steps turn green at your goal; the resting pulse turns amber from 5 beats over your usual and red from 8; stress follows Garmin’s own steps. A press opens the board. Nothing leaves the Mac.")
+            case .macNow:
+                Picker("", selection: $action.target) {
+                    ForEach(MacNowKeys.Number.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+                }
+                .labelsHidden()
+                .accessibilityIdentifier("macNowPicker")
+                note("Shows the Mac’s battery, the free space on its disk, or how hard it is working, and changes colour when it needs a look: amber, then red. A press opens Battery or Storage in System Settings, or Activity Monitor.")
+            case .worldClock, .sunTimes:
+                TextField("Town", text: $action.target)
+                    .textFieldStyle(.roundedBorder)
+                    .accessibilityIdentifier("townField")
+                note(action.type == .worldClock
+                     ? "Shows the time in this town, and “tomorrow” or “yesterday” when it is another day there. A press opens the Mac’s Clock. The free service Open-Meteo gets the town’s name once, to find its time zone. Hold the key down to give it another town."
+                     : "Shows the next sunrise or sunset in this town, on the town’s own clock. A press opens the Mac’s Weather. The free service Open-Meteo gets the town’s name once, and after that only its place. Hold the key down to give it another town.")
+            case .freeUntil:
+                HStack(spacing: 8) {
+                    Text("A press opens " + (action.target.isEmpty ? "Calendar" : KeyArt.appName(action.target))).lineLimit(1)
+                    Spacer(minLength: 4)
+                    if !action.target.isEmpty {
+                        Button("Calendar") { action.target = "" }.buttonStyle(PlainButton())
+                    }
+                    Button("Choose app…") { if let picked = Chooser.app() { action.target = picked } }
+                        .buttonStyle(PlainButton())
+                }
+                note("Shows how long you are free until your next event of today: green with the time left, red with “Busy” while an event goes on. All-day events are left out. It uses the same calendar permission as the Next event key.")
             case .nextEvent:
                 HStack(spacing: 8) {
                     Text("A press opens " + (action.target.isEmpty ? "Calendar" : KeyArt.appName(action.target))).lineLimit(1)

@@ -124,7 +124,8 @@ public enum Navigator {
             break       // it only shows something
         case .app, .link, .raycast, .shortcut, .text, .media, .recent, .askAI, .copied, .recentFile,
              .timer, .toggle, .appleShortcut, .list, .running, .wait,
-             .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk, .weatherTown:
+             .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk, .weatherTown,
+             .garmin, .macNow, .worldClock, .sunTimes, .freeUntil:
             outcome.run.append(action)
         }
     }

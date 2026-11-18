@@ -30,6 +30,11 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// Asks for another town for a weather key (target = that key's id). Not something to pick for a key:
     /// it is what a long press of a weather key does when the key has no long press of its own.
     case weatherTown
+    /// More glance keys (see GlanceMore.swift): garmin = one number from the Garmin board (target: see
+    /// `GarminKeys.Number`); macNow = the Mac's battery, free space or how busy it is (target: see
+    /// `MacNowKeys.Number`); worldClock = the time in a town (target); sunTimes = the next sunrise or sunset
+    /// in a town (target); freeUntil = how long until the next event (target = the app a press opens).
+    case garmin, macNow, worldClock, sunTimes, freeUntil
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -164,6 +169,11 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .cover: return .media
         // On a key as it shows right now the target is the level: green, amber or red.
         case .bodyBattery: return BatteryKeys.kind(Int(target))
+        // On a key as it shows right now the name is the colour the glance asks for.
+        case .garmin: return KeyKind(rawValue: name) ?? .web
+        case .macNow, .worldClock: return KeyKind(rawValue: name) ?? .move
+        case .sunTimes: return .text
+        case .freeUntil: return KeyKind(rawValue: name) ?? .app
         }
     }
 
@@ -207,6 +217,11 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .cover: return "music"
         case .bodyBattery: return "battery"
         case .desk: return "deck-window-full"
+        case .garmin: return GarminKeys.number(target).icon
+        case .macNow: return MacNowKeys.number(target).icon
+        case .worldClock: return "globe"
+        case .sunTimes: return "app-sunrise"
+        case .freeUntil: return "app-calendar"
         }
     }
 }
@@ -245,13 +260,13 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     public func action(long: Bool) -> DeckAction {
         if long, hasHeld, let held { return held }
         // A weather key without a long press of its own asks for another town.
-        if long, action.type == .weather { return DeckAction(type: .weatherTown, target: id.uuidString) }
+        if long, action.type.hasTown { return DeckAction(type: .weatherTown, target: id.uuidString) }
         return action
     }
 
     /// True when holding the key does something else than pressing it: a long press of its own, or
     /// a weather key (which then asks for another town).
-    public var actsOnHold: Bool { hasHeld || action.type == .weather }
+    public var actsOnHold: Bool { hasHeld || action.type.hasTown }
 
     public var shownIcon: String { icon.isEmpty ? action.autoIcon : icon }
 

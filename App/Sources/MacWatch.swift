@@ -85,7 +85,7 @@ final class MacWatch: ObservableObject {
         now = copy
     }
 
-    private static func battery() -> (percent: Int, charging: Bool)? {
+    static func battery() -> (percent: Int, charging: Bool)? {
         guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
               let list = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef] else { return nil }
         for source in list {

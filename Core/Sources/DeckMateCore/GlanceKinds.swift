@@ -9,10 +9,13 @@ public struct Glance: Equatable, Sendable {
     public var big: String
     /// The small words under them, when the key has no title of its own.
     public var words: String
+    /// The key's colour while it shows this (green, amber, red …); nil = the colour of its kind.
+    public var tone: KeyKind?
 
-    public init(big: String = "", words: String = "") {
+    public init(big: String = "", words: String = "", tone: KeyKind? = nil) {
         self.big = big
         self.words = words
+        self.tone = tone
     }
 }
 
@@ -367,7 +370,7 @@ extension Deck {
     /// The town of the weather key with this id; nil when there is no such weather key.
     public func town(ofKey id: UUID) -> String? {
         let keys = profiles.flatMap { $0.pages.flatMap { $0.keys.values } } + Array(favourites.values)
-        return keys.first { $0.id == id && $0.action.type == .weather }?.action.target
+        return keys.first { $0.id == id && $0.action.type.hasTown }?.action.target
     }
 
     /// Gives the weather key with this id another town. Nothing else changes.
@@ -375,12 +378,12 @@ extension Deck {
         let new = town.trimmingCharacters(in: .whitespacesAndNewlines)
         for group in profiles.indices {
             for page in profiles[group].pages.indices {
-                for (slot, key) in profiles[group].pages[page].keys where key.id == id && key.action.type == .weather {
+                for (slot, key) in profiles[group].pages[page].keys where key.id == id && key.action.type.hasTown {
                     profiles[group].pages[page].keys[slot]?.action.target = new
                 }
             }
         }
-        for (slot, key) in favourites where key.id == id && key.action.type == .weather {
+        for (slot, key) in favourites where key.id == id && key.action.type.hasTown {
             favourites[slot]?.action.target = new
         }
     }

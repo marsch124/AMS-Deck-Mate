@@ -116,8 +116,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             let folder = URL(fileURLWithPath: arguments[index + 1])
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             var page = DeckPage(name: "Glance")
-            let kinds: [DeckAction] = [DeckAction(type: .nextEvent), DeckAction(type: .weather, target: "Stockholm"),
-                                       DeckAction(type: .dueToday), DeckAction(type: .cover), DeckAction(type: .bodyBattery)]
+            var kinds: [DeckAction] = [DeckAction(type: .nextEvent), DeckAction(type: .weather, target: "Stockholm"),
+                                       DeckAction(type: .freeUntil), DeckAction(type: .cover), DeckAction(type: .bodyBattery)]
+            kinds += GarminKeys.Number.allCases.map { DeckAction(type: .garmin, target: $0.rawValue) }
+            kinds += MacNowKeys.Number.allCases.map { DeckAction(type: .macNow, target: $0.rawValue) }
+            kinds += [DeckAction(type: .worldClock, target: "Stockholm"), DeckAction(type: .sunTimes, target: "Stockholm")]
             for (slot, action) in kinds.enumerated() { page.keys[slot] = DeckKey(action: action) }
             let watch = GlanceWatch()
             watch.watch(Deck(profiles: [DeckProfile(name: "Check", pages: [page])]))
@@ -130,6 +133,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
                 var places = UserDefaults.standard.dictionary(forKey: "weatherPlaces") ?? [:]
                 places["stockholm"] = nil
                 UserDefaults.standard.set(places, forKey: "weatherPlaces")
+                var zones = UserDefaults.standard.dictionary(forKey: "townZones") ?? [:]
+                zones["stockholm"] = nil
+                UserDefaults.standard.set(zones, forKey: "townZones")
                 print("glance written")
                 NSApp.terminate(nil)
             }
@@ -518,7 +524,7 @@ extension AppDelegate {
     func askTown(_ id: String) {
         guard let key = UUID(uuidString: id), let now = model.deck.town(ofKey: key) else { return }
         let alert = NSAlert()
-        alert.messageText = "Weather key"
+        alert.messageText = "Town for this key"
         alert.informativeText = "Which town should this key show? Type one, or pick one you used before."
         let box = NSComboBox(frame: NSRect(x: 0, y: 0, width: 260, height: 26))
         box.addItems(withObjectValues: model.townsUsed)
@@ -577,6 +583,12 @@ enum Snapshots {
                     shot(ScreenDeckView(model: model).padding(16), "deck-glance-\(name)", look, folder)
                     shot(SetupView(model: model, startSlot: 1), "setup-weather-\(name)", look, folder)
                     shot(SetupView(model: model, startSlot: 5), "setup-desk-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 8), "setup-garmin-\(name)", look, folder)
+                }
+                // 0.12: world clock, sunrise and sunset, free until (page 4 of the made-up keys).
+                if let fourth = group.topPages.dropFirst(3).first {
+                    model.show(profile: group.id, page: fourth.id)
+                    shot(ScreenDeckView(model: model).padding(16), "deck-glance2-\(name)", look, folder)
                 }
                 model.show(profile: group.id, page: first.id)
             }

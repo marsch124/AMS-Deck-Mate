@@ -112,14 +112,14 @@ enum ActionRunner {
         case .running:
             let now = action.resolving(live())
             if now.type == .app { run(now) }
-        case .nextEvent, .weather, .dueToday, .desk:
+        case .nextEvent, .weather, .dueToday, .desk, .macNow, .worldClock, .sunTimes, .freeUntil:
             glancePressed?(action)
         case .weatherTown:
             townAsked?(action.target)
         case .cover:
             guard mayPressKeys else { askToPressKeys(); return }
             pressMedia(.playPause)
-        case .bodyBattery:
+        case .bodyBattery, .garmin:
             if let url = URL(string: BatteryKeys.board) { NSWorkspace.shared.open(url) }
         case .none, .folder, .back, .nextPage, .previousPage, .profile, .multi, .micLight, .wait:
             break       // moving around is the Navigator's work; a light only shows; a wait only waits
