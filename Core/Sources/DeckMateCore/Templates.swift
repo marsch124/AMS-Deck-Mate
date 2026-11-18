@@ -32,6 +32,10 @@ public struct PageGroupTemplate: Identifiable, Sendable {
         /// "" = the automatic keyboard drawing; otherwise the name of a drawing in the app's icons.
         public let icon: String
         public let combo: KeyCombo
+        /// A link key instead of a shortcut: the link it opens ("" = a shortcut key).
+        public var link = ""
+        /// An app key instead of a shortcut: the app's bundle identifier ("" = none).
+        public var appID = ""
     }
     public let id: String
     public let name: String
@@ -50,6 +54,32 @@ public enum Templates {
     }
 
     public static let all: [PageGroupTemplate] = [finder, safari, notion, fusion]
+
+    /// What Set up keys › "+" offers: the shortcut page groups, then the one for his own apps.
+    public static let menu: [PageGroupTemplate] = all + [ownApps]
+
+    private static func link(_ title: String, _ icon: String = "", _ link: String) -> PageGroupTemplate.Key {
+        PageGroupTemplate.Key(title: title, icon: icon, combo: KeyCombo(keyCode: 0, keyName: ""), link: link)
+    }
+
+    /// Links his own apps understand (each found in that app's code): AMS Tidy Bar (`application(_:open:)`),
+    /// AMS Shopping Companion (`onOpenURL`), PARAGON (`AppModel.handle(url:)`). Seedboard has no link to
+    /// open it, so its key opens the app. It belongs to no app: it shows when he picks it.
+    public static let ownApps = PageGroupTemplate(id: "ams-apps", name: "My AMS apps", app: "", keys: [
+        link("Tidy Bar: show or hide", "app-sync", "amstidybar://toggle"),
+        link("Tidy Bar: show", "app-drawerOpen", "amstidybar://show"),
+        link("Tidy Bar: hide", "app-drawer", "amstidybar://hide"),
+        link("Tidy Bar: arrange", "app-listIndent", "amstidybar://arrange"),
+        link("Shopping: scan", "app-capture", "amsshopping://scan"),
+        link("Shopping: trip", "shopping", "amsshopping://trip"),
+        link("PARAGON: Inbox", "app-inbox", "amspara:///list/inbox"),
+        link("PARAGON: Today", "app-today", "amspara:///list/today"),
+        link("PARAGON: Overdue", "app-clockAlert", "amspara:///list/overdue"),
+        link("PARAGON: Review", "app-review", "amspara:///list/review"),
+        link("PARAGON: Plan", "app-timeBlocks", "amspara:///plan"),
+        PageGroupTemplate.Key(title: "Seedboard", icon: "", combo: KeyCombo(keyCode: 0, keyName: ""),
+                              appID: "com.schabbauer.AMSSeedboard"),
+    ])
 
     static let finder = PageGroupTemplate(id: "finder", name: "Finder", app: "com.apple.finder", keys: [
         key("New window", "", "N", cmd: true),
@@ -122,10 +152,15 @@ public enum Templates {
     public static func profile(from template: PageGroupTemplate, in deck: Deck) -> DeckProfile {
         var keys: [Int: DeckKey] = [:]
         for (place, k) in template.keys.prefix(15).enumerated() {
-            keys[place] = DeckKey(title: k.title, icon: k.icon, action: DeckAction(type: .shortcut, combo: k.combo))
+            let action: DeckAction
+            if !k.link.isEmpty { action = DeckAction(type: .link, target: k.link) }
+            else if !k.appID.isEmpty { action = DeckAction(type: .app, target: k.appID) }
+            else { action = DeckAction(type: .shortcut, combo: k.combo) }
+            // An app key shows the app's own icon and name.
+            keys[place] = DeckKey(title: k.appID.isEmpty ? k.title : "", icon: k.appID.isEmpty ? k.icon : "", action: action)
         }
         let taken = deck.profiles.contains { $0.name == template.name }
-        let appTaken = deck.profileNaming(app: template.app) != nil
+        let appTaken = template.app.isEmpty || deck.profileNaming(app: template.app) != nil
         return DeckProfile(name: taken ? template.name + " (ready-made)" : template.name,
                            apps: appTaken ? [] : [template.app],
                            pages: [DeckPage(name: "Page 1", keys: keys)])

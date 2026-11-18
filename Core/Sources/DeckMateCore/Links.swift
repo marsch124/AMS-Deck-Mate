@@ -77,7 +77,7 @@ public enum DeckLinks {
     }
 
     /// Kinds of key that make no sense from outside: they only move around the keys, or are not keys at all.
-    static let notFromOutside: Set<ActionType> = [.none, .folder, .back, .nextPage, .previousPage, .wait, .weatherTown, .zero]
+    public static let notFromOutside: Set<ActionType> = [.none, .folder, .back, .nextPage, .previousPage, .wait, .weatherTown, .zero]
 
     /// The commands Raycast lists: one small script for every key that does something and has words,
     /// by file name. `name` gives a key's words (its own, the app's name, or what it does); a key

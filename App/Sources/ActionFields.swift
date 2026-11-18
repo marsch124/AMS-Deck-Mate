@@ -262,8 +262,7 @@ struct ActionFields: View {
                 note("A calm bar that rises while you breathe in and falls while you breathe out.")
             case .bar:
                 note("One part of a progress bar that several keys in a row make together.")
-            case .often:
-                note("Shows one of the keys you press most.")
+            case .often: OftenFields(action: $action)
             case .cover:
                 note("Shows the cover of the song Spotify plays, with the song’s name. A press plays or pauses. The cover appears with the next song change after AMS Deck Mate starts. The picture comes from Spotify’s own open look-up, by the track only.")
             case .bodyBattery:

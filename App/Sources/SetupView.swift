@@ -266,8 +266,8 @@ struct SetupView: View {
                                 .accessibilityIdentifier("addEmptyGroup")
                             Text("Ready-made").font(.caption.weight(.semibold)).foregroundStyle(Palette.part("profiles", scheme))
                                 .padding(.top, 2)
-                            ForEach(Templates.all) { item in
-                                Button("\(item.name) – \(item.keys.count) shortcut keys") { addingGroup = false; addReadyMade(item) }
+                            ForEach(Templates.menu) { item in
+                                Button("\(item.name) – \(item.keys.count) \(item.app.isEmpty ? "link keys" : "shortcut keys")") { addingGroup = false; addReadyMade(item) }
                                     .buttonStyle(PlainButton())
                                     .accessibilityIdentifier("readyMade-\(item.id)")
                             }
@@ -321,6 +321,7 @@ struct SetupView: View {
                                            : "No app yet: it shows only when you pick it.")
                      : "Shows by itself when one of these apps is in front.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                HoursRows(model: model, profile: profile.id)
                 HStack(spacing: 6) {
                     if !isDefault(profile) {
                         Button("Make default") { model.change { $0.defaultProfile = profile.id } }
@@ -402,6 +403,24 @@ struct SetupView: View {
         edit(profile) { item in
             guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
             item.pages[index].keys[place] = DeckKey(title: "Open apps", action: DeckAction(type: .folder, target: folder.id.uuidString))
+            item.pages.append(folder)
+        }
+    }
+
+    /// A folder that shows the keys pressed most, opened from the first empty place of this page.
+    private func addOftenUsed(_ profile: DeckProfile, _ page: DeckPage) {
+        guard leaveKey() else { return }
+        guard let place = page.firstFreePlace else {
+            let alert = NSAlert()
+            alert.messageText = "This page has no empty place."
+            alert.informativeText = "Clear a key or pick another page, then add the “Often used” folder again. Nothing was changed."
+            alert.runModal()
+            return
+        }
+        let folder = OftenKeys.folder(parent: page.id)
+        edit(profile) { item in
+            guard let index = item.pages.firstIndex(where: { $0.id == page.id }) else { return }
+            item.pages[index].keys[place] = DeckKey(title: "Often used", action: DeckAction(type: .folder, target: folder.id.uuidString))
             item.pages.append(folder)
         }
     }
@@ -503,6 +522,14 @@ struct SetupView: View {
                         .buttonStyle(PlainButton())
                         .accessibilityIdentifier("addOpenApps")
                     Text("always shows the apps open now")
+                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Spacer()
+                }
+                HStack(spacing: 8) {
+                    Button("Add an “Often used” folder") { addOftenUsed(profile, page) }
+                        .buttonStyle(PlainButton())
+                        .accessibilityIdentifier("addOftenUsed")
+                    Text("shows the keys you press most")
                         .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     Spacer()
                 }

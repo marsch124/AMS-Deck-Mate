@@ -263,7 +263,7 @@ public struct KeyUse: Codable, Equatable, Sendable {
 
     /// Keys that do something on the Mac: the ones that only move around or only show something are left out.
     private static func counted(in deck: Deck, name: (DeckKey) -> String) -> [(key: DeckKey, words: String)] {
-        let skip: Set<ActionType> = [.none, .folder, .back, .nextPage, .previousPage, .profile, .micLight]
+        let skip: Set<ActionType> = [.none, .folder, .back, .nextPage, .previousPage, .profile, .micLight, .often]
         func label(_ key: DeckKey, _ slot: Int) -> String {
             let title = name(key)
             return title.isEmpty ? "key \(slot + 1)" : "“\(title)”"
