@@ -25,6 +25,7 @@
 		6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9085CF6126FF6B11B8514D /* SettingsView.swift */; };
 		69DD6B2B03115CAC3B235600 /* KindChooser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42814D2A56D0969EB95965B2 /* KindChooser.swift */; };
 		6EFC23F6DA31DF8DB984D121 /* CopiedList.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5908A62B4CCFDC9F6533D68 /* CopiedList.swift */; };
+		6F11D1A9FC2CE8627D9517CD /* Pacer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3703DCBD68E926E0535F195F /* Pacer.swift */; };
 		76DE12C927BB43C6B8E51E11 /* SampleLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EECC7045EF82EDD6111E1DE /* SampleLink.swift */; };
 		773935AF491D4D900B7C9012 /* Outside.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597FD3445474A6E4FD56E384 /* Outside.swift */; };
 		79D9A6140848CF13AB2B5204 /* PhoneLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 564D1488659C79AEC8657E00 /* PhoneLook.swift */; };
@@ -62,6 +63,7 @@
 		25F4A172CE57401656C065E8 /* LinkClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkClient.swift; sourceTree = "<group>"; };
 		292EECF9A27600E43A77F562 /* LiveWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWatch.swift; sourceTree = "<group>"; };
 		2D72E884D49BA853B41CDCBE /* MacActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacActions.swift; sourceTree = "<group>"; };
+		3703DCBD68E926E0535F195F /* Pacer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pacer.swift; sourceTree = "<group>"; };
 		3762868082154D49F518F35B /* PhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneApp.swift; sourceTree = "<group>"; };
 		3C0D9C2764FF86C3866F8DB1 /* DeckScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckScreen.swift; sourceTree = "<group>"; };
 		3D4D729F81F0D52A25801405 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 				EF488D55A14DCAF88D88AFA9 /* MacWatch.swift */,
 				BA62F3E5031DFF998CEDD376 /* main.swift */,
 				597FD3445474A6E4FD56E384 /* Outside.swift */,
+				3703DCBD68E926E0535F195F /* Pacer.swift */,
 				D7FA4FED5A41A0AEC2F52964 /* PhoneServer.swift */,
 				AC9085CF6126FF6B11B8514D /* SettingsView.swift */,
 				3D4D729F81F0D52A25801405 /* SetupView.swift */,
@@ -383,6 +386,7 @@
 				0BABDD98B4A56B44FACEC6EF /* MacSwitches.swift in Sources */,
 				500391B2DF457863220FB440 /* MacWatch.swift in Sources */,
 				773935AF491D4D900B7C9012 /* Outside.swift in Sources */,
+				6F11D1A9FC2CE8627D9517CD /* Pacer.swift in Sources */,
 				090EE7D45FA4A6C5BE8657B4 /* PhoneServer.swift in Sources */,
 				6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */,
 				1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */,

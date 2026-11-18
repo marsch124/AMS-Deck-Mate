@@ -645,6 +645,25 @@ enum Snapshots {
                     shot(SetupView(model: model, startSlot: 1), "setup-paragon-\(name)", look, folder)
                     shot(SetupView(model: model, startSlot: 5), "setup-focus-\(name)", look, folder)
                 }
+                // 0.16: live keys (page 7): plan, breathing, old temperature, whole minutes, a bar across a row.
+                if let seventh = group.topPages.dropFirst(6).first {
+                    model.show(profile: group.id, page: seventh.id)
+                    shot(ScreenDeckView(model: model).padding(16), "deck-live-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 1), "setup-breath-\(name)", look, folder)
+                    shot(SetupView(model: model, startSlot: 6), "setup-bar-\(name)", look, folder)
+                    let keys = model.keys
+                    let strip = NSImage(size: NSSize(width: 5 * 72 * 3, height: 3 * 72 * 3))
+                    strip.lockFocus()
+                    for index in 0..<15 {
+                        if let picture = KeyArt.image(for: keys[index], pixels: 72) {
+                            NSGraphicsContext.current?.imageInterpolation = .none
+                            NSImage(cgImage: picture, size: NSSize(width: 72, height: 72))
+                                .draw(in: NSRect(x: (index % 5) * 216, y: (2 - index / 5) * 216, width: 216, height: 216))
+                        }
+                    }
+                    strip.unlockFocus()
+                    save(strip.tiffRepresentation.flatMap { NSBitmapImageRep(data: $0) }, "box-live-\(name)", folder)
+                }
                 model.show(profile: group.id, page: first.id)
             }
             model.startFinding()

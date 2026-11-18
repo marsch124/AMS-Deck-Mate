@@ -7,7 +7,7 @@ import Network
 /// the keys it taps. An iPhone may only press keys once he allowed it on the Mac.
 final class PhoneServer: ObservableObject {
     /// The iPhone connected right now, by its name.
-    @Published private(set) var connected: String?
+    @Published private(set) var connected: String? { didSet { model.phoneConnected = connected != nil } }
     /// The iPhones he allowed: the id the Mac gave it → the iPhone's name.
     @Published private(set) var allowed: [String: String]
     /// The secret each allowed iPhone proves itself with (it never travels again after the first time).

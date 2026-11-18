@@ -41,6 +41,12 @@ public enum TimerKeys {
         return s >= 3600 ? "\(s / 3600):\(two(s % 3600 / 60)):\(two(s % 60))" : "\(s / 60):\(two(s % 60))"
     }
 
+    /// What a timer or a focus round shows: whole minutes while more than a minute is left ("12 min"),
+    /// seconds only in the last minute ("0:59"). A stopwatch keeps `clock`.
+    public static func shown(_ seconds: Int) -> String {
+        seconds > 60 ? "\((seconds + 59) / 60) min" : clock(seconds)
+    }
+
     /// The timers running (by their minutes, the moment each ends) and the ones just finished
     /// (the moment each stops saying "Done").
     public struct State: Equatable, Sendable {

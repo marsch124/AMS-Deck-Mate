@@ -302,7 +302,7 @@ public enum ActionWords {
         case .zero: return "Back to 0"
         case .paragon:
             switch ParagonKeys.what(action.target) {
-            case .inbox, .next: return "Opened PARAGON"
+            case .inbox, .next, .plan: return "Opened PARAGON"
             case .copiedTask: return "Task added to PARAGON"
             case .note: return "Note for PARAGON"
             }

@@ -7,7 +7,7 @@ import Foundation
 /// only reads it. Adding a task or a note goes through PARAGON's own capture link.
 public enum ParagonKeys {
     public enum What: String, CaseIterable, Sendable {
-        case inbox, next, copiedTask, note
+        case inbox, next, copiedTask, note, plan
 
         public var title: String {
             switch self {
@@ -15,6 +15,7 @@ public enum ParagonKeys {
             case .next: return "Next task"
             case .copiedTask: return "Task from the copied text"
             case .note: return "Quick note"
+            case .plan: return "Now on my plan"
             }
         }
 
@@ -25,6 +26,7 @@ public enum ParagonKeys {
             case .next: return "Next task"
             case .copiedTask: return "Add task"
             case .note: return "Quick note"
+            case .plan: return "My plan"
             }
         }
 
@@ -34,11 +36,12 @@ public enum ParagonKeys {
             case .next: return "control-check"
             case .copiedTask: return "control-addCircle"
             case .note: return "notebook"
+            case .plan: return "app-calendar"
             }
         }
 
         /// Shows something from PARAGON's file (the others only do something).
-        public var shows: Bool { self == .inbox || self == .next }
+        public var shows: Bool { self == .inbox || self == .next || self == .plan }
     }
 
     public static func what(_ target: String) -> What { What(rawValue: target) ?? .inbox }
@@ -55,6 +58,11 @@ public enum ParagonKeys {
     public static let oldWords = "Open PARAGON"
     public static let missingWords = "No PARAGON"
     public static let nothingNextWords = "Nothing next"
+    /// The newest format of PARAGON's little file this Deck Mate understands. A file without a number is 1.
+    public static let knownFormat = 1
+    public static let updateWords = "Update Deck Mate"
+    public static let freeWords = "Free"
+    public static let nothingPlannedWords = "Nothing more planned"
 
     /// The names the glances go by in `LiveKeys.glances`.
     public static func glanceName(_ what: What) -> String { "paragon:" + what.rawValue }
@@ -70,8 +78,24 @@ public enum ParagonKeys {
         }
     }
 
+    /// One block of today's plan: its name, and its start and end in minutes since midnight.
+    public struct Block: Equatable, Sendable {
+        public var title: String
+        public var start: Int
+        public var end: Int
+        public init(title: String, start: Int, end: Int) {
+            self.title = title
+            self.start = start
+            self.end = end
+        }
+    }
+
     /// What Deck Mate takes from PARAGON's file.
     public struct Snapshot: Equatable, Sendable {
+        /// The file's format number (a file without one is 1).
+        public var format: Int = 1
+        /// Today's plan blocks, earliest first; empty = none, or the file has none.
+        public var plan: [Block] = []
         public var day: Day
         public var dueToday: Int
         public var overdue: Int
@@ -104,6 +128,14 @@ public enum ParagonKeys {
         func count(_ name: String) -> Int { max(0, (json[name] as? NSNumber)?.intValue ?? 0) }
         var shot = Snapshot(day: Day(year: year, month: month, day: number), dueToday: count("dueToday"),
                             overdue: count("overdue"), inbox: count("inboxCount"))
+        shot.format = max(1, (json["format"] as? NSNumber)?.intValue ?? 1)
+        // Tolerant: a block with missing fields is left out.
+        shot.plan = ((json["plan"] as? [[String: Any]]) ?? []).compactMap { block in
+            guard let title = (block["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty,
+                  let start = (block["start"] as? NSNumber)?.intValue, let end = (block["end"] as? NSNumber)?.intValue,
+                  (0...1440).contains(start), end > start, end <= 1440 else { return nil }
+            return Block(title: title, start: start, end: end)
+        }.sorted { $0.start < $1.start }
         if let first = (json["items"] as? [[String: Any]])?.first,
            let title = (first["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty {
             shot.nextTitle = title
@@ -118,22 +150,44 @@ public enum ParagonKeys {
     /// The words when the numbers cannot be shown; nil = they can.
     static func trouble(_ shot: Snapshot?, today: Day, installed: Bool) -> Glance? {
         guard installed else { return Glance(words: missingWords) }
+        if let shot, shot.format > knownFormat { return Glance(big: "–", words: updateWords) }
         guard let shot, shot.day == today else { return Glance(big: "–", words: oldWords) }
         return nil
     }
 
     /// What an Inbox or a Next task key shows. A file from an earlier day counts for nothing.
-    public static func glance(_ what: What, snapshot: Snapshot?, today: Day, installed: Bool) -> Glance? {
+    public static func glance(_ what: What, snapshot: Snapshot?, today: Day, installed: Bool, minute: Int = 0) -> Glance? {
         guard what.shows else { return nil }
         if let trouble = trouble(snapshot, today: today, installed: installed) { return trouble }
         guard let shot = snapshot else { return nil }
         switch what {
         case .inbox:
             return Glance(big: String(shot.inbox), words: "Inbox", tone: shot.inbox > 0 ? .text : nil)
+        case .plan:
+            return planGlance(shot.plan, minute: minute)
         default:
             guard let title = shot.nextTitle else { return Glance(words: nothingNextWords) }
             return Glance(big: shot.nextDue ?? "", words: title, tone: shot.nextOverdue ? .raycast : nil)
         }
+    }
+
+    /// "14:30" from minutes since midnight.
+    public static func clock(minute: Int) -> String {
+        let m = min(1440, max(0, minute))
+        return String(format: "%02d:%02d", m / 60 % 24, m % 60)
+    }
+
+    /// What a "Now on my plan" key shows: the block going on now (its end large, "until" and its name small),
+    /// else the next block of today (its start large and its name), else "Free".
+    public static func planGlance(_ blocks: [Block], minute: Int) -> Glance {
+        let sorted = blocks.sorted { $0.start < $1.start }
+        if let now = sorted.first(where: { $0.start <= minute && minute < $0.end }) {
+            return Glance(big: clock(minute: now.end), words: "until " + now.title)
+        }
+        if let next = sorted.first(where: { $0.start > minute }) {
+            return Glance(big: clock(minute: next.start), words: next.title)
+        }
+        return Glance(big: freeWords, words: nothingPlannedWords)
     }
 
     /// What a Due today key shows: the number due today; overdue ones in words, and in red.
@@ -147,7 +201,7 @@ public enum ParagonKeys {
     /// What a press of an Inbox or a Next task key opens.
     public static func openLink(_ what: What, snapshot: Snapshot?, today: Day) -> String {
         if what == .next, let shot = snapshot, shot.day == today, let link = shot.nextLink { return link }
-        return what == .next ? todayLink : inboxLink
+        return what == .next || what == .plan ? todayLink : inboxLink
     }
 
     /// A longer text is not sent to PARAGON.
