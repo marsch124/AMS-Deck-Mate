@@ -1135,3 +1135,12 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Soft tap feel.** A light buzz when the picture snaps away or comes back by your own swipe, pull or tap on the tab. It follows the switch "Tap buzz" (Settings, Touch; an iPad has no buzz). No buzz when the picture hides by itself (section 127).
 - **Texts.** What's new 0.24, How it works (parts "The navigation picture" and the iPhone-on-its-side part) and "Signs in this app" (the link dot and the "Pages" tab lines) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 130. Page group name and a hint on the "Pages" tab (iPhone and iPad 0.25 build 31)
+- **Version.** Before: iPhone and iPad app 0.24 (build 30). Now: 0.25 (build 31). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Name on the tab (iPhone).** With the iPhone held on its side and the navigation picture hidden (the heading line has stepped aside since 0.24, section 129), the purple "Pages" tab also shows the name of the page group you are in: under the word "Pages", running up the tab like it, in caption size and lighter white. A long name is shortened with "…". So you still see where you are without the heading.
+- **iPad.** No change: the iPad keeps its heading, so its tab shows only "Pages".
+- **Hint "Hold for groups".** Small purple words under the bottom of the "Pages" tab. They say that holding the tab opens the list of page groups (section 129).
+- **When the hint shows.** For 8 seconds each time the tab appears (the picture hidden by a swipe or by itself). Only the first 3 times. Never again once the list has been used (the tab held and a page group picked).
+- **Texts.** What's new 0.25, How it works (part "The navigation picture") and "Signs in this app" (the "Pages" tab line and a new line for the hint) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.

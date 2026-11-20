@@ -56,3 +56,12 @@ final class HeadingAsideTests: XCTestCase {
         XCTAssertTrue(MapSwipe.headingShows(phoneSideways: false, mapHidden: true), "the iPad keeps its heading")
     }
 }
+
+final class TabHintTests: XCTestCase {
+    func testHintShowsThreeTimesUntilTheListIsUsed() {
+        XCTAssertTrue(MapSwipe.tabHintShows(timesShown: 0, usedList: false))
+        XCTAssertTrue(MapSwipe.tabHintShows(timesShown: 2, usedList: false))
+        XCTAssertFalse(MapSwipe.tabHintShows(timesShown: 3, usedList: false))
+        XCTAssertFalse(MapSwipe.tabHintShows(timesShown: 0, usedList: true), "once used, never again")
+    }
+}

@@ -66,6 +66,10 @@ struct DeckScreen: View {
     /// His pick (0.23): the tab nudges twice when the picture hid by itself.
     @State private var tabNudge: CGFloat = 0
     @State private var tabLight = false
+    /// His pick (0.25): the hint "Hold for groups" under the tab, the first times only.
+    @AppStorage("tabHintShown") private var tabHintShown = 0
+    @AppStorage("tabListUsed") private var tabListUsed = false
+    @State private var tabHint = false
     @State private var onItsSide = false
     @State private var showStatus = false
     @State private var showMusicPlate = false
@@ -301,6 +305,19 @@ struct DeckScreen: View {
         }
         .frame(width: max(open, Self.tabWidth), alignment: .leading)
         .frame(maxHeight: .infinity)
+        // His pick (0.25): "Hold for groups" just under the tab, apart from it (so it never widens the tab).
+        .overlay(alignment: tabSpan == nil ? .bottomLeading : .topLeading) {
+            if tabHint, !showMap, mapPull == nil {
+                Text("Hold for groups")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(PhonePalette.fill("profiles"))
+                    .fixedSize()
+                    .offset(y: tabSpan.map { $0.minY + $0.height + 3 } ?? 17)
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+                    .accessibilityIdentifier("tabHint")
+            }
+        }
         .contentShape(Rectangle())
         .simultaneousGesture(mapDrag(width: full))
     }
@@ -340,6 +357,18 @@ struct DeckScreen: View {
                     .rotationEffect(.degrees(-90))
                     .frame(width: 20, height: 56)
                 Capsule().fill(.white.opacity(0.8)).frame(width: 3, height: 22)
+                // His pick (0.25): the iPhone has no heading now, so the tab says which page group is showing.
+                if !headingShows, let group = currentGroupName {
+                    Text(group)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(width: 110, height: 16)
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 16, height: 110)
+                        .accessibilityIdentifier("tabGroupName")
+                }
             }
             .frame(width: Self.tabWidth)
             .frame(maxHeight: .infinity)
@@ -349,7 +378,9 @@ struct DeckScreen: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Pages")
+        .onChange(of: showMap) { _, shown in if !shown, mapPlace { tabAppeared() } }
+        .onAppear { if !showMap, mapPlace { tabAppeared() } }
+        .accessibilityLabel(currentGroupName.map { "Pages, \($0)" } ?? "Pages")
         .accessibilityHint("Shows the navigation picture again. Hold for a list of page groups.")
         .accessibilityIdentifier("pagesTab")
         // His pick (0.24): hold the tab for the page groups; a tap on one goes to its first page.
@@ -357,12 +388,27 @@ struct DeckScreen: View {
             ForEach(link.map, id: \.id) { group in
                 if let first = group.pages.first {
                     Button(group.id == link.status?.current ? "\(group.name) (here)" : group.name) {
+                        tabListUsed = true
+                        withAnimation { tabHint = false }
                         link.go(group: group.id, page: first.id)
                     }
                     .accessibilityIdentifier("tabGroup-\(group.id)")
                 }
             }
         }
+    }
+
+    /// The name of the page group showing now.
+    private var currentGroupName: String? {
+        link.map.first { $0.id == link.status?.current }?.name
+    }
+
+    /// The tab has just appeared: the hint shows for 8 seconds, the first 3 times only.
+    private func tabAppeared() {
+        guard MapSwipe.tabHintShows(timesShown: tabHintShown, usedList: tabListUsed) else { return }
+        tabHintShown += 1
+        withAnimation(.easeOut(duration: 0.3).delay(0.5)) { tabHint = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.5) { withAnimation(.easeIn(duration: 0.4)) { tabHint = false } }
     }
 
     /// A soft buzz when the picture snaps away or back by his own hand (the keys' tap-feel switch rules it).

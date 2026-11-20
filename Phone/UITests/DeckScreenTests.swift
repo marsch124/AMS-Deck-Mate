@@ -89,7 +89,7 @@ final class DeckScreenTests: XCTestCase {
         XCUIDevice.shared.orientation = .landscapeLeft
         addTeardownBlock { XCUIDevice.shared.orientation = .portrait }
         let app = XCUIApplication()
-        app.launchArguments = ["-sample", "-forceMap"]
+        app.launchArguments = ["-sample", "-forceMap", "-tabHintShown", "0", "-tabListUsed", "NO"]
         app.launch()
 
         let plate = app.descendants(matching: .any)["navigationPicture"]
@@ -111,6 +111,11 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertGreaterThan(after, before, "the keys grow with the favourites in a column")
         print("FAVOURITE COLUMN width \(column.frame.width)")
         snap(app, "pages-tab")
+        // 0.25: on an iPhone (no heading) the tab names the page group.
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            XCTAssertTrue(app.descendants(matching: .any)["tabGroupName"].exists, "the tab says which page group shows")
+        }
+        XCTAssertTrue(app.descendants(matching: .any)["tabHint"].waitForExistence(timeout: 3), "the hint shows under the tab (0.25)")
         // 0.24: hold the tab for the page groups.
         tab.press(forDuration: 1.0)
         XCTAssertTrue(app.buttons["tabGroup-1"].waitForExistence(timeout: 5), "holding the tab lists the page groups")

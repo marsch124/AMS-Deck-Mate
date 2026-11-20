@@ -37,6 +37,13 @@ public enum MapSwipe {
         !(phoneSideways && mapHidden)
     }
 
+    /// The hint "Hold for groups" under the tab (his pick, 0.25): the first 3 times the tab appears,
+    /// and never again once he has used the list.
+    public static let hintTimes = 3
+    public static func tabHintShows(timesShown: Int, usedList: Bool) -> Bool {
+        !usedList && timesShown < hintTimes
+    }
+
     /// The width that shows while the finger drags: never below zero, and a little stretch past full.
     public static func shownWidth(wasOpen: Bool, moved: Double, width: Double) -> Double {
         let raw = (wasOpen ? width : 0) + moved
