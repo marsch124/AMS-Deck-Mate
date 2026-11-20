@@ -255,7 +255,12 @@ struct SetupView: View {
             HStack {
                 Text("Page groups").font(.headline).foregroundStyle(Palette.part("profiles", scheme))
                 Spacer()
-                Button { addingGroup = true } label: { Mark(name: "control-add", size: 16, colour: Palette.part("profiles", scheme)) }
+                Button { addingGroup = true } label: {
+                    HStack(spacing: 3) {
+                        Mark(name: "control-add", size: 14, colour: Palette.part("profiles", scheme))
+                        Text("Page group").font(.callout.weight(.medium)).foregroundStyle(Palette.part("profiles", scheme))
+                    }
+                }
                     .buttonStyle(.plain)
                     .help("Add a page group: an empty one or a ready-made one")
                     .accessibilityIdentifier("addProfile")
@@ -477,7 +482,12 @@ struct SetupView: View {
                             }
                             .accessibilityIdentifier("page-\(item.name)")
                         }
-                        Button(action: addPage) { Mark(name: "control-add", size: 15, colour: Palette.part("keys", scheme)) }
+                        Button(action: addPage) {
+                            HStack(spacing: 3) {
+                                Mark(name: "control-add", size: 13, colour: Palette.part("keys", scheme))
+                                Text("Page").font(.callout.weight(.medium)).foregroundStyle(Palette.part("keys", scheme))
+                            }
+                        }
                             .buttonStyle(.plain)
                             .help("Add a page")
                             .accessibilityIdentifier("addPage")

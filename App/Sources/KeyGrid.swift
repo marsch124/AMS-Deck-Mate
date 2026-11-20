@@ -165,9 +165,9 @@ struct ScreenDeckView: View {
                         .accessibilityIdentifier("profileLock")
                 }
                 Spacer(minLength: 8)
-                headerButton("app-search", "Find a key by its name (Space or / while the keys have the keyboard)", "deckFind", find)
-                headerButton("control-settings", "Set up keys", "deckSetup", openSetup)
-                headerButton("control-close", "Hide the keys", "deckClose", close)
+                headerButton("app-search", "Search", "Find a key by its name (Space or / while the keys have the keyboard)", "deckFind", find)
+                headerButton("control-settings", "Set up", "Set up keys", "deckSetup", openSetup)
+                headerButton(nil, "Hide", "Hide the keys", "deckClose", close)
             }
             KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
                     gap: model.deck.screenSize.gap,
@@ -214,14 +214,18 @@ struct ScreenDeckView: View {
         .frame(width: gridWidth, alignment: .leading)
     }
 
-    private func headerButton(_ icon: String, _ help: String, _ id: String, _ action: @escaping () -> Void) -> some View {
-        Mark(name: icon, size: 15, colour: .white.opacity(0.8))
-            .frame(width: 22, height: 20)
-            .contentShape(Rectangle())
-            .overlay(ClickCatcher { _ in action() })
-            .help(help)
-            .accessibilityLabel(help)
-            .accessibilityIdentifier(id)
+    private func headerButton(_ icon: String?, _ word: String, _ help: String, _ id: String, _ action: @escaping () -> Void) -> some View {
+        HStack(spacing: 3) {
+            if let icon { Mark(name: icon, size: 13, colour: .white.opacity(0.8)) }
+            Text(word).font(.caption.weight(.medium)).foregroundStyle(.white.opacity(0.8)).lineLimit(1)
+        }
+        .padding(.horizontal, 4)
+        .frame(height: 20)
+        .contentShape(Rectangle())
+        .overlay(ClickCatcher { _ in action() })
+        .help(help)
+        .accessibilityLabel(help)
+        .accessibilityIdentifier(id)
     }
 }
 
