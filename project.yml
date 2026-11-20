@@ -25,8 +25,8 @@ targets:
       path: App/Config/Info.plist
       properties:
         CFBundleDisplayName: AMS Deck Mate
-        CFBundleShortVersionString: "0.16.1"
-        CFBundleVersion: "25"
+        CFBundleShortVersionString: "0.17"
+        CFBundleVersion: "26"
         CFBundleIconFile: AppIcon
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
@@ -63,8 +63,8 @@ targets:
       path: Phone/Config/Info.plist
       properties:
         CFBundleDisplayName: Deck Mate
-        CFBundleShortVersionString: "0.18"
-        CFBundleVersion: "23"
+        CFBundleShortVersionString: "0.19"
+        CFBundleVersion: "24"
         ITSAppUsesNonExemptEncryption: false
         CFBundleIconName: AppIcon
         LSRequiresIPhoneOS: true
