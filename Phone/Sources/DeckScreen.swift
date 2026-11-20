@@ -60,6 +60,7 @@ struct DeckScreen: View {
     @AppStorage("showMap") private var showMap = true
     /// His pick (0.22): the picture hides by itself after a quiet minute.
     @AppStorage("mapHidesBySelf") private var mapHidesBySelf = true
+    @AppStorage("tapBuzz") private var tapBuzz = true
     /// His pick (0.23): how long the screen must be quiet first (30, 60 or 120 seconds).
     @AppStorage("mapQuietSeconds") private var mapQuietSeconds = 60
     /// His pick (0.23): the tab nudges twice when the picture hid by itself.
@@ -90,6 +91,8 @@ struct DeckScreen: View {
     @State private var mapPull: CGFloat?
     /// iPhone on its side with the picture hidden: the battery line and the note sit over the keys instead.
     private var linesOverKeys: Bool { mapPlace && !showMap }
+    /// iPhone on its side, picture hidden: no heading line (the link dot moves into the column beside the keys).
+    private var headingShows: Bool { MapSwipe.headingShows(phoneSideways: phoneSideways, mapHidden: linesOverKeys) }
     /// The picture hidden: the favourites stand in a column left of the keys (his pick, 0.21).
     private var favColumn: Bool { favouritesShow && mapPlace && !showMap }
     /// The favourites and the keys glide between the row and the column.
@@ -112,7 +115,8 @@ struct DeckScreen: View {
                         // His pick (0.16): the heading in one line in the middle over the keys, in the room
                         // that was free there anyway, so the keys keep their size and their place.
                         VStack(spacing: 2) {
-                            sideHeading
+                            // His pick (0.24): the picture hidden, the heading steps aside and the keys take its height.
+                            if headingShows { sideHeading.transition(.opacity) }
                             keysColumn(note: false)
                         }
                         .overlay(alignment: .top) {
@@ -312,6 +316,7 @@ struct DeckScreen: View {
                 guard mapPull != nil else { return }
                 let open = MapSwipe.opensAfter(wasOpen: showMap, moved: drag.translation.width,
                                                predicted: drag.predictedEndTranslation.width, width: full)
+                if open != showMap { snapFeel() }
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
                     showMap = open
                     mapPull = nil
@@ -322,6 +327,7 @@ struct DeckScreen: View {
     /// A thin purple tab at the left edge with "Pages" running up it: the navigation picture is hidden here.
     private var pagesTab: some View {
         Button {
+            snapFeel()
             withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = true }
         } label: {
             VStack(spacing: 10) {
@@ -344,8 +350,24 @@ struct DeckScreen: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Pages")
-        .accessibilityHint("Shows the navigation picture again")
+        .accessibilityHint("Shows the navigation picture again. Hold for a list of page groups.")
         .accessibilityIdentifier("pagesTab")
+        // His pick (0.24): hold the tab for the page groups; a tap on one goes to its first page.
+        .contextMenu {
+            ForEach(link.map, id: \.id) { group in
+                if let first = group.pages.first {
+                    Button(group.id == link.status?.current ? "\(group.name) (here)" : group.name) {
+                        link.go(group: group.id, page: first.id)
+                    }
+                    .accessibilityIdentifier("tabGroup-\(group.id)")
+                }
+            }
+        }
+    }
+
+    /// A soft buzz when the picture snaps away or back by his own hand (the keys' tap-feel switch rules it).
+    private func snapFeel() {
+        if tapBuzz { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
     }
 
     /// The picture hid by itself: the tab steps out and back twice and lights up for a moment, so he sees where it went.
@@ -366,6 +388,7 @@ struct DeckScreen: View {
     /// the Mac's app on its side at the top; the lock, music and Settings at the bottom, Settings in the corner.
     private var edgeColumn: some View {
         VStack(spacing: 0) {
+            if !headingShows { statusDot.padding(.bottom, 4) }
             GeometryReader { room in
                 if showGlance, connected, link.newMac, let mac = link.mac, !mac.app.isEmpty {
                     // Turned a quarter: it reads from the top down and is as long as the room allows.

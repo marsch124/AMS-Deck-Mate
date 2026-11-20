@@ -32,6 +32,11 @@ public enum MapSwipe {
         on && shown && idle >= max(10, after)
     }
 
+    /// iPhone on its side with the picture hidden: the heading steps aside so the keys get its height (his pick, 0.24).
+    public static func headingShows(phoneSideways: Bool, mapHidden: Bool) -> Bool {
+        !(phoneSideways && mapHidden)
+    }
+
     /// The width that shows while the finger drags: never below zero, and a little stretch past full.
     public static func shownWidth(wasOpen: Bool, moved: Double, width: Double) -> Double {
         let raw = (wasOpen ? width : 0) + moved

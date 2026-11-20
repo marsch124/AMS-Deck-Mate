@@ -94,6 +94,8 @@ final class DeckScreenTests: XCTestCase {
 
         let plate = app.descendants(matching: .any)["navigationPicture"]
         XCTAssertTrue(plate.waitForExistence(timeout: 10))
+        // A run before may have left the picture hidden: bring it back first.
+        if app.buttons["pagesTab"].isHittable { app.buttons["pagesTab"].tap(); sleep(1) }
         let before = app.descendants(matching: .any)["key0"].frame.width
         snap(app, "map-shown")
         plate.swipeLeft()
@@ -109,6 +111,11 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertGreaterThan(after, before, "the keys grow with the favourites in a column")
         print("FAVOURITE COLUMN width \(column.frame.width)")
         snap(app, "pages-tab")
+        // 0.24: hold the tab for the page groups.
+        tab.press(forDuration: 1.0)
+        XCTAssertTrue(app.buttons["tabGroup-1"].waitForExistence(timeout: 5), "holding the tab lists the page groups")
+        snap(app, "tab-menu")
+        app.buttons["tabGroup-1"].tap()
         tab.tap()
         XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 5), "a tap on the tab brings the picture back")
 

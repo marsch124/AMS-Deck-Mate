@@ -48,3 +48,11 @@ final class MapHidesBySelfTests: XCTestCase {
         XCTAssertEqual(MapSwipe.quietChoices, [30, 60, 120])
     }
 }
+
+final class HeadingAsideTests: XCTestCase {
+    func testHeadingStepsAsideOnlyOnASidewaysPhoneWithTheMapHidden() {
+        XCTAssertFalse(MapSwipe.headingShows(phoneSideways: true, mapHidden: true))
+        XCTAssertTrue(MapSwipe.headingShows(phoneSideways: true, mapHidden: false))
+        XCTAssertTrue(MapSwipe.headingShows(phoneSideways: false, mapHidden: true), "the iPad keeps its heading")
+    }
+}

@@ -1124,3 +1124,14 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Unchanged from 0.22.** Any touch anywhere on the screen starts the quiet time again; the "Pages" tab (tap or pull) brings the picture back; hiding by itself turns the "Navigation picture" switch off, like a swipe.
 - **Texts.** What's new 0.23, How it works (parts "The navigation picture" and "Settings") and "Signs in this app" (the "Pages" tab line) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 129. Bigger keys with the picture hidden, page groups on the "Pages" tab, a soft tap feel (iPhone and iPad 0.24 build 30)
+- **Version.** Before: iPhone and iPad app 0.23 (build 29). Now: 0.24 (build 30). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Heading steps aside (iPhone only).** With the iPhone held on its side and the navigation picture hidden, the heading line over the keys (page group · page, for example "Default · Page 1", with the coloured link dot) is not shown, so the keys get its height too. Keys: 96 to 106 points (placeholders, to be filled in after measuring on the simulator).
+- **Link dot.** It moves to the top of the narrow column beside the keys (the column with the Mac's app, the lock, the music button and Settings). A tap still says in words what its colour means (section on the link dot, 0.19).
+- **Page dots and name.** The page dots under the keys still show which page you are on. The page group's name shows again when the picture comes back.
+- **iPad.** No change: the heading stays.
+- **Page groups on the "Pages" tab.** A long press (about half a second) on the tab opens a small list of your page groups. A tap on one jumps straight to its first page, without opening the picture. The group you are in says "(here)" after its name. A plain tap on the tab still brings the picture back (section 125).
+- **Soft tap feel.** A light buzz when the picture snaps away or comes back by your own swipe, pull or tap on the tab. It follows the switch "Tap buzz" (Settings, Touch; an iPad has no buzz). No buzz when the picture hides by itself (section 127).
+- **Texts.** What's new 0.24, How it works (parts "The navigation picture" and the iPhone-on-its-side part) and "Signs in this app" (the link dot and the "Pages" tab lines) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
