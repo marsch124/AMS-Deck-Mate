@@ -19,3 +19,19 @@ final class MapSwipeTests: XCTestCase {
         XCTAssertEqual(MapSwipe.shownWidth(wasOpen: true, moved: 100, width: 200), 215)
     }
 }
+
+final class FavouriteColumnTests: XCTestCase {
+    func testColumnFitsBesideTheKeys() {
+        // iPad on its side, favourites on: the keys were 178; with the column they grow, the favourites are smaller.
+        let ipad = FavouriteColumn.sides(width: 1290, height: 744, gap: 8)
+        XCTAssertGreaterThan(ipad.key, 178)
+        XCTAssertLessThan(ipad.favourite, ipad.key)
+        // The column of 5 is never taller than the 3 rows, and everything fits the width.
+        XCTAssertLessThanOrEqual(5 * ipad.favourite + 4 * 8, 3 * ipad.key + 2 * 8)
+        XCTAssertLessThanOrEqual(5 * ipad.key + 4 * 8 + 16 + ipad.favourite, 1290)
+        // A short iPhone: the height decides.
+        let phone = FavouriteColumn.sides(width: 680, height: 304, gap: 8)
+        XCTAssertEqual(phone.key, 96)
+        XCTAssertEqual(phone.favourite, 54)
+    }
+}

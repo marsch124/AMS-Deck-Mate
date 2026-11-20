@@ -28,3 +28,22 @@ public enum MapSwipe {
         return max(0, raw)
     }
 }
+
+/// With the navigation picture hidden, the five favourites stand in a column left of the 15 keys (his pick, 0.21).
+public enum FavouriteColumn {
+    /// The extra room between the favourites column and the keys (on top of the key gap).
+    public static let extraGap = 8.0
+
+    /// The side of one of the 15 keys and of one favourite, so 3 rows of keys and a column of 5 favourites
+    /// (as tall as the 3 rows) fill `width` × `height`.
+    public static func sides(width: Double, height: Double, gap: Double) -> (key: Double, favourite: Double) {
+        // Width: 5 keys + 4 gaps + the column gap + one favourite, where a favourite = (3 keys + 2 gaps − 4 gaps) / 5.
+        let byWidth = (width - 4 * gap - (gap + extraGap) + 0.4 * gap) / 5.6
+        let byHeight = (height - 2 * gap) / 3
+        let key = max(10, (min(byWidth, byHeight)).rounded(.down))
+        return (key, max(6, ((3 * key - 2 * gap) / 5).rounded(.down)))
+    }
+
+    /// Width over height of the keys with the column, for fitting the box.
+    public static let ratio = 1.9
+}

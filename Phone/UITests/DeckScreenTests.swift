@@ -85,6 +85,9 @@ final class DeckScreenTests: XCTestCase {
 
     /// 0.20: a swipe to the left hides the navigation picture behind the "Pages" tab and the keys grow; a tap brings it back.
     func testSwipeHidesNavigationPicture() {
+        // He only ever holds the iPhone and iPad on their side.
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { XCUIDevice.shared.orientation = .portrait }
         let app = XCUIApplication()
         app.launchArguments = ["-sample", "-forceMap"]
         app.launch()
@@ -99,7 +102,12 @@ final class DeckScreenTests: XCTestCase {
         sleep(1)
         let after = app.descendants(matching: .any)["key0"].frame.width
         print("KEY SIDE before \(before) after \(after)")
-        XCTAssertGreaterThanOrEqual(after, before, "the keys never shrink when the picture hides")
+        // His pick (0.21): the favourites stand in a column left of the keys, and the keys grow.
+        let column = app.descendants(matching: .any)["favouritesColumn"]
+        XCTAssertTrue(column.exists, "the favourites stand in a column")
+        XCTAssertLessThan(column.frame.maxX, app.descendants(matching: .any)["key0"].frame.minX, "left of the keys")
+        XCTAssertGreaterThan(after, before, "the keys grow with the favourites in a column")
+        print("FAVOURITE COLUMN width \(column.frame.width)")
         snap(app, "pages-tab")
         tab.tap()
         XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 5), "a tap on the tab brings the picture back")

@@ -83,6 +83,10 @@ struct DeckScreen: View {
     @State private var mapPull: CGFloat?
     /// iPhone on its side with the picture hidden: the battery line and the note sit over the keys instead.
     private var linesOverKeys: Bool { mapPlace && !showMap }
+    /// The picture hidden: the favourites stand in a column left of the keys (his pick, 0.21).
+    private var favColumn: Bool { favouritesShow && mapPlace && !showMap }
+    /// The favourites and the keys glide between the row and the column.
+    @Namespace private var keysSpace
     private var favouritesShow: Bool { showFavourites && link.newMac && link.hasFavourites }
     /// The last touch, for the resting clock.
     @State private var lastTouch = Date()
@@ -119,6 +123,9 @@ struct DeckScreen: View {
                     }
                     .coordinateSpace(.named("keysRow"))
                     .onPreferenceChange(KeysFrameKey.self) { keysFrame = $0 }
+                    // His pick (0.21): the picture hidden, the tab moves to the edge of the safe area (the
+                    // column with Settings sits there when the camera is on the right, so then it stays).
+                    .padding(.leading, linesOverKeys && !islandTrailing ? -12 : 0)
                     // His pick (0.16): the app pill, lock, music and Settings stand in the free strip by the
                     // screen's edge, beside the keys, so the keys keep their size and their place.
                     .padding(islandTrailing ? .leading : .trailing, edgeReserve)
@@ -233,7 +240,8 @@ struct DeckScreen: View {
                     .frame(width: max(0, mapPull ?? Self.sidePanelWidth), alignment: .trailing)
                     .clipped()
                 }
-                mapSlot(width: Self.sidePanelWidth)
+                // His pick (0.21): the tab as tall as the keys, its top and bottom in line with them.
+                mapSlot(width: Self.sidePanelWidth, tabSpan: keysFrame.height > 0 ? keysFrame : nil)
             }
             .frame(maxHeight: .infinity, alignment: .top)
             .overlay(alignment: .top) { if failedNote, !linesOverKeys { noteLine } }
@@ -257,16 +265,19 @@ struct DeckScreen: View {
 
     /// The navigation picture, or the "Pages" tab where it hides. A swipe to the left on the picture slides
     /// it away (it follows the finger and the keys grow into its room); a tap or a pull on the tab brings it back.
-    private func mapSlot(width full: CGFloat) -> some View {
+    private func mapSlot(width full: CGFloat, tabSpan: CGRect? = nil) -> some View {
         let open = mapPull ?? (showMap ? full : 0)
         let shown = min(1, max(0, open / full))
-        return ZStack(alignment: .leading) {
+        return ZStack(alignment: .topLeading) {
             navigationPicture(width: full)
                 .frame(width: max(0, min(open, full)), alignment: .trailing)
                 .clipped()
                 .opacity(Double(min(1, shown * 1.6)))
                 .allowsHitTesting(mapPull == nil && showMap)
             pagesTab
+                .frame(height: tabSpan?.height)
+                .padding(.top, tabSpan.map { max(0, $0.minY) } ?? 0)
+                .frame(maxHeight: .infinity, alignment: .top)
                 .opacity(Double(max(0, 1 - shown * 3)))
                 .allowsHitTesting(mapPull == nil && !showMap)
         }
@@ -444,31 +455,37 @@ struct DeckScreen: View {
             if note { noteLine }
             GeometryReader { box in
                 let wide = link.tiles.count > 1
+                let column = favColumn && !wide
                 let layout = Self.wideLayout(in: box.size, gap: keyGap.points, pages: link.tiles.count, favourites: favouritesShow)
-                let side = (wide ? layout.side : Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow)) * keySize.scale
-                VStack(spacing: keyGap.points + Self.favouritesGap) {
-                    if wide {
-                        WideGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner, across: layout.across)
-                    } else {
-                        KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
-                    }
-                    if favouritesShow {
-                        HStack(spacing: keyGap.points) {
-                            ForEach(0..<PhoneLink.favouriteCount, id: \.self) { index in
-                                KeyView(index: index, key: link.favourites[index], side: side, corner: keyShape.corner,
-                                        lit: link.litFavourites.contains(index), name: "favourite",
-                                        hold: { link.favourite(index, long: true) }) { link.favourite(index, long: false) }
-                            }
+                let sides = FavouriteColumn.sides(width: box.size.width, height: box.size.height, gap: keyGap.points)
+                let side = (column ? CGFloat(sides.key)
+                            : wide ? layout.side : Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow)) * keySize.scale
+                let favouriteSide = column ? CGFloat(sides.favourite) * keySize.scale : side
+                Group {
+                    if column {
+                        // His pick (0.21): the picture hidden, the favourites stand in a column left of the keys.
+                        HStack(alignment: .top, spacing: keyGap.points + CGFloat(FavouriteColumn.extraGap)) {
+                            favourites(side: favouriteSide, column: true)
+                            KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                                .matchedGeometryEffect(id: "grid", in: keysSpace)
                         }
-                        .accessibilityElement(children: .contain)
-                        .accessibilityIdentifier("favouritesRow")
+                    } else {
+                        VStack(spacing: keyGap.points + Self.favouritesGap) {
+                            if wide {
+                                WideGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner, across: layout.across)
+                            } else {
+                                KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                                    .matchedGeometryEffect(id: "grid", in: keysSpace)
+                            }
+                            if favouritesShow { favourites(side: favouriteSide, column: false) }
+                        }
                     }
                 }
                     .background(GeometryReader { keys in
                         Color.clear.preference(key: KeysFrameKey.self, value: keys.frame(in: .named("keysRow")))
                     })
                     .frame(width: box.size.width, height: box.size.height,
-                           alignment: keysPlace == .bottom ? .bottom : (keysPlace == .top ? .top : .center))
+                           alignment: Self.keysAlignment(keysPlace, leading: column))
                     .opacity(connected ? 1 : 0.35)
                     .contentShape(Rectangle())
                     .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
@@ -483,7 +500,10 @@ struct DeckScreen: View {
                         }
                     })
             }
-            .aspectRatio(favouritesShow ? 5.0 / 4.1 : 5.0 / 3.0, contentMode: .fit)
+            .aspectRatio(favColumn && link.tiles.count < 2 ? FavouriteColumn.ratio : (favouritesShow ? 5.0 / 4.1 : 5.0 / 3.0),
+                         contentMode: .fit)
+            // With the favourites column the keys stand right beside the "Pages" tab (his pick, 0.21).
+            .frame(maxWidth: .infinity, alignment: favColumn ? .leading : .center)
             if showDots { pageDots }
         }
         .overlay(alignment: .top) {
@@ -567,6 +587,32 @@ struct DeckScreen: View {
     /// The extra room between the 15 keys and the favourites row.
     static let favouritesGap: CGFloat = 8
 
+    /// Where the keys sit in their box: low, high or in the middle; left with the favourites column.
+    static func keysAlignment(_ place: PhonePrefs.Place, leading: Bool) -> Alignment {
+        switch place {
+        case .bottom: return leading ? .bottomLeading : .bottom
+        case .top: return leading ? .topLeading : .top
+        case .middle: return leading ? .leading : .center
+        }
+    }
+
+    /// The five favourites, round (his pick, 0.21: a round key is always a favourite), in a row under the keys
+    /// or in a column left of them; each one glides between the two places.
+    private func favourites(side: CGFloat, column: Bool) -> some View {
+        let gap = keyGap.points
+        let stack = column ? AnyLayout(VStackLayout(spacing: gap)) : AnyLayout(HStackLayout(spacing: gap))
+        return stack {
+            ForEach(0..<PhoneLink.favouriteCount, id: \.self) { index in
+                KeyView(index: index, key: link.favourites[index], side: side, corner: 0.5,
+                        lit: link.litFavourites.contains(index), name: "favourite",
+                        hold: { link.favourite(index, long: true) }) { link.favourite(index, long: false) }
+                    .matchedGeometryEffect(id: "favourite\(index)", in: keysSpace)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(column ? "favouritesColumn" : "favouritesRow")
+    }
+
     // MARK: Navigation picture
 
     /// Every page group with its pages as small pictures; the page showing has a frame; a tap goes there.
@@ -635,13 +681,13 @@ struct DeckScreen: View {
 
     // MARK: Music
 
-    /// One small round button, never filled (his ask, 0.19.1); the word under it says "Playing" while something plays. A tap opens the music plate.
+    /// One small music mark with no fill (his asks, 0.19.1 and 0.21); the word under it says "Playing" while something plays. A tap opens the music plate.
     private func musicButton(_ now: PhoneLink.MacNow) -> some View {
         Button { showMusicPlate = true } label: {
+            // His ask (0.21): no fill at all, like the lock and the gear beside it.
             PhoneIcon(name: "iconMusic", size: isPad ? 22 : 19)
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(width: isPad ? 38 : 34, height: isPad ? 38 : 34)
-                .background(PhonePalette.part("settings").opacity(0.14), in: Circle())
+                .frame(height: isPad ? 34 : 30)
                 .worded(now.playing ? "Playing" : "Music")
                 .contentShape(Rectangle())
         }
@@ -719,7 +765,8 @@ struct DeckScreen: View {
 
     private var settingsButton: some View {
         Button { showSettings = true } label: {
-            PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
+            // His ask (0.21): not bold — the same size as the lock and music marks, so the same thin line.
+            PhoneIcon(name: "iconSettings", size: isPad ? 22 : 19)
                 .foregroundStyle(PhonePalette.part("settings"))
                 .frame(height: isPad ? 34 : 30)
                 .worded("Settings")
