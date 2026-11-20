@@ -175,7 +175,10 @@ final class LinkClient: ObservableObject {
                 client.map = SampleLink.map()
                 client.macAsleep = CommandLine.arguments.contains("-macAsleep")
                 if client.wideOn || CommandLine.arguments.contains("-wide") {
-                    let count = PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad)
+                    // "-widePages 2" shows fewer pages, for checking the layout.
+                    let asked = CommandLine.arguments.firstIndex(of: "-widePages").flatMap {
+                        $0 + 1 < CommandLine.arguments.count ? Int(CommandLine.arguments[$0 + 1]) : nil }
+                    let count = asked ?? PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad)
                     client.tiles = Array(SampleLink.wideNames.prefix(count))
                     client.keys = SampleLink.wideKeys(count)
                 }

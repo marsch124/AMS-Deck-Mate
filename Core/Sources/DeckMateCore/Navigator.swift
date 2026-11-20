@@ -39,8 +39,8 @@ public enum Navigator {
 
     /// "Several pages at once" (an iPhone or iPad used without the box): the page at `position`
     /// first, then the next top pages of its page group in their order, going round to the start,
-    /// until `count` pages show or every top page is there. A folder counts from the top page it
-    /// sits in (that top page itself is then not shown again).
+    /// then its folders, until `count` pages show. A folder counts from the top page it sits in
+    /// (that top page itself is then not shown again).
     public static func spread(at position: DeckPosition, count: Int, in deck: Deck) -> [DeckPosition] {
         guard count > 1, let profile = deck.profile(position.profile), profile.page(position.page) != nil else {
             return [position]
@@ -56,6 +56,12 @@ public enum Navigator {
         var shown = [position]
         for step in 1..<tops.count where shown.count < count {
             shown.append(DeckPosition(profile: profile.id, page: tops[(at + step) % tops.count].id))
+        }
+        // Fewer top pages than places (his pick, 0.19.1): the page group's folders fill the rest, in
+        // their order. A folder shown this way remembers its page, so its Back key goes there.
+        for page in profile.pages where shown.count < count {
+            guard let parent = page.parent, !shown.contains(where: { $0.page == page.id }) else { continue }
+            shown.append(DeckPosition(profile: profile.id, page: page.id, trail: [parent]))
         }
         return shown
     }

@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.17 (build 26), 20 Nov 2026; iPhone and iPad app 0.19 (build 24)
+# AMS Deck Mate, specification, version 0.17.1 (build 27), 20 Nov 2026; iPhone and iPad app 0.19.1 (build 25)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -251,6 +251,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.17.1 (Mac, build 27, 20 Nov 2026; iPhone and iPad 0.19.1, build 25).** Several pages at once: folders fill empty spots and the pages are arranged for the biggest keys, section 124. Not yet proven on a real iPhone or iPad.
 
 **0.16.1 (Mac, build 25, 18 Nov 2026; iPhone and iPad stay 0.18, build 23).** The keeper: the app comes back by itself, section 120. Not yet proven: a real restart of the Mac with the keeper.
 
@@ -1065,3 +1067,13 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - The small lock, music and gear buttons have a tiny word under them: "Private", "Music", "Settings". The coloured link dot to the Mac has the word "Mac" under it; a tap explains its colours (green, amber, red).
 - Both guides have a part "Signs in this app" listing every mark and colour that means something, each with its meaning: Mac guide (red corner, white dot, letter mark, white frame, lock, header words (Search, Set up, Hide), cross, "+ Page group" and "+ Page", warning, tile colours, grey-blue old number, link dot); phone guide (link dot colours, lock, music, gear, white dot, red corner, red note, amber battery line, page dots, navigation frame and ribbons, page names, app pill, moon, resting clock).
 - How it works and What's new are updated in both apps (Mac guide `Guide.swift`, phone guide `PhoneGuide.swift`).
+
+## 124. Several pages at once: folders fill empty spots (Mac 0.17.1 build 27, iPhone and iPad 0.19.1 build 25)
+- **Why.** Tried on an iPad: the page group "Notion" (2 top pages) showed just 2 small pages at the bottom, and "AMS Deck" (only the page Home plus folders) showed 1 page.
+- **Rule.** The pages that show are the top pages of the page group, as in section 121. When there are fewer than the device shows (2 on an iPhone, 4 on an iPad), the page group's folders fill the rest, in their order in Set up keys. A folder that is itself the first page (the view is inside it) is not repeated. The rule lives on the Mac (it decides which pages it sends), so it needs the Mac at 0.17.1 and the phone at 0.19.1; with an older one it works as in section 121.
+- **Example.** iPad with "AMS Deck": Home, Apps, Tutorials and Raycast, 4 pages (60 keys); before: Home only (15 keys).
+- **Back key.** A Back key on a folder shown this way goes to the page the folder belongs to; that page then becomes the first page.
+- **Bigger keys.** The phone arranges the pages in whichever way gives the biggest keys, counting the 5-by-3 grid of each page and the space left: 2 pages on an iPad sit one above the other, 3 pages may sit two above one. Before: always side by side (2) or two above and two below (4). Example: iPad with "Notion" (2 pages): keys about 75 points before, about 110 points now (about half as big again).
+- **Unchanged.** The switch, the page names, tapping, swiping, the box and the keys on the Mac's screen (still just the first page). Link version 9 is unchanged.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+- **Music button look.** The round Music button is always the light background with a green note; it no longer fills green while something plays. Its word under it says "Playing" while something plays and "Music" otherwise. Before: filled green while music played, a light green ring otherwise. (Section 123's word "Music" is now this word when nothing plays.)

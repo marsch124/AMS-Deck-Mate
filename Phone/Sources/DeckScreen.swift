@@ -339,11 +339,11 @@ struct DeckScreen: View {
             if note { noteLine }
             GeometryReader { box in
                 let wide = link.tiles.count > 1
-                let side = (wide ? Self.wideKeySide(in: box.size, gap: keyGap.points, pages: link.tiles.count, favourites: favouritesShow)
-                                 : Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow)) * keySize.scale
+                let layout = Self.wideLayout(in: box.size, gap: keyGap.points, pages: link.tiles.count, favourites: favouritesShow)
+                let side = (wide ? layout.side : Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow)) * keySize.scale
                 VStack(spacing: keyGap.points + Self.favouritesGap) {
                     if wide {
-                        WideGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                        WideGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner, across: layout.across)
                     } else {
                         KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
                     }
@@ -434,10 +434,23 @@ struct DeckScreen: View {
         return max(10, floor(min(byWidth, byHeight)))
     }
 
-    /// "Several pages at once": the side of one key when 2 pages sit side by side (iPhone), or
-    /// 4 pages two above two (iPad), each with its name above it.
-    static func wideKeySide(in size: CGSize, gap: CGFloat = 8, pages: Int, favourites: Bool = false) -> CGFloat {
-        let across = CGFloat(min(2, pages)), down = CGFloat(pages > 2 ? 2 : 1)
+    /// "Several pages at once": the pages are laid out the way that gives the biggest keys (his pick,
+    /// 0.19.1): side by side, one above the other, or two above two.
+    static func wideLayout(in size: CGSize, gap: CGFloat = 8, pages: Int, favourites: Bool = false) -> (across: Int, side: CGFloat) {
+        guard pages > 1 else { return (1, 0) }
+        var best = (across: min(2, pages), side: CGFloat(0))
+        for across in 1...pages {
+            let down = (pages + across - 1) / across
+            guard (down - 1) * across < pages else { continue }     // no row left empty
+            let side = wideKeySide(in: size, gap: gap, across: across, down: down, favourites: favourites)
+            if side > best.side + 0.5 { best = (across, side) }
+        }
+        return best
+    }
+
+    /// The side of one key with the pages `across` × `down`, each with its name above it.
+    static func wideKeySide(in size: CGSize, gap: CGFloat, across: Int, down: Int, favourites: Bool) -> CGFloat {
+        let across = CGFloat(across), down = CGFloat(down)
         let between = WideGrid.between(gap)
         let byWidth = (size.width - across * 4 * gap - (across - 1) * between) / (5 * across)
         let rows = 3 * down + (favourites ? 1 : 0)
@@ -517,14 +530,14 @@ struct DeckScreen: View {
 
     // MARK: Music
 
-    /// One small round button (filled while something plays); a tap opens the music plate.
+    /// One small round button, never filled (his ask, 0.19.1); the word under it says "Playing" while something plays. A tap opens the music plate.
     private func musicButton(_ now: PhoneLink.MacNow) -> some View {
         Button { showMusicPlate = true } label: {
             PhoneIcon(name: "iconMusic", size: isPad ? 22 : 19)
-                .foregroundStyle(now.playing ? Color.white : PhonePalette.part("settings"))
+                .foregroundStyle(PhonePalette.part("settings"))
                 .frame(width: isPad ? 38 : 34, height: isPad ? 38 : 34)
-                .background(now.playing ? PhonePalette.fill("settings") : PhonePalette.part("settings").opacity(0.14), in: Circle())
-                .worded("Music")
+                .background(PhonePalette.part("settings").opacity(0.14), in: Circle())
+                .worded(now.playing ? "Playing" : "Music")
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -928,13 +941,15 @@ private struct WideGrid: View {
     let side: CGFloat
     var gap: CGFloat = 8
     var corner: CGFloat = 0.16
+    /// How many pages sit side by side (the rest go below).
+    var across = 2
 
     static let nameHeight: CGFloat = 16
     static func between(_ gap: CGFloat) -> CGFloat { max(14, gap * 2.5) }
 
     var body: some View {
         let names = link.tiles
-        let across = min(2, names.count)
+        let across = max(1, min(across, names.count))
         VStack(spacing: Self.between(gap)) {
             ForEach(0..<(names.count + across - 1) / across, id: \.self) { row in
                 HStack(alignment: .top, spacing: Self.between(gap)) {

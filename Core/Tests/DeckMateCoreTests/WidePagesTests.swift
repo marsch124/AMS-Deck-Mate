@@ -13,8 +13,10 @@ final class WidePagesTests: XCTestCase {
             Navigator.spread(at: DeckPosition(profile: group.id, page: page), count: count, in: deck).map(\.page)
         }
         XCTAssertEqual(pages(p1.id, 2), [p1.id, p2.id])
-        XCTAssertEqual(pages(p3.id, 4), [p3.id, p1.id, p2.id], "goes round; three top pages = three pages")
+        XCTAssertEqual(pages(p3.id, 4), [p3.id, p1.id, p2.id, folder.id], "goes round, then the folders fill up")
         XCTAssertEqual(pages(folder.id, 4), [folder.id, p3.id, p1.id], "a folder: its top page is not shown again")
+        let spread = Navigator.spread(at: DeckPosition(profile: group.id, page: p1.id), count: 4, in: deck)
+        XCTAssertEqual(spread.last?.trail, [p2.id], "a folder shown to fill up knows its page, for its Back key")
         XCTAssertEqual(pages(p2.id, 1), [p2.id])
         XCTAssertEqual(PhoneLink.tile(of: 47).tile, 3)
         XCTAssertEqual(PhoneLink.tile(of: 47).place, 2)
