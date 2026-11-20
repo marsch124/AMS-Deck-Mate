@@ -24,9 +24,12 @@ public enum MapSwipe {
     /// The quiet time after which the picture hides by itself (his pick, 0.22).
     public static let quietSeconds = 60.0
 
-    /// Whether the picture hides by itself now: the switch is on, it shows, and nothing was touched for a minute.
-    public static func hidesBySelf(on: Bool, shown: Bool, idle: Double) -> Bool {
-        on && shown && idle >= quietSeconds
+    /// The quiet times he can pick in Settings (0.23): 30 seconds, 1 minute, 2 minutes.
+    public static let quietChoices = [30, 60, 120]
+
+    /// Whether the picture hides by itself now: the switch is on, it shows, and nothing was touched for `after` seconds.
+    public static func hidesBySelf(on: Bool, shown: Bool, idle: Double, after: Double = quietSeconds) -> Bool {
+        on && shown && idle >= max(10, after)
     }
 
     /// The width that shows while the finger drags: never below zero, and a little stretch past full.

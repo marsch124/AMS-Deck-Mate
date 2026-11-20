@@ -60,6 +60,11 @@ struct DeckScreen: View {
     @AppStorage("showMap") private var showMap = true
     /// His pick (0.22): the picture hides by itself after a quiet minute.
     @AppStorage("mapHidesBySelf") private var mapHidesBySelf = true
+    /// His pick (0.23): how long the screen must be quiet first (30, 60 or 120 seconds).
+    @AppStorage("mapQuietSeconds") private var mapQuietSeconds = 60
+    /// His pick (0.23): the tab nudges twice when the picture hid by itself.
+    @State private var tabNudge: CGFloat = 0
+    @State private var tabLight = false
     @State private var onItsSide = false
     @State private var showStatus = false
     @State private var showMusicPlate = false
@@ -171,8 +176,10 @@ struct DeckScreen: View {
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
             // His pick (0.22): a minute without a touch, the picture slides away by itself, like a swipe.
             if mapPlace, mapPull == nil,
-               MapSwipe.hidesBySelf(on: mapHidesBySelf, shown: showMap, idle: now.timeIntervalSince(lastTouch)) {
+               MapSwipe.hidesBySelf(on: mapHidesBySelf, shown: showMap, idle: now.timeIntervalSince(lastTouch),
+                                    after: Double(mapQuietSeconds)) {
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = false }
+                nudgeTab()
             }
             // The keys shown on a tap while the Mac sleeps stay for 2 minutes after the last touch.
             if keysWhileAsleep, now.timeIntervalSince(lastTouch) >= 120 { withAnimation(.easeOut(duration: 0.25)) { keysWhileAsleep = false } }
@@ -331,12 +338,25 @@ struct DeckScreen: View {
             .frame(width: Self.tabWidth)
             .frame(maxHeight: .infinity)
             .background(PhonePalette.fill("profiles"), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.white.opacity(tabLight ? 0.3 : 0)))
+            .offset(x: tabNudge)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Pages")
         .accessibilityHint("Shows the navigation picture again")
         .accessibilityIdentifier("pagesTab")
+    }
+
+    /// The picture hid by itself: the tab steps out and back twice and lights up for a moment, so he sees where it went.
+    private func nudgeTab() {
+        let steps: [(Double, CGFloat)] = [(0.45, 7), (0.63, 0), (0.81, 7), (0.99, 0)]
+        for (wait, x) in steps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                withAnimation(.easeInOut(duration: 0.18)) { tabNudge = x; if wait == 0.45 { tabLight = true } }
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { withAnimation(.easeOut(duration: 0.4)) { tabLight = false } }
     }
 
     /// The width of the "Pages" tab.

@@ -1106,10 +1106,21 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 ## 127. Bigger "Pages" word, the picture hides by itself (iPhone and iPad 0.22 build 28)
 - **Version.** Before: iPhone and iPad app 0.21 (build 27). Now: 0.22 (build 28). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
 - **Bigger word.** The word "Pages" on the purple tab (section 125) is bigger and easier to read. Before: 12-point caption type on a tab 22 points wide. Now: 15-point type (subheadline, bold) on a tab 28 points wide. The keys keep their sizes, give or take a point or two.
-- **Hides by itself.** Only with the device on its side and the navigation picture showing: when nothing on the screen has been touched for one minute, the picture slides away by itself, with the same spring as a swipe (section 125). The favourites move into the column and the keys grow, exactly as when the picture is swiped away (section 126).
+- **Hides by itself.** Only with the device on its side and the navigation picture showing: when nothing on the screen has been touched for one minute (since 0.23 the quiet time is a choice, see section 128; 1 minute stays the starting choice), the picture slides away by itself, with the same spring as a swipe (section 125). The favourites move into the column and the keys grow, exactly as when the picture is swiped away (section 126).
 - **Touch restarts the minute.** Any touch anywhere on the screen starts the minute again.
 - **Bring it back.** Tap or pull the "Pages" tab: the picture shows again, and it hides again after the next quiet minute.
-- **New switch.** Settings, Showing, right under "Navigation picture": "Hide the picture after a minute" (on at first). Off: the picture stays until it is swiped away.
+- **New switch.** Settings, Showing, right under "Navigation picture": "Hide the picture after a minute" (on at first; renamed "Hide the picture by itself" in 0.23, section 128). Off: the picture stays until it is swiped away.
 - **Same switch as the swipe.** Hiding by itself turns the same "Navigation picture" switch off as the swipe does (section 125). After it has hidden itself that switch shows off, and the picture stays hidden after the app is closed until it is brought back.
 - **Texts.** What's new 0.22, How it works (parts "The navigation picture" and "Settings") and "Signs in this app" (the "Pages" tab line) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 128. The "Pages" tab nudges, the quiet time is a choice (iPhone and iPad 0.23 build 29)
+- **Version.** Before: iPhone and iPad app 0.22 (build 28). Now: 0.23 (build 29). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Nudge.** When the navigation picture hides by itself (section 127), the purple "Pages" tab nudges twice: it moves a little to the right and back, two times, and its purple turns lighter for a moment. The whole thing takes about 1.5 seconds. No glow, no sound. It shows where the picture went.
+- **Not on a swipe.** When the picture is swiped away by hand (section 125), the tab does not nudge. Only hiding by itself does.
+- **Quiet time is a choice.** Settings, Showing, under the switch: a choice "After" with 30 seconds, 1 minute or 2 minutes. 1 minute is the starting choice, as in 0.22 (section 127, where the time was fixed at one minute).
+- **Only while on.** The choice shows only while the switch is on.
+- **Switch renamed.** The switch "Hide the picture after a minute" is now called "Hide the picture by itself" (on at first, as before). Off: the picture stays until it is swiped away.
+- **Unchanged from 0.22.** Any touch anywhere on the screen starts the quiet time again; the "Pages" tab (tap or pull) brings the picture back; hiding by itself turns the "Navigation picture" switch off, like a swipe.
+- **Texts.** What's new 0.23, How it works (parts "The navigation picture" and "Settings") and "Signs in this app" (the "Pages" tab line) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.

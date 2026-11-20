@@ -42,5 +42,9 @@ final class MapHidesBySelfTests: XCTestCase {
         XCTAssertTrue(MapSwipe.hidesBySelf(on: true, shown: true, idle: 60))
         XCTAssertFalse(MapSwipe.hidesBySelf(on: false, shown: true, idle: 600), "switch off: it stays")
         XCTAssertFalse(MapSwipe.hidesBySelf(on: true, shown: false, idle: 600), "already hidden")
+        // 0.23: the chosen quiet time.
+        XCTAssertTrue(MapSwipe.hidesBySelf(on: true, shown: true, idle: 30, after: 30))
+        XCTAssertFalse(MapSwipe.hidesBySelf(on: true, shown: true, idle: 90, after: 120))
+        XCTAssertEqual(MapSwipe.quietChoices, [30, 60, 120])
     }
 }
