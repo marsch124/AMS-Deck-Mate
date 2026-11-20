@@ -35,3 +35,12 @@ final class FavouriteColumnTests: XCTestCase {
         XCTAssertEqual(phone.favourite, 54)
     }
 }
+
+final class MapHidesBySelfTests: XCTestCase {
+    func testHidesAfterAQuietMinute() {
+        XCTAssertFalse(MapSwipe.hidesBySelf(on: true, shown: true, idle: 59))
+        XCTAssertTrue(MapSwipe.hidesBySelf(on: true, shown: true, idle: 60))
+        XCTAssertFalse(MapSwipe.hidesBySelf(on: false, shown: true, idle: 600), "switch off: it stays")
+        XCTAssertFalse(MapSwipe.hidesBySelf(on: true, shown: false, idle: 600), "already hidden")
+    }
+}

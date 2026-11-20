@@ -58,6 +58,8 @@ struct DeckScreen: View {
     @AppStorage("showGlance") private var showGlance = true
     @AppStorage("ownKeys") private var ownKeys = false
     @AppStorage("showMap") private var showMap = true
+    /// His pick (0.22): the picture hides by itself after a quiet minute.
+    @AppStorage("mapHidesBySelf") private var mapHidesBySelf = true
     @State private var onItsSide = false
     @State private var showStatus = false
     @State private var showMusicPlate = false
@@ -167,6 +169,11 @@ struct DeckScreen: View {
                                                    from: eveningFrom, to: eveningTo)
             let due = PhonePrefs.rests(afterMinutes: minutes, idle: now.timeIntervalSince(lastTouch))
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
+            // His pick (0.22): a minute without a touch, the picture slides away by itself, like a swipe.
+            if mapPlace, mapPull == nil,
+               MapSwipe.hidesBySelf(on: mapHidesBySelf, shown: showMap, idle: now.timeIntervalSince(lastTouch)) {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = false }
+            }
             // The keys shown on a tap while the Mac sleeps stay for 2 minutes after the last touch.
             if keysWhileAsleep, now.timeIntervalSince(lastTouch) >= 120 { withAnimation(.easeOut(duration: 0.25)) { keysWhileAsleep = false } }
         }
@@ -312,12 +319,13 @@ struct DeckScreen: View {
         } label: {
             VStack(spacing: 10) {
                 Capsule().fill(.white.opacity(0.8)).frame(width: 3, height: 22)
+                // His pick (0.22): a bigger word, easy to read (was 12-point caption type).
                 Text("Pages")
-                    .font(.caption.weight(.bold))
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(.white)
                     .fixedSize()
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 14, height: 44)
+                    .frame(width: 20, height: 56)
                 Capsule().fill(.white.opacity(0.8)).frame(width: 3, height: 22)
             }
             .frame(width: Self.tabWidth)
@@ -332,7 +340,7 @@ struct DeckScreen: View {
     }
 
     /// The width of the "Pages" tab.
-    static let tabWidth: CGFloat = 22
+    static let tabWidth: CGFloat = 28
 
     /// iPhone on its side (his pick, 0.16): beside the keys, in the free strip by the screen's edge, one column:
     /// the Mac's app on its side at the top; the lock, music and Settings at the bottom, Settings in the corner.

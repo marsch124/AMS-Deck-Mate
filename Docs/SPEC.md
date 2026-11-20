@@ -1102,3 +1102,14 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Texts.** What's new 0.21, How it works (parts "The favourites row", "The navigation picture" and "Settings") and "Signs in this app" (changed "Pages" tab line, new line "Round key: a favourite") are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
 - **Small buttons (0.21, his ask).** The music button has no background: only the music mark (22 pt iPad, 19 pt iPhone) in the Settings green with its word under it, like the lock. The gear is drawn at the same size as the lock and music marks (22 / 19 pt; was 30 / 24), so its line is as thin as theirs.
+
+## 127. Bigger "Pages" word, the picture hides by itself (iPhone and iPad 0.22 build 28)
+- **Version.** Before: iPhone and iPad app 0.21 (build 27). Now: 0.22 (build 28). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Bigger word.** The word "Pages" on the purple tab (section 125) is bigger and easier to read. Before: 12-point caption type on a tab 22 points wide. Now: 15-point type (subheadline, bold) on a tab 28 points wide. The keys keep their sizes, give or take a point or two.
+- **Hides by itself.** Only with the device on its side and the navigation picture showing: when nothing on the screen has been touched for one minute, the picture slides away by itself, with the same spring as a swipe (section 125). The favourites move into the column and the keys grow, exactly as when the picture is swiped away (section 126).
+- **Touch restarts the minute.** Any touch anywhere on the screen starts the minute again.
+- **Bring it back.** Tap or pull the "Pages" tab: the picture shows again, and it hides again after the next quiet minute.
+- **New switch.** Settings, Showing, right under "Navigation picture": "Hide the picture after a minute" (on at first). Off: the picture stays until it is swiped away.
+- **Same switch as the swipe.** Hiding by itself turns the same "Navigation picture" switch off as the swipe does (section 125). After it has hidden itself that switch shows off, and the picture stays hidden after the app is closed until it is brought back.
+- **Texts.** What's new 0.22, How it works (parts "The navigation picture" and "Settings") and "Signs in this app" (the "Pages" tab line) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
