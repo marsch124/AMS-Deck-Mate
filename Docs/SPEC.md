@@ -1144,3 +1144,14 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **When the hint shows.** For 8 seconds each time the tab appears (the picture hidden by a swipe or by itself). Only the first 3 times. Never again once the list has been used (the tab held and a page group picked).
 - **Texts.** What's new 0.25, How it works (part "The navigation picture") and "Signs in this app" (the "Pages" tab line and a new line for the hint) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 131. Swipe for page groups on the "Pages" tab, brighter hint at night (iPhone and iPad 0.26 build 32)
+- **Version.** Before: iPhone and iPad app 0.25 (build 31). Now: 0.26 (build 32). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Swipe on the tab.** While the navigation picture is hidden, a swipe up or down on the purple "Pages" tab goes to the next (up) or the previous (down) page group, the same as a swipe up or down on the keys. It lands on the same page as the swipe on the keys does.
+- **Same switch.** It follows the Settings switch "Swipe up or down changes page group" (card Touch, identifier "swipeProfiles", stored as "swipeProfiles", on at first). Off there, off on the tab too.
+- **Buzz.** A soft buzz goes with each change, following the switch "Tap buzz" (Settings, Touch).
+- **Name on the tab.** On an iPhone held on its side the group name on the tab (section 130) changes with the swipe. An iPad's tab shows only "Pages".
+- **Unchanged.** A plain tap on the tab still brings the picture back; holding about half a second still opens the list of page groups (section 129); a swipe to the left or right on the tab still pulls the picture out.
+- **Hint at night.** The hint "Hold for groups" (section 130) stays the tab's purple by day; with a dark background it is a lighter purple, so it reads well on the dark iPad screen. Its timing (8 seconds, first 3 times, never after the list was used) is unchanged.
+- **Texts.** What's new 0.26, How it works (part "The navigation picture") and "Signs in this app" (the "Pages" tab line and the "Hold for groups" line) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.

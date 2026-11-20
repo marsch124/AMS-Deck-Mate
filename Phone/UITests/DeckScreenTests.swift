@@ -113,9 +113,14 @@ final class DeckScreenTests: XCTestCase {
         snap(app, "pages-tab")
         // 0.25: on an iPhone (no heading) the tab names the page group.
         if UIDevice.current.userInterfaceIdiom == .phone {
-            XCTAssertTrue(app.descendants(matching: .any)["tabGroupName"].exists, "the tab says which page group shows")
+            XCTAssertTrue(tab.label.contains("Default"), "the tab says which page group shows")
         }
         XCTAssertTrue(app.descendants(matching: .any)["tabHint"].waitForExistence(timeout: 3), "the hint shows under the tab (0.25)")
+        // 0.26: a swipe up on the tab goes to the next page group.
+        // (The sample has no Mac to answer, so only check it never opens the picture; the rule has its own test.)
+        tab.swipeUp()
+        sleep(1)
+        XCTAssertFalse(app.buttons["mapPage-p1"].isHittable, "an up or down swipe on the tab keeps the picture hidden")
         // 0.24: hold the tab for the page groups.
         tab.press(forDuration: 1.0)
         XCTAssertTrue(app.buttons["tabGroup-1"].waitForExistence(timeout: 5), "holding the tab lists the page groups")

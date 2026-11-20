@@ -310,7 +310,8 @@ struct DeckScreen: View {
             if tabHint, !showMap, mapPull == nil {
                 Text("Hold for groups")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(PhonePalette.fill("profiles"))
+                    // His pick (0.26): lighter purple at night, so it reads on a dark screen.
+                    .foregroundStyle(PhonePalette.part("profiles"))
                     .fixedSize()
                     .offset(y: tabSpan.map { $0.minY + $0.height + 3 } ?? 17)
                     .allowsHitTesting(false)
@@ -330,7 +331,16 @@ struct DeckScreen: View {
                 mapPull = CGFloat(MapSwipe.shownWidth(wasOpen: showMap, moved: drag.translation.width, width: full))
             }
             .onEnded { drag in
-                guard mapPull != nil else { return }
+                guard mapPull != nil else {
+                    // His pick (0.26): up or down on the tab changes the page group, like on the keys.
+                    if !showMap, swipeProfiles,
+                       let step = MapSwipe.groupStep(across: drag.translation.width, along: drag.translation.height),
+                       let next = link.status?.profile(after: step) {
+                        snapFeel()
+                        link.swipeProfile(next)
+                    }
+                    return
+                }
                 let open = MapSwipe.opensAfter(wasOpen: showMap, moved: drag.translation.width,
                                                predicted: drag.predictedEndTranslation.width, width: full)
                 if open != showMap { snapFeel() }
@@ -343,10 +353,8 @@ struct DeckScreen: View {
 
     /// A thin purple tab at the left edge with "Pages" running up it: the navigation picture is hidden here.
     private var pagesTab: some View {
-        Button {
-            snapFeel()
-            withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = true }
-        } label: {
+        // A plain tap only (0.26): a button also fired when a swipe up or down ended on the tall tab.
+        Group {
             VStack(spacing: 10) {
                 Capsule().fill(.white.opacity(0.8)).frame(width: 3, height: 22)
                 // His pick (0.22): a bigger word, easy to read (was 12-point caption type).
@@ -377,7 +385,13 @@ struct DeckScreen: View {
             .offset(x: tabNudge)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .onTapGesture {
+            snapFeel()
+            withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = true }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = true } }
         .onChange(of: showMap) { _, shown in if !shown, mapPlace { tabAppeared() } }
         .onAppear { if !showMap, mapPlace { tabAppeared() } }
         .accessibilityLabel(currentGroupName.map { "Pages, \($0)" } ?? "Pages")

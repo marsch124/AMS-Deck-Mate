@@ -65,3 +65,12 @@ final class TabHintTests: XCTestCase {
         XCTAssertFalse(MapSwipe.tabHintShows(timesShown: 0, usedList: true), "once used, never again")
     }
 }
+
+final class TabGroupSwipeTests: XCTestCase {
+    func testUpIsNextDownIsBefore() {
+        XCTAssertEqual(MapSwipe.groupStep(across: 5, along: -90), 1)
+        XCTAssertEqual(MapSwipe.groupStep(across: -10, along: 90), -1)
+        XCTAssertNil(MapSwipe.groupStep(across: 0, along: 40), "too short")
+        XCTAssertNil(MapSwipe.groupStep(across: 80, along: 90), "not clearly up or down")
+    }
+}

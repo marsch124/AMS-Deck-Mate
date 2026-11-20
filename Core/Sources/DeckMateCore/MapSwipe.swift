@@ -44,6 +44,13 @@ public enum MapSwipe {
         !usedList && timesShown < hintTimes
     }
 
+    /// An up or down swipe on the "Pages" tab, like on the keys (his pick, 0.26): +1 = the next page group
+    /// (finger up), −1 = the one before (finger down), nil = not a clear up-or-down swipe.
+    public static func groupStep(across: Double, along: Double) -> Int? {
+        guard abs(along) > 60, abs(along) > abs(across) * 1.5 else { return nil }
+        return along < 0 ? 1 : -1
+    }
+
     /// The width that shows while the finger drags: never below zero, and a little stretch past full.
     public static func shownWidth(wasOpen: Bool, moved: Double, width: Double) -> Double {
         let raw = (wasOpen ? width : 0) + moved
