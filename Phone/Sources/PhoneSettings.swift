@@ -40,6 +40,7 @@ struct PhoneSettings: View {
     @AppStorage("showMusic") private var showMusic = true
     @AppStorage("showGlance") private var showGlance = true
     @AppStorage("showMap") private var showMap = true
+    @AppStorage("widePages") private var widePages = false
     @AppStorage("eveningRest") private var eveningRest = false
     @AppStorage("eveningFrom") private var eveningFrom = PhoneEvening.defaultFrom
     @AppStorage("eveningTo") private var eveningTo = PhoneEvening.defaultTo
@@ -196,6 +197,14 @@ struct PhoneSettings: View {
                 note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
             }
             card("Showing", "settings") {
+                Toggle("Several pages at once", isOn: Binding(get: { widePages }, set: { widePages = $0; link.sendWide() }))
+                    .accessibilityIdentifier("widePages")
+                note(DeckScreen.device == "iPad"
+                     ? "For using the iPad without the Stream Deck: four pages at once, two above two (60 keys). The first is the page you are on, then the next ones of the page group. Needs AMS Deck Mate 0.17 on the Mac."
+                     : "For using the iPhone without the Stream Deck: two pages side by side (30 keys). The first is the page you are on, then the next one of the page group. Needs AMS Deck Mate 0.17 on the Mac.")
+                if widePages, link.macName != nil, case .connected = link.state, !link.wideMac {
+                    note("Your Mac's AMS Deck Mate is older than 0.17: it shows one page until you update it.")
+                }
                 Toggle("The note on what a key did", isOn: $showNote).accessibilityIdentifier("showNote")
                 note("A key that did not work always shows its note, also when this is off.")
                 Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")

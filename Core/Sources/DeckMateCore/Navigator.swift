@@ -37,6 +37,29 @@ public enum Navigator {
         return fixed
     }
 
+    /// "Several pages at once" (an iPhone or iPad used without the box): the page at `position`
+    /// first, then the next top pages of its page group in their order, going round to the start,
+    /// until `count` pages show or every top page is there. A folder counts from the top page it
+    /// sits in (that top page itself is then not shown again).
+    public static func spread(at position: DeckPosition, count: Int, in deck: Deck) -> [DeckPosition] {
+        guard count > 1, let profile = deck.profile(position.profile), profile.page(position.page) != nil else {
+            return [position]
+        }
+        var top = position.page
+        var seen: Set<UUID> = [top]
+        while let parent = profile.page(top)?.parent, profile.page(parent) != nil, !seen.contains(parent) {
+            seen.insert(parent)
+            top = parent
+        }
+        let tops = profile.topPages
+        guard let at = tops.firstIndex(where: { $0.id == top }) else { return [position] }
+        var shown = [position]
+        for step in 1..<tops.count where shown.count < count {
+            shown.append(DeckPosition(profile: profile.id, page: tops[(at + step) % tops.count].id))
+        }
+        return shown
+    }
+
     /// The keys showing at a position, by place.
     public static func keys(at position: DeckPosition, in deck: Deck) -> [Int: DeckKey] {
         deck.profile(position.profile)?.page(position.page)?.keys ?? [:]

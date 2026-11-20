@@ -76,6 +76,9 @@ final class PhoneServer: ObservableObject {
         var lastFavourites: Data?
         var lastMac: Data?
         var lastMap: Data?
+        /// "Several pages at once": how many pages this iPhone or iPad shows (1 = one, as ever).
+        var wide = 1
+        var lastTiles: [String]?
         init(_ connection: NWConnection) { self.connection = connection }
     }
 
@@ -378,11 +381,17 @@ final class PhoneServer: ObservableObject {
             guard phone.trusted else { return }
             send(.pong, to: phone)
         case let .press(index):
-            guard phone.trusted, (0..<StreamDeckProtocol.keyCount).contains(index) else { return }
+            guard phone.trusted, (0..<StreamDeckProtocol.keyCount * phone.wide).contains(index) else { return }
             press(index, long: false, favourite: false, from: phone)
         case let .hold(index):
-            guard phone.trusted, (0..<StreamDeckProtocol.keyCount).contains(index) else { return }
+            guard phone.trusted, (0..<StreamDeckProtocol.keyCount * phone.wide).contains(index) else { return }
             press(index, long: true, favourite: false, from: phone)
+        case let .wide(count):
+            guard phone.trusted else { return }
+            phone.wide = min(max(count, 1), PhoneLink.mostTiles)
+            phone.lastKeys = nil
+            phone.lastTiles = nil
+            sendKeys(to: phone)
         case let .favourite(index, long):
             guard phone.trusted, (0..<PhoneLink.favouriteCount).contains(index) else { return }
             press(index, long: long, favourite: true, from: phone)
@@ -439,12 +448,32 @@ final class PhoneServer: ObservableObject {
     /// A tap or long press from an iPhone. With its own keys only its own place moves: the Mac's
     /// keys on screen and the box stay where they are, and the Mac still does what the key says.
     private func press(_ index: Int, long: Bool, favourite: Bool, from phone: Phone) {
+        let (tile, place) = PhoneLink.tile(of: index)
+        if !favourite, tile > 0 {
+            pressOnTile(tile, place: place, index: index, long: long, from: phone)
+            return
+        }
         guard let own = ownPlace(of: phone) else {
             model.pressFromPhone(index, long: long, favourite: favourite)
             return
         }
         if !favourite, phone.version >= 2 { send(.pressed(index: index), to: phone) }
         phone.own = model.act(index, at: own, long: long, favourite: favourite).position
+        sendKeys(to: phone)
+    }
+
+    /// "Several pages at once": a key of the second, third or fourth page. It acts from its own page;
+    /// a key that opens a folder or another page moves the view there (that page becomes the first).
+    private func pressOnTile(_ tile: Int, place: Int, index: Int, long: Bool, from phone: Phone) {
+        guard let first = ownPlace(of: phone) ?? model.position else { return }
+        let pages = Navigator.spread(at: first, count: phone.wide, in: model.deck)
+        guard tile < pages.count else { return }
+        send(.pressed(index: index), to: phone)
+        let at = pages[tile]
+        let moved = model.act(place, at: at, long: long).position
+        if moved != at {
+            if phone.own != nil { phone.own = moved } else { model.show(moved) }
+        }
         sendKeys(to: phone)
     }
 
@@ -539,9 +568,24 @@ final class PhoneServer: ObservableObject {
 
     private func sendKeys(to phone: Phone) {
         let place = ownPlace(of: phone) ?? model.position
-        let keys = model.live(place.map { Navigator.keys(at: $0, in: model.deck) } ?? [:])
-        let list = (0..<StreamDeckProtocol.keyCount).map { index in
-            PhoneLink.Key(index: index, title: KeyArt.title(keys[index]), picture: KeyArt.pngForPhone(keys[index]))
+        // Several pages at once (an iPhone or iPad from 0.19 on): 15 keys per page, one long list.
+        let pages: [DeckPosition?] = phone.wide > 1 && phone.version >= 9
+            ? (place.map { Navigator.spread(at: $0, count: phone.wide, in: model.deck) } ?? [nil])
+            : [place]
+        var list: [PhoneLink.Key] = []
+        for (tile, page) in pages.enumerated() {
+            let keys = model.live(page.map { Navigator.keys(at: $0, in: model.deck) } ?? [:])
+            list += (0..<StreamDeckProtocol.keyCount).map { index in
+                PhoneLink.Key(index: tile * StreamDeckProtocol.keyCount + index, title: KeyArt.title(keys[index]),
+                              picture: KeyArt.pngForPhone(keys[index]))
+            }
+        }
+        if phone.version >= 9 {
+            let names = phone.wide > 1 ? pages.map { pageName(at: $0) } : []
+            if names != phone.lastTiles {
+                phone.lastTiles = names
+                send(.tiles(names: names), to: phone)
+            }
         }
         let line = model.placeLine(at: place)
         // An iPhone app from 0.17 on gets only the keys that look different (a timer's second = one
@@ -593,6 +637,15 @@ final class PhoneServer: ObservableObject {
         guard frame != phone.lastStatus else { return }
         phone.lastStatus = frame
         post(frame, to: phone)
+    }
+
+    /// A page's own name for "Several pages at once" ("Page 2" when it has none).
+    private func pageName(at position: DeckPosition?) -> String {
+        guard let position, let group = model.deck.profile(position.profile),
+              let page = group.page(position.page) else { return "" }
+        if !page.name.isEmpty { return page.name }
+        let tops = group.topPages
+        return tops.firstIndex(where: { $0.id == page.id }).map { "Page \($0 + 1)" } ?? "Folder"
     }
 
     private func toPhones(since version: Int, _ message: PhoneLink.Message) {

@@ -18,6 +18,8 @@ final class LinkClient: ObservableObject {
         }
     }
     @Published private(set) var place = ""
+    /// "Several pages at once": the names of the pages shown side by side; empty = one page, as ever.
+    @Published private(set) var tiles: [String] = []
     @Published private(set) var keys: [Int: PhoneLink.Key] = [:]
     /// The profiles and pages (from a Mac at 0.4 or later).
     @Published private(set) var status: PhoneLink.Status?
@@ -66,6 +68,18 @@ final class LinkClient: ObservableObject {
         send(.go(profile: group, page: page))
     }
     var hasFavourites: Bool { favourites.values.contains { $0.picture != nil } }
+
+    /// "Several pages at once" (for using the iPhone or iPad without the box): on in Settings › Showing.
+    var wideOn: Bool { UserDefaults.standard.bool(forKey: "widePages") }
+    /// The Mac knows several pages at once (Mac 0.17 on).
+    var wideMac: Bool { macVersion >= 9 }
+
+    /// Tells the Mac how many pages to send (after connecting, and when the setting changes).
+    func sendWide() {
+        guard case .connected = state, wideMac, !isSample else { return }
+        send(.wide(count: wideOn ? PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad) : 1))
+        if !wideOn { tiles = [] }
+    }
 
     /// "My own keys": this device moves through one page group on its own place.
     var ownOn: Bool { UserDefaults.standard.bool(forKey: "ownKeys") }
@@ -160,6 +174,11 @@ final class LinkClient: ObservableObject {
                 client.mac = SampleLink.mac
                 client.map = SampleLink.map()
                 client.macAsleep = CommandLine.arguments.contains("-macAsleep")
+                if client.wideOn || CommandLine.arguments.contains("-wide") {
+                    let count = PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad)
+                    client.tiles = Array(SampleLink.wideNames.prefix(count))
+                    client.keys = SampleLink.wideKeys(count)
+                }
             }
             client.lookingSince = nil
             if CommandLine.arguments.contains("-looking") {
@@ -420,6 +439,8 @@ final class LinkClient: ObservableObject {
             state = .connected(talkingTo)
             startPinging()
             if ownOn { sendOwn() }
+            tiles = []
+            if wideOn { sendWide() }
         case .refused:
             state = .refused(talkingTo)
             connection?.cancel()
@@ -431,6 +452,8 @@ final class LinkClient: ObservableObject {
             // Only the keys that look different: the others stay as they are.
             self.place = place
             for key in list { keys[key.index] = key }
+        case let .tiles(names):
+            tiles = wideOn ? names : []
         case let .status(status):
             self.status = status
         case let .pressed(index):
@@ -447,7 +470,7 @@ final class LinkClient: ObservableObject {
         case let .asleep(asleep):
             if let words = PhoneLink.wakeNote(wasAsleep: macAsleep, asleep: asleep) { show(words, ok: true) }
             macAsleep = asleep
-        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit, .ping, .pong:
+        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit, .ping, .pong, .wide:
             break
         }
     }

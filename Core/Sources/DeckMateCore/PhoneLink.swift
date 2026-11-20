@@ -12,7 +12,8 @@ public enum PhoneLink {
 
     /// One key as the iPhone shows it: the Mac draws it, the iPhone only shows the picture.
     public struct Key: Codable, Equatable, Sendable {
-        /// The key's place: 0 is top left, then left to right, top to bottom, up to 14.
+        /// The key's place: 0 is top left, then left to right, top to bottom, up to 14. With several
+        /// pages at once (version 9) the second page's keys go on at 15, the third's at 30, the fourth's at 45.
         public var index: Int
         /// The words on the key, for VoiceOver and checks.
         public var title: String
@@ -82,6 +83,11 @@ public enum PhoneLink {
         /// that stays quiet is a dead one, however connected it looks.
         case ping
         case pong
+        /// iPhone → Mac (version 9): "Several pages at once": show me this many pages (1 = one, as ever;
+        /// at most `mostTiles`). The keys then come as one long list, 15 per page.
+        case wide(count: Int)
+        /// Mac → iPhone (version 9): the names of the pages shown at once, first = the page it is on.
+        case tiles(names: [String])
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -95,6 +101,7 @@ public enum PhoneLink {
             case .visit: return 6
             case .secure: return 7
             case .some, .ping, .pong: return 8
+            case .wide, .tiles: return 9
             }
         }
     }
@@ -104,7 +111,17 @@ public enum PhoneLink {
     /// 4 = the navigation picture; 5 = the Mac says when it sleeps; 6 = a swipe shows a page group without locking it.
     /// 7 = the line is private: sealed from its first moment (`SecureLine`); older versions are no longer answered.
     /// 8 = only the keys that changed are sent, and the iPhone asks "are you there?" every few seconds.
-    public static let currentVersion = 8
+    /// 9 = several pages at once (`wide`, `tiles`), for an iPhone or iPad used without the box.
+    public static let currentVersion = 9
+
+    /// "Several pages at once": at most this many pages (an iPad: two above, two below).
+    public static let mostTiles = 4
+    /// How many pages each kind of device shows at once.
+    public static func tiles(pad: Bool) -> Int { pad ? 4 : 2 }
+    /// Which page of the ones shown a key belongs to, and its place on that page.
+    public static func tile(of index: Int) -> (tile: Int, place: Int) {
+        (index / StreamDeckProtocol.keyCount, index % StreamDeckProtocol.keyCount)
+    }
 
     /// The iPhone asks "are you there?" this often, and gives the line up when nothing at all came
     /// from the Mac for `quietLimit` seconds (two answers missed). The Mac closes a line it has not

@@ -74,6 +74,8 @@ struct DeckScreen: View {
     /// The navigation picture shows on an iPad held on its side ("-forceMap" shows it anywhere, for checks).
     private var mapShows: Bool {
         showMap && connected && !link.map.isEmpty
+            // An iPhone showing two pages at once needs all its width for the keys.
+            && (isPad || link.tiles.count < 2)
             && (onItsSide || CommandLine.arguments.contains("-forceMap"))
     }
     private var favouritesShow: Bool { showFavourites && link.newMac && link.hasFavourites }
@@ -336,9 +338,15 @@ struct DeckScreen: View {
         VStack(spacing: 8) {
             if note { noteLine }
             GeometryReader { box in
-                let side = Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow) * keySize.scale
+                let wide = link.tiles.count > 1
+                let side = (wide ? Self.wideKeySide(in: box.size, gap: keyGap.points, pages: link.tiles.count, favourites: favouritesShow)
+                                 : Self.keySide(in: box.size, gap: keyGap.points, favourites: favouritesShow)) * keySize.scale
                 VStack(spacing: keyGap.points + Self.favouritesGap) {
-                    KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                    if wide {
+                        WideGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                    } else {
+                        KeyGrid(link: link, side: side, gap: keyGap.points, corner: keyShape.corner)
+                    }
                     if favouritesShow {
                         HStack(spacing: keyGap.points) {
                             ForEach(0..<PhoneLink.favouriteCount, id: \.self) { index in
@@ -426,6 +434,18 @@ struct DeckScreen: View {
         return max(10, floor(min(byWidth, byHeight)))
     }
 
+    /// "Several pages at once": the side of one key when 2 pages sit side by side (iPhone), or
+    /// 4 pages two above two (iPad), each with its name above it.
+    static func wideKeySide(in size: CGSize, gap: CGFloat = 8, pages: Int, favourites: Bool = false) -> CGFloat {
+        let across = CGFloat(min(2, pages)), down = CGFloat(pages > 2 ? 2 : 1)
+        let between = WideGrid.between(gap)
+        let byWidth = (size.width - across * 4 * gap - (across - 1) * between) / (5 * across)
+        let rows = 3 * down + (favourites ? 1 : 0)
+        let fixed = down * WideGrid.nameHeight + down * 2 * gap + (down - 1) * between
+            + (favourites ? gap + favouritesGap : 0)
+        return max(10, floor(min(byWidth, (size.height - fixed) / rows)))
+    }
+
     /// The extra room between the 15 keys and the favourites row.
     static let favouritesGap: CGFloat = 8
 
@@ -504,7 +524,7 @@ struct DeckScreen: View {
                 .foregroundStyle(now.playing ? Color.white : PhonePalette.part("settings"))
                 .frame(width: isPad ? 38 : 34, height: isPad ? 38 : 34)
                 .background(now.playing ? PhonePalette.fill("settings") : PhonePalette.part("settings").opacity(0.14), in: Circle())
-                .frame(width: 44, height: 44)
+                .worded("Music")
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -583,7 +603,8 @@ struct DeckScreen: View {
         Button { showSettings = true } label: {
             PhoneIcon(name: "iconSettings", size: isPad ? 30 : 24)
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(width: 44, height: 44)
+                .frame(height: isPad ? 34 : 30)
+                .worded("Settings")
                 .contentShape(Rectangle())
         }
         .accessibilityLabel("Settings")
@@ -595,7 +616,8 @@ struct DeckScreen: View {
         Button { showPrivate = true } label: {
             PhoneIcon(name: "iconLock", size: isPad ? 21 : 18)
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(width: 36, height: 44)
+                .frame(height: isPad ? 34 : 30)
+                .worded("Private")
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -618,7 +640,8 @@ struct DeckScreen: View {
         Button { showStatus = true } label: {
             Circle().fill(statusColour)
                 .frame(width: isPad ? 16 : 13, height: isPad ? 16 : 13)
-                .frame(width: 44, height: 44)
+                .frame(height: isPad ? 34 : 30)
+                .worded("Mac")
                 // Upright, a small lock beside the dot: the line to the Mac is private.
                 // (On its side the lock sits bottom left, by Settings and music.)
                 .overlay(alignment: .trailing) {
@@ -878,13 +901,15 @@ private struct KeyGrid: View {
     let side: CGFloat
     var gap: CGFloat = 8
     var corner: CGFloat = 0.16
+    /// "Several pages at once": the second page's keys start at 15, the third's at 30 …
+    var first = 0
 
     var body: some View {
         VStack(spacing: gap) {
             ForEach(0..<3, id: \.self) { row in
                 HStack(spacing: gap) {
                     ForEach(0..<5, id: \.self) { column in
-                        let index = row * 5 + column
+                        let index = first + row * 5 + column
                         KeyView(index: index, key: link.keys[index], side: side, corner: corner, lit: link.lit.contains(index),
                                 hold: link.newMac ? { link.hold(index) } : nil) {
                             link.press(index)
@@ -893,6 +918,48 @@ private struct KeyGrid: View {
                 }
             }
         }
+    }
+}
+
+/// "Several pages at once": the pages side by side (iPhone: 2) or two above two (iPad: 4), each
+/// with its name above it. The first is the page the device is on.
+private struct WideGrid: View {
+    @ObservedObject var link: LinkClient
+    let side: CGFloat
+    var gap: CGFloat = 8
+    var corner: CGFloat = 0.16
+
+    static let nameHeight: CGFloat = 16
+    static func between(_ gap: CGFloat) -> CGFloat { max(14, gap * 2.5) }
+
+    var body: some View {
+        let names = link.tiles
+        let across = min(2, names.count)
+        VStack(spacing: Self.between(gap)) {
+            ForEach(0..<(names.count + across - 1) / across, id: \.self) { row in
+                HStack(alignment: .top, spacing: Self.between(gap)) {
+                    ForEach(0..<across, id: \.self) { column in
+                        let page = row * across + column
+                        if page < names.count {
+                            VStack(alignment: .leading, spacing: gap) {
+                                Text(names[page].isEmpty ? "Page" : names[page])
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .frame(height: Self.nameHeight)
+                                    .accessibilityIdentifier("pageName\(page)")
+                                KeyGrid(link: link, side: side, gap: gap, corner: corner,
+                                        first: page * StreamDeckProtocol.keyCount)
+                            }
+                        } else {
+                            Color.clear.frame(width: 5 * side + 4 * gap, height: 1)
+                        }
+                    }
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("severalPages")
     }
 }
 
@@ -960,5 +1027,17 @@ private struct KeysFrameKey: PreferenceKey {
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
         let next = nextValue()
         if next != .zero { value = next }
+    }
+}
+
+private extension View {
+    /// A small button's word under its mark (his rule: a button that is only a symbol gets a word).
+    func worded(_ word: String) -> some View {
+        VStack(spacing: 1) {
+            self
+            Text(word).font(.caption2.weight(.semibold)).foregroundStyle(PhonePalette.part("settings")).lineLimit(1)
+                .fixedSize()
+        }
+        .frame(minWidth: 44, minHeight: 44)
     }
 }

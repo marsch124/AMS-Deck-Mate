@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.16.1 (build 25), 18 Nov 2026; iPhone and iPad app 0.18 (build 23), unchanged
+# AMS Deck Mate, specification, version 0.17 (build 26), 20 Nov 2026; iPhone and iPad app 0.19 (build 24)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -1045,3 +1045,23 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Check picture.** `--snapshots` now also writes `settings-mac-day.png` and `settings-mac-night.png` (Settings, "This Mac"), looked at by day and by night.
 - **Not yet proven.** A real restart of the Mac with the keeper in place.
 - The iPhone and iPad app is not changed (0.18, build 23).
+
+## 121. Several pages at once (iPhone and iPad 0.19 build 24, Mac 0.17 build 26)
+- **Purpose.** For using the iPhone or iPad without the Stream Deck box: more keys on one screen.
+- **Switch.** Phone Settings, Showing, "Several pages at once". Off at first. Remembered on the device.
+- **Layout.** Off: one page of 15 keys, as before. On: the iPhone shows 2 pages side by side (10 keys across by 3 down, 30 keys); the iPad shows 4 pages, two above and two below (60 keys). Each page has its own small name above it.
+- **Which pages.** The first page is the page the device is on (as before). The others follow in the page group's order and it goes round: after the last page it continues with the first, so you see as many pages as fit (2 or 4), or fewer when the page group has fewer top pages. In a folder, the folder shows first and its own top page is not repeated. A page without a name shows as "Page 2", "Page 3" and so on. Folders are not shown as extra pages.
+- **Tap.** A tap on any key does what that key does, as if it had been pressed on its own page. A key that opens a folder or another page moves the view: that page becomes the first one.
+- **Swipe.** A sideways swipe moves one page on, as before.
+- **Still shown.** The favourites row and the navigation picture show when they are on. The Stream Deck box, if plugged in, and the keys on the Mac's screen keep showing just the first page.
+- **Link version 9.** The Mac understands link version 9: it sends the extra pages and carries out a tap on any of them. It needs the phone at 0.19 and the Mac at 0.17. With an older Mac the switch (Settings, Showing; its note says it needs the Mac at 0.17) says so and the phone shows one page as before; with an older phone the Mac talks as before.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 122. Mark check, Mac (Mac 0.17)
+- Keys window header: the three buttons read "Search", "Set up" and "Hide" (words, not pictures; Hide has no cross any more). The cross now means "remove" everywhere in the app (Set up keys).
+- Set up keys: the two look-alike "+" buttons read "+ Page group" (beside "Page groups") and "+ Page" (after the page names).
+
+## 123. Mark check, phone (iPhone and iPad 0.19) and "Signs in this app"
+- The small lock, music and gear buttons have a tiny word under them: "Private", "Music", "Settings". The coloured link dot to the Mac has the word "Mac" under it; a tap explains its colours (green, amber, red).
+- Both guides have a part "Signs in this app" listing every mark and colour that means something, each with its meaning: Mac guide (red corner, white dot, letter mark, white frame, lock, header words (Search, Set up, Hide), cross, "+ Page group" and "+ Page", warning, tile colours, grey-blue old number, link dot); phone guide (link dot colours, lock, music, gear, white dot, red corner, red note, amber battery line, page dots, navigation frame and ribbons, page names, app pill, moon, resting clock).
+- How it works and What's new are updated in both apps (Mac guide `Guide.swift`, phone guide `PhoneGuide.swift`).

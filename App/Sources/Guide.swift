@@ -41,7 +41,8 @@ enum Guide {
             "Since 0.5, a key with a long-press action shows a small white dot in its top right corner. Hold the mouse button on it for half a second and the second action runs. Let go sooner and the usual action runs.",
             "A key with a long-press action acts when you let go of the mouse button, so the Mac can tell a short click from a long one. All other keys act at once, as before.",
             "The favourites row is not shown on the keys on screen. It is for the iPhone and iPad.",
-            "New in 0.16: if another app already uses Control-Option-D, Settings › Keys on screen says in orange: \"Control-Option-D is used by another app, so it does not work here. Use the menu bar icon to show the keys.\" Before: the shortcut simply did nothing."
+            "New in 0.16: if another app already uses Control-Option-D, Settings › Keys on screen says in orange: \"Control-Option-D is used by another app, so it does not work here. Use the menu bar icon to show the keys.\" Before: the shortcut simply did nothing.",
+            "New in 0.17: the three small buttons in the top line now read \"Search\", \"Set up\" and \"Hide\". Before: a magnifier, a gear and a cross, with no words. Hide has no cross any more, so the cross means \"remove\" only, in Set up keys."
         ]),
         Section(id: "look", title: "The look of a key", part: "keys", lines: [
             "A key is a flat coloured tile with a white hand-drawn icon and a short title.",
@@ -61,6 +62,7 @@ enum Guide {
         ]),
         Section(id: "setup", title: "Set up keys", part: "keys", lines: [
             "Open it from the menu. Page groups are on the left, under \"Page groups\": add (\"Add a page group\"; the new one is named \"New page group\"), rename, delete, make default, and \"Use with apps\".",
+            "New in 0.17: the two look-alike \"+\" buttons now have words. The one beside \"Page groups\" reads \"+ Page group\" and the one after the page names reads \"+ Page\". Before: both were just a \"+\".",
             "New in 0.10: the + beside \"Page groups\" now opens a small list: \"Empty page group\" and four ready-made ones. See \"Ready-made page groups\" below. Under the page's buttons there is also \"Add an “Open apps” folder\". See \"Open app keys\" below.",
             "New in 0.11: six more kinds under \"What it does\": \"Next event\", \"Weather\", \"Due today\", \"Album cover\", \"Body Battery\" and \"Desk\". The Weather key has a field for the town, and the Desk key has the button \"Take the desk as it is now\" and a list of the apps it holds.",
             "New in 0.12: five more kinds under \"What it does\": \"Garmin number\", \"Mac at a glance\", \"World clock\", \"Sunrise and sunset\" and \"Free until\". Garmin number and Mac at a glance have a list to pick the number from. World clock and Sunrise and sunset have a field for the town.",
@@ -561,7 +563,8 @@ enum Guide {
             "If the iPhone says \"Looking for your Mac…\": check that the Mac app is open, that Wi-Fi and Bluetooth are on, that the iPhone is close to the Mac, and that Local Network is allowed for Deck Mate in the iPhone's Settings, Privacy & Security, Local Network.",
             "New in 0.7 (the Mac at 0.7 and the iPhone or iPad app at 0.9): the Mac tells a connected iPhone or iPad when its screen goes to sleep and when it wakes. With the switch \"Dark while the Mac sleeps\" in the iPhone's or iPad's Settings (on at first), the device goes black with a small moon and \"Mac asleep\", may lock itself, and brightens when the Mac wakes. One tap shows the keys again. The \"Recent app\" and \"Ask AI\" keys show and work on the iPhone and iPad too, drawn by the Mac.",
             "New in 0.5 (the Mac at 0.5 and the iPhone or iPad app at 0.7 together): own keys, the favourites row, the Mac at a glance and the music strip (today a small music button; see below). See the next part.",
-            "New in 0.15 (the Mac at 0.15 and the iPhone or iPad app at 0.17): the Mac sends only the keys that look different. With a running timer, stopwatch or focus round, one small picture arrives each second, instead of all fifteen (about 300 KB). The iPhone or iPad asks \"are you there?\" every 5 seconds and the Mac answers. The Mac closes the line of an iPhone or iPad it has not heard from for 20 seconds, and the device then looks for the Mac again. With the app at 0.16, everything works as before."
+            "New in 0.15 (the Mac at 0.15 and the iPhone or iPad app at 0.17): the Mac sends only the keys that look different. With a running timer, stopwatch or focus round, one small picture arrives each second, instead of all fifteen (about 300 KB). The iPhone or iPad asks \"are you there?\" every 5 seconds and the Mac answers. The Mac closes the line of an iPhone or iPad it has not heard from for 20 seconds, and the device then looks for the Mac again. With the app at 0.16, everything works as before.",
+            "New in 0.17 (the Mac at 0.17 and the iPhone or iPad app at 0.19): \"Several pages at once\", for using the iPhone or iPad without the box. With the switch on in the phone's Settings, Showing, the iPhone shows 2 pages side by side (30 keys) and the iPad 4 pages (60 keys), each with its page name above it. The first page is the page you are on; the others are the next pages of the same page group. It goes round: after the last page it continues with the first. In a folder, the folder shows first and its own top page is not repeated. A page without a name shows as \"Page 2\", \"Page 3\" and so on. A tap on any key does what that key does. The Mac sends all of them: it understands link version 9 (the new, longer way the Mac and the phone talk). With an older phone, everything works as before. The box, if it is plugged in, keeps showing just the first page, and so do the keys on screen on the Mac."
         ]),
         Section(id: "iphonenew", title: "On your iPhone and iPad, 0.5", part: "settings", lines: [
             "My own keys. In Settings on the iPhone or iPad, the new card \"Keys\" is at the top. \"Follow the Mac\" is as before: it shows the page group and page the Mac shows. \"My own keys\": pick a page group, and the iPhone or iPad then moves through that group on its own: pages, folders and Back, at its own place.",
@@ -589,6 +592,22 @@ enum Guide {
             "New in 0.15: a hidden door is closed. Before, the app had a door meant for checks, through which other programs on the Mac could press keys by a message. The app as you use it now listens to nothing of the kind.",
             "New in 0.16: the secret of each allowed iPhone or iPad now lives in the Mac's Keychain (its safe for passwords), one entry for each device, instead of in the app's settings. The names stay in the settings. It moves over by itself and never shows a password window. If the Keychain cannot be used, the secret stays where it was and a note goes into the box diary. \"Forget\" removes it. Not yet proven across a future new build of the app."
         ]),
+        Section(id: "signs", title: "Signs in this app", part: "settings", lines: [
+            "Marks and colours on the keys, the keys on screen and the screens of this app, each with one meaning. If you meet a mark that is not here, it is a bug.",
+            "Small red triangle in a key's top right corner: that key is broken. Its app, file, folder, Raycast command, folder page or page group is gone. \"Check keys\" lists it.",
+            "Small white dot in a key's top right corner: the key has a long-press action. Hold it for half a second.",
+            "Small round white mark with a letter or number in a key's top left corner (1 to 5, Q to T, A to G): the key can be pressed with that letter right now. It shows only on the keys on screen and only while they have the keyboard.",
+            "White frame round a key in \"Set up keys\": the key you are editing.",
+            "Small lock in the top line of the keys on screen: the page group is locked. It stays until you choose \"Automatic\" in the menu.",
+            "Words in the top line of the keys on screen: \"Search\" (find a key by its name), \"Set up\" (opens Set up keys) and \"Hide\" (closes the keys on screen and takes nothing away). They are words, not pictures. Hide has no cross.",
+            "Cross in Set up keys (beside an app, a page or a key): remove it. The cross means \"remove\" and nothing else anywhere in this app.",
+            "\"+ Page group\" (beside \"Page groups\") adds a page group. \"+ Page\" (after the page names) adds a page to the page group you are in. They are two different buttons with two different words.",
+            "Warning triangle in Set up keys: something on that key needs your attention, with the reason beside it.",
+            "Coloured tiles: apps blue, links teal, Raycast red, shortcuts and switches purple, typed text and timers amber, music and sound green, moving around grey-blue. A colour that changes with a value (Body Battery, Stress, Focus rounds, Free until, Mac at a glance) is explained in the part for that key. Red on a key means real trouble only.",
+            "Grey-blue number on a glance key: the number is old (a Garmin number more than 3 hours old, a Weather key more than 2 hours old).",
+            "Small dot beside a name in Settings: green or tick-like means allowed or on, red means not allowed or off. The words beside it say which.",
+            "Link dot on the iPhone and iPad: green means connected to the Mac, amber means looking for the Mac or waiting for it to allow this device, red means the Mac said no. A small lock beside it means the line is private. These are shown on the iPhone, not on the Mac."
+        ]),
         Section(id: "permissions", title: "What the Mac asks for", part: "settings", lines: [
             "Accessibility, once, for keys that press a keyboard shortcut, type text, paste a last copied text or control music and sound. Settings shows whether it is allowed and has an \"Allow…\" button.",
             "The Mac may also ask for Input Monitoring when the box is first plugged in.",
@@ -605,6 +624,7 @@ enum Guide {
             "They hold the box and brightness, change page group with the app in front, the keys on screen (where they show, hide after a key, size), the iPhone card, open at login, permissions, bring over again and the check for broken keys.",
             "The version number, Quit and Done stay at the bottom.",
             "New in 0.16, no new parts, but new lines in old ones: the box's evening dimming in \"The box\"; the warning about Control-Option-D in \"Keys on screen\"; the card \"A key for <app>?\" at the top of \"Key use\"; and in \"Where it is kept\" the words about the key pictures in the iCloud copy.",
+            "New in 0.17, no new parts: the iPhone card is unchanged. The Mac now understands link version 9 (several pages at once on an iPhone or iPad); nothing to switch on here.",
             "\"Open at login\" (in \"This Mac\"): while it is on, the Mac opens AMS Deck Mate every time you log in. New in 0.16.1: the app also keeps a second, separate start order with the Mac, called the keeper. It opens the app at every login even if the Mac's own login list fails, and it opens the app again by itself if it ever stops unexpectedly (usually within a second; the Mac may wait up to 10 seconds). Before, the app stayed gone until you opened it by hand, and so did the box, the keys on screen, the Raycast commands and the iPhone link.",
             "If you quit the app yourself with \"Quit\", it stays closed until you open it or until the next login. Switching \"Open at login\" off takes the keeper away too. At every start the app checks that the keeper is in place and puts it back if it is missing.",
             "If you open the app by hand while \"Open at login\" is on, it closes and comes back about a second later. That is normal: it hands itself over to the keeper so it is always protected. A link that opened the app in that very moment (for example a Raycast command while the app was closed) is not carried over, so press it once more.",
@@ -636,6 +656,23 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.17", date: "20 Nov 2026", new: [
+            "Round of one new way to use the iPhone and iPad, and a mark check. Before: Mac 0.16.1 (build 25) and iPhone and iPad app 0.18 (build 23). Now: Mac 0.17 (build 26) and iPhone and iPad app 0.19 (build 24).",
+            "Several pages at once (the Mac's part). Before: the iPhone and iPad showed one page of 15 keys. Now: with the new switch \"Several pages at once\" in the phone's Settings, Showing, the iPhone shows 2 pages side by side (30 keys) and the iPad 4 pages (60 keys). The Mac now understands link version 9, the new, longer way it talks to the phone: it sends the extra pages, and it carries out a tap on any of them exactly as if you had pressed that key on its own page.",
+            "Which pages show: the first one is the page the phone is on, as before. The others are the next pages of the same page group, in their order, and it goes round: after the last page it continues with the first. So the phone shows 2 (iPhone) or 4 (iPad) pages, or fewer when the page group has fewer top pages. In a folder, the folder shows first and its own top page is not repeated. A page without a name shows as \"Page 2\", \"Page 3\" and so on. Folders are not shown as extra pages.",
+            "A key that opens a folder or another page moves the view: that page becomes the first one on the phone.",
+            "Nothing changes on the Mac: the box, if it is plugged in, and the keys on screen keep showing just the first page.",
+            "Needs the phone app at 0.19 and this Mac at 0.17. With an older Mac the switch on the phone says so and the phone shows one page as before. With an older phone, the Mac talks as before.",
+            "Not yet tried: none of this was run on a real iPhone or iPad. The real box is at home until January 2027."
+        ], changed: [
+            "The keys on screen: the three buttons in the top line now read \"Search\", \"Set up\" and \"Hide\". Before: a magnifier, a gear and a cross, with no words. Hide has no cross any more.",
+            "Set up keys: the two \"+\" buttons now read \"+ Page group\" and \"+ Page\". Before: both were a plain \"+\", one beside \"Page groups\" and one after the page names.",
+            "How it works has a new part, \"Signs in this app\" (every mark and colour that means something), and new lines in \"On your iPhone\", \"Set up keys\", \"Keys on screen\" and \"Settings\". The specification has new numbered items. The Mac app is now 0.17 (build 26)."
+        ], fixed: [
+            "Mark check: the cross meant two things (\"hide the keys\" in the top line of the keys on screen, \"remove\" in Set up keys). Now the top-line button reads \"Hide\" with no cross, so the cross means \"remove\" everywhere in the app.",
+            "Mark check: two look-alike \"+\" buttons in Set up keys, one for a page group and one for a page. Now they have words.",
+            "Mark check: the magnifier and the gear in the top line were pictures only. Now they read \"Search\" and \"Set up\"."
+        ]),
         Release(id: "0.16.1", date: "18 Nov 2026", new: [
             "Mac only. Before: Mac 0.16 (build 24). Now: Mac 0.16.1 (build 25). The iPhone and iPad app is not changed and stays at 0.18 (build 23).",
             "Why: the Mac's own login list can fail without saying so. On 17 Nov 2026 a Mac restarted and did not open two menu bar apps of this family, although \"Open at login\" was on: the Mac's login list could not find them. AMS Deck Mate relied on that list alone, so after such a restart the Stream Deck box, the keys on screen, the Raycast commands and the iPhone link would stay dead until the app was opened by hand.",

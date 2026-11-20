@@ -29,13 +29,15 @@ enum PhoneGuide {
             "Touch, Swipe up or down changes page group (on at first). When it is off, a swipe up or down does nothing. Swiping left or right for pages always works.",
             "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap. New in 0.18: a key that did not work always shows its red note, also when this switch is off. Since 0.11 it also shows the short note \"Mac is back\" when the Mac wakes from sleep, so the same switch hides both.",
             "Showing, Page dots (on at first): the small dots under the keys.",
+            "Showing, Several pages at once (new in 0.19, off at first): on the iPhone 2 pages side by side, on the iPad 4 pages. See \"Several pages at once\" below. It needs a Mac at 0.17; with an older Mac the switch says so.",
             "Showing, Keep the screen awake while connected (on at first). When it is off, the screen sleeps as usual.",
             "Showing, Dark while the Mac sleeps (on at first, since 0.9): when the Mac's screen goes to sleep, this screen goes black with a small moon and \"Mac asleep\". See \"Dark while the Mac sleeps\" below. Needs a Mac at 0.7.",
             "Showing, Warn when the battery is low (on at first): when the iPhone or iPad is at 20 % or less and not charging, a small amber line such as \"Battery 18 % – plug in\" shows centred under the heading, and also under the resting clock. It goes away when charging or above 20 %.",
             "Showing, Favourites row (on at first; since 0.18 in Showing, before in Keys): the row of 5 favourite keys under the 15 keys. It only shows when at least one favourite is set on the Mac. Needs a Mac at 0.5.",
             "Showing, Mac at a glance (on at first; since 0.18 in Showing): the name of the app in front on the Mac, as one small pill at the bottom middle, in the same green as the settings gear (since 0.13 a pill; since 0.14 without the battery; since 0.15 green instead of blue). Needs a Mac at 0.5.",
             "Showing, Music button (on at first; since 0.18 in Showing): one small round button. With the iPad on its side it is at the bottom left; with the iPhone on its side it is in the narrow column beside the keys, second from the bottom. Tap it for a small plate that shows what is playing on the Mac, with buttons. Needs a Mac at 0.5.",
-            "Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
+                        "New in 0.19: the small lock, music and gear buttons have a tiny word under them (\"Private\", \"Music\", \"Settings\"), and the coloured link dot has the word \"Mac\" under it (a tap still says in words what its colour means). See \"Signs in this app\".",
+"Your Mac: shows which Mac is used, with \"Forget this Mac\" (see below). This part is unchanged."
         ]),
         Section(id: "finding", title: "Finding your Mac", part: "settings", lines: [
             "It finds your Mac by itself when both are on the same Wi-Fi: at home, in a hotel, or with the Mac on your iPhone's hotspot. Without a shared Wi-Fi it also tries to reach the Mac directly, like AirDrop, but that is not proven yet.",
@@ -92,6 +94,15 @@ enum PhoneGuide {
             "Since 0.16, on an iPhone held on its side, the navigation picture uses the whole height of the left panel, because the app pill, lock, music button and gear moved to a narrow column to the right of the keys and the heading moved above the keys. It is about 54 points taller than with the heading above it, so more page groups show without scrolling.",
             "Needs the AMS Deck Mate app at 0.6 on the Mac. With an older Mac the picture stays hidden. Not yet tried on a real iPhone held on its side."
         ]),
+        Section(id: "several", title: "Several pages at once", part: "keys", lines: [
+            "New in 0.19: \"Several pages at once\", for using the iPhone or iPad without the Stream Deck box. Switch it on in Settings, Showing (off at first).",
+            "With it on, the iPhone shows 2 pages side by side (10 keys across by 3 down, 30 keys) and the iPad shows 4 pages (two above and two below, 60 keys). Each page has its own small name above it.",
+            "The first page is the page you are on, as before. The others follow in the page group's order and it goes round: after the last page it continues with the first, so you see as many pages as fit (2 or 4), or fewer when the page group has fewer top pages. In a folder, the folder shows first and its own top page is not repeated. A page without a name shows as \"Page 2\", \"Page 3\" and so on. Folders are not shown as extra pages.",
+            "A tap on any key does what that key does, as if you had pressed it on its own page. A key that opens a folder or another page moves the view: that page becomes the first one.",
+            "A swipe sideways moves one page on, as before. The favourites row and the navigation picture still show when they are on. The Stream Deck box, if it is plugged in, keeps showing just the first page.",
+            "It needs the Mac at 0.17. With an older Mac the switch says so (its note says it needs the Mac at 0.17) and the phone shows one page as before.",
+            "Not yet tried on a real iPhone or iPad."
+        ]),
         Section(id: "longpress", title: "Long press", part: "keys", lines: [
             "A key with a small white dot in its top right corner has a second action. Hold the key for half a second and the second action runs. You feel a stronger buzz.",
             "A long press on a key without a dot does the usual thing, as if you had tapped.",
@@ -136,6 +147,23 @@ enum PhoneGuide {
             "A key that runs a Raycast command works from the iPhone like any other key. The command runs on the Mac.",
             "You set up keys on the Mac, in \"Set up keys\". The iPhone shows what you set up there."
         ]),
+        Section(id: "signs", title: "Signs in this app", part: "settings", lines: [
+            "Marks and colours in this app, each with one meaning. If you meet a mark that is not here, it is a bug.",
+            "Coloured dot at the top (the link to the Mac), with the word \"Mac\" under it: green means connected to your Mac; amber means looking for the Mac or waiting for it to allow this iPhone or iPad; red means the Mac said no. Tap it for the words.",
+            "Small lock (\"Private\"): the line to the Mac is private, so nobody else on the Wi-Fi can read your keys or press them. Upright it sits beside the link dot; on its side it sits in the column beside the keys. Tap it for the words.",
+            "Round button with a note (\"Music\"): opens the plate with what is playing on the Mac. It is filled green while something is playing, and pale while nothing is.",
+            "Round gear (\"Settings\"): opens Settings. Everyone knows the gear; it now also has a tiny word under it.",
+            "Small white dot in a key's top right corner: the key has a long-press action. Hold it for half a second.",
+            "Small red corner on a key: that key is broken on the Mac. The note at the bottom says why.",
+            "Red note with a warning drawing at the bottom: a key did not work. It always shows.",
+            "Amber line with a warning drawing under the heading, such as \"Battery 18 % – plug in\": this iPhone or iPad is at 20 % or less and not charging.",
+            "Small dots under the keys: one for each page. The filled one is the page you are on. None inside a folder or when there is one page.",
+            "Blue frame in the navigation picture: the page showing now. Purple ribbon over a page group's pages: the page group you are in; grey-blue: the others.",
+            "Small name above each page when \"Several pages at once\" is on: the name of that page. The first page is the one you are on.",
+            "Green pill at the bottom: the name of the app in front on the Mac.",
+            "Black screen with a small moon and \"Mac asleep\": the Mac's screen is asleep. One tap shows the keys.",
+            "Large dimmed clock with the date: the resting clock. One tap brings the keys back."
+        ]),
         Section(id: "forget", title: "Forget and ask again", part: "settings", lines: [
             "In the iPhone's Settings you see which Mac it uses. \"Forget this Mac\" makes the iPhone start fresh and ask the Mac again.",
             "On the Mac, the card \"iPhone\" in Settings lists the allowed iPhones. \"Forget\" takes the permission back. That iPhone then shows \"Ask again\".",
@@ -160,6 +188,23 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.19", date: "20 Nov 2026", new: [
+            "Round of one new way to look at the keys, and a mark check. Before: iPhone and iPad app 0.18 (build 23). Now: 0.19 (build 24). It needs Mac 0.17 for the new part; everything else works with Mac 0.16 and 0.15.",
+            "Several pages at once, for using the iPhone or iPad without the Stream Deck box. Before: one page of 15 keys. Now: a new switch in Settings, Showing, \"Several pages at once\" (off at first). With it on, the iPhone shows 2 pages side by side (10 keys across by 3 down, 30 keys) and the iPad 4 pages (two above and two below, 60 keys). Each page has its own small name above it.",
+            "Which pages show: the first page is the page you are on, as before. The others follow in the page group's order and it goes round: after the last page it continues with the first, so you see as many pages as fit (2 or 4), or fewer when the page group has fewer top pages. In a folder, the folder shows first and its own top page is not repeated. A page without a name shows as \"Page 2\", \"Page 3\" and so on. Folders are not shown as extra pages.",
+            "Tapping: a tap on any key does what that key does, as if you had pressed it on its own page. A key that opens a folder or another page moves the view, so that page becomes the first one. A swipe sideways moves one page on, as before.",
+            "The favourites row and the navigation picture still show when they are on. The Stream Deck box, if it is plugged in, keeps showing just the first page.",
+            "Needs the Mac at 0.17. With an older Mac the switch says so, and the phone shows one page as before.",
+            "New in How it works: a part \"Several pages at once\" and a part \"Signs in this app\".",
+            "Not yet tried: none of this was run on a real iPhone or iPad."
+        ], changed: [
+            "The small lock, music and gear buttons now have a tiny word under them: \"Private\", \"Music\" and \"Settings\". Before: pictures only.",
+            "The coloured link dot to the Mac now has the word \"Mac\" under it. Before: a dot alone. A tap still explains its colours.",
+            "How it works is updated for these changes. The app is now 0.19 (build 24)."
+        ], fixed: [
+            "Mark check: three round buttons that were only pictures (lock, music, gear) now say what they are.",
+            "Mark check: the link dot was a colour with no word. Now it has words."
+        ]),
         Release(id: "0.18", date: "18 Nov 2026", new: [
             "Round of calm, safety and tidiness. Before: iPhone and iPad app 0.17 (build 22). Now: 0.18 (build 23). It works with Mac 0.16, and it also works with Mac 0.15.",
             "A note about a key that did not work always shows. Before: with the switch \"The note on what a key did\" off, you saw nothing, also when a key failed. Now: a small note shows anyway (above the keys on an iPad; over the top of the left panel on an iPhone held on its side). A new line under the switch says: \"A key that did not work always shows its note, also when this is off.\"",

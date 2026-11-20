@@ -64,6 +64,21 @@ enum SampleLink {
         return result
     }
 
+    /// "Several pages at once" in pictures: the made-up keys on every page, a little shifted each time.
+    static let wideNames = ["Page 1", "Apps", "PARAGON", "On the Mac"]
+    static func wideKeys(_ pages: Int) -> [Int: PhoneLink.Key] {
+        let one = keys()
+        var result: [Int: PhoneLink.Key] = [:]
+        for page in 0..<pages {
+            for (index, key) in one {
+                let place = (index + page * 3) % StreamDeckProtocol.keyCount
+                result[page * StreamDeckProtocol.keyCount + place] =
+                    PhoneLink.Key(index: page * StreamDeckProtocol.keyCount + place, title: key.title, picture: key.picture)
+            }
+        }
+        return result
+    }
+
     /// A flat coloured square with a white title near the bottom.
     private static func picture(_ title: String, _ colour: UIColor) -> Data? {
         let size = CGSize(width: 144, height: 144)
