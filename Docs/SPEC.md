@@ -1077,3 +1077,15 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Unchanged.** The switch, the page names, tapping, swiping, the box and the keys on the Mac's screen (still just the first page). Link version 9 is unchanged.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
 - **Music button look.** The round Music button is always the light background with a green note; it no longer fills green while something plays. Its word under it says "Playing" while something plays and "Music" otherwise. Before: filled green while music played, a light green ring otherwise. (Section 123's word "Music" is now this word when nothing plays.)
+
+## 125. Hide and show the navigation picture with a swipe (iPhone and iPad 0.20 build 26)
+- **Version.** Before: iPhone and iPad app 0.19.1 (build 25). Now: 0.20 (build 26). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Where.** Only when the device is on its side (iPhone and iPad) and the navigation picture (section 29) can show: wider than tall, a Mac at 0.6 or newer, and the switch on.
+- **Hide.** A finger on the navigation picture, swipe to the left. The picture follows the finger and slides off to the left, and the keys grow into the room it leaves, live, as the finger drags. On letting go it springs away by itself. Let go early (less than a third of the way, and no quick flick) and it springs back open.
+- **Show.** When hidden, a thin purple tab stands at the left edge, as tall as the keys, with the word "Pages" running up it and a small grip mark. A tap on the tab, or a pull to the right, shows the picture: it follows the finger out again, the keys shrink back, and it springs into place. The tab's purple is the same purple as the ribbon of the page group you are in on the picture (section 45).
+- **Keys.** A swipe on the keys themselves still changes pages, as before; only a swipe on the picture or the tab hides or shows it.
+- **Same as the switch.** The swipe is the Settings, Showing, "Navigation picture" switch (`showMap`, section 29): it turns that switch on or off, so the state is remembered after the app closes, and the switch shows the same state.
+- **Key size.** The keys take the freed width only when the width is what holds them back. Measured on an iPad Air 13 on its side (sample keys): without the favourites row 210 → 246 points; with the favourites row 178 → 178 (height-bound). iPhone 17 Pro on its side: 68 → 68 with the favourites row, 96 → 96 without (height-bound both ways). The map column is exactly as wide as the picture, or the 22-point tab, so the keys always get the rest.
+- **iPhone only.** While the picture is hidden, the battery warning line and the note on what a key did (they normally sit above the picture in the left panel) move over the keys, at the top in the middle.
+- **Texts.** What's new 0.20, How it works (parts "Settings" and "The navigation picture") and "Signs in this app" (new line for the "Pages" tab) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.

@@ -13,7 +13,7 @@ enum PhoneGuide {
         Section(id: "settings", title: "Settings", part: "settings", lines: [
             "Open Settings with the gear. It is at the top right; since 0.13, with the iPad held on its side, it is at the bottom left; since 0.16, with the iPhone held on its side, it is in a narrow column to the right of the keys, at the bottom corner. Every choice applies at once and is remembered on this iPhone or iPad. Done closes Settings. Since 0.7 the first part is \"Keys\".",
             "Keys (since 0.7, at the top): \"Follow the Mac\" (as before) or \"My own keys\", and then, in the row \"Page group\", you pick a page group. See \"My own keys\" below. With an older Mac this card says \"Needs AMS Deck Mate 0.5 on the Mac\" and the new parts stay hidden.",
-            "Showing (since 0.18; before in Keys): a switch \"Navigation picture\" (on at first). It shows the page groups and pages as small pictures on the left of an iPad or iPhone held on its side (iPhone since 0.10). It needs a Mac at 0.6. The note about holding a key for its long-press action now stands under Touch.",
+            "Showing (since 0.18; before in Keys): a switch \"Navigation picture\" (on at first). It shows the page groups and pages as small pictures on the left of an iPad or iPhone held on its side (iPhone since 0.10). Since 0.20 a swipe to the left on the picture turns this switch off, and the purple \"Pages\" tab (or a tap on it) turns it on again; the switch always shows the same state. It needs a Mac at 0.6. The note about holding a key for its long-press action now stands under Touch.",
             "Look, Background: Day and night (light by day, dark by night, as before), Always dark, Night blue, Forest, Plum, Rust or Slate. The colours are deep, calm shades and the words turn light on them.",
             "Look, A colour for each page group (under Background): every page group from your Mac is listed with its own choice, \"Same as background\" (at first) or one of the colours. When that group shows, the background takes its colour, so you see at a glance which one is up. It needs a Mac at 0.4 or later, because the list comes from the Mac. Before a Mac is connected the list says so.",
             "Look, Key shape: Rounded (as before), Square or Pillow (very round corners).",
@@ -89,7 +89,11 @@ enum PhoneGuide {
             "The page showing now has a blue frame. Since 0.16 each page group sits in its own framed panel: its name is white bold words on a full-colour ribbon across both small pages, purple for the page group you are in and grey-blue for the others, and the panel behind the pages is softly tinted in the same colour. Before 0.16 the name was a plain small word above the pages, purple or grey. The list scrolls when it is long.",
             "Tap a small page and the keys go there. When the iPad follows the Mac, the Mac goes there too and that page group is locked until you choose \"Automatic\" in Settings, Keys, row \"Page group\". With \"My own keys\", only the iPad's own place moves, and the page group you picked is remembered.",
             "An iPad or iPhone held upright shows no picture, because there is no room.",
-            "In Settings, the switch \"Navigation picture\" in the Keys card (on at first) turns it off.",
+            "In Settings, the switch \"Navigation picture\" in the Showing card (on at first) turns it off.",
+            "New in 0.20, only with the device on its side: swipe to the left on the navigation picture to hide it. The picture follows your finger and slides off to the left, and the keys grow into the room it leaves, live, as you drag (they grow when the width is what holds them back: on an iPad without the favourites row, from about 210 to about 246 points, about a sixth bigger. With the favourites row on, and on an iPhone, the keys are already as tall as the screen allows, so they keep their size and the picture simply makes room). Let go and it springs away by itself; let go early (less than a third of the way, and no quick flick) and it springs back open.",
+            "When it is hidden, a thin purple tab stands at the left edge, as tall as the keys, with the word \"Pages\" running up it and a small grip mark. Tap the tab, or pull it to the right: the picture follows your finger out again, the keys shrink back, and it springs into place. The tab is the same purple as the ribbon of the page group you are in.",
+            "Swipes on the keys still change pages; only a swipe on the picture or on the tab hides or shows it. The swipe is the same as the Settings switch \"Navigation picture\": it turns that switch on or off, so it is remembered after the app closes.",
+            "On an iPhone, while the picture is hidden, the battery warning line and the note on what a key did move over the keys, at the top in the middle.",
             "Since 0.13, on an iPad held on its side, the navigation picture is as tall as the keys: its top edge is in line with the top row of keys and its bottom edge with the bottom row of keys. Before, it started right under the top line, higher than the keys, and ran down past the page dots. When there are more pages than fit, it scrolls as before.",
             "Since 0.16, on an iPhone held on its side, the navigation picture uses the whole height of the left panel, because the app pill, lock, music button and gear moved to a narrow column to the right of the keys and the heading moved above the keys. It is about 54 points taller than with the heading above it, so more page groups show without scrolling.",
             "Needs the AMS Deck Mate app at 0.6 on the Mac. With an older Mac the picture stays hidden. Not yet tried on a real iPhone held on its side."
@@ -160,6 +164,7 @@ enum PhoneGuide {
             "Amber line with a warning drawing under the heading, such as \"Battery 18 % – plug in\": this iPhone or iPad is at 20 % or less and not charging.",
             "Small dots under the keys: one for each page. The filled one is the page you are on. None inside a folder or when there is one page.",
             "Blue frame in the navigation picture: the page showing now. Purple ribbon over a page group's pages: the page group you are in; grey-blue: the others.",
+            "Thin purple tab at the left edge with the word \"Pages\" and a small grip mark (since 0.20): the navigation picture is hidden. Tap it, or pull it to the right, to show the picture again. Its purple is the same as the ribbon of the page group you are in.",
             "Small name above each page when \"Several pages at once\" is on: the name of that page. The first page is the one you are on.",
             "Green pill at the bottom: the name of the app in front on the Mac.",
             "Black screen with a small moon and \"Mac asleep\": the Mac's screen is asleep. One tap shows the keys.",
@@ -189,6 +194,20 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.20", date: "20 Nov 2026", new: [
+            "One new thing: hide and show the navigation picture with a swipe. Before: iPhone and iPad app 0.19.1 (build 25). Now: 0.20 (build 26). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed.",
+            "Hide it: on an iPad or iPhone held on its side, put a finger on the navigation picture (the page map on the left) and swipe to the left. The picture follows your finger and slides off to the left, and the keys grow into the room it leaves, live, as you drag. Let go and it springs away by itself. Let go early (less than a third of the way, and no quick flick) and it springs back open.",
+            "Show it again: when the picture is hidden, a thin purple tab stands at the left edge, as tall as the keys, with the word \"Pages\" running up it and a small grip mark. Tap the tab, or pull it to the right: the picture follows your finger out again, the keys shrink back, and it springs into place.",
+            "Bigger keys while it is hidden, where there is room: on an iPad held on its side without the favourites row, the keys grow from about 210 to about 246 points (about a sixth bigger), live as you swipe. With the favourites row on (about 178 points), and on an iPhone (about 68 points with the favourites row, 96 without), the keys are already as tall as the screen allows, so they keep their size. Before: the picture could only be hidden with the switch in Settings.",
+            "Not yet tried: none of this was run on a real iPhone or iPad."
+        ], changed: [
+            "The switch Settings, Showing, \"Navigation picture\" and the swipe are now the same thing. Before: only the switch could hide the picture. Now: the swipe turns that switch on or off, so it is remembered after the app is closed, and the switch shows the same state.",
+            "Swipes on the keys still change pages, as before. Only a swipe on the picture or on the tab hides or shows it.",
+            "On the iPhone, when the picture is hidden, the battery warning line and the note on what a key did move over the keys, at the top in the middle (they normally sit above the picture).",
+            "How it works has changed lines in \"The navigation picture\" and \"Settings\", and \"Signs in this app\" has a new line for the \"Pages\" tab. The app is now 0.20 (build 26)."
+        ], fixed: [
+            "Nothing was broken in this round."
+        ]),
         Release(id: "0.19.1", date: "20 Nov 2026", new: [
             "Small follow-up round, from trying 0.19 on the iPad. Before: iPhone and iPad app 0.19 (build 24). Now: 0.19.1 (build 25). The folders part needs Mac 0.17.1; everything else works with Mac 0.17.",
             "Several pages at once now fills empty spots with folders. Before: \"Notion\" (2 pages) showed just 2 small pages at the bottom of the iPad, and \"AMS Deck\" (only the page Home plus folders) showed 1 page of 15 keys. Now: when the page group has fewer top pages than the device shows (2 on an iPhone, 4 on an iPad), its folders fill the rest, in their order in Set up keys. \"AMS Deck\" shows Home, Apps, Tutorials and Raycast on the iPad: 4 pages, 60 keys instead of 15.",

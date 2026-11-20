@@ -83,6 +83,43 @@ final class DeckScreenTests: XCTestCase {
         XCTAssertTrue(app.buttons["mapPage-w1"].waitForExistence(timeout: 5))
     }
 
+    /// 0.20: a swipe to the left hides the navigation picture behind the "Pages" tab and the keys grow; a tap brings it back.
+    func testSwipeHidesNavigationPicture() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-forceMap"]
+        app.launch()
+
+        let plate = app.descendants(matching: .any)["navigationPicture"]
+        XCTAssertTrue(plate.waitForExistence(timeout: 10))
+        let before = app.descendants(matching: .any)["key0"].frame.width
+        snap(app, "map-shown")
+        plate.swipeLeft()
+        let tab = app.buttons["pagesTab"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 5) && tab.isHittable, "the Pages tab stands where the picture was")
+        sleep(1)
+        let after = app.descendants(matching: .any)["key0"].frame.width
+        print("KEY SIDE before \(before) after \(after)")
+        XCTAssertGreaterThanOrEqual(after, before, "the keys never shrink when the picture hides")
+        snap(app, "pages-tab")
+        tab.tap()
+        XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 5), "a tap on the tab brings the picture back")
+
+        // Without the favourites row the keys are held back by the width: hidden, they grow.
+        app.terminate()
+        app.launchArguments = ["-sample", "-forceMap", "-showFavourites", "NO"]
+        app.launch()
+        XCTAssertTrue(plate.waitForExistence(timeout: 10))
+        let narrow = app.descendants(matching: .any)["key0"].frame.width
+        plate.swipeLeft()
+        XCTAssertTrue(tab.waitForExistence(timeout: 5))
+        sleep(1)
+        let wide = app.descendants(matching: .any)["key0"].frame.width
+        print("KEY SIDE no favourites before \(narrow) after \(wide)")
+        snap(app, "pages-tab-no-favourites")
+        tab.tap()
+        XCTAssertTrue(app.buttons["mapPage-p1"].waitForExistence(timeout: 5))
+    }
+
     /// An iPhone on its side: the side panel on the left holds the heading and the navigation picture;
     /// his placement (0.16): the Mac's app, the lock, music and Settings stand in one column right of the keys.
     func testSidePanel() {

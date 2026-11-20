@@ -72,12 +72,17 @@ struct DeckScreen: View {
         phoneSideways || (isPad && onItsSide) || CommandLine.arguments.contains("-forceMap")
     }
     /// The navigation picture shows on an iPad held on its side ("-forceMap" shows it anywhere, for checks).
-    private var mapShows: Bool {
-        showMap && connected && !link.map.isEmpty
+    /// The navigation picture has its place here: shown, or hidden behind the "Pages" tab (0.20: a swipe hides it).
+    private var mapPlace: Bool {
+        connected && !link.map.isEmpty
             // An iPhone showing two pages at once needs all its width for the keys.
             && (isPad || link.tiles.count < 2)
             && (onItsSide || CommandLine.arguments.contains("-forceMap"))
     }
+    /// The width of the navigation picture while a finger drags it (nil when no finger is on it).
+    @State private var mapPull: CGFloat?
+    /// iPhone on its side with the picture hidden: the battery line and the note sit over the keys instead.
+    private var linesOverKeys: Bool { mapPlace && !showMap }
     private var favouritesShow: Bool { showFavourites && link.newMac && link.hasFavourites }
     /// The last touch, for the resting clock.
     @State private var lastTouch = Date()
@@ -99,6 +104,18 @@ struct DeckScreen: View {
                             sideHeading
                             keysColumn(note: false)
                         }
+                        .overlay(alignment: .top) {
+                            if linesOverKeys {
+                                VStack(spacing: 4) {
+                                    if let battery {
+                                        batteryLine(battery)
+                                            .padding(.horizontal, 10).padding(.vertical, 4)
+                                            .background(PhonePalette.card, in: Capsule())
+                                    }
+                                    if (showNote || failedNote), link.note != nil { noteLine }
+                                }
+                            }
+                        }
                     }
                     .coordinateSpace(.named("keysRow"))
                     .onPreferenceChange(KeysFrameKey.self) { keysFrame = $0 }
@@ -115,7 +132,7 @@ struct DeckScreen: View {
                     VStack(spacing: 8) {
                         topBar.padding(.leading, inWindow ? 76 : 0)
                         HStack(spacing: 14) {
-                            if mapShows { mapColumn }
+                            if mapPlace { mapColumn }
                             keysColumn(note: showNote)
                         }
                         .coordinateSpace(.named("keysRow"))
@@ -202,22 +219,109 @@ struct DeckScreen: View {
     }
 
     /// iPhone on its side: the navigation picture on the left, from the very top (a battery line or the note above it).
+    @ViewBuilder
     private var sidePanel: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let battery { batteryLine(battery) }
-            if showNote, link.note != nil { noteLine }
-            if mapShows {
-                navigationPicture(width: Self.sidePanelWidth)
-            } else {
+        if mapPlace {
+            // The picture slides away to the left with a swipe; the lines above it slide with it.
+            VStack(alignment: .leading, spacing: 6) {
+                if !linesOverKeys {
+                    VStack(alignment: .leading, spacing: 6) {
+                        if let battery { batteryLine(battery) }
+                        if showNote, link.note != nil { noteLine }
+                    }
+                    .frame(width: Self.sidePanelWidth, alignment: .leading)
+                    .frame(width: max(0, mapPull ?? Self.sidePanelWidth), alignment: .trailing)
+                    .clipped()
+                }
+                mapSlot(width: Self.sidePanelWidth)
+            }
+            .frame(maxHeight: .infinity, alignment: .top)
+            .overlay(alignment: .top) { if failedNote, !linesOverKeys { noteLine } }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("sidePanel")
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                if let battery { batteryLine(battery) }
+                if showNote, link.note != nil { noteLine }
                 Spacer(minLength: 0)
             }
+            .frame(width: Self.sidePanelWidth)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .overlay(alignment: .top) { if failedNote { noteLine } }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("sidePanel")
         }
-        .frame(width: Self.sidePanelWidth)
-        .frame(maxHeight: .infinity, alignment: .top)
-        .overlay(alignment: .top) { if failedNote { noteLine } }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("sidePanel")
     }
+
+    // MARK: Hiding the navigation picture (0.20)
+
+    /// The navigation picture, or the "Pages" tab where it hides. A swipe to the left on the picture slides
+    /// it away (it follows the finger and the keys grow into its room); a tap or a pull on the tab brings it back.
+    private func mapSlot(width full: CGFloat) -> some View {
+        let open = mapPull ?? (showMap ? full : 0)
+        let shown = min(1, max(0, open / full))
+        return ZStack(alignment: .leading) {
+            navigationPicture(width: full)
+                .frame(width: max(0, min(open, full)), alignment: .trailing)
+                .clipped()
+                .opacity(Double(min(1, shown * 1.6)))
+                .allowsHitTesting(mapPull == nil && showMap)
+            pagesTab
+                .opacity(Double(max(0, 1 - shown * 3)))
+                .allowsHitTesting(mapPull == nil && !showMap)
+        }
+        .frame(width: max(open, Self.tabWidth), alignment: .leading)
+        .frame(maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .simultaneousGesture(mapDrag(width: full))
+    }
+
+    private func mapDrag(width full: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 14, coordinateSpace: .global)
+            .onChanged { drag in
+                // Only a mostly sideways drag moves it; up and down still scroll the picture.
+                guard mapPull != nil || abs(drag.translation.width) > abs(drag.translation.height) * 1.3 else { return }
+                mapPull = CGFloat(MapSwipe.shownWidth(wasOpen: showMap, moved: drag.translation.width, width: full))
+            }
+            .onEnded { drag in
+                guard mapPull != nil else { return }
+                let open = MapSwipe.opensAfter(wasOpen: showMap, moved: drag.translation.width,
+                                               predicted: drag.predictedEndTranslation.width, width: full)
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                    showMap = open
+                    mapPull = nil
+                }
+            }
+    }
+
+    /// A thin purple tab at the left edge with "Pages" running up it: the navigation picture is hidden here.
+    private var pagesTab: some View {
+        Button {
+            withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = true }
+        } label: {
+            VStack(spacing: 10) {
+                Capsule().fill(.white.opacity(0.8)).frame(width: 3, height: 22)
+                Text("Pages")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .fixedSize()
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 14, height: 44)
+                Capsule().fill(.white.opacity(0.8)).frame(width: 3, height: 22)
+            }
+            .frame(width: Self.tabWidth)
+            .frame(maxHeight: .infinity)
+            .background(PhonePalette.fill("profiles"), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Pages")
+        .accessibilityHint("Shows the navigation picture again")
+        .accessibilityIdentifier("pagesTab")
+    }
+
+    /// The width of the "Pages" tab.
+    static let tabWidth: CGFloat = 22
 
     /// iPhone on its side (his pick, 0.16): beside the keys, in the free strip by the screen's edge, one column:
     /// the Mac's app on its side at the top; the lock, music and Settings at the bottom, Settings in the corner.
@@ -296,11 +400,12 @@ struct DeckScreen: View {
     private var mapColumn: some View {
         VStack(spacing: 0) {
             Color.clear.frame(height: max(0, keysFrame.minY))
-            navigationPicture(width: Self.mapWidth)
+            mapSlot(width: Self.mapWidth)
                 .frame(height: keysFrame.height > 0 ? keysFrame.height : nil)
             Spacer(minLength: 0)
         }
-        .frame(width: Self.mapWidth)
+        // Exactly as wide as the picture (or the tab), so the keys get all the rest.
+        .frame(width: max(mapPull ?? (showMap ? Self.mapWidth : 0), Self.tabWidth))
     }
 
     /// The width of the navigation picture beside the keys.

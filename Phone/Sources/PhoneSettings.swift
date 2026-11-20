@@ -216,7 +216,7 @@ struct PhoneSettings: View {
                 Toggle("Mac at a glance", isOn: $showGlance).accessibilityIdentifier("showGlance")
                 note("The app in front on the Mac, in one small pill.")
                 Toggle("Navigation picture", isOn: $showMap).accessibilityIdentifier("showMap")
-                note("Every page group and page as a small picture on the left. Tap one to go there.")
+                note("Every page group and page as a small picture on the left. Tap one to go there. Swipe it to the left to hide it; the purple \"Pages\" tab brings it back (a tap or a pull to the right).")
                 Toggle("Page dots", isOn: $showDots).accessibilityIdentifier("showDots")
                 Toggle("Keep the screen awake while connected", isOn: $stayAwake).accessibilityIdentifier("stayAwake")
                 Toggle("Warn when the battery is low", isOn: $warnBattery).accessibilityIdentifier("batteryWarningSwitch")
