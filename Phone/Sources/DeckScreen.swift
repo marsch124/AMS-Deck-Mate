@@ -792,12 +792,15 @@ struct DeckScreen: View {
 
     // MARK: Music
 
-    /// One small music mark with no fill (his asks, 0.19.1 and 0.21); the word under it says "Playing" while something plays. A tap opens the music plate.
+    /// One small music mark: the note in a thin green ring that is never filled (his ask, 0.27 — what he had
+    /// meant in 0.19.1 and 0.21 too); the word under it says "Playing" while something plays. A tap opens the music plate.
     private func musicButton(_ now: PhoneLink.MacNow) -> some View {
         Button { showMusicPlate = true } label: {
-            // His ask (0.21): no fill at all, like the lock and the gear beside it.
-            PhoneIcon(name: "iconMusic", size: isPad ? 22 : 19)
+            PhoneIcon(name: "iconMusic", size: isPad ? 18 : 16)
                 .foregroundStyle(PhonePalette.part("settings"))
+                .frame(width: Self.musicRing(isPad), height: Self.musicRing(isPad))
+                // The subtle frame: a 1-point line at half strength, no fill behind the note.
+                .overlay(Circle().strokeBorder(PhonePalette.part("settings").opacity(0.5), lineWidth: 1))
                 .frame(height: isPad ? 34 : 30)
                 .worded(now.playing ? "Playing" : "Music")
                 .contentShape(Rectangle())
@@ -811,6 +814,9 @@ struct DeckScreen: View {
                 .presentationBackground(PhonePalette.card)
         }
     }
+
+    /// How wide the thin ring round the music note is.
+    static func musicRing(_ pad: Bool) -> CGFloat { pad ? 30 : 26 }
 
     /// What is playing on the Mac, with play or pause, next, quieter and louder.
     private func musicPlate(_ now: PhoneLink.MacNow) -> some View {

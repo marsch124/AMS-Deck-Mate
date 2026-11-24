@@ -464,7 +464,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Settings, Showing: switch "Mac at a glance" (default on, stored on that device).
 
 ## 28. The music button and plate (Mac 0.5, iPhone and iPad 0.7; button since 0.8.1)
-- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button (since 0.13, with the iPad or iPhone on its side, at the bottom left, section 43), shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. It is filled green while something is playing. A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it. Since 0.8.2 the plate has a solid background (the card colour), not see-through glass.
+- Since 0.8.1 (before, a strip above the keys): one small round button at the top right of the key screen, beside the settings button (since 0.13, with the iPad or iPhone on its side, at the bottom left, section 43), shown when the switch "Music button" is on (default on, stored on that device; the stored setting is the same one that was called "Music strip") and the Mac is at 0.5. Since 0.27 its note sits inside a thin green ring that is never filled (section 132). A tap opens a small plate with: song and artist, play or pause, next, quieter, the Mac's volume in percent, louder. A tap outside the plate closes it. Since 0.8.2 the plate has a solid background (the card colour), not see-through glass.
 - Spotify and Apple Music. The Mac listens for the change notices both send when the song or the play state changes, so the plate says "Nothing playing yet" until the next change of song or pause after the Mac app has started.
 - Buttons send `music(command:)`: `playPause`, `next`, `volumeUp`, `volumeDown`. Play or pause and next are done as the Mac's music keys, so they need the same one-time Accessibility permission. Volume moves 6 points per tap and needs no permission.
 - Not yet tried: play or pause from the plate.
@@ -486,7 +486,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 Made after 0.7 on a real iPad, where the top was too crowded. Only the key screen changes; the Mac app is unchanged (0.6, build 8).
 - Heading: the place (for example "Mail · Mail Main") is centred at the top and larger: large title size and bold on the iPad, title size on the iPhone. Since 0.10 it is only a heading: no menu on a tap and no lock drawing beside it (section 34).
 - Connection: one small coloured dot at the top left, instead of the line "Connected to <Mac>". Green: connected (since 0.15 the same green as the settings gear; before, its own brighter green). Amber: looking, connecting, or waiting for the Mac to allow it. Red: the Mac said no. A tap on the dot opens a small card that says it in words (for example "Connected to the Mac") and what the colours mean. Since 0.8.2 the card has a solid background (the card colour), not see-through glass. The big message card in the middle while there is no Mac is unchanged.
-- Music: one small round button at the top right, beside the settings button (since 0.13 at the bottom left on its side, section 43); the plate it opens is in section 28. The Settings switch is called "Music button".
+- Music: one small button (since 0.27 a note in a thin green ring) at the top right, beside the settings button (since 0.13 at the bottom left on its side, section 43); the plate it opens is in section 28. The Settings switch is called "Music button".
 - The Mac at a glance: one very small centred line at the very bottom, under the page dots (section 27); 0.13 had two pills, since 0.14 one small pill with the app in front, green since 0.15 (section 43). Same switch.
 - The iPad's own low battery warning ("Battery 18 % – plug in") sits centred under the heading.
 - Test: the phone screen test now also opens the music plate and the connection card (found by their identifiers).
@@ -1101,7 +1101,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Key size.** Measured on simulators, sample keys, favourites row on, picture hidden. iPad: keys from about 179 to about 220 points, favourites about 128 points. iPhone: keys from about 68 to about 96 points, favourites about 54 points. (Section 125 gave the sizes of 0.20.)
 - **Texts.** What's new 0.21, How it works (parts "The favourites row", "The navigation picture" and "Settings") and "Signs in this app" (changed "Pages" tab line, new line "Round key: a favourite") are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
-- **Small buttons (0.21, his ask).** The music button has no background: only the music mark (22 pt iPad, 19 pt iPhone) in the Settings green with its word under it, like the lock. The gear is drawn at the same size as the lock and music marks (22 / 19 pt; was 30 / 24), so its line is as thin as theirs.
+- **Small buttons (0.21, his ask).** The music button has no background: only the music mark (22 pt iPad, 19 pt iPhone; since 0.27 inside a thin ring, section 132) in the Settings green with its word under it, like the lock. The gear is drawn at the same size as the lock and music marks (22 / 19 pt; was 30 / 24), so its line is as thin as theirs.
 
 ## 127. Bigger "Pages" word, the picture hides by itself (iPhone and iPad 0.22 build 28)
 - **Version.** Before: iPhone and iPad app 0.21 (build 27). Now: 0.22 (build 28). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
@@ -1154,4 +1154,13 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Unchanged.** A plain tap on the tab still brings the picture back; holding about half a second still opens the list of page groups (section 129); a swipe to the left or right on the tab still pulls the picture out.
 - **Hint at night.** The hint "Hold for groups" (section 130) stays the tab's purple by day; with a dark background it is a lighter purple, so it reads well on the dark iPad screen. Its timing (8 seconds, first 3 times, never after the list was used) is unchanged.
 - **Texts.** What's new 0.26, How it works (part "The navigation picture") and "Signs in this app" (the "Pages" tab line and the "Hold for groups" line) are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 132. Music button: note in a thin green ring (iPhone and iPad 0.27 build 33)
+- **Version.** Before: iPhone and iPad app 0.26 (build 32). Now: 0.27 (build 33). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
+- **Before (0.21 to 0.26).** The music note stood alone, with no ring and no fill, 22 pt on the iPad and 19 pt on the iPhone. (Earlier still: a filled green circle, then a light green circle, section 123 and 0.19.1 to 0.20.)
+- **Now.** The note sits inside a thin green ring: a 1-pt line in the Settings green at half strength (colour "settings", opacity 0.5), never filled, the same by day and by night, and the same whether music plays or not. Ring 30 pt across on the iPad, 26 pt on the iPhone. The note inside is 18 pt on the iPad and 16 pt on the iPhone (before 22 / 19).
+- **Unchanged.** The word under the button: "Music", or "Playing" while something plays. A tap opens the music plate (section 28). Places: bottom left on an iPad on its side, the edge column on an iPhone on its side, top right when held upright. The lock and the gear keep their look (0.21).
+- **Sign.** One meaning only: note in a thin green ring = Music. No other mark in the app uses a ring for something else.
+- **Texts.** What's new 0.27, How it works (parts "Settings" and "The Mac at a glance and the music button") and "Signs in this app" (the music line) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
