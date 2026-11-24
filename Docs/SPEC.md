@@ -439,6 +439,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - "Hide after a key is pressed" applies to the action that ran, as in section 3.
 
 ## 25. Favourites row (Mac 0.5, iPhone and iPad 0.7)
+- **Later change.** Since 0.28 on an iPad on its side with several pages at once: a column at the right of the pages, as big as the keys (section 133).
 - 5 places, 0 to 4, that stay in place on every page and in every page group. Stored in `deck.json` as `favourites` on the Deck. They belong to the whole setup, not to a page group or a page.
 - Any action except a folder or Back. A favourite can also have a long press (`held`).
 - Set in Set up keys: a row "Favourites" under the 15 keys. Click one and edit it like any key. Copy and Paste work on favourites; dragging does not.
@@ -470,6 +471,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Not yet tried: play or pause from the plate.
 
 ## 29. The navigation picture (Mac 0.6, iPad 0.8, iPhone on its side 0.10)
+- **Later change.** Since 0.28 on an iPad on its side with several pages at once: opened as a plate by the "Pages" button (section 133).
 - Where: on an iPad or, since 0.10, an iPhone held on its side (wider than tall). The keys sit on the right and the navigation picture on the left, in the side panel (section 34). An iPad or iPhone held upright shows no picture, because there is no room on the left.
 - What it shows: every page group, with every one of its pages and folders, each as a small picture of its 15 keys with the page's name under it. A folder shows its folder mark. The page showing now has a blue frame. Since 0.16 each page group sits in its own framed panel with its name as a ribbon (section 45); before 0.16 the name was a plain small word above the pages and was highlighted for the active group. The list scrolls when it is long.
 - Pictures: drawn by the Mac, PNG, 166 x 98 px each, and sent when the setup changes (and when a device that announced version 4 connects).
@@ -1049,6 +1051,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - The iPhone and iPad app is not changed (0.18, build 23).
 
 ## 121. Several pages at once (iPhone and iPad 0.19 build 24, Mac 0.17 build 26)
+- **Later change.** Since 0.28 an iPad on its side has its own layout for it (section 133).
 - **Purpose.** For using the iPhone or iPad without the Stream Deck box: more keys on one screen.
 - **Switch.** Phone Settings, Showing, "Several pages at once". Off at first. Remembered on the device.
 - **Layout.** Off: one page of 15 keys, as before. On: the iPhone shows 2 pages side by side (10 keys across by 3 down, 30 keys); the iPad shows 4 pages, two above and two below (60 keys). Each page has its own small name above it.
@@ -1164,3 +1167,22 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Sign.** One meaning only: note in a thin green ring = Music. No other mark in the app uses a ring for something else.
 - **Texts.** What's new 0.27, How it works (parts "Settings" and "The Mac at a glance and the music button") and "Signs in this app" (the music line) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 133. Biggest keys: iPad on its side with several pages at once (iPhone and iPad 0.28 build 34)
+- **Version.** Before: iPhone and iPad app 0.27 (build 33). Now: 0.28 (build 34). It works with the Mac app as it is (Mac 0.17.1, build 27); no Mac update is needed and the link version is unchanged.
+- **Aim.** The owner's words: keys as big as possible is priority one; nothing may be hidden; the extras stay in sight but small. He picked "layout 5" from a picture.
+- **When.** Only an iPad held on its side (wider than tall) with the Settings switch "Several pages at once" on (section 121). Unchanged: the iPhone (one page already fills its height), an iPad held upright, an iPad on its side with the switch off, the Mac app and the link version.
+- **Before (0.27).** A large heading on top; the "Pages" tab or the navigation picture at the left; the 4 pages two above two; the favourites row under them; a bottom bar with Settings / Music / Private and the Mac's app pill. On an iPad mini the keys were about 50 pt and the right 40 % of the screen was empty.
+- **Now: pages.** The pages fill the screen, two above two, each with its name above it (name height 16 pt, gap 14 pt between pages). The keys stay square: about 93 pt on an iPad mini (before about 50), about 114 pt on a 13-inch iPad.
+- **Now: favourites.** The five round favourites (section 126) stand in one more column at the right of the pages, exactly as big as the keys, under the small word "Favourites": three beside the upper pages, two beside the lower pages.
+- **Now: "Pages" button.** In the sixth place of that column, under the two lower favourites. A square as big as a key, not filled: card-coloured, purple frame, the purple word "Pages" and the name of the page group under it. A tap opens the navigation picture (section 29) as a small plate over the keys; a tap on a page there goes to it and the plate closes. A hold opens the list of page groups (section 129). The "Pages" tab at the left edge (sections 125 to 131) and the picture beside the keys are not used in this layout.
+- **Now: the thin line.** Everything else is one line 30 pt high under the keys. Left: the green link dot with the word "Mac" beside it and the Mac's app pill. Middle: the heading (page group · page) in small bold type. Right: Settings, Music and Private, each a small mark with its word beside it (before: under it). The Music note keeps its thin green ring, 26 pt here (section 132).
+- **Not shown here.** No page dots and no big clock (no free room; the page names above the pages show where you are). The note on what the last tap did, and the battery warning, float for a moment at the top over the keys.
+- **Two pages only.** A page group that shows two pages: the pages stand side by side and the favourites plus the "Pages" button stand in a row under them (six places), because that gives bigger keys.
+- **No favourites.** Favourites switched off or none set: no extra column; the "Pages" button is a small purple-framed button in the thin line.
+- **Swipes.** On the keys as before: sideways = pages, up or down = page group.
+- **Rule in Core.** `BigKeys` in `Core/Sources/DeckMateCore/MapSwipe.swift`: `BigKeys.plan(width:height:gap:pages:favourites:)` returns across, down, the key side and where the extras go (column, row or none). Constants: between = 14, nameHeight = 16, lineHeight = 30.
+- **Tests.** One data test `BigKeysTests`; one screen test `testBigKeysOnItsSide` (identifiers `severalPages`, `favouritesColumn` or `favouritesRow`, `pagesKey`, `pagesPlate`, `bigKeysLine`).
+- **Signs.** New: the purple-framed square "Pages" = opens the picture of all pages; hold = page groups. It is the same "Pages" as the purple tab (same colour, same word, same two ways to open the picture and the list), in a layout where the tab is not used. A round key is still a favourite.
+- **Texts.** What's new 0.28, How it works (parts "Settings", "The navigation picture", "Several pages at once", "The favourites row", "The Mac at a glance and the music button") and "Signs in this app" are updated.
+- **Not yet proven.** Nothing here was run on a real iPad.

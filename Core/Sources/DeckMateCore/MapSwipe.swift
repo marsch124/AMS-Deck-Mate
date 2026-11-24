@@ -77,3 +77,49 @@ public enum FavouriteColumn {
     /// Width over height of the keys with the column, for fitting the box.
     public static let ratio = 1.9
 }
+
+/// "Several pages at once" on an iPad held on its side (his pick, 0.28, "layout 5"): the keys come first.
+/// The pages fill the screen; the five favourites and the "Pages" button stand in one more column at the
+/// right, as big as the keys (or, with one row of pages, in a row under them); all the rest is one thin line.
+public enum BigKeys {
+    /// The room between two pages, and between the pages and the favourites.
+    public static let between = 14.0
+    /// The height of a page's name above its keys.
+    public static let nameHeight = 16.0
+    /// The height of the thin line under the keys (dot, heading, the three marks).
+    public static let lineHeight = 30.0
+
+    /// Where the favourites and the "Pages" button stand: in a column at the right (six places beside two
+    /// rows of pages), in a row under one row of pages, or nowhere (no favourites to show).
+    public enum Extras: Sendable { case column, row, none }
+
+    public struct Plan: Equatable, Sendable {
+        /// Pages side by side, and rows of pages.
+        public let across: Int
+        public let down: Int
+        /// The side of one key, and of one favourite.
+        public let side: Double
+        public let extras: Extras
+    }
+
+    /// The layout that gives the biggest square keys for `pages` pages in width × height; nil for fewer
+    /// than 2 pages or more than 4 (then the usual screen shows).
+    public static func plan(width: Double, height: Double, gap: Double, pages: Int, favourites: Bool) -> Plan? {
+        guard (2...4).contains(pages) else { return nil }
+        var best: Plan?
+        for down in 1...2 {
+            let across = (pages + down - 1) / down
+            // One page above another only when both rows are used.
+            guard down == 1 || pages > across * (down - 1) else { continue }
+            let extras: Extras = !favourites ? .none : (down == 2 ? .column : .row)
+            let a = Double(across), d = Double(down)
+            let byWidth = (width - a * 4 * gap - (a - 1) * between - (extras == .column ? between : 0))
+                / (5 * a + (extras == .column ? 1 : 0))
+            let byHeight = (height - d * (nameHeight + 3 * gap) - (d - 1) * between - (extras == .row ? between : 0))
+                / (3 * d + (extras == .row ? 1 : 0))
+            let side = max(10, min(byWidth, byHeight).rounded(.down))
+            if side > (best?.side ?? 0) { best = Plan(across: across, down: down, side: side, extras: extras) }
+        }
+        return best
+    }
+}

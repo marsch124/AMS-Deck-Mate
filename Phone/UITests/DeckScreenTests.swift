@@ -205,6 +205,35 @@ final class DeckScreenTests: XCTestCase {
         }
     }
 
+    /// 0.28: an iPad on its side with several pages at once puts the keys first: the pages fill the screen,
+    /// the favourites stand in a column as big as the keys, "Pages" opens the navigation picture as a plate.
+    func testBigKeysOnItsSide() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "iPad only")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { XCUIDevice.shared.orientation = .portrait }
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-wide", "-showFavourites", "YES"]
+        app.launch()
+
+        let any = app.descendants(matching: .any)
+        XCTAssertTrue(any["severalPages"].waitForExistence(timeout: 10))
+        XCTAssertTrue(any["bigKeysLine"].exists)
+        let key = any["key0"].frame, favourite = any["favourite0"].frame, screen = app.frame
+        // The keys are big (they were about 50 points on an iPad mini, 0.27) and a favourite is as big as a key.
+        XCTAssertGreaterThan(key.width, 85)
+        XCTAssertEqual(favourite.width, key.width, accuracy: 1)
+        // The favourites stand right of the last key of the upper pages, and the whole width is used.
+        XCTAssertGreaterThan(favourite.minX, any["key19"].frame.maxX)
+        XCTAssertGreaterThan(favourite.maxX, screen.width * 0.93)
+        // The thin line is under the keys, with Settings in it.
+        XCTAssertGreaterThan(app.buttons["settingsButton"].frame.minY, any["key59"].frame.maxY)
+        snap(app, "bigkeys")
+        // "Pages" opens the navigation picture as a plate; a page in it goes there and closes it.
+        any["pagesKey"].tap()
+        XCTAssertTrue(any["pagesPlate"].waitForExistence(timeout: 5))
+        snap(app, "bigkeys-pages")
+    }
+
     /// A picture for the eye, only when the run asks for it (TEST_RUNNER_DECK_SHOTS=<folder>).
     private func snap(_ app: XCUIApplication, _ name: String) {
         guard let folder = ProcessInfo.processInfo.environment["DECK_SHOTS"] else { return }

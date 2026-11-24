@@ -74,6 +74,7 @@ struct DeckScreen: View {
     @State private var showStatus = false
     @State private var showMusicPlate = false
     @State private var showPrivate = false
+    @State private var showPagesPlate = false
     /// Where the keys sit in the row they share with the navigation picture, so the plate lines up with them.
     @State private var keysFrame = CGRect.zero
     /// The camera cut-out is on the right (iPhone turned the other way): the column beside the keys moves left.
@@ -91,6 +92,14 @@ struct DeckScreen: View {
             && (isPad || link.tiles.count < 2)
             && (onItsSide || CommandLine.arguments.contains("-forceMap"))
     }
+    /// iPad on its side with several pages at once (his pick, 0.28): the keys fill the screen, the favourites
+    /// and the "Pages" button stand in one more column, everything else is one thin line under them.
+    private var bigKeys: Bool {
+        isPad && (onItsSide || CommandLine.arguments.contains("-forceMap")) && connected
+            && (2...4).contains(link.tiles.count)
+    }
+    /// The height of the small marks: lower in the thin line of the big-keys screen.
+    private var markHeight: CGFloat { bigKeys ? 26 : (isPad ? 34 : 30) }
     /// The width of the navigation picture while a finger drags it (nil when no finger is on it).
     @State private var mapPull: CGFloat?
     /// iPhone on its side with the picture hidden: the battery line and the note sit over the keys instead.
@@ -150,6 +159,8 @@ struct DeckScreen: View {
                             .offset(x: (islandTrailing ? -1 : 1) * (Self.edgeWidth + Self.edgeGap - edgeReserve),
                                     y: max(keysFrame.minY, 0))
                     }
+                } else if bigKeys {
+                    bigKeysScreen
                 } else {
                     VStack(spacing: 8) {
                         topBar.padding(.leading, inWindow ? 76 : 0)
@@ -163,8 +174,8 @@ struct DeckScreen: View {
                     }
                 }
             }
-            .padding(.horizontal, isPad ? 20 : 12)
-            .padding(.vertical, isPad ? 14 : 8)
+            .padding(.horizontal, bigKeys ? 8 : (isPad ? 20 : 12))
+            .padding(.vertical, bigKeys ? 4 : (isPad ? 14 : 8))
             .opacity(resting || dark ? 0 : 1)
             if dark { asleepScreen } else if resting { restingClock }
         }
@@ -183,7 +194,7 @@ struct DeckScreen: View {
             let due = PhonePrefs.rests(afterMinutes: minutes, idle: now.timeIntervalSince(lastTouch))
             if due != resting, due { withAnimation(.easeInOut(duration: 0.6)) { resting = true } }
             // His pick (0.22): a minute without a touch, the picture slides away by itself, like a swipe.
-            if mapPlace, mapPull == nil,
+            if mapPlace, !bigKeys, mapPull == nil,
                MapSwipe.hidesBySelf(on: mapHidesBySelf, shown: showMap, idle: now.timeIntervalSince(lastTouch),
                                     after: Double(mapQuietSeconds)) {
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = false }
@@ -599,17 +610,7 @@ struct DeckScreen: View {
                            alignment: Self.keysAlignment(keysPlace, leading: column))
                     .opacity(connected ? 1 : 0.35)
                     .contentShape(Rectangle())
-                    .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
-                        // Sideways = pages; up or down = the next or previous page group (not locked since 0.10.1).
-                        let across = drag.translation.width
-                        let along = drag.translation.height
-                        if abs(across) > 60, abs(across) > abs(along) * 1.5 {
-                            link.page(across < 0 ? 1 : -1)
-                        } else if swipeProfiles, abs(along) > 60, abs(along) > abs(across) * 1.5,
-                                  let next = link.status?.profile(after: along < 0 ? 1 : -1) {
-                            link.swipeProfile(next)
-                        }
-                    })
+                    .gesture(keysSwipe)
             }
             .aspectRatio(favColumn && link.tiles.count < 2 ? FavouriteColumn.ratio : (favouritesShow ? 5.0 / 4.1 : 5.0 / 3.0),
                          contentMode: .fit)
@@ -620,6 +621,183 @@ struct DeckScreen: View {
         .overlay(alignment: .top) {
             if !note, !phoneSideways, failedNote { noteLine.offset(y: -36) }
         }
+    }
+
+    /// A swipe on the keys: sideways = pages; up or down = the next or previous page group (not locked since 0.10.1).
+    private var keysSwipe: some Gesture {
+        DragGesture(minimumDistance: 30).onEnded { drag in
+            let across = drag.translation.width
+            let along = drag.translation.height
+            if abs(across) > 60, abs(across) > abs(along) * 1.5 {
+                link.page(across < 0 ? 1 : -1)
+            } else if swipeProfiles, abs(along) > 60, abs(along) > abs(across) * 1.5,
+                      let next = link.status?.profile(after: along < 0 ? 1 : -1) {
+                link.swipeProfile(next)
+            }
+        }
+    }
+
+    // MARK: Big keys (0.28)
+
+    /// iPad on its side, several pages at once (his pick "layout 5"): the pages as large as the screen allows,
+    /// the favourites and "Pages" as big as the keys beside (or under) them, one thin line for all the rest.
+    private var bigKeysScreen: some View {
+        VStack(spacing: 6) {
+            GeometryReader { box in
+                let gap = keyGap.points
+                let plan = BigKeys.plan(width: box.size.width, height: box.size.height, gap: gap,
+                                        pages: link.tiles.count, favourites: favouritesShow)
+                let side = CGFloat(plan?.side ?? 40) * keySize.scale
+                let between = CGFloat(BigKeys.between)
+                let pages = WideGrid(link: link, side: side, gap: gap, corner: keyShape.corner,
+                                     across: plan?.across ?? 2, between: between)
+                Group {
+                    switch plan?.extras ?? .none {
+                    case .column:
+                        HStack(alignment: .top, spacing: between) {
+                            pages
+                            extrasColumn(side: side, gap: gap)
+                        }
+                    case .row:
+                        VStack(spacing: between) {
+                            pages
+                            extrasRow(side: side, gap: gap)
+                        }
+                    case .none:
+                        pages
+                    }
+                }
+                .frame(width: box.size.width, height: box.size.height,
+                       alignment: Self.keysAlignment(keysPlace, leading: false))
+                .contentShape(Rectangle())
+                .gesture(keysSwipe)
+            }
+            // What the last tap did and the battery warning float over the top of the keys for a moment.
+            .overlay(alignment: .top) {
+                VStack(spacing: 4) {
+                    if let battery {
+                        batteryLine(battery)
+                            .padding(.horizontal, 10).padding(.vertical, 4)
+                            .background(PhonePalette.card, in: Capsule())
+                    }
+                    if (showNote || failedNote), link.note != nil { noteLine }
+                }
+                .allowsHitTesting(false)
+            }
+            bigKeysLine
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("bigKeysScreen")
+    }
+
+    /// The column right of the pages: "Favourites" over three of them beside the upper pages, two more and
+    /// the "Pages" button beside the lower pages, each in line with a row of keys.
+    private func extrasColumn(side: CGFloat, gap: CGFloat) -> some View {
+        VStack(spacing: CGFloat(BigKeys.between)) {
+            ForEach(0..<2, id: \.self) { half in
+                VStack(alignment: .leading, spacing: gap) {
+                    Text(half == 0 ? "Favourites" : " ")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .frame(width: side, height: CGFloat(BigKeys.nameHeight), alignment: .leading)
+                    VStack(spacing: gap) {
+                        ForEach(0..<3, id: \.self) { row in
+                            let place = half * 3 + row
+                            if place < PhoneLink.favouriteCount { favouriteKey(place, side: side) } else { pagesKey(side: side) }
+                        }
+                    }
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("favouritesColumn")
+    }
+
+    /// One row of pages: the favourites and the "Pages" button in a row under them.
+    private func extrasRow(side: CGFloat, gap: CGFloat) -> some View {
+        HStack(spacing: gap) {
+            ForEach(0..<PhoneLink.favouriteCount, id: \.self) { favouriteKey($0, side: side) }
+            pagesKey(side: side)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("favouritesRow")
+    }
+
+    /// "Pages", as big as a key but only a frame, so it never looks like one of his own keys: a tap opens the
+    /// navigation picture as a plate over the keys, holding it lists the page groups.
+    private func pagesKey(side: CGFloat, small: Bool = false) -> some View {
+        let shape = RoundedRectangle(cornerRadius: small ? 7 : side * keyShape.corner, style: .continuous)
+        let colour = PhonePalette.part("profiles")
+        return VStack(spacing: 2) {
+            Text("Pages").font(small ? .footnote.weight(.bold) : .headline.weight(.bold))
+            if !small, let group = currentGroupName {
+                Text(group).font(.caption2.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.7).opacity(0.85)
+            }
+            // The screen itself says what holding does (his sign rule).
+            if !small, side >= 80 {
+                Text("Hold: groups").font(.caption2).lineLimit(1).minimumScaleFactor(0.7).opacity(0.7)
+                    .accessibilityIdentifier("pagesKeyHint")
+            }
+        }
+        .foregroundStyle(colour)
+        .padding(.horizontal, small ? 10 : 4)
+        .frame(width: small ? nil : side, height: small ? 24 : side)
+        .background(PhonePalette.card, in: shape)
+        .overlay(shape.strokeBorder(colour, lineWidth: small ? 1.5 : 2))
+        .contentShape(shape)
+        .onTapGesture {
+            snapFeel()
+            showPagesPlate = true
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(currentGroupName.map { "Pages, \($0)" } ?? "Pages")
+        .accessibilityHint("Shows all pages. Hold for a list of page groups.")
+        .accessibilityAction { showPagesPlate = true }
+        .accessibilityIdentifier("pagesKey")
+        .popover(isPresented: $showPagesPlate) {
+            navigationPicture(width: 320) { showPagesPlate = false }
+                .frame(height: 440)
+                .presentationCompactAdaptation(.popover)
+                .presentationBackground(PhonePalette.card)
+                .accessibilityIdentifier("pagesPlate")
+        }
+        .contextMenu {
+            ForEach(link.map, id: \.id) { group in
+                if let first = group.pages.first {
+                    Button(group.id == link.status?.current ? "\(group.name) (here)" : group.name) {
+                        link.go(group: group.id, page: first.id)
+                    }
+                    .accessibilityIdentifier("pagesKeyGroup-\(group.id)")
+                }
+            }
+        }
+    }
+
+    /// The thin line under the keys: the link dot and the Mac's app at the left, the heading in the middle,
+    /// Settings, music and the lock at the right, each with its word beside it.
+    private var bigKeysLine: some View {
+        ZStack {
+            placeLine.padding(.horizontal, 330)
+            HStack(spacing: 10) {
+                statusDot
+                if showGlance, link.newMac, let mac = link.mac, !mac.app.isEmpty {
+                    glancePill(icon: nil, words: mac.app, part: "settings")
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Mac: \(mac.app)")
+                        .accessibilityIdentifier("macGlance")
+                }
+                if !favouritesShow { pagesKey(side: 0, small: true) }
+                Spacer(minLength: 8)
+                settingsButton
+                if showMusic, link.newMac, let now = link.mac { musicButton(now) }
+                if link.isPrivate { privateLock }
+            }
+        }
+        .frame(height: CGFloat(BigKeys.lineHeight))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("bigKeysLine")
     }
 
     /// The Mac's screen sleeps: this one goes black too.
@@ -714,9 +892,7 @@ struct DeckScreen: View {
         let stack = column ? AnyLayout(VStackLayout(spacing: gap)) : AnyLayout(HStackLayout(spacing: gap))
         return stack {
             ForEach(0..<PhoneLink.favouriteCount, id: \.self) { index in
-                KeyView(index: index, key: link.favourites[index], side: side, corner: 0.5,
-                        lit: link.litFavourites.contains(index), name: "favourite",
-                        hold: { link.favourite(index, long: true) }) { link.favourite(index, long: false) }
+                favouriteKey(index, side: side)
                     .matchedGeometryEffect(id: "favourite\(index)", in: keysSpace)
             }
         }
@@ -724,10 +900,17 @@ struct DeckScreen: View {
         .accessibilityIdentifier(column ? "favouritesColumn" : "favouritesRow")
     }
 
+    /// One favourite: round, wherever it stands.
+    private func favouriteKey(_ index: Int, side: CGFloat) -> some View {
+        KeyView(index: index, key: link.favourites[index], side: side, corner: 0.5,
+                lit: link.litFavourites.contains(index), name: "favourite",
+                hold: { link.favourite(index, long: true) }) { link.favourite(index, long: false) }
+    }
+
     // MARK: Navigation picture
 
     /// Every page group with its pages as small pictures; the page showing has a frame; a tap goes there.
-    private func navigationPicture(width: CGFloat) -> some View {
+    private func navigationPicture(width: CGFloat, picked: (() -> Void)? = nil) -> some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(link.map, id: \.id) { group in
@@ -750,7 +933,7 @@ struct DeckScreen: View {
                                   alignment: .leading, spacing: 8) {
                             ForEach(group.pages, id: \.id) { page in
                                 let current = here && page.id == link.status?.pageID
-                                Button { link.go(group: group.id, page: page.id) } label: {
+                                Button { link.go(group: group.id, page: page.id); picked?() } label: {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Group {
                                             if let image = page.picture.flatMap({ UIImage(data: $0) }) {
@@ -796,13 +979,13 @@ struct DeckScreen: View {
     /// meant in 0.19.1 and 0.21 too); the word under it says "Playing" while something plays. A tap opens the music plate.
     private func musicButton(_ now: PhoneLink.MacNow) -> some View {
         Button { showMusicPlate = true } label: {
-            PhoneIcon(name: "iconMusic", size: isPad ? 18 : 16)
+            PhoneIcon(name: "iconMusic", size: bigKeys ? 15 : (isPad ? 18 : 16))
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(width: Self.musicRing(isPad), height: Self.musicRing(isPad))
+                .frame(width: bigKeys ? 26 : Self.musicRing(isPad), height: bigKeys ? 26 : Self.musicRing(isPad))
                 // The subtle frame: a 1-point line at half strength, no fill behind the note.
                 .overlay(Circle().strokeBorder(PhonePalette.part("settings").opacity(0.5), lineWidth: 1))
-                .frame(height: isPad ? 34 : 30)
-                .worded(now.playing ? "Playing" : "Music")
+                .frame(height: markHeight)
+                .worded(now.playing ? "Playing" : "Music", beside: bigKeys)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -883,10 +1066,10 @@ struct DeckScreen: View {
     private var settingsButton: some View {
         Button { showSettings = true } label: {
             // His ask (0.21): not bold — the same size as the lock and music marks, so the same thin line.
-            PhoneIcon(name: "iconSettings", size: isPad ? 22 : 19)
+            PhoneIcon(name: "iconSettings", size: bigKeys ? 18 : (isPad ? 22 : 19))
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(height: isPad ? 34 : 30)
-                .worded("Settings")
+                .frame(height: markHeight)
+                .worded("Settings", beside: bigKeys)
                 .contentShape(Rectangle())
         }
         .accessibilityLabel("Settings")
@@ -896,10 +1079,10 @@ struct DeckScreen: View {
     /// On its side: the lock (the line to the Mac is private) by Settings and music; a tap says it in words.
     private var privateLock: some View {
         Button { showPrivate = true } label: {
-            PhoneIcon(name: "iconLock", size: isPad ? 21 : 18)
+            PhoneIcon(name: "iconLock", size: bigKeys ? 17 : (isPad ? 21 : 18))
                 .foregroundStyle(PhonePalette.part("settings"))
-                .frame(height: isPad ? 34 : 30)
-                .worded("Private")
+                .frame(height: markHeight)
+                .worded("Private", beside: bigKeys)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -922,8 +1105,8 @@ struct DeckScreen: View {
         Button { showStatus = true } label: {
             Circle().fill(statusColour)
                 .frame(width: isPad ? 16 : 13, height: isPad ? 16 : 13)
-                .frame(height: isPad ? 34 : 30)
-                .worded("Mac")
+                .frame(height: markHeight)
+                .worded("Mac", beside: bigKeys)
                 // Upright, a small lock beside the dot: the line to the Mac is private.
                 // (On its side the lock sits bottom left, by Settings and music.)
                 .overlay(alignment: .trailing) {
@@ -995,7 +1178,7 @@ struct DeckScreen: View {
     /// The place, only as a heading (picking or locking a page group is in Settings since 0.10).
     private var placeLine: some View {
         Text(link.place.isEmpty ? "Deck Mate" : link.place)
-            .font(isPad ? .largeTitle.weight(.bold) : (phoneSideways ? .title3.weight(.bold) : .title2.weight(.bold)))
+            .font(bigKeys ? .headline.weight(.bold) : isPad ? .largeTitle.weight(.bold) : (phoneSideways ? .title3.weight(.bold) : .title2.weight(.bold)))
             .foregroundStyle(.primary)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
@@ -1213,15 +1396,19 @@ private struct WideGrid: View {
     /// How many pages sit side by side (the rest go below).
     var across = 2
 
+    /// The room between two pages; nil = the usual one for this key gap.
+    var between: CGFloat?
+
     static let nameHeight: CGFloat = 16
     static func between(_ gap: CGFloat) -> CGFloat { max(14, gap * 2.5) }
 
     var body: some View {
         let names = link.tiles
         let across = max(1, min(across, names.count))
-        VStack(spacing: Self.between(gap)) {
+        let between = between ?? Self.between(gap)
+        VStack(spacing: between) {
             ForEach(0..<(names.count + across - 1) / across, id: \.self) { row in
-                HStack(alignment: .top, spacing: Self.between(gap)) {
+                HStack(alignment: .top, spacing: between) {
                     ForEach(0..<across, id: \.self) { column in
                         let page = row * across + column
                         if page < names.count {
@@ -1316,12 +1503,24 @@ private struct KeysFrameKey: PreferenceKey {
 
 private extension View {
     /// A small button's word under its mark (his rule: a button that is only a symbol gets a word).
-    func worded(_ word: String) -> some View {
-        VStack(spacing: 1) {
-            self
-            Text(word).font(.caption2.weight(.semibold)).foregroundStyle(PhonePalette.part("settings")).lineLimit(1)
-                .fixedSize()
+    /// `beside`: in the thin line of the big-keys screen the word stands beside the mark, not under it.
+    @ViewBuilder
+    func worded(_ word: String, beside: Bool = false) -> some View {
+        if beside {
+            HStack(spacing: 5) {
+                self
+                Text(word).font(.caption.weight(.semibold)).foregroundStyle(PhonePalette.part("settings")).lineLimit(1)
+                    .fixedSize()
+            }
+            .frame(minHeight: 30)
+            .padding(.horizontal, 5)
+        } else {
+            VStack(spacing: 1) {
+                self
+                Text(word).font(.caption2.weight(.semibold)).foregroundStyle(PhonePalette.part("settings")).lineLimit(1)
+                    .fixedSize()
+            }
+            .frame(minWidth: 44, minHeight: 44)
         }
-        .frame(minWidth: 44, minHeight: 44)
     }
 }
