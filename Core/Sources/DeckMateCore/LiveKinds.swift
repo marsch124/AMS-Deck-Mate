@@ -116,7 +116,10 @@ public enum SwitchKeys {
         case dark: return isOn ? "Dark" : "Light"
         case mute: return isOn ? "Muted" : "Sound on"
         case awake: return isOn ? "Awake" : "May sleep"
-        default: return isOn ? "On" : "Off"
+        default:
+            // A fan key says its choice whether it is on or not: the switch mark says which is on.
+            if let choice = FanKeys.choice(of: target) { return FanKeys.words(choice) }
+            return isOn ? "On" : "Off"
         }
     }
 }

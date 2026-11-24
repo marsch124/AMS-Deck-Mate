@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.17.1 (build 27), 20 Nov 2026; iPhone and iPad app 0.19.1 (build 25)
+# AMS Deck Mate, specification, version 0.18 (build 28), 24 Nov 2026; iPhone and iPad app 0.29 (build 35)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.18 (Mac; iPhone and iPad stay 0.29, build 35): three new choices of the Switch key, "Fans: Automatic", "Fans: Cool" and "Fans: Full" (7 choices in all instead of 4), which ask AMS Fan Menu (0.2 or newer) for the fan speed and show which choice is on (section 135); one more drawing, a fan (`app-fan.svg`), 257 in all instead of 256. No link version change (still 9), no keys-file format change (still 3).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
 - Since 0.8 (Mac) and 0.11 (iPhone and iPad): the "Last copied text" and "Recent file" keys (section 36), "Bring back an earlier state" and the self-repairing keys file (section 37), the private link with a 4-digit check number (section 38), the "Mac is back" note and the trimmed box diary (section 39).
 - Since 0.11 (Mac, round 2 of 3 of his picked ideas): six new kinds of key (Next event, Weather, Due today, Album cover, Body Battery, Desk; 29 kinds instead of 23), five of them showing a value at a glance (sections 56 to 62). iPhone and iPad stay 0.16 (build 21): the Mac draws the keys.
@@ -251,6 +252,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.18 (Mac, build 28, 24 Nov 2026; iPhone and iPad stay 0.29, build 35).** Fan keys: three new choices of the Switch key that ask AMS Fan Menu for Automatic, Cool or Full and show which is on, section 135. A fan drawing, 257 in all. Link version (9) and keys-file format (3) unchanged. Not yet proven: the Stream Deck box itself, and the keys on a real iPhone or iPad.
 
 **0.17.1 (Mac, build 27, 20 Nov 2026; iPhone and iPad 0.19.1, build 25).** Several pages at once: folders fill empty spots and the pages are arranged for the biggest keys, section 124. Not yet proven on a real iPhone or iPad.
 
@@ -1199,3 +1202,21 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Long press.** Not new (Mac 0.5, section 25): a favourite can have a long press, done by holding it half a second; set on the Mac in Set up keys, which draws a small dot on such a key. Mentioned in What's new 0.29 only.
 - **Texts.** What's new 0.29, How it works (parts "The favourites row", "Several pages at once", "Settings") and "Signs in this app" are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
+
+## 135. Fan keys (Mac 0.18)
+- **Version.** Before: Mac 0.17.1 (build 27). Now: Mac 0.18 (build 28), 24 Nov 2026. The iPhone and iPad app stays 0.29 (build 35) and needs no update: the Mac draws the keys, so the new keys show and work there by themselves. The link version stays 9 and the keys-file format stays 3.
+- **What.** Three new choices of the Switch key (section 47): `ActionType.toggle` with `target` `fan:automatic`, `fan:cool` or `fan:full`. In Set up keys, "Switch (on or off)" had four choices (Dark mode, Mute the sound, Keep the Mac awake, Two things in turn); it has seven now ("Fans: Automatic", "Fans: Cool", "Fans: Full"). Rules in `Core/Sources/DeckMateCore/FanKeys.swift`, enum `FanKeys`.
+- **Needs.** AMS Fan Menu (version 0.2 or newer), the owner's menu bar app that sets the MacBook's fan speed, installed on this Mac. Deck Mate never touches the fans itself; it only asks AMS Fan Menu.
+- **Press.** Posts the distributed notification `com.schabbauer.AMSFanMenu.choose` with the choice word as its object. Automatic: the Mac runs the fans itself. Cool: a middle speed. Full: top speed. The speeds are Fan Menu's own, set there.
+- **Fan Menu not open.** The press opens AMS Fan Menu first and posts the notification about 1.5 seconds later. **Not installed:** the press does nothing and the note says "AMS Fan Menu is not on this Mac". After a press the note says "Fans: Cool" (or Automatic, Full).
+- **Key check.** While AMS Fan Menu (`com.schabbauer.AMSFanMenu`) is not on this Mac, a fan key counts as a key that cannot work: red corner in Set up keys and "AMS Fan Menu is not on this Mac" (`KeyCheck.problem`).
+- **Showing which is on.** The Mac reads `~/Library/Application Support/AMS Fan Menu/state.json` (its `choice` word) every two seconds while any switch key is in use, and at once when the distributed notification `com.schabbauer.AMSFanMenu.changed` arrives. The fan key whose choice is on shows the switch mark of section 47 filled; the other fan keys show it as an outline. Same mark, same meaning as on every switch key; no new sign.
+- **Follows Fan Menu.** Within a moment (two seconds at most), also when the choice is changed in Fan Menu's own panel or by its own rules (on battery, a timed choice running out, too hot, sleep). A choice with no key (Quiet, My speed, Follow temperature): no fan key is filled.
+- **Second press.** Unlike the other switches, a press on a fan key that is already on changes nothing. To leave Cool, press Automatic (or Full).
+- **Reaching the screens.** The "on" state travels to the box, the keys on screen and the iPhone and iPad inside the key's picture, using the existing `quiet` ("lit") flag of a shown key. So the link version does not change.
+- **Look.** Purple like every switch key (colour = kind of key). Drawing: a fan with three blades, the same mark AMS Fan Menu shows in the menu bar, from the shared AMS icon library (`app-fan.svg`). One more drawing to pick in Set up keys: 257 files in the app's Icons folder (256 before). Without a title of its own the key says "Automatic", "Cool" or "Full".
+- **Own keys.** Three fan keys were added on free places, nothing moved: page group "AMS Deck", page "Home", bottom row, the first three places (places 11, 12 and 13 counting from 1; index 10, 11, 12): Automatic, Cool, Full. A copy of the keys file from before is in Backups ("deck before fan keys 2026-11-24 2055.json"). Keys: 208 before, 211 now.
+- **Tests.** `FanKeysTests`: three more data tests than before.
+- **Signs.** None new. The switch mark keeps its one meaning: filled = on, outline = off; on a fan key, "on" means that fan choice is on right now.
+- **Texts.** What's new 0.18, How it works (part "Switch key (on or off)", the list of drawings) are updated.
+- **Not yet proven.** The Stream Deck box itself (the owner is away until January 2027), and the keys on his real iPhone and iPad.

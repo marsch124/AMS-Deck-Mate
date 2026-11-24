@@ -16,7 +16,8 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     case recent, askAI
     /// copied = a text copied before the current one (target "1"–"3"); recentFile = a file opened lately (target "1"–"3").
     case copied, recentFile
-    /// timer = counts down its minutes (target); toggle = a switch that is on or off (target: see `SwitchKeys`);
+    /// timer = counts down its minutes (target); toggle = a switch that is on or off (target: see `SwitchKeys`,
+    /// and `FanKeys` for the fan keys);
     /// appleShortcut = runs a Shortcut of the Shortcuts app by its name; list = a small list to pick from (its steps);
     /// running = one of the apps open now (target "1"–"15"); micLight = shows whether the microphone is in use;
     /// wait = a pause between the steps of a "several things in a row" key (target = seconds).
@@ -256,7 +257,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .timer: return "app-timer"
         case .toggle:
             return target == SwitchKeys.dark ? "app-moon" : target == SwitchKeys.mute ? "deck-mute"
-                : target == SwitchKeys.awake ? "coffee" : "deck-multi"
+                : target == SwitchKeys.awake ? "coffee" : FanKeys.isFan(target) ? "app-fan" : "deck-multi"
         case .appleShortcut: return "deck-script"
         case .list: return "control-list"
         case .running: return "deck-app"

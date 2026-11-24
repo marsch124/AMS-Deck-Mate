@@ -51,7 +51,7 @@ enum Guide {
             "Since 0.9.3 a key can also show a picture of its own, for example an app's real icon, instead of a white drawing. This works for any key, also one that opens a web address or a file. The picture has rounded corners like an app icon and sits on the key's usual colour (links stay teal). If the picture file is gone, the key shows the usual drawing for what it does.",
             "The pictures are files in the folder \"Pictures\" beside your keys. The AMS Apps Overview tool puts them there. There is no button to choose a picture in the app yet.",
             "A key that opens an app and has no words of its own shows the app's name, for example Mail, Safari or Calculator. Words you write on a key always win. This is the same on the box, on the screen and on the iPhone.",
-            "There are 256 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone.",
+            "There are 257 hand-drawn icons to pick from. Since 0.9.2 they include a house, arrows in all four directions, and window top half and bottom half next to the left half, right half and full window drawings. Since 0.9.4 there is also a drawer. Since 0.10 there are a microphone and a crossed-out microphone. Since 0.18 there is also a fan with three blades.",
             "New in 0.10: timer keys are amber, switch keys and Apple Shortcut keys are purple, and an \"Open app\" key is blue like any app key. The microphone light is red while a microphone is in use and grey-blue while it is free.",
             "New in 0.11: the five keys that show something at a glance put the value in large white words where the drawing normally is, with small words under it. See \"Keys that show something at a glance\" below. Next event and Desk are blue, Weather is teal, Due today is purple, Album cover is green, and Body Battery is green, amber or red by its number. New in 0.12: a glance key can also change its colour with its value. The five new kinds are Garmin number (teal), Mac at a glance (grey-blue), World clock (grey-blue), Sunrise and sunset (amber) and Free until (green or red, by your calendar).",
             "New in 0.13: \"On the Mac\" keys are purple like shortcut keys. \"Join the meeting\" is blue, \"Spotify playlist\" is green, \"Search for the copied text\" is teal, and \"Counter\" and \"Stopwatch\" are amber. Two new drawings to pick: an eject mark and a video camera, so there are 256 to choose from.",
@@ -181,12 +181,20 @@ enum Guide {
             "A timer is forgotten when Deck Mate quits."
         ]),
         Section(id: "switch", title: "Switch key (on or off)", part: "keys", lines: [
-            "New in 0.10. In Set up keys, under \"What it does\", choose \"Switch (on or off)\". It has three choices, and since 0.13 a fourth, \"Keep the Mac awake\".",
+            "New in 0.10. In Set up keys, under \"What it does\", choose \"Switch (on or off)\". It has three choices, since 0.13 a fourth, \"Keep the Mac awake\", and since 0.18 three more, \"Fans: Automatic\", \"Fans: Cool\" and \"Fans: Full\". That makes seven.",
             "New in 0.13: \"Keep the Mac awake\". While it is on, the Mac and its screen do not go to sleep by themselves. Press again to switch it off. It is off again after AMS Deck Mate quits or the Mac restarts. Without a title the key says \"Awake\" or \"May sleep\".",
             "\"Dark mode\" switches the Mac between light and dark. The first time, the Mac asks once whether Deck Mate may control \"System Events\". Choose Allow.",
             "\"Mute the sound\" mutes and unmutes the Mac.",
+            "New in 0.18: fan keys. \"Fans: Automatic\", \"Fans: Cool\" and \"Fans: Full\" set the fan speed of your MacBook. For this you need AMS Fan Menu (version 0.2 or newer) on this Mac. Deck Mate never touches the fans itself. It only asks AMS Fan Menu.",
+            "A press asks AMS Fan Menu for that choice. Automatic: the Mac runs the fans itself. Cool: a middle speed. Full: top speed. The speeds are the ones set in AMS Fan Menu.",
+            "If AMS Fan Menu is not open, the press opens it first and asks about a second and a half later. If it is not installed, the press does nothing and the note says \"AMS Fan Menu is not on this Mac\". After a press the note says, for example, \"Fans: Cool\". Set up keys also marks a fan key as a key that cannot work while AMS Fan Menu is not on this Mac.",
+            "The fan key of the choice that is on right now shows the small switch mark filled. The other fan keys show it as an outline. It is the same mark as on every switch key. Filled means on, outline means off.",
+            "The keys follow AMS Fan Menu within a moment (about two seconds at most). That is also so when you change the choice in the Fan Menu panel, or when Fan Menu changes it by its own rules (on battery, a timed choice running out, too hot, sleep). If Fan Menu is on a choice that has no key (Quiet, My speed, Follow temperature), no fan key is filled.",
+            "One difference from the other switches: a second press on a fan key that is already on changes nothing. To leave Cool, press Automatic (or Full).",
+            "A fan key is purple like every switch key. Its drawing is a fan with three blades, the same as AMS Fan Menu shows in the menu bar. Without a title it says \"Automatic\", \"Cool\" or \"Full\".",
+            "The iPhone and iPad app need no update. The Mac draws the keys, so the fan keys show and work there by themselves.",
             "\"Two things in turn\": you set what happens when it goes on and what happens when it goes off. The key remembers which one it is, also after a restart.",
-            "The key shows a small switch mark in its top-left corner: filled when on, an outline when off.",
+            "The key shows a small switch mark in its top-left corner: filled when on, an outline when off. On a fan key, filled means this fan choice is on right now.",
             "A key without a title says \"Dark\" or \"Light\", \"Muted\" or \"Sound on\", \"On\" or \"Off\".",
             "Dark mode and mute follow the Mac also when you change them somewhere else. Mute follows within about two seconds.",
             "The key is purple."
@@ -656,6 +664,22 @@ enum Guide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.18", date: "24 Nov 2026", new: [
+            "Fan keys. Before: Mac 0.17.1 (build 27) and iPhone and iPad app 0.29 (build 35). Now: Mac 0.18 (build 28); the iPhone and iPad app stays 0.29 (build 35) and needs no update, because the Mac draws the keys, so the new keys show and work there by themselves.",
+            "Three new choices for the kind \"Switch (on or off)\" in Set up keys. Before: four choices (Dark mode, Mute the sound, Keep the Mac awake, Two things in turn). Now: seven. The new ones are \"Fans: Automatic\", \"Fans: Cool\" and \"Fans: Full\".",
+            "They work together with your other Mac app, AMS Fan Menu (version 0.2 or newer), which sets the fan speed of the MacBook. It must be installed on this Mac. Deck Mate never touches the fans itself. It only asks AMS Fan Menu.",
+            "A press on a fan key asks AMS Fan Menu for that choice. Automatic: the Mac runs the fans itself. Cool: a middle speed. Full: top speed. The speeds are the ones you set in AMS Fan Menu.",
+            "If AMS Fan Menu is not open, the press opens it first and asks about a second and a half later. If it is not installed, the press does nothing and the note says \"AMS Fan Menu is not on this Mac\". After a press the note says \"Fans: Cool\" (or Automatic, Full). Set up keys also marks a fan key as a key that cannot work while AMS Fan Menu is not on this Mac.",
+            "The key shows which choice is on. The fan key of the choice that is on right now shows the small switch mark in its top-left corner filled. The other fan keys show it as an outline. It is the same mark, with the same meaning, as on every switch key. There is no new sign in the app.",
+            "The keys follow AMS Fan Menu within a moment (about two seconds at most). That is also so when the choice is changed in the Fan Menu panel, or when Fan Menu changes it by its own rules (on battery, a timed choice running out, too hot, sleep). If Fan Menu is on a choice that has no key (Quiet, My speed, Follow temperature), no fan key is filled.",
+            "One difference from the other switches: a second press on a fan key that is already on changes nothing. To leave Cool, press Automatic (or Full).",
+            "Look. A fan key is purple like every switch key. Its drawing is a fan with three blades, the same mark AMS Fan Menu shows in the menu bar. It is one more hand-drawn drawing to pick in Set up keys: 257 drawings, 256 before. Without a title of its own the key says \"Automatic\", \"Cool\" or \"Full\".",
+            "In your own keys, three fan keys were added on free places, and nothing was moved: page group \"AMS Deck\", page \"Home\", bottom row, the first three places (places 11, 12 and 13): Automatic, Cool, Full. Keys: 208 before, 211 now. A copy of the keys from before is in Backups (\"deck before fan keys 2026-11-24 2055.json\").",
+            "Not yet tried: the Stream Deck box itself (you are away until January 2027), and the fan keys on your real iPhone and iPad."
+        ], changed: [
+            "How it works has changed lines in \"Switch key (on or off)\" and in the list of drawings. The specification has a new numbered part. The Mac app is now 0.18 (build 28)."
+        ], fixed: [
+        ]),
         Release(id: "0.17.1", date: "20 Nov 2026", new: [
             "Small follow-up round, from trying 0.19 on the iPad. Before: Mac 0.17 (build 26) and iPhone and iPad app 0.19 (build 24). Now: Mac 0.17.1 (build 27) and iPhone and iPad app 0.19.1 (build 25).",
             "Several pages at once now fills empty spots with folders. Before: the page group \"Notion\" has 2 top pages, so the iPad showed just 2 pages, small, at the bottom; \"AMS Deck\" has only the page Home plus folders, so the iPad showed 1 page (15 keys). Now: when the page group has fewer top pages than the device shows (2 on an iPhone, 4 on an iPad), its folders fill the rest, in their order in Set up keys. \"AMS Deck\" now shows Home, Apps, Tutorials and Raycast on the iPad: 4 pages, 60 keys instead of 15.",

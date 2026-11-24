@@ -706,6 +706,8 @@ enum Snapshots {
                 if let fourth = group.topPages.dropFirst(3).first {
                     model.show(profile: group.id, page: fourth.id)
                     shot(ScreenDeckView(model: model).padding(16), "deck-glance2-\(name)", look, folder)
+                    // 0.18: the fan keys are on this page too (places 6 to 8); "Cool" is the one that is on.
+                    shot(SetupView(model: model, startSlot: 6), "setup-fan-\(name)", look, folder)
                 }
                 // 0.13: on the Mac, meeting, playlist, search, counter, stopwatch, keep awake (page 5).
                 if let fifth = group.topPages.dropFirst(4).first {

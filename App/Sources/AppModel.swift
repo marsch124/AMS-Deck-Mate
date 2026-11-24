@@ -122,7 +122,7 @@ final class AppModel: ObservableObject {
             copiedTexts = ["current", "Meeting notes for Monday"]
             recentFiles = ["/Users/sample/Documents/Plan.pdf"]
             runningApps = ["com.apple.Safari", "com.apple.mail", "com.apple.Notes"]
-            switchedOn = [SwitchKeys.dark]
+            switchedOn = [SwitchKeys.dark, FanKeys.target("cool")]
             micInUse = true
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259), "5": day.addingTimeInterval(45)])
@@ -245,6 +245,12 @@ final class AppModel: ObservableObject {
             forName: Notification.Name("AppleInterfaceThemeChangedNotification"), object: nil, queue: .main) { [weak self] _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { self?.lookAtMac() }
         })
+        // AMS Fan Menu changed its choice, from a fan key or from anywhere else.
+        liveWatchers.append(DistributedNotificationCenter.default().addObserver(
+            forName: Notification.Name(FanKeys.changed), object: nil, queue: .main) { [weak self] _ in
+            self?.lookAtMac()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self?.lookAtMac() }
+        })
         refreshRunning()
         lookAtMac()
         watchLive()
@@ -358,6 +364,8 @@ final class AppModel: ObservableObject {
         if MacSwitches.isDark { on.insert(SwitchKeys.dark) }
         if MacSwitches.isMuted { on.insert(SwitchKeys.mute) }
         if KeepAwake.isOn { on.insert(SwitchKeys.awake) }
+        // The fan choice that is on, as AMS Fan Menu wrote it down.
+        if let fan = FanKeys.on(state: try? Data(contentsOf: AppModel.fanState)) { on.insert(fan) }
         let mic = deck.uses(.micLight) && MacSwitches.micInUse
         guard on != switchedOn || mic != micInUse else { return }
         switchedOn = on
@@ -501,6 +509,29 @@ final class AppModel: ObservableObject {
         scheduleTick()
     }
 
+    private static let fanState = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(FanKeys.stateFile)
+
+    /// A fan key was pressed: AMS Fan Menu is asked for the choice. When it is not open it is opened
+    /// first and asked a moment later; when it is not on this Mac the note says so.
+    private func askFans(_ choice: String) {
+        let ask = {
+            DistributedNotificationCenter.default().postNotificationName(
+                Notification.Name(FanKeys.ask), object: choice, userInfo: nil, deliverImmediately: true)
+        }
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: FanKeys.app).isEmpty {
+            ask()
+        } else if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: FanKeys.app) {
+            let quietly = NSWorkspace.OpenConfiguration()
+            quietly.activates = false
+            NSWorkspace.shared.openApplication(at: url, configuration: quietly) { _, _ in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { ask() }
+            }
+            for wait in [2.5, 4.0] { DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in self?.lookAtMac() } }
+        } else {
+            ranEvents.send(("AMS Fan Menu is not on this Mac", false))
+        }
+    }
+
     /// A switch key was pressed.
     func switchPressed(_ action: DeckAction) {
         switch action.target {
@@ -512,6 +543,8 @@ final class AppModel: ObservableObject {
             KeepAwake.set(!KeepAwake.isOn)
             lookAtMac()
             return
+        case let target where FanKeys.isFan(target):
+            askFans(FanKeys.choice(of: target) ?? "")
         default:
             let isOn = switchedOn.contains(action.target)
             if let step = SwitchKeys.step(of: action, isOn: isOn) { ActionRunner.run(step) }
@@ -1054,6 +1087,10 @@ enum Sample {
         fourth.keys = [0: DeckKey(action: DeckAction(type: .worldClock, target: "Tokyo")),
                        1: DeckKey(action: DeckAction(type: .sunTimes, target: "Lisbon")),
                        2: DeckKey(action: DeckAction(type: .freeUntil)),
+                       // 0.18: the fan keys; "Cool" is the one that is on.
+                       5: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("automatic"))),
+                       6: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("cool"))),
+                       7: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("full"))),
                        14: key("Next page", DeckAction(type: .nextPage))]
         var fifth = DeckPage(name: "Page 5")
         fifth.keys = [0: DeckKey(action: DeckAction(type: .macDo, target: MacDo.lock.rawValue)),
