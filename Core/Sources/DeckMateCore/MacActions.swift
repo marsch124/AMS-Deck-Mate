@@ -204,14 +204,19 @@ public enum MeetingKeys {
     /// The meeting to join, of the events that have a video link: the one that starts within ten
     /// minutes, else the one going on (the one that began last), else the next one within a day.
     public static func pick(_ events: [Event], now: Date) -> (title: String, link: String)? {
-        let linked = events.compactMap { event -> (event: Event, link: String)? in
-            guard event.end > now, event.start < now.addingTimeInterval(ahead), let link = link(in: event.texts) else { return nil }
-            return (event, link)
-        }.sorted { $0.event.start < $1.event.start }
-        let ahead = linked.filter { $0.event.start > now }
-        let chosen = ahead.first(where: { $0.event.start <= now.addingTimeInterval(soon) })
-            ?? linked.last(where: { $0.event.start <= now })
-            ?? ahead.first
+        // Written in small steps with the limits named first: GitHub's compiler could not work out the
+        // one long expression, and a local "ahead" beside the limit "ahead" was a circular reference there.
+        let latest = now.addingTimeInterval(Self.ahead)
+        let soonest = now.addingTimeInterval(Self.soon)
+        var linked: [(event: Event, link: String)] = []
+        for event in events where event.end > now && event.start < latest {
+            if let found = link(in: event.texts) { linked.append((event: event, link: found)) }
+        }
+        linked.sort { $0.event.start < $1.event.start }
+        let coming = linked.filter { $0.event.start > now }
+        var chosen = coming.first(where: { $0.event.start <= soonest })
+        if chosen == nil { chosen = linked.last(where: { $0.event.start <= now }) }
+        if chosen == nil { chosen = coming.first }
         return chosen.map { ($0.event.title, $0.link) }
     }
 }
