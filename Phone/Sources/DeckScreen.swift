@@ -697,8 +697,8 @@ struct DeckScreen: View {
             ForEach(0..<2, id: \.self) { half in
                 VStack(alignment: .leading, spacing: gap) {
                     Text(half == 0 ? "Favourites" : " ")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(PhonePalette.part("favourites"))
                         .lineLimit(1)
                         .frame(width: side, height: CGFloat(BigKeys.nameHeight), alignment: .leading)
                     VStack(spacing: gap) {
@@ -900,12 +900,19 @@ struct DeckScreen: View {
         .accessibilityIdentifier(column ? "favouritesColumn" : "favouritesRow")
     }
 
-    /// One favourite: round, wherever it stands.
+    /// One favourite: round and in a thin gold ring, wherever it stands (his pick, 0.29: "gold ring each").
     private func favouriteKey(_ index: Int, side: CGFloat) -> some View {
         KeyView(index: index, key: link.favourites[index], side: side, corner: 0.5,
                 lit: link.litFavourites.contains(index), name: "favourite",
                 hold: { link.favourite(index, long: true) }) { link.favourite(index, long: false) }
+            // The ring stands a little outside the key, in the room between the keys, so the key keeps its size.
+            .overlay(Circle().strokeBorder(PhonePalette.part("favourites"), lineWidth: side < 70 ? 1.5 : 2)
+                .padding(-Self.favouriteRing)
+                .allowsHitTesting(false))
     }
+
+    /// How far outside a favourite its gold ring stands.
+    static let favouriteRing: CGFloat = 3.5
 
     // MARK: Navigation picture
 

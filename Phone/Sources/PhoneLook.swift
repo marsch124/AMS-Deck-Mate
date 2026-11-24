@@ -23,6 +23,8 @@ enum PhonePalette {
         case "box": return dynamic(day: rgb(0.05, 0.48, 0.42), night: rgb(0.36, 0.80, 0.72))
         case "screen": return dynamic(day: rgb(0.14, 0.40, 0.84), night: rgb(0.47, 0.71, 1.00))
         case "settings": return dynamic(day: rgb(0.13, 0.52, 0.26), night: rgb(0.45, 0.82, 0.55))
+        // Gold belongs to the favourites alone: the ring round each one and the word above them (his pick, 0.29).
+        case "favourites": return dynamic(day: rgb(0.79, 0.54, 0.05), night: rgb(0.95, 0.75, 0.30))
         default: return dynamic(day: brand, night: rgb(0.62, 0.68, 1.00))
         }
     }

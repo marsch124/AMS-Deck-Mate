@@ -438,7 +438,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Box and Mac keys on screen: a key with `held` acts when let go (short) or after 0.5 s still held (long); all other keys act at once. The box rule is not yet tried on the real box.
 - "Hide after a key is pressed" applies to the action that ran, as in section 3.
 
-## 25. Favourites row (Mac 0.5, iPhone and iPad 0.7)
+## 25. Favourites row (Mac 0.5, iPhone and iPad 0.7; gold ring since 0.29, section 134)
 - **Later change.** Since 0.28 on an iPad on its side with several pages at once: a column at the right of the pages, as big as the keys (section 133).
 - 5 places, 0 to 4, that stay in place on every page and in every page group. Stored in `deck.json` as `favourites` on the Deck. They belong to the whole setup, not to a page group or a page.
 - Any action except a folder or Back. A favourite can also have a long press (`held`).
@@ -1093,7 +1093,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Texts.** What's new 0.20, How it works (parts "Settings" and "The navigation picture") and "Signs in this app" (new line for the "Pages" tab) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
 
-## 126. Favourites beside the "Pages" tab, round favourites (iPhone and iPad 0.21 build 27)
+## 126. Favourites beside the "Pages" tab, round favourites (iPhone and iPad 0.21 build 27; gold ring since 0.29, section 134)
 - **Version.** Before: iPhone and iPad app 0.20 (build 26). Now: 0.21 (build 27). It works with the Mac app as it is (Mac 0.17.1); no Mac update is needed and the link version is unchanged.
 - **Where.** Only when the device is on its side (wider than tall), the navigation picture is hidden (section 125), and the favourites row is on (section 25) with at least one favourite set.
 - **Column.** The favourites row moves into a column of five keys on the left, right next to the purple "Pages" tab, from top to bottom in the same order as the row (the first favourite at the top). The 15 keys then use three rows only and grow. When the picture shows again, the favourites go back to the row under the keys. The change is animated: it springs with the picture.
@@ -1168,7 +1168,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Texts.** What's new 0.27, How it works (parts "Settings" and "The Mac at a glance and the music button") and "Signs in this app" (the music line) are updated.
 - **Not yet proven.** Nothing here was run on a real iPhone or iPad.
 
-## 133. Biggest keys: iPad on its side with several pages at once (iPhone and iPad 0.28 build 34)
+## 133. Biggest keys: iPad on its side with several pages at once (iPhone and iPad 0.28 build 34; favourites in a gold ring since 0.29, section 134)
 - **Version.** Before: iPhone and iPad app 0.27 (build 33). Now: 0.28 (build 34). It works with the Mac app as it is (Mac 0.17.1, build 27); no Mac update is needed and the link version is unchanged.
 - **Aim.** The owner's words: keys as big as possible is priority one; nothing may be hidden; the extras stay in sight but small. He picked "layout 5" from a picture.
 - **When.** Only an iPad held on its side (wider than tall) with the Settings switch "Several pages at once" on (section 121). Unchanged: the iPhone (one page already fills its height), an iPad held upright, an iPad on its side with the switch off, the Mac app and the link version.
@@ -1186,3 +1186,16 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Signs.** New: the purple-framed square "Pages" = opens the picture of all pages; hold = page groups. It is the same "Pages" as the purple tab (same colour, same word, same two ways to open the picture and the list), in a layout where the tab is not used. A round key is still a favourite.
 - **Texts.** What's new 0.28, How it works (parts "Settings", "The navigation picture", "Several pages at once", "The favourites row", "The Mac at a glance and the music button") and "Signs in this app" are updated.
 - **Not yet proven.** Nothing here was run on a real iPad.
+
+## 134. Favourites in a gold ring (iPhone and iPad 0.29 build 35)
+- **Version.** Before: iPhone and iPad app 0.28 (build 34). Now: 0.29 (build 35). It works with the Mac app as it is (Mac 0.17.1, build 27); no Mac update is needed and the link version is unchanged.
+- **Aim.** The owner wanted the favourites to stand out. He picked option 3 of 4 from a picture: "gold ring each".
+- **Before (0.28).** The favourites were round keys (section 126) with nothing round them. The small word "Favourites" over the column of the big-keys screen (section 133) was grey.
+- **Now: ring.** Every favourite has a thin gold ring outside its key: line 2 pt, or 1.5 pt when the favourite is smaller than 70 pt; the ring stands 3.5 pt outside the key. The keys keep their size; the ring uses the room between the keys. An empty favourite place has the ring too.
+- **Where.** Wherever favourites show: the column and the row of the big-keys iPad screen (section 133), the favourites row under the keys (section 25), and the favourites column beside the keys (section 126), on iPad and iPhone.
+- **Now: word.** The small word "Favourites" over the column is gold too.
+- **Colour.** Gold is a new colour of its own for favourites: day about (0.79, 0.54, 0.05), night lighter (0.95, 0.75, 0.30); in code `PhonePalette.part("favourites")`. It is not the amber of the warning line or of "looking for the Mac".
+- **Signs.** Changed: a round key in a gold ring = a favourite (stays in place on every page and page group). Gold means nothing else in the app.
+- **Long press.** Not new (Mac 0.5, section 25): a favourite can have a long press, done by holding it half a second; set on the Mac in Set up keys, which draws a small dot on such a key. Mentioned in What's new 0.29 only.
+- **Texts.** What's new 0.29, How it works (parts "The favourites row", "Several pages at once", "Settings") and "Signs in this app" are updated.
+- **Not yet proven.** Nothing here was run on a real iPhone or iPad.
