@@ -281,7 +281,11 @@ struct DeckScreen: View {
         })
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
         .overlay(alignment: explain.explained?.low == true ? .bottom : .top) {
-            if explain.explaining { explainPlate.padding(10).allowsHitTesting(false) }
+            if explain.explaining {
+                explainPlate.padding(10)
+                    .padding(.bottom, bigKeys && explain.explained?.low == true ? CGFloat(BigKeys.lineHeight) + 4 : 0)
+                    .allowsHitTesting(false)
+            }
         }
         .environmentObject(explain)
         .accessibilityElement(children: .contain)
@@ -1277,12 +1281,17 @@ struct DeckScreen: View {
         VStack(spacing: 2) {
             ZStack {
                 // The heading: large and in the middle.
-                placeLine.padding(.horizontal, isPad ? 110 : 84)
+                // An iPhone held upright has no room for a third button at the right (0.32: Explain stood on
+                // the heading's last letters), so Explain stands at the left, beside the link dot, and the
+                // heading leaves 108 points free on both sides while it shows. An iPad keeps it at the right.
+                let explainLeft = !isPad && !lowButtons && connected && link.explains
+                placeLine.padding(.horizontal, isPad ? 110 : (explainLeft ? 108 : 84))
                 HStack(spacing: 2) {
                     statusDot
+                    if explainLeft { explainButton.padding(.leading, 4) }
                     Spacer(minLength: 8)
                     if !lowButtons {
-                        if connected, link.explains { explainButton }
+                        if isPad, connected, link.explains { explainButton }
                         if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
                         settingsButton
                     }
@@ -1312,11 +1321,19 @@ struct DeckScreen: View {
         return Button {
             if on { explain.end() } else { explain.explaining = true }
         } label: {
+            let ring = bigKeys ? 26 : Self.musicRing(isPad)
             PhoneIcon(name: "iconExplain", size: bigKeys ? 17 : (isPad ? 21 : 18))
                 .foregroundStyle(on ? Color.white : colour)
+                // Word under the mark: the mark alone stands on a filled circle, as wide as the music ring
+                // (0.32: a fill behind mark and word was a blob that cut the word off).
+                .frame(width: bigKeys ? nil : ring, height: bigKeys ? nil : ring)
+                .background { if on, !bigKeys { Circle().fill(PhonePalette.fill("explain")) } }
                 .frame(height: markHeight)
-                .worded("Explain", beside: bigKeys, tint: on ? Color.white : colour)
-                .background { if on { Capsule().fill(PhonePalette.fill("explain")) } }
+                .worded("Explain", beside: bigKeys, tint: on && bigKeys ? Color.white : colour)
+                // Word beside the mark (the thin line of the big keys): one filled capsule holds both.
+                .padding(.horizontal, bigKeys ? 7 : 0)
+                .frame(height: bigKeys ? 24 : nil)
+                .background { if on, bigKeys { Capsule().fill(PhonePalette.fill("explain")) } }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -1353,7 +1370,7 @@ struct DeckScreen: View {
 
     private func explainRow(_ label: String, _ words: String, _ colour: Color) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
-            Text(label).fontWeight(.semibold).foregroundStyle(colour).frame(width: 52, alignment: .leading)
+            Text(label).fontWeight(.semibold).foregroundStyle(colour).frame(width: 62, alignment: .leading)
             Text(words).lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
     }
