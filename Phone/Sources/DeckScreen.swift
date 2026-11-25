@@ -75,6 +75,12 @@ struct DeckScreen: View {
     @State private var showMusicPlate = false
     @State private var showPrivate = false
     @State private var showPagesPlate = false
+    /// Big keys (0.30): the navigation picture pulled in from the far left edge, over the keys.
+    @State private var drawerOpen = false
+    /// How much of it shows while a finger drags it (nil when no finger is on it).
+    @State private var drawerPull: CGFloat?
+    /// It is only built while it is in use (pulled, open, or sliding away).
+    @State private var drawerLive = false
     /// Where the keys sit in the row they share with the navigation picture, so the plate lines up with them.
     @State private var keysFrame = CGRect.zero
     /// The camera cut-out is on the right (iPhone turned the other way): the column beside the keys moves left.
@@ -177,8 +183,11 @@ struct DeckScreen: View {
             .padding(.horizontal, bigKeys ? 8 : (isPad ? 20 : 12))
             .padding(.vertical, bigKeys ? 4 : (isPad ? 14 : 8))
             .opacity(resting || dark ? 0 : 1)
+            if bigKeys, !resting, !dark { pagesDrawer }
             if dark { asleepScreen } else if resting { restingClock }
         }
+        // Big keys (0.30): a finger sliding in from the far left edge pulls the navigation picture over the keys.
+        .simultaneousGesture(drawerDrag)
         // Every touch counts as "still here" for the resting clock (and never gets in the way of the keys).
         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastTouch = Date() })
         .onAppear { UIDevice.current.isBatteryMonitoringEnabled = true }
@@ -200,6 +209,12 @@ struct DeckScreen: View {
                 withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) { showMap = false }
                 nudgeTab()
             }
+            // The picture pulled over the big keys goes away after the same quiet time.
+            if drawerOpen, drawerPull == nil,
+               MapSwipe.hidesBySelf(on: mapHidesBySelf, shown: true, idle: now.timeIntervalSince(lastTouch),
+                                    after: Double(mapQuietSeconds)) {
+                setDrawer(false)
+            }
             // The keys shown on a tap while the Mac sleeps stay for 2 minutes after the last touch.
             if keysWhileAsleep, now.timeIntervalSince(lastTouch) >= 120 { withAnimation(.easeOut(duration: 0.25)) { keysWhileAsleep = false } }
         }
@@ -207,9 +222,12 @@ struct DeckScreen: View {
         .onChange(of: scenePhase) { _, phase in
             // Never leave the device dim: back to his brightness, and the keys instead of the resting clock.
             if phase != .active { restoreScreen(); if resting { resting = false; lastTouch = Date() } }
+            // A drag cut short by leaving the app never leaves the picture half in.
+            if phase != .active, drawerPull != nil { drawerPull = nil; if !drawerOpen { drawerLive = false } }
         }
         .onDisappear { restoreScreen() }
         .onChange(of: link.macAsleep) { _, _ in keysWhileAsleep = false }
+        .onChange(of: bigKeys) { _, big in if !big { drawerOpen = false; drawerPull = nil; drawerLive = false } }
         // Turned from one side straight to the other the size stays the same: only this tells.
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in readIslandSide() }
         .preferredColorScheme(ground == .auto ? nil : .dark)
@@ -625,7 +643,9 @@ struct DeckScreen: View {
 
     /// A swipe on the keys: sideways = pages; up or down = the next or previous page group (not locked since 0.10.1).
     private var keysSwipe: some Gesture {
-        DragGesture(minimumDistance: 30).onEnded { drag in
+        DragGesture(minimumDistance: 30, coordinateSpace: .global).onEnded { drag in
+            // Big keys (0.30): a swipe that starts at the far left edge pulls the navigation picture in instead.
+            if bigKeys, drawerOpen || drawerLive || EdgePull.atEdge(startX: drag.startLocation.x) { return }
             let across = drag.translation.width
             let along = drag.translation.height
             if abs(across) > 60, abs(across) > abs(along) * 1.5 {
@@ -688,6 +708,96 @@ struct DeckScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("bigKeysScreen")
+    }
+
+    // MARK: The navigation picture pulled in from the left edge (0.30)
+
+    /// The navigation picture over the big keys: it slides in from the far left edge with the finger, the
+    /// keys behind it dim; a slide back, a tap beside it or a tap on a page sends it away again.
+    private var pagesDrawer: some View {
+        let full = CGFloat(EdgePull.width)
+        let open = drawerPull ?? (drawerOpen ? full : 0)
+        let shown = min(1, max(0, open / full))
+        return ZStack(alignment: .leading) {
+            Color.black.opacity(0.42 * Double(shown))
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { setDrawer(false) }
+                .allowsHitTesting(drawerOpen || drawerPull != nil)
+                .accessibilityElement()
+                .accessibilityLabel("Close the pages")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHidden(!drawerOpen)
+                .accessibilityIdentifier("pagesDrawerShade")
+            if drawerLive {
+                navigationPicture(width: full) { setDrawer(false) }
+                    .padding(.vertical, 8)
+                    .offset(x: CGFloat(EdgePull.offset(shown: Double(open), margin: 8)))
+                    .padding(.leading, 8)
+                    .allowsHitTesting(drawerOpen && drawerPull == nil)
+                    .accessibilityHidden(!drawerOpen)
+                    .accessibilityIdentifier("pagesDrawer")
+            }
+            // The screen itself shows where to pull: a short purple line at the edge (purple = pages).
+            Capsule()
+                .fill(PhonePalette.fill("profiles"))
+                .frame(width: 4, height: 64)
+                .frame(width: 8, height: 96)
+                .contentShape(Rectangle())
+                .onTapGesture { setDrawer(true) }
+                .opacity(Double(1 - shown))
+                .allowsHitTesting(!drawerOpen && drawerPull == nil)
+                .accessibilityElement()
+                .accessibilityLabel("Pages")
+                .accessibilityHint("Pull to the right, or tap, for all pages.")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { setDrawer(true) }
+                .accessibilityIdentifier("pagesEdge")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    /// The picture slides in or away by itself (a tap, a page picked, the quiet time).
+    private func setDrawer(_ open: Bool, buzz: Bool = true) {
+        if open { drawerLive = true }
+        if buzz, open != drawerOpen { snapFeel() }
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+            drawerOpen = open
+            drawerPull = nil
+        }
+        if !open { retireDrawer() }
+    }
+
+    /// Once it has slid away it is taken down, so it costs nothing while the keys show.
+    private func retireDrawer() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            if !drawerOpen, drawerPull == nil { drawerLive = false }
+        }
+    }
+
+    private var drawerDrag: some Gesture {
+        DragGesture(minimumDistance: 10, coordinateSpace: .global)
+            .onChanged { drag in
+                guard bigKeys, !resting, !dark else { return }
+                if drawerPull == nil {
+                    guard EdgePull.takes(startX: drag.startLocation.x, open: drawerOpen,
+                                         across: drag.translation.width, along: drag.translation.height) else { return }
+                    drawerLive = true
+                }
+                drawerPull = CGFloat(MapSwipe.shownWidth(wasOpen: drawerOpen, moved: drag.translation.width,
+                                                         width: EdgePull.width))
+            }
+            .onEnded { drag in
+                guard drawerPull != nil else { return }
+                let open = MapSwipe.opensAfter(wasOpen: drawerOpen, moved: drag.translation.width,
+                                               predicted: drag.predictedEndTranslation.width, width: EdgePull.width)
+                if open != drawerOpen { snapFeel() }
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                    drawerOpen = open
+                    drawerPull = nil
+                }
+                if !open { retireDrawer() }
+            }
     }
 
     /// The column right of the pages: "Favourites" over three of them beside the upper pages, two more and

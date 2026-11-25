@@ -234,6 +234,31 @@ final class DeckScreenTests: XCTestCase {
         snap(app, "bigkeys-pages")
     }
 
+    /// 0.30: on the big-keys screen a finger sliding in from the far left edge pulls the navigation picture
+    /// over the keys; a tap beside it sends it away again.
+    func testPullPagesFromTheLeftEdge() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "iPad only")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        addTeardownBlock { XCUIDevice.shared.orientation = .portrait }
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample", "-wide", "-showFavourites", "YES"]
+        app.launch()
+
+        let any = app.descendants(matching: .any)
+        XCTAssertTrue(any["severalPages"].waitForExistence(timeout: 10))
+        XCTAssertTrue(any["pagesEdge"].exists)
+        XCTAssertFalse(any["pagesDrawer"].exists)
+        let keyBefore = any["key0"].frame
+        let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5)).withOffset(CGVector(dx: 8, dy: 0))
+        from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 260, dy: 0)))
+        XCTAssertTrue(any["pagesDrawer"].waitForExistence(timeout: 5))
+        // The keys keep their size and place behind it.
+        XCTAssertEqual(any["key0"].frame, keyBefore)
+        snap(app, "bigkeys-drawer")
+        any["pagesDrawerShade"].tap()
+        XCTAssertFalse(any["pagesDrawer"].waitForExistence(timeout: 2))
+    }
+
     /// A picture for the eye, only when the run asks for it (TEST_RUNNER_DECK_SHOTS=<folder>).
     private func snap(_ app: XCUIApplication, _ name: String) {
         guard let folder = ProcessInfo.processInfo.environment["DECK_SHOTS"] else { return }

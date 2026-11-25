@@ -20,6 +20,26 @@ final class MapSwipeTests: XCTestCase {
     }
 }
 
+final class EdgePullTests: XCTestCase {
+    func testPullFromTheFarLeftEdge() {
+        // Closed: only a sideways drag to the right that starts at the far left pulls the picture in.
+        XCTAssertTrue(EdgePull.takes(startX: 10, open: false, across: 40, along: 5))
+        XCTAssertFalse(EdgePull.takes(startX: 60, open: false, across: 40, along: 5))    // started on the keys
+        XCTAssertFalse(EdgePull.takes(startX: 10, open: false, across: -40, along: 5))   // to the left
+        XCTAssertFalse(EdgePull.takes(startX: 10, open: false, across: 20, along: 40))   // up or down
+        // Open: a sideways drag anywhere moves it; up and down scroll the picture.
+        XCTAssertTrue(EdgePull.takes(startX: 400, open: true, across: -40, along: 5))
+        XCTAssertFalse(EdgePull.takes(startX: 400, open: true, across: -10, along: 40))
+        // A swipe from the edge never changes the page.
+        XCTAssertTrue(EdgePull.atEdge(startX: 32))
+        XCTAssertFalse(EdgePull.atEdge(startX: 33))
+        // Closed it stands fully outside (its width and the margin), in it stands at its place.
+        XCTAssertEqual(EdgePull.offset(shown: 0, margin: 8), -328)
+        XCTAssertEqual(EdgePull.offset(shown: 320, margin: 8), 0)
+        XCTAssertEqual(EdgePull.offset(shown: 160, margin: 8), -164)
+    }
+}
+
 final class FavouriteColumnTests: XCTestCase {
     func testColumnFitsBesideTheKeys() {
         // iPad on its side, favourites on: the keys were 178; with the column they grow, the favourites are smaller.

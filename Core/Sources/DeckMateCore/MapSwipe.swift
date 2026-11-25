@@ -59,6 +59,31 @@ public enum MapSwipe {
     }
 }
 
+/// The big-keys iPad screen (0.30): the navigation picture is pulled in from the far left edge, over the keys.
+public enum EdgePull {
+    /// How near the left edge a finger must start to pull the picture in.
+    public static let zone = 32.0
+    /// The picture's width when it is in.
+    public static let width = 320.0
+
+    /// Whether a drag starts in the edge zone (such a swipe never changes the page).
+    public static func atEdge(startX: Double) -> Bool { startX <= zone }
+
+    /// Whether this drag moves the picture: closed, a mostly sideways drag to the right that starts at the
+    /// edge; open, a mostly sideways drag anywhere (up and down still scroll the picture).
+    public static func takes(startX: Double, open: Bool, across: Double, along: Double) -> Bool {
+        guard abs(across) > abs(along) * 1.3 else { return false }
+        return open || (atEdge(startX: startX) && across > 0)
+    }
+
+    /// How far the picture stands left of its place while `shown` of its width shows (0 = fully in);
+    /// closed, it is the margin further out, so nothing of it peeks in.
+    public static func offset(shown: Double, margin: Double) -> Double {
+        if shown >= width { return (shown - width) }
+        return (max(0, shown) - width) * (width + margin) / width
+    }
+}
+
 /// With the navigation picture hidden, the five favourites stand in a column left of the 15 keys (his pick, 0.21).
 public enum FavouriteColumn {
     /// The extra room between the favourites column and the keys (on top of the key gap).
