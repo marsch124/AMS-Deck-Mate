@@ -260,6 +260,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             center.addObserver(self, selector: #selector(openSetup), name: Notification.Name(AppDelegate.note + "openSetup"), object: nil)
             center.addObserver(self, selector: #selector(openSettings), name: Notification.Name(AppDelegate.note + "openSettings"), object: nil)
             center.addObserver(self, selector: #selector(pressFromOutside(_:)), name: Notification.Name(AppDelegate.note + "press"), object: nil)
+            center.addObserver(self, selector: #selector(clickSetup(_:)), name: Notification.Name(AppDelegate.note + "clickSetup"), object: nil)
         }
 
         // The very first start shows the keys, so there is something to see.
@@ -615,6 +616,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             deckWaits = true
         }
         show(&setupWindow, title: "Set up keys", SetupView(model: model) { [weak self] in self?.setupWindow?.close() })
+    }
+
+    /// For checks ("--checks" only): a click in the "Set up keys" window at "x,y", in points from the
+    /// top left corner of its content. The click is made inside the app, so it needs no permission.
+    @objc private func clickSetup(_ notification: Notification) {
+        guard let window = setupWindow, let height = window.contentView?.bounds.height,
+              let parts = (notification.object as? String)?.split(separator: ",").compactMap({ Double($0) }), parts.count == 2 else { return }
+        let point = NSPoint(x: parts[0], y: Double(height) - parts[1])
+        for kind in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+            if let event = NSEvent.mouseEvent(with: kind, location: point, modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                              windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
+                window.sendEvent(event)
+            }
+        }
     }
 
     @objc private func openSettings() {

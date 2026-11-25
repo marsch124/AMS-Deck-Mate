@@ -245,9 +245,9 @@ public enum PagePlaces {
     }
 
     /// The height of the "Set up keys" window: 840 points, less on a screen that is not that tall
-    /// (28 points stay free for the title bar), never under 560.
+    /// (32 points stay free for the title bar), never under 560.
     public static func windowHeight(screen: Double?) -> Double {
         guard let screen else { return 840 }
-        return max(560, min(840, screen - 28))
+        return max(560, min(840, screen - 32))
     }
 }

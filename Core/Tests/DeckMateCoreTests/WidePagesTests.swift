@@ -73,8 +73,8 @@ final class WidePagesTests: XCTestCase {
         XCTAssertEqual(PagePlaces.page(dropped: PagePlaces.placeDrag + "1", in: group), apps.id)
         XCTAssertNil(PagePlaces.page(dropped: PagePlaces.placeDrag + "none", in: group))
         XCTAssertEqual(PagePlaces.windowHeight(screen: 1080), 840)
-        XCTAssertEqual(PagePlaces.windowHeight(screen: 720), 692, "a small screen: the window fits, the columns scroll")
-        XCTAssertEqual(PagePlaces.windowHeight(screen: 821), 793, "his MacBook with larger text")
+        XCTAssertEqual(PagePlaces.windowHeight(screen: 720), 688, "a small screen: the window fits, the columns scroll")
+        XCTAssertEqual(PagePlaces.windowHeight(screen: 821), 789, "his MacBook with larger text")
         XCTAssertEqual(PagePlaces.windowHeight(screen: nil), 840)
     }
 }
