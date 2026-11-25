@@ -118,6 +118,7 @@ public struct AppDays: Codable, Equatable, Sendable {
         func look(_ key: DeckKey) {
             look(key.action)
             if let held = key.held { look(held) }
+            if let twice = key.twice { look(twice) }
         }
         for profile in deck.profiles {
             found.formUnion(profile.apps)

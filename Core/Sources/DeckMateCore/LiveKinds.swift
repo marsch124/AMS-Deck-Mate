@@ -111,14 +111,14 @@ public enum SwitchKeys {
     }
 
     /// The words on a switch key without a title.
-    public static func words(_ target: String, isOn: Bool) -> String {
+    public static func words(_ target: String, isOn: Bool, fanLeft: Int? = nil) -> String {
         switch target {
         case dark: return isOn ? "Dark" : "Light"
         case mute: return isOn ? "Muted" : "Sound on"
         case awake: return isOn ? "Awake" : "May sleep"
         default:
-            // A fan key says its choice whether it is on or not: the switch mark says which is on.
-            if let choice = FanKeys.choice(of: target) { return FanKeys.keyWords(choice) }
+            // A fan key that is off says what a press gives; one that is on shows what is left of its time.
+            if let choice = FanKeys.choice(of: target) { return FanKeys.keyWords(choice, isOn: isOn, left: fanLeft) }
             return isOn ? "On" : "Off"
         }
     }

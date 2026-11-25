@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.19 (build 29), 25 Nov 2026; iPhone and iPad app 0.31 (build 37)
+# AMS Deck Mate, specification, version 0.20 (build 30), 25 Nov 2026; iPhone and iPad app 0.32 (build 38)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.20 (Mac) and 0.32 (iPhone and iPad): the fan key that is on shows the minutes left (section 140); a double press, a third action of every key, marked by a small white "×2" (section 141); words that say what a key does, shown as a plate under the Mac pointer and by the new "Explain" button on the iPhone and iPad (section 142). Link version is now 10 (was 9), keys-file format stays 3 (new optional field `twice` per key).
 - Since 0.19 (Mac) and 0.31 (iPhone and iPad): Cool and Full fan keys last 10 minutes (section 137); the "Set up keys" window is taller so nothing is cut off (137); the owner places pages in four places for several pages at once (section 138); a switch between 1 page and 4 pages, the left-edge pull on an iPhone on its side and the blue name of the page you are on (section 139). Link version stays 9, keys-file format stays 3 (new optional field `places` per page group).
 - Since 0.18 (Mac; iPhone and iPad stay 0.29, build 35): three new choices of the Switch key, "Fans: Automatic", "Fans: Cool" and "Fans: Full" (7 choices in all instead of 4), which ask AMS Fan Menu (0.2 or newer) for the fan speed and show which choice is on (section 135); one more drawing, a fan (`app-fan.svg`), 257 in all instead of 256. No link version change (still 9), no keys-file format change (still 3).
 - Since 0.7 (Mac) and 0.9 (iPhone and iPad): the "Recent app" and "Ask AI (copied text)" keys, and the dark screen while the Mac sleeps (sections 31 to 33).
@@ -254,6 +255,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
 
+**0.20 (Mac, build 30, 25 Nov 2026; iPhone and iPad 0.32, build 38).** The fan key that is on shows the minutes left (section 140); double press (141); what a key does in words, the pointer note on the Mac and the "Explain" button on the phone (142); link version 10. Keys-file format (3) unchanged. Not yet proven: the double press on the real Stream Deck box, a real finger double-tapping on a real iPhone or iPad with the real Mac, and the full 10 minutes counting down on the key.
+
 **0.19 (Mac, build 29, 25 Nov 2026; iPhone and iPad 0.31, build 37).** Fan keys Cool and Full last 10 minutes and say so (section 137); "Set up keys" window taller, nothing cut off (137); four places for the pages shown together (section 138). Link version (9) and keys-file format (3) unchanged. Not yet proven: the Stream Deck box itself, the 10 minutes on real fans, and the pages on a real iPhone or iPad.
 
 **0.31 (iPhone and iPad, build 37, 25 Nov 2026; Mac 0.19, build 29).** A switch between 1 page and 4 pages (2 on an iPhone) on the navigation picture; the pull from the left edge on an iPhone on its side with 2 pages; the name of the page you are on in blue (section 139). Replaces 0.30 (build 36), which added the pull on an iPad (section 136). Not yet proven on a real iPhone or iPad.
@@ -441,7 +444,7 @@ The Mac app was 0.4.1 (5) through 0.5.1; it is now 0.4.2 (6). On the iPhone only
 - Mark: a key with a `held` action that is not "none" shows a small white dot in its top right corner. It is drawn in the key picture, so it shows on the box, on the keys on screen and on the iPhone and iPad (also on an iPhone app older than 0.7).
 - A broken `held` action (app, file or folder gone and so on, as section 20) shows the red corner, with the reason "Long press: <reason>" in Set up keys and in "Check all keys".
 - Time: a press of 0.5 s or more is long (`Navigator.longPress` = 0.5).
-- A long press on a key without `held` does the usual thing.
+- A long press on a key without `held` does the usual thing. Since 0.20 a key can also have a double press, `twice` (section 141); the dot of this section keeps its one meaning, hold.
 - iPhone and iPad: a key with `held` sends `hold(index:)` after 0.5 s, with a stronger buzz (if Tap buzz is on); a shorter tap sends `press(index:)`. A key without `held` sends `press` at once.
 - Box and Mac keys on screen: a key with `held` acts when let go (short) or after 0.5 s still held (long); all other keys act at once. The box rule is not yet tried on the real box.
 - "Hide after a key is pressed" applies to the action that ran, as in section 3.
@@ -925,7 +928,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 
 ## 94. Raycast commands and links (Mac 0.15)
 - Settings, new part "Raycast and links". A folder "Raycast" beside the keys file holds one small command file per key that has words and does something (not Back, folders or page keys): `deck-<key id>.sh`. The folder is written again whenever the keys change. Button "Show the folder". Raycast needs the folder once: Settings › Extensions › Script Commands › Add Directories. The commands are listed under "Deck Mate · <page group> › <page>".
-- Link forms: `amsdeckmate://press?key=<id or words>&pass=<pass>` (optional `&hold=1` for the long press), `amsdeckmate://show?group=<name>&pass=<pass>`, `amsdeckmate://keys?pass=<pass>` (show or hide the keys on screen).
+- Link forms: `amsdeckmate://press?key=<id or words>&pass=<pass>` (optional `&hold=1` for the long press; since 0.20 optional `&twice=1` for the double press, section 141), `amsdeckmate://show?group=<name>&pass=<pass>`, `amsdeckmate://keys?pass=<pass>` (show or hide the keys on screen).
 - Every link needs this Mac's own pass: a random word made on this Mac, kept in UserDefaults `linkPass`. A link without it, or with a wrong one, does nothing.
 - A pressed key acts wherever it sits; the keys on screen and the box do not move, except for a "Switch page group" key. Quit all apps, Empty the bin and Eject all disks always ask first, also when "Ask first" is off.
 - UserDefaults `linksOff`: switches the whole thing off; the folder is then removed.
@@ -1212,7 +1215,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Version.** Before: Mac 0.18 (build 28). Now: Mac 0.19 (build 29), 25 Nov 2026. Link version stays 9; keys-file format stays 3.
 - **Before (0.18, section 135).** The Cool and Full keys posted `cool` or `full`; AMS Fan Menu kept the choice as long as its own "For" line said, and with its usual pick "Until I change" that meant for good, until another key was pressed.
 - **Now.** Cool and Full ask for 10 minutes. `FanKeys.minutes = 10`; `FanKeys.wish("cool")` is `"cool:600"` (and `"full:600"`), the object of the distributed notification `com.schabbauer.AMSFanMenu.choose`. Automatic stays `"automatic"` with no time. After 10 minutes AMS Fan Menu gives the fans back to the Mac by itself and its choice goes to Automatic; the Automatic key then shows the filled switch mark (same state file and `changed` notification as in section 135). A second press on the same key sends the wish again, so the 10 minutes start afresh.
-- **Words.** `FanKeys.keyWords`: on the key "Cool 10 min" and "Full 10 min" (before: "Cool", "Full"). `FanKeys.longWords`: in the picker of "Set up keys" and in the Raycast command names "Fans: Cool for 10 minutes" and "Fans: Full for 10 minutes"; "Fans: Automatic" unchanged.
+- **Words.** `FanKeys.keyWords`: on the key "Cool 10 min" and "Full 10 min" (before: "Cool", "Full"). Since 0.20 this is the wording of a key that is OFF; a key that is on shows the minutes left (section 140). `FanKeys.longWords`: in the picker of "Set up keys" and in the Raycast command names "Fans: Cool for 10 minutes" and "Fans: Full for 10 minutes"; "Fans: Automatic" unchanged.
 - **Needs.** AMS Fan Menu 0.3.1 or newer (installed 25 Nov 2026). With an older AMS Fan Menu the Cool and Full keys do nothing (it does not understand the time).
 - **Tests.** `FanKeysTests.testCoolAndFullLastTenMinutes`.
 - **Signs.** None new; the switch mark keeps its meaning (filled = on, outline = off).
@@ -1246,6 +1249,43 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Texts.** What's new 0.31, How it works (parts "Several pages at once", "The navigation picture" pointer) and "Signs in this app".
 - **Not yet proven.** On a real iPhone or iPad.
 
+## 140. The minutes left on the fan key (Mac 0.20; shown by iPhone and iPad 0.32)
+- **Version.** Before: Mac 0.19 (build 29). Now: Mac 0.20 (build 30), 25 Nov 2026. The Mac draws the keys, so the iPhone and iPad show the minutes by themselves (no change needed there). Needs AMS Fan Menu 0.3.1 or newer, as before; AMS Fan Menu itself was not changed.
+- **Before (0.19, section 137).** The Cool and Full keys always read "Cool 10 min" and "Full 10 min", on or off.
+- **Now.** The key of the choice that is ON shows what is left: "Cool · 8 min"; in the last minute "Cool · <1 min". Whole minutes, rounded up, the same count AMS Fan Menu shows. The key that is OFF still reads "Cool 10 min" or "Full 10 min" (what a press gives). A choice that is on without an end (set in AMS Fan Menu itself with "Until I change") reads just "Cool" or "Full". "Automatic" never shows minutes.
+- **Redraw.** The key is drawn again when the minute changes, not every second. Deck Mate still looks at AMS Fan Menu's note every 2 seconds (section 135) and at once when Fan Menu says it changed.
+- **Own title.** A fan key with a title of its own keeps that title; the live words only show on a key without a title (as before).
+- **Signs.** Changed: the words on a fan key. "Cool · 8 min" on the key that is on = minutes left; "Cool 10 min" on a key that is off = what a press gives. The switch mark is unchanged.
+- **Texts.** What's new 0.20 (Mac) and 0.32 (phone), How it works ("Switch key (on or off)"), "Signs in this app" (both).
+- **Not yet proven.** The full 10 minutes counting down on the key.
+
+## 141. Double press (Mac 0.20; iPhone and iPad 0.32)
+- **Version.** Before: a key had its normal action and, since 0.5, a long press (`held`, section 24). Now: Mac 0.20 (build 30) and iPhone and iPad 0.32 (build 38), 25 Nov 2026, a third action: the double press.
+- **Model.** One new optional field per key in the keys file: `twice` (an Action, like `held`). Missing or type "none" = no double press (every key at first). Files from before are read unchanged, the keys-file format stays 3, and none of the owner's keys was changed (no key of his has a double press yet). In code: `DeckKey.twice`, `DeckKey.hasTwice`, `DeckKey.action(long:twice:)`.
+- **Set up keys.** Right under "Long press" at the bottom of the right column there is "Double press": the same list of things a key can do and the same fields as "Long press". A favourite can have one, and so can a key that only moves around (page, folder, page group).
+- **Timing rule.** `TwicePress` (`Core/Navigator.swift`): two presses within a third of a second (0.33 s) are a double press. A key that HAS a double press waits 0.33 s after one press, to see whether a second follows, and then does its normal action. Every key without a double press acts at once, exactly as before. On the box and with the mouse the wait starts when the key is let go (a key with `held` already acts on release, section 24). A double press on a key without `twice` is two presses, one after the other, as before. A long press (0.5 s) still works on a key that has both.
+- **Where it counts.** The box's keys, a click on the keys on screen, a tap on the iPhone and iPad (the 15 keys and the favourites; the Mac does the waiting, so an iPhone or iPad app 0.31 gets the double press too with Mac 0.20), the key's letter typed twice while the keys on screen take the keyboard, and links (below).
+- **Links.** `amsdeckmate://press?key=<id or words>&twice=1&pass=<pass>` runs the double-press action at once, with no waiting (section 94; like `&hold=1`).
+- **Key check.** The check for broken keys also looks at `twice`; its note starts with "Double press: " (like "Long press: ", section 24).
+- **Sign.** New: a small white "×2" in a key's top right corner = the key has a double press. It sits to the left of the place of the long-press dot (the dot keeps its one meaning: hold). A key can show both. On the box, the keys on screen and the iPhone and iPad.
+- **Texts.** What's new 0.20 and 0.32, How it works (Mac: "Keys on screen", "Set up keys", new part "Double press: a third action", "Press keys from Raycast and by link"; phone: "Settings" (Touch), new part "Double press", "The favourites row"), "Signs in this app" (both).
+- **Not yet proven.** The double press on the real Stream Deck box (the owner is away until January 2027); a real finger double-tapping on a real iPhone or iPad with the real Mac.
+
+## 142. What a key does, in words; the pointer note and the Explain button; link version 10 (Mac 0.20; iPhone and iPad 0.32)
+- **Version.** Before: nothing said in words what a key would do. Now: Mac 0.20 (build 30) and iPhone and iPad 0.32 (build 38), 25 Nov 2026.
+- **Rule.** `KeySays` (`Core/KeySays.swift`): new words for every kind of key, said as what it WILL do: "Opens Safari", "Presses ⌘N", "Fans: Cool for 10 minutes", "Goes to the page “Money”" and so on. Up to three lines per key: tap (on the Mac: click), hold (only when holding does something else, i.e. the key has `held` or acts on hold) and twice (only when the key has a double press, section 141).
+- **Mac, the keys on screen.** Resting the pointer on a key for one second shows a small light plate over the other half of the keys that says "Click …", "Hold …" and "Twice …". Moving the pointer away, or a click, removes it. Nothing else about the keys on screen changed.
+- **iPhone and iPad, the Explain button.** A new small button "Explain" (a hand-drawn question mark in a ring, with its word) stands with Settings, Music and Private: in the thin line under the keys on the iPad's big-keys screen, in the narrow column beside the keys on an iPhone held on its side, in the top line when held upright. Settings, Music and Private keep their exact places; Explain is added on the side away from the screen's edge. Its own colour is pink (pink means Explain only on the iPhone and iPad).
+  - Tap Explain: it becomes a filled pink button, every key gets a thin pink frame, and a plate says "Explain is on. Tap a key to read what it does — nothing is pressed. Tap Explain again to leave."
+  - Tap a key or a favourite: nothing is pressed. The plate shows the key's words in bold and under them "Tap …", "Hold …" (when holding does something else) and "Twice …" (when it has a double press). Tap key after key. The plate stands at the top of the screen when the key is in the lower half, and at the bottom when the key is in the upper half, so it never covers the key.
+  - Tap Explain again: the keys act again. It also ends when Settings opens or the app leaves the screen. It never ends by itself while the owner looks, so a tap meant for reading can never press a key.
+  - Swipes (pages, page groups, the pull from the left edge, section 136) work as before while Explain is on.
+  - The button only shows while connected to a Mac with 0.20 or later (the Mac sends the words).
+- **Link version 10.** `PhoneLink.currentVersion` is 10 (was 9, section 96 and 121). The Mac sends the words of each shown key to a side at link version 10. Old and new work together: an iPhone or iPad 0.31 with Mac 0.20 gets the double press too (the Mac does the waiting) but has no Explain button; an iPhone or iPad 0.32 with a Mac before 0.20 shows no Explain button, because that Mac does not send the words. Keys-file format stays 3.
+- **Signs.** New: a small white "×2" (section 141); on the iPhone and iPad a question mark in a ring with the word "Explain", pink = the Explain button, filled pink = Explain is on, and a thin pink frame round every key = Explain is on, a tap reads the key instead of pressing it. Changed: the words on a fan key (section 140). Unchanged: the small white dot = long press.
+- **Texts.** What's new 0.20 and 0.32; How it works (Mac: new part "What a key says it does", "Keys on screen"; phone: new part "Explain", "Settings"), "Signs in this app" (both).
+- **Not yet proven.** A real finger on a real iPhone or iPad with the real Mac.
+
 ## 136. Pull the navigation picture in from the left edge (iPhone and iPad 0.30 build 36)
 - **Version.** Before: iPhone and iPad app 0.29 (build 35). Now: 0.30 (build 36), 25 Nov 2026. It works with the Mac app as it is (Mac 0.18, build 28); no Mac update is needed and the link version is unchanged.
 - **Aim.** The owner missed pulling the navigation picture in from the left, which he had before 0.28 in the other layouts (the purple "Pages" tab, section 125). Since 0.28 the big-keys screen (section 133) only had the "Pages" button.
@@ -1273,7 +1313,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Follows Fan Menu.** Within a moment (two seconds at most), also when the choice is changed in Fan Menu's own panel or by its own rules (on battery, a timed choice running out, too hot, sleep). A choice with no key (Quiet, My speed, Follow temperature): no fan key is filled.
 - **Second press.** Unlike the other switches, a press on a fan key that is already on changes nothing. To leave Cool, press Automatic (or Full).
 - **Reaching the screens.** The "on" state travels to the box, the keys on screen and the iPhone and iPad inside the key's picture, using the existing `quiet` ("lit") flag of a shown key. So the link version does not change.
-- **Look.** Purple like every switch key (colour = kind of key). Drawing: a fan with three blades, the same mark AMS Fan Menu shows in the menu bar, from the shared AMS icon library (`app-fan.svg`). One more drawing to pick in Set up keys: 257 files in the app's Icons folder (256 before). Without a title of its own the key says "Automatic", "Cool" or "Full".
+- **Look.** Purple like every switch key (colour = kind of key). Drawing: a fan with three blades, the same mark AMS Fan Menu shows in the menu bar, from the shared AMS icon library (`app-fan.svg`). One more drawing to pick in Set up keys: 257 files in the app's Icons folder (256 before). Without a title of its own the key says "Automatic", "Cool" or "Full" (0.19: "Cool 10 min", "Full 10 min"; since 0.20 the one that is on shows the minutes left, section 140).
 - **Own keys.** Three fan keys were added on free places, nothing moved: page group "AMS Deck", page "Home", bottom row, the first three places (places 11, 12 and 13 counting from 1; index 10, 11, 12): Automatic, Cool, Full. A copy of the keys file from before is in Backups ("deck before fan keys 2026-11-24 2055.json"). Keys: 208 before, 211 now.
 - **Tests.** `FanKeysTests`: three more data tests than before.
 - **Signs.** None new. The switch mark keeps its one meaning: filled = on, outline = off; on a fan key, "on" means that fan choice is on right now.

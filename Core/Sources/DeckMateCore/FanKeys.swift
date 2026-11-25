@@ -56,6 +56,26 @@ public enum FanKeys {
         seconds(for: choice) == nil ? words(choice) : "\(words(choice)) \(minutes) min"
     }
 
+    /// What is left of the timed choice that is on, from the bytes of Fan Menu's state file (`endsAt`,
+    /// seconds since 1970): whole minutes, rounded up, as Fan Menu itself says them; 0 = under a minute.
+    /// nil = no end (set in Fan Menu with "Until I change"), no file, or an end that passed a while ago.
+    public static func minutesLeft(state data: Data?, now: Double) -> Int? {
+        struct State: Decodable { var choice: String; var endsAt: Double? }
+        guard let data, let state = try? JSONDecoder().decode(State.self, from: data),
+              let endsAt = state.endsAt else { return nil }
+        let left = endsAt - now
+        if left <= -5 { return nil }
+        return left <= 60 ? 0 : Int((left / 60).rounded(.up))
+    }
+
+    /// The words on a fan key. Off: what a press gives ("Cool 10 min"). On with an end: what is left
+    /// ("Cool · 8 min", "Cool · <1 min"). On without an end: the choice alone ("Cool").
+    public static func keyWords(_ choice: String, isOn: Bool, left: Int?) -> String {
+        guard isOn, seconds(for: choice) != nil || left != nil else { return keyWords(choice) }
+        guard let left else { return words(choice) }
+        return left == 0 ? "\(words(choice)) · <1 min" : "\(words(choice)) · \(left) min"
+    }
+
     /// In lists and notes: "Automatic", "Cool for 10 minutes".
     public static func longWords(_ choice: String) -> String {
         seconds(for: choice) == nil ? words(choice) : "\(words(choice)) for \(minutes) minutes"

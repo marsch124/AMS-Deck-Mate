@@ -48,6 +48,7 @@ public enum OftenKeys {
         }
         real.id = key.id
         real.held = nil
+        real.twice = nil
         return real
     }
 

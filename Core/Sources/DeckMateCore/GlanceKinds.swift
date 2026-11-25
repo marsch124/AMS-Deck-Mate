@@ -387,7 +387,7 @@ extension Deck {
             return [action] + action.steps.flatMap { with($0) }
         }
         let keys = profiles.flatMap { $0.pages.flatMap { $0.keys.values } } + Array(favourites.values)
-        return keys.flatMap { with($0.action) + with($0.held) }
+        return keys.flatMap { with($0.action) + with($0.held) + with($0.twice) }
     }
 
     /// The towns of the weather keys, each once, as he wrote them.

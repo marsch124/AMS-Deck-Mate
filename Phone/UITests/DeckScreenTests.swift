@@ -300,4 +300,23 @@ final class DeckScreenTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.staticTexts["Update AMS Deck Mate on your Mac"].waitForExistence(timeout: 5))
     }
+
+    /// Explain: the plate reads a key's words and the key is not pressed; Explain ends with a second tap.
+    func testExplainReadsAKeyWithoutPressingIt() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-sample"]
+        app.launch()
+        let plate = app.descendants(matching: .any)["explainPlate"]
+        XCTAssertTrue(app.buttons["explainButton"].waitForExistence(timeout: 10))
+        app.buttons["explainButton"].tap()
+        XCTAssertEqual(app.buttons["explainButton"].value as? String, "on")
+        XCTAssertTrue(plate.waitForExistence(timeout: 5))
+        XCTAssertTrue(plate.label.contains("Explain is on"))
+        app.descendants(matching: .any)["key1"].tap()
+        XCTAssertTrue(plate.label.contains("Tap"))
+        XCTAssertTrue(plate.label.contains("Twice"))
+        app.buttons["explainButton"].tap()
+        XCTAssertTrue(plate.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["explainButton"].value as? String, "off")
+    }
 }

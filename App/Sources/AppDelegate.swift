@@ -280,7 +280,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     }
 
     @objc private func pressFromOutside(_ note: Notification) {
-        if let text = note.object as? String, let index = Int(text) { model.click(index) }
+        // "3" = key 3 clicked and let go at once, as the mouse does it; "3:hold" = held for 0.7 seconds.
+        guard let text = note.object as? String else { return }
+        let parts = text.split(separator: ":").map(String.init)
+        guard let index = parts.first.flatMap({ Int($0) }) else { return }
+        model.click(index)
+        DispatchQueue.main.asyncAfter(deadline: .now() + (parts.last == "hold" ? 0.7 : 0.05)) { [weak self] in self?.model.release(index) }
     }
 
     /// Without an Edit menu the Mac gives no Copy, Paste or Undo keys at all (this app shows no menu bar of its own).
@@ -683,6 +688,9 @@ enum Snapshots {
         }
         for (name, look) in [("day", NSAppearance.Name.aqua), ("night", NSAppearance.Name.darkAqua)] {
             shot(ScreenDeckView(model: model).padding(16), "deck-\(name)", look, folder)
+            // The note under the pointer (0.20): on a key of the top row it stands below, on one of the bottom row above.
+            shot(ScreenDeckView(model: model, startSaying: 0).padding(16), "deck-says-\(name)", look, folder)
+            shot(ScreenDeckView(model: model, startSaying: 12).padding(16), "deck-says-low-\(name)", look, folder)
             model.keyboardOn = true
             shot(ScreenDeckView(model: model).padding(16), "deck-letters-\(name)", look, folder)
             model.keyboardOn = false

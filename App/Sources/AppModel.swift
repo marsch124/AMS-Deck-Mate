@@ -61,6 +61,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var timers = TimerKeys.State()
     /// The switches that are on: dark mode and mute as the Mac has them, and his own.
     @Published private(set) var switchedOn: Set<String> = []
+    /// The minutes left of the fan choice that is on; nil = no end.
+    @Published private(set) var fanLeft: Int?
     /// An app is listening to the microphone (looked at only while a key shows it).
     @Published private(set) var micInUse = false
     /// The counters, by their names: how far each has counted. Kept across restarts.
@@ -123,6 +125,7 @@ final class AppModel: ObservableObject {
             recentFiles = ["/Users/sample/Documents/Plan.pdf"]
             runningApps = ["com.apple.Safari", "com.apple.mail", "com.apple.Notes"]
             switchedOn = [SwitchKeys.dark, FanKeys.target("cool")]
+            fanLeft = 8
             micInUse = true
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259), "5": day.addingTimeInterval(45)])
@@ -306,7 +309,8 @@ final class AppModel: ObservableObject {
                  focus: FocusKeys.showing(focusRun, now: sampleNow ?? Date()),
                  covers: glance.coversReady,
                  breath: BreathKeys.showing(breathRun, now: sampleNow ?? Date()),
-                 bar: BarKeys.now(focus: focusRun, timers: timers, at: sampleNow ?? Date()))
+                 bar: BarKeys.now(focus: focusRun, timers: timers, at: sampleNow ?? Date()),
+                 fanLeft: fanLeft)
     }
     /// Pictures with made-up keys stand still at this moment.
     var sampleNow: Date?
@@ -365,10 +369,14 @@ final class AppModel: ObservableObject {
         if MacSwitches.isMuted { on.insert(SwitchKeys.mute) }
         if KeepAwake.isOn { on.insert(SwitchKeys.awake) }
         // The fan choice that is on, as AMS Fan Menu wrote it down.
-        if let fan = FanKeys.on(state: try? Data(contentsOf: AppModel.fanState)) { on.insert(fan) }
+        let fanFile = try? Data(contentsOf: AppModel.fanState)
+        if let fan = FanKeys.on(state: fanFile) { on.insert(fan) }
+        // This runs every 2 seconds, so the fan key is redrawn only when its minute changes.
+        let left = FanKeys.minutesLeft(state: fanFile, now: Date().timeIntervalSince1970)
         let mic = deck.uses(.micLight) && MacSwitches.micInUse
-        guard on != switchedOn || mic != micInUse else { return }
+        guard on != switchedOn || mic != micInUse || left != fanLeft else { return }
         switchedOn = on
+        fanLeft = left
         micInUse = mic
         bump()
     }
@@ -680,10 +688,10 @@ final class AppModel: ObservableObject {
     /// A key was pressed, on screen or on the box. Says what came of it.
     /// `long` = held for half a second; `favourite` = a key of the favourites row instead of the page.
     @discardableResult
-    func press(_ index: Int, long: Bool = false, favourite: Bool = false) -> Navigator.Outcome? {
+    func press(_ index: Int, long: Bool = false, favourite: Bool = false, twice: Bool = false) -> Navigator.Outcome? {
         guard let position else { return nil }
         if !favourite { pressedEvents.send(index) }
-        let outcome = act(index, at: position, long: long, favourite: favourite)
+        let outcome = act(index, at: position, long: long, favourite: favourite, twice: twice)
         move(to: outcome.position)
         return outcome
     }
@@ -694,9 +702,9 @@ final class AppModel: ObservableObject {
     /// first, also on a key set to "without asking".
     @discardableResult
     func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false,
-             careful: Bool = false) -> Navigator.Outcome {
-        let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long)
-                                : Navigator.press(index, at: position, in: deck, long: long)
+             careful: Bool = false, twice: Bool = false) -> Navigator.Outcome {
+        let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long, twice: twice)
+                                : Navigator.press(index, at: position, in: deck, long: long, twice: twice)
         let now = liveNow
         let run = outcome.run.map { oftenAction($0).resolving(now) }.map { careful ? $0.askingFirst : $0 }
         // Count the press, for Settings › Key use (only keys that do something on the Mac).
@@ -707,6 +715,10 @@ final class AppModel: ObservableObject {
                 use.record(counted.id, now: Date())
                 saveUseSoon()
             }
+        }
+        // For checks ("--checks" only): the diary says what each press ran, so a check can read it instead of guessing from a picture.
+        if CommandLine.arguments.contains("--checks") {
+            BoxLog.note("check: key \(index)\(long ? " held" : "")\(twice ? " twice" : "") → \(ActionWords.done(run, appName: { $0 }) ?? "nothing")")
         }
         tell(run, in: deck.profile(position.profile))
         pressedKeyID = (favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index])?.id
@@ -725,16 +737,57 @@ final class AppModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refreshStatus() }
     }
 
+    // MARK: What a key does, in words (0.20)
+
+    /// The lines for a key as it is set up (not as it shows right now): a tap, a hold, a double press.
+    func says(_ key: DeckKey?, in profile: UUID?) -> KeySays.Lines? {
+        key.map { KeySays.lines($0, in: deck, profile: profile, appName: { KeyArt.appName($0) }) }
+    }
+
+    /// The lines for a key of the page the Mac shows.
+    func says(_ index: Int) -> KeySays.Lines? {
+        guard let position else { return nil }
+        return says(Navigator.keys(at: position, in: deck)[index], in: position.profile)
+    }
+
     // MARK: Short and long presses (box and mouse)
 
     private var holds: [Int: UUID] = [:]
+    private var twicePresses = TwicePress()
+
+    /// A press of a key that has a double press (0.20), at a place of its own ("mac:3", one per iPhone
+    /// or iPad and key): the first press waits a third of a second and then runs `once`, unless a
+    /// second press came in that time; the second press runs `twice` at once.
+    func pressOrTwice(_ place: String, once: @escaping () -> Void, twice: @escaping () -> Void) {
+        let now = ProcessInfo.processInfo.systemUptime
+        switch twicePresses.press(place, at: now) {
+        case .twice:
+            twice()
+        case .wait:
+            DispatchQueue.main.asyncAfter(deadline: .now() + TwicePress.wait) { [weak self] in
+                guard let self, self.twicePresses.over(place, first: now) else { return }
+                once()
+            }
+        }
+    }
 
     /// A key went down. A key with a long-press action waits: let go before half a second = the
-    /// usual action, still down after half a second = the long-press action. Every other key acts at once.
+    /// usual action, still down after half a second = the long-press action. A key with a double
+    /// press waits a third of a second after it was let go; a second press in that time is the double
+    /// press, and acts as soon as the key goes down. Every other key acts at once.
     private func keyDown(_ index: Int, done: @escaping (Navigator.Outcome?) -> Void = { _ in }) {
-        guard keys[index]?.actsOnHold == true else { done(press(index)); return }
+        let key = keys[index]
+        let place = "mac:\(index)"
+        if key?.hasTwice == true, twicePresses.waits(place) {
+            _ = twicePresses.press(place, at: ProcessInfo.processInfo.systemUptime)
+            done(press(index, twice: true))
+            return
+        }
+        guard key?.actsOnHold == true || key?.hasTwice == true else { done(press(index)); return }
         let mark = UUID()
         holds[index] = mark
+        // A key with a double press and nothing of its own on a long press only waits for the key to come up.
+        guard key?.actsOnHold == true else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + Navigator.longPress) { [weak self] in
             guard let self, self.holds[index] == mark else { return }
             self.holds[index] = nil
@@ -744,7 +797,13 @@ final class AppModel: ObservableObject {
 
     private func keyUp(_ index: Int, done: @escaping (Navigator.Outcome?) -> Void = { _ in }) {
         guard holds.removeValue(forKey: index) != nil else { return }
-        done(press(index))
+        guard let key = keys[index], key.hasTwice else { done(press(index)); return }
+        // The usual action waits a third of a second: a second press may follow (it is caught in `keyDown`).
+        pressOrTwice("mac:\(index)", once: { [weak self] in
+            // The same key must still be there: another page may show by now.
+            guard let self, self.keys[index]?.id == key.id else { return }
+            done(self.press(index))
+        }, twice: {})
     }
 
     /// Says what a press did, or why it could not be done.
@@ -776,15 +835,24 @@ final class AppModel: ObservableObject {
     /// A key pressed on the keyboard while the keys on screen hold it. `release` first gives the
     /// keyboard back to the app in front, so a shortcut or typed text lands there.
     func pressFromKeyboard(_ index: Int, release: @escaping () -> Void) {
-        guard let position else { return }
-        let outcome = Navigator.press(index, at: position, in: deck)
         pressed.insert(index)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
-        guard !outcome.run.isEmpty else { press(index); return }
+        // A key with a double press waits a third of a second for the same letter again.
+        guard let key = keys[index], key.hasTwice else { keyboardPress(index, twice: false, release: release); return }
+        pressOrTwice("mac:\(index)", once: { [weak self] in
+            guard let self, self.keys[index]?.id == key.id else { return }
+            self.keyboardPress(index, twice: false, release: release)
+        }, twice: { [weak self] in self?.keyboardPress(index, twice: true, release: release) })
+    }
+
+    private func keyboardPress(_ index: Int, twice: Bool, release: @escaping () -> Void) {
+        guard let position else { return }
+        let outcome = Navigator.press(index, at: position, in: deck, twice: twice)
+        guard !outcome.run.isEmpty else { press(index, twice: twice); return }
         release()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             guard let self else { return }
-            self.press(index)
+            self.press(index, twice: twice)
             if ScreenDeckRules.hides(after: outcome, setting: self.deck.screenHidesAfterKey) { self.onScreenKeyActed?() }
         }
     }
@@ -794,7 +862,7 @@ final class AppModel: ObservableObject {
     /// A key with a long-press action stays pressed until the mouse button comes up (`release`).
     func click(_ index: Int) {
         pressed.insert(index)
-        if keys[index]?.actsOnHold != true {
+        if keys[index]?.actsOnHold != true, keys[index]?.hasTwice != true {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
         }
         keyDown(index) { [weak self] outcome in self?.hideAfter(outcome) }
@@ -812,9 +880,9 @@ final class AppModel: ObservableObject {
     }
 
     /// A tap on the iPhone: like a press on the box (the keys on screen show it, and never hide for it).
-    func pressFromPhone(_ index: Int, long: Bool = false, favourite: Bool = false) {
+    func pressFromPhone(_ index: Int, long: Bool = false, favourite: Bool = false, twice: Bool = false) {
         if !favourite { pressed.insert(index) }
-        press(index, long: long, favourite: favourite)
+        press(index, long: long, favourite: favourite, twice: twice)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { [weak self] in self?.pressed.remove(index) }
     }
 
@@ -1028,9 +1096,11 @@ enum Sample {
         ]
         first.keys = [
             0: DeckKey(title: "Mail", action: DeckAction(type: .app, target: "com.apple.mail"),
-                       held: DeckAction(type: .app, target: "com.apple.iCal")),
+                       held: DeckAction(type: .app, target: "com.apple.iCal"),
+                       twice: DeckAction(type: .app, target: "com.apple.Notes")),
             1: key("Calendar", DeckAction(type: .app, target: "com.apple.iCal")),
-            2: key("Safari", DeckAction(type: .app, target: "com.apple.Safari")),
+            2: DeckKey(title: "Safari", action: DeckAction(type: .app, target: "com.apple.Safari"),
+                       twice: DeckAction(type: .link, target: "https://example.com")),
             3: key("Notes", DeckAction(type: .app, target: "com.apple.Notes"), icon: "notebook"),
             4: key("News", DeckAction(type: .link, target: "https://example.com")),
             5: key("Clipboard", DeckAction(type: .raycast, target: RaycastLink.builtIn[0].link)),

@@ -43,6 +43,7 @@ extension DeckKey {
         }
         key.action = now
         key.held = held?.resolvingRecent(list)
+        key.twice = twice?.resolvingRecent(list)
         return key
     }
 }

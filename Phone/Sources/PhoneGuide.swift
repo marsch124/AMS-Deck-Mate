@@ -26,6 +26,8 @@ enum PhoneGuide {
             "Touch, Tap buzz (on at first): the small buzz when a key is tapped. An iPad has no buzz.",
             "Touch, Click sound (off at first): a soft click when a key is tapped. It follows the silent switch and the volume of the device.",
             "Touch, Hold a key for half a second for its long-press action (keys with a small dot have one).",
+            "Touch, Tap a key twice within a third of a second for its double-press action (keys with a small \"×2\" have one; new in 0.32).",
+            "Touch, the button \"Explain\" (new in 0.32): tap it, then tap a key to read what it does, without pressing it. See \"Explain\" below.",
             "Touch, Swipe up or down changes page group (on at first). When it is off, a swipe up or down does nothing. Swiping left or right for pages always works.",
             "Showing, \"What ran\" note (on at first): the short note at the bottom after a tap. New in 0.18: a key that did not work always shows its red note, also when this switch is off. Since 0.11 it also shows the short note \"Mac is back\" when the Mac wakes from sleep, so the same switch hides both.",
             "Showing, Page dots (on at first): the small dots under the keys. Since 0.28 there are none on an iPad held on its side with \"Several pages at once\" on (no room; the page names stand above the pages).",
@@ -136,11 +138,30 @@ enum PhoneGuide {
             "A broken long-press action shows the red corner, and the Mac says \"Long press: <reason>\".",
             "Needs the AMS Deck Mate app at 0.5 on the Mac. Not yet tried on a real iPhone or iPad."
         ]),
+        Section(id: "twicepress", title: "Double press", part: "keys", lines: [
+            "New in 0.32. A key with a small white \"×2\" in its top right corner has a third action. Tap the key twice within a third of a second (0.33 seconds) and the double-press action runs. It works on the 15 keys and on the favourites.",
+            "The \"×2\" sits to the left of the place of the long-press dot. The dot still means only \"hold\". A key can have both.",
+            "The price, said plainly: a key that has a double press waits a third of a second after one tap, to see whether a second tap follows, and only then does its usual thing. Every key without a double press acts at once, as before. The Mac does the waiting, so an iPhone or iPad app 0.31 gets the double press too, from a Mac at 0.20.",
+            "A double tap on a key without a \"×2\" is two taps, one after the other, as before. A long press still works on a key that has both.",
+            "You set the double press on the Mac, in Set up keys, under \"What it does\", in the picker \"Double press\" (right under \"Long press\"). Before 0.32 there was no double press. A broken double-press action shows the red corner, and the Mac says \"Double press: <reason>\".",
+            "Needs the AMS Deck Mate app at 0.20 on the Mac. Not yet tried with a real finger on a real iPhone or iPad."
+        ]),
+        Section(id: "explain", title: "Explain", part: "keys", lines: [
+            "New in 0.32. The button \"Explain\" says in words what a key does, without pressing it. It is a small question mark in a thin pink ring with its word under it. It stands with Settings, Music and Private, and those keep their exact places. Explain is added on the side away from the screen's edge.",
+            "Where: on the iPad's big-keys screen, in the thin line under the keys. On an iPhone held on its side, in the narrow column beside the keys. Held upright, in the top line.",
+            "Tap Explain. It turns into a filled pink button, every key gets a thin pink frame, and a plate says: \"Explain is on. Tap a key to read what it does — nothing is pressed. Tap Explain again to leave.\"",
+            "Tap a key (or a favourite). Nothing is pressed. The plate shows the key's words in bold, and under them \"Tap …\", \"Hold …\" (only when holding does something else) and \"Twice …\" (only when the key has a double press). Tap key after key.",
+            "The plate stands at the top of the screen when the key is in the lower half, and at the bottom when the key is in the upper half, so it never covers the key.",
+            "To leave, tap Explain again, and the keys act again. It also ends when Settings opens or the app leaves the screen. It never ends by itself while you look, so a tap meant for reading can never press a key.",
+            "Swipes work as before while Explain is on: pages, page groups and the pull from the left edge.",
+            "The button only shows while the phone is connected to a Mac with AMS Deck Mate 0.20 or later, because the Mac sends the words. With an older Mac there is no Explain button. Pink means Explain only, on the iPhone and iPad.",
+            "Not yet tried with a real finger on a real iPhone or iPad."
+        ]),
         Section(id: "favourites", title: "The favourites row", part: "keys", lines: [
             "5 keys that stay in place on every page and in every page group. They show as a row under the 15 keys. Since 0.21 they are round, in the row and everywhere else, so a round key always means a favourite and a rounded square is one of the 15 keys. They work as before: tap, or hold for the long press.",
             "New in 0.21, only with the device on its side and the navigation picture hidden: the row moves into a column of five round keys on the left, right next to the purple \"Pages\" tab, in the same order as the row (the first favourite at the top). The 15 keys then use three rows only and grow: on an iPad from about 179 to about 220 points, on an iPhone from about 68 to about 96 points. The favourites in the column are smaller than the 15 keys (about 128 points on an iPad, about 54 on an iPhone; five of them are as tall as three keys). Show the picture again and the favourites go back to the row under the keys. The move is animated, together with the picture.",
             "New in 0.29: every favourite has a thin gold ring round it, a little outside the key, so you see at once which keys are favourites. The ring shows wherever favourites show (the row, the column beside the keys, the column and row of the big-keys iPad screen), and on an empty favourite place too. The keys keep their size. Gold is only for favourites.",
-            "You set them on the Mac, in Set up keys, in the row \"Favourites\" under the 15 keys. A favourite can be anything except a folder or Back, and it can have a long press too.",
+            "You set them on the Mac, in Set up keys, in the row \"Favourites\" under the 15 keys. A favourite can be anything except a folder or Back, and it can have a long press too (and, since 0.32, a double press).",
             "A favourite that moves to another page or page group moves your own place when this device has its own keys, and otherwise the Mac's place.",
             "New in 0.28, only an iPad held on its side with \"Several pages at once\" on: the five round favourites stand in one column at the right of the pages, exactly as big as the keys (about 93 points on an iPad mini), each in a thin gold ring (since 0.29) that stands just outside the key, under the small word \"Favourites\" (gold since 0.29): three beside the upper pages, two beside the lower ones, and the purple \"Pages\" button in the sixth place. With only two pages showing they stand in a row under the pages instead.",
             "The row only shows when at least one favourite is set. In Settings, the switch \"Favourites row\" (on at first) turns it off.",
@@ -183,6 +204,9 @@ enum PhoneGuide {
             "Note in a thin green ring (\"Music\" under it) = Music; a tap opens what is playing on the Mac. Since 0.27 the ring is a thin line, never filled, the same by day and by night; it does not change when music plays, only the word under it says \"Playing\" instead of \"Music\". (0.21 to 0.26: the note alone, no ring.)",
             "Round gear (\"Settings\"): opens Settings. Everyone knows the gear; it now also has a tiny word under it.",
             "Small white dot in a key's top right corner: the key has a long-press action. Hold it for half a second.",
+            "Small white \"×2\" in a key's top right corner (new in 0.32): the key has a double press. Tap it twice within a third of a second. It sits to the left of the place of the dot; a key can show both.",
+            "Question mark in a thin pink ring with the word \"Explain\" (new in 0.32; pink means Explain only): the Explain button. Filled pink: Explain is on. A thin pink frame round every key: Explain is on, and a tap reads the key instead of pressing it.",
+            "Words on a fan key (changed in 0.32, needs Mac 0.20): \"Cool · 8 min\" on the key that is on means the minutes left; \"Cool 10 min\" on a key that is off means what a press gives. \"Cool\" alone means on with no end. The Mac draws these words.",
             "Small red corner on a key: that key is broken on the Mac. The note at the bottom says why.",
             "Red note with a warning drawing at the bottom: a key did not work. It always shows.",
             "Amber line with a warning drawing under the heading, such as \"Battery 18 % – plug in\": this iPhone or iPad is at 20 % or less and not charging.",
@@ -223,6 +247,20 @@ enum PhoneGuide {
     ]
 
     static let releases: [Release] = [
+        Release(id: "0.32", date: "25 Nov 2026", new: [
+            "Round of three things. Before: iPhone and iPad app 0.31 (build 37). Now: 0.32 (build 38). It works with the Mac app 0.20 (build 30). The link between the Mac and the phone is now version 10 (it was 9). Old and new work together: see the last lines of this entry.",
+            "An Explain button. Before: nothing on the phone said what a key does; you had to remember, or press it. Now: a small button \"Explain\" (a question mark in a thin pink ring, with its word under it) stands with Settings, Music and Private. Those keep their exact places; Explain is added on the side away from the screen's edge. On the iPad's big-keys screen it is in the thin line under the keys, on an iPhone held on its side in the narrow column beside the keys, and held upright in the top line.",
+            "Tap Explain: it turns into a filled pink button, every key gets a thin pink frame, and a plate says \"Explain is on. Tap a key to read what it does — nothing is pressed. Tap Explain again to leave.\" Tap a key or a favourite: nothing is pressed. The plate shows the key's words in bold, and under them \"Tap …\", \"Hold …\" (only when holding does something else) and \"Twice …\" (only when the key has a double press). Tap key after key.",
+            "The plate stands at the top of the screen when the key is in the lower half, and at the bottom when the key is in the upper half, so it never covers the key. Tap Explain again and the keys act again. It also ends when Settings opens or the app leaves the screen. It never ends by itself while you look, so a tap meant for reading can never press a key. Swipes (pages, page groups, the pull from the left edge) work as before while Explain is on.",
+            "The Explain button needs AMS Deck Mate 0.20 on the Mac, because the Mac sends the words. It only shows while the phone is connected to such a Mac. With an older Mac there is no Explain button.",
+            "A double press. Before: a key had its usual action and a long press (hold half a second; the small white dot). Now: a key can have a double press too, set on the Mac in Set up keys under \"Double press\". Such a key shows a small white \"×2\" in its top right corner, to the left of the place of the dot. Tap it twice within a third of a second (0.33 seconds) and the double-press action runs. It works on the 15 keys and on the favourites.",
+            "The price, said plainly: a key that has a double press waits a third of a second after one tap, to see whether a second tap follows. Every key without a double press acts at once, as before. A double tap on a key without a double press is two taps, one after the other, as before. A long press still works on a key that has both.",
+            "The minutes left on the fan key. Before: the Cool and Full fan keys always read \"Cool 10 min\" and \"Full 10 min\". Now: the key that is on shows what is left, for example \"Cool · 8 min\", and in the last minute \"Cool · <1 min\". A key that is off still reads \"Cool 10 min\". The Mac draws the words, so this needs Mac 0.20.",
+            "Old and new together: an iPhone or iPad app 0.31 with Mac 0.20 gets the double press too (the Mac does the waiting) but has no Explain button. This app 0.32 with a Mac before 0.20 shows no Explain button, because that Mac does not send the words.",
+            "Not yet tried: none of this was run with a real finger on a real iPhone or iPad with the real Mac."
+        ], changed: [
+            "How it works has changed lines in \"Settings\" (Touch), \"The favourites row\" and \"Signs in this app\" (new lines for \"×2\", for the Explain button with its filled state and the thin pink frame, and for the words on a fan key; the dot is unchanged), and has new parts \"Double press\" and \"Explain\". The app is now 0.32 (build 38)."
+        ], fixed: []),
         Release(id: "0.31", date: "25 Nov 2026", new: [
             "Round of three things for several pages at once. Before: iPhone and iPad app 0.30 (build 36). Now: 0.31 (build 37). It works with the Mac app 0.19 (build 29); with an older Mac the first two things work and the blue name does not.",
             "A switch between 1 page and 4 pages on the screen itself. Before: only in Settings, Showing, \"Several pages at once\". Now: on top of the navigation picture (the small pictures of all pages) sits a two-part switch: \"4 pages\" and \"1 page\" on an iPad, \"2 pages\" and \"1 page\" on an iPhone. The part in full purple is what shows now; a tap on the other part switches at once.",

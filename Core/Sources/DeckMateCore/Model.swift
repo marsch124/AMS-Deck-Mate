@@ -297,14 +297,17 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     public var action: DeckAction
     /// What a long press (half a second) does; nil = the same as a short one.
     public var held: DeckAction?
+    /// What a double press (two presses within a third of a second) does; nil = two presses, one after the other (0.20).
+    public var twice: DeckAction?
 
     public init(id: UUID = UUID(), title: String = "", icon: String = "", action: DeckAction = .none,
-                held: DeckAction? = nil) {
+                held: DeckAction? = nil, twice: DeckAction? = nil) {
         self.id = id
         self.title = title
         self.icon = icon
         self.action = action
         self.held = held
+        self.twice = twice
     }
 
     public init(from decoder: Decoder) throws {
@@ -314,10 +317,22 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         icon = c.value(.icon, "")
         action = c.value(.action, .none)
         held = try? c.decodeIfPresent(DeckAction.self, forKey: .held)
+        twice = try? c.decodeIfPresent(DeckAction.self, forKey: .twice)
     }
 
     /// True when a long press does something of its own (the key then shows a small dot).
     public var hasHeld: Bool { held.map { $0.type != .none } ?? false }
+
+    /// True when a double press does something of its own (the key then shows a small "×2", and waits a
+    /// third of a second after one press to see whether a second follows).
+    public var hasTwice: Bool { twice.map { $0.type != .none } ?? false }
+
+    /// What a press does: the double-press action for a double press on a key that has one, the
+    /// long-press action for a long press on a key that has one, else the usual one.
+    public func action(long: Bool, twice pressedTwice: Bool) -> DeckAction {
+        if pressedTwice, hasTwice, let twice { return twice }
+        return action(long: long)
+    }
 
     /// What a press does: the long-press action for a long press on a key that has one, else the usual one.
     public func action(long: Bool) -> DeckAction {

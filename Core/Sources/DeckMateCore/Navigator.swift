@@ -109,18 +109,21 @@ public enum Navigator {
 
     /// A key was pressed: where the deck is afterwards, and what to do on the Mac.
     /// `long` = held for half a second: the key's long-press action, when it has one.
-    public static func press(_ index: Int, at position: DeckPosition, in deck: Deck, long: Bool = false) -> Outcome {
+    /// `twice` = pressed twice within a third of a second: the key's double-press action, when it has one.
+    public static func press(_ index: Int, at position: DeckPosition, in deck: Deck, long: Bool = false,
+                             twice: Bool = false) -> Outcome {
         var outcome = Outcome(position: position, run: [])
         guard let key = keys(at: position, in: deck)[index] else { return outcome }
-        apply(key.action(long: long), to: &outcome, in: deck, depth: 0)
+        apply(key.action(long: long, twice: twice), to: &outcome, in: deck, depth: 0)
         return outcome
     }
 
     /// A key of the favourites row was pressed. It acts from wherever the deck is.
-    public static func pressFavourite(_ index: Int, at position: DeckPosition, in deck: Deck, long: Bool = false) -> Outcome {
+    public static func pressFavourite(_ index: Int, at position: DeckPosition, in deck: Deck, long: Bool = false,
+                                      twice: Bool = false) -> Outcome {
         var outcome = Outcome(position: position, run: [])
         guard let key = deck.favourites[index] else { return outcome }
-        let action = key.action(long: long)
+        let action = key.action(long: long, twice: twice)
         guard action.type.fitsFavourite else { return outcome }
         apply(action, to: &outcome, in: deck, depth: 0)
         return outcome
@@ -249,5 +252,48 @@ public enum PagePlaces {
     public static func windowHeight(screen: Double?) -> Double {
         guard let screen else { return 840 }
         return max(560, min(840, screen - 32))
+    }
+}
+
+/// The double press (0.20): a key that has a double-press action waits a third of a second after one
+/// press, to see whether a second follows. A second press within that time is the double press; no
+/// second press = the usual action, once, when the wait is over. Keys without a double press never
+/// wait. One place per key that waits (the Mac's own keys, and each iPhone or iPad apart).
+public struct TwicePress: Equatable, Sendable {
+    /// A third of a second.
+    public static let wait = 0.33
+
+    public enum Verdict: Equatable, Sendable {
+        /// The first press: wait, and ask `over` when the time is up.
+        case wait
+        /// The second press came in time: the double press.
+        case twice
+    }
+
+    /// The presses that wait, by the name of their place: the moment each came.
+    public private(set) var waiting: [String: Double] = [:]
+
+    public init() {}
+
+    /// True while a first press waits at this place.
+    public func waits(_ place: String) -> Bool { waiting[place] != nil }
+
+    /// A key that has a double press was pressed at `now` (seconds). A press that finds one waiting
+    /// is the double press; the clock that calls `over` after `wait` keeps the time.
+    public mutating func press(_ place: String, at now: Double) -> Verdict {
+        if waiting[place] != nil {
+            waiting[place] = nil
+            return .twice
+        }
+        waiting[place] = now
+        return .wait
+    }
+
+    /// The wait of the press that came at `first` is over: true = no second press came, so the key
+    /// does its usual thing now, once. False = a double press took it, or a later press waits in its place.
+    public mutating func over(_ place: String, first: Double) -> Bool {
+        guard waiting[place] == first else { return false }
+        waiting[place] = nil
+        return true
     }
 }

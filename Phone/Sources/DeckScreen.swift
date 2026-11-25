@@ -2,11 +2,33 @@ import SwiftUI
 import UIKit
 import DeckMateCore
 
+/// The words of one key for the Explain plate.
+struct Explained: Equatable {
+    var title: String
+    var tap: String?
+    var hold: String?
+    var twice: String?
+    /// The plate stands at the bottom (the key is in the upper half of the screen).
+    var low: Bool
+}
+
+/// "Explain" (0.32): on or off, and the key read last. The keys read it to know a tap must only explain.
+final class ExplainState: ObservableObject {
+    @Published var explaining = false
+    @Published var explained: Explained?
+    func end() {
+        if explaining { explaining = false }
+        if explained != nil { explained = nil }
+    }
+}
+
 /// The main screen: the place line on top, the 15 keys low near the thumb, page dots and a short
 /// note on what a tap did.
 struct DeckScreen: View {
     @ObservedObject var link: LinkClient
     @State private var showSettings = false
+    /// Explain (0.32): the keys are read, not pressed (`explaining`, `explained` live in this object).
+    @StateObject private var explain = ExplainState()
     @State private var hintClosed = false
     @State private var windowWidth: CGFloat = 0
     private var inWindow: Bool {
@@ -231,7 +253,11 @@ struct DeckScreen: View {
             if keysWhileAsleep, now.timeIntervalSince(lastTouch) >= 120 { withAnimation(.easeOut(duration: 0.25)) { keysWhileAsleep = false } }
         }
         .onChange(of: resting) { _, now in now ? dimScreen() : restoreScreen() }
+        .onChange(of: showSettings) { _, open in if open { explain.end() } }
+        .onChange(of: connected) { _, now in if !now { explain.end() } }
+        .onChange(of: link.explains) { _, now in if !now { explain.end() } }
         .onChange(of: scenePhase) { _, phase in
+            if phase != .active { explain.end() }
             // Never leave the device dim: back to his brightness, and the keys instead of the resting clock.
             if phase != .active { restoreScreen(); if resting { resting = false; lastTouch = Date() } }
             // A drag cut short by leaving the app never leaves the picture half in.
@@ -254,6 +280,10 @@ struct DeckScreen: View {
                 .onChange(of: box.safeAreaInsets) { _, new in sideInsets = new }
         })
         .sheet(isPresented: $showSettings) { PhoneSettings(link: link) }
+        .overlay(alignment: explain.explained?.low == true ? .bottom : .top) {
+            if explain.explaining { explainPlate.padding(10).allowsHitTesting(false) }
+        }
+        .environmentObject(explain)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("deckScreen")
     }
@@ -503,6 +533,7 @@ struct DeckScreen: View {
                         .accessibilityIdentifier("macGlance")
                 }
             }
+            if connected, link.explains { explainButton }
             if connected, link.isPrivate { privateLock }
             if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
             settingsButton
@@ -540,6 +571,7 @@ struct DeckScreen: View {
             settingsButton
             if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
             if connected, link.isPrivate { privateLock }
+            if connected, link.explains { explainButton }
             Spacer(minLength: 8)
         }
         .accessibilityElement(children: .contain)
@@ -942,6 +974,7 @@ struct DeckScreen: View {
                 }
                 if !favouritesShow { pagesKey(side: 0, small: true) }
                 Spacer(minLength: 8)
+                if link.explains { explainButton }
                 settingsButton
                 if showMusic, link.newMac, let now = link.mac { musicButton(now) }
                 if link.isPrivate { privateLock }
@@ -1249,6 +1282,7 @@ struct DeckScreen: View {
                     statusDot
                     Spacer(minLength: 8)
                     if !lowButtons {
+                        if connected, link.explains { explainButton }
                         if showMusic, connected, link.newMac, let now = link.mac { musicButton(now) }
                         settingsButton
                     }
@@ -1269,6 +1303,59 @@ struct DeckScreen: View {
         }
         .accessibilityLabel("Settings")
         .accessibilityIdentifier("settingsButton")
+    }
+
+    /// Explain: a tap turns it on or off. On, the keys only say what they do (nothing is pressed).
+    private var explainButton: some View {
+        let on = explain.explaining
+        let colour = PhonePalette.part("explain")
+        return Button {
+            if on { explain.end() } else { explain.explaining = true }
+        } label: {
+            PhoneIcon(name: "iconExplain", size: bigKeys ? 17 : (isPad ? 21 : 18))
+                .foregroundStyle(on ? Color.white : colour)
+                .frame(height: markHeight)
+                .worded("Explain", beside: bigKeys, tint: on ? Color.white : colour)
+                .background { if on { Capsule().fill(PhonePalette.fill("explain")) } }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Explain")
+        .accessibilityValue(on ? "on" : "off")
+        .accessibilityIdentifier("explainButton")
+    }
+
+    /// The plate over the keys while Explain is on: what to do, or the words of the key read last.
+    private var explainPlate: some View {
+        let colour = PhonePalette.part("explain")
+        return VStack(alignment: .leading, spacing: 4) {
+            if let key = explain.explained {
+                Text(key.title.isEmpty ? "Key" : key.title).font(.headline).lineLimit(1)
+                if let tap = key.tap {
+                    explainRow("Tap", tap, colour)
+                    if let hold = key.hold { explainRow("Hold", hold, colour) }
+                    if let twice = key.twice { explainRow("Twice", twice, colour) }
+                } else {
+                    Text("The Mac did not say what this key does.")
+                }
+            } else {
+                Text("Explain is on. Tap a key to read what it does — nothing is pressed. Tap Explain again to leave.")
+            }
+        }
+        .font(.callout)
+        .padding(12)
+        .frame(maxWidth: 440, alignment: .leading)
+        .background(PhonePalette.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(colour, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("explainPlate")
+    }
+
+    private func explainRow(_ label: String, _ words: String, _ colour: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 0) {
+            Text(label).fontWeight(.semibold).foregroundStyle(colour).frame(width: 52, alignment: .leading)
+            Text(words).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     /// On its side: the lock (the line to the Mac is private) by Settings and music; a tap says it in words.
@@ -1645,8 +1732,19 @@ private struct KeyView: View {
     var hold: (() -> Void)?
     let press: () -> Void
     @State private var pressed = false
+    @EnvironmentObject private var explain: ExplainState
+    /// Where this key stands on the screen (for the plate's side when it is held, not tapped).
+    @State private var midY: CGFloat = 0
     @AppStorage("tapBuzz") private var tapBuzz = true
     @AppStorage("tapClick") private var tapClick = false
+
+    /// Explain: the key's words go to the plate; nothing is pressed.
+    private func read(atY y: CGFloat) {
+        guard image != nil else { return }
+        if tapBuzz { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+        explain.explained = Explained(title: key?.title ?? "", tap: key?.tap, hold: key?.hold, twice: key?.twice,
+                                      low: y < UIScreen.main.bounds.height / 2)
+    }
 
     private var image: UIImage? { key?.picture.flatMap { UIImage(data: $0) } }
 
@@ -1668,7 +1766,15 @@ private struct KeyView: View {
         .scaleEffect(down ? 0.95 : 1)
         .animation(.easeOut(duration: 0.08), value: down)
         .contentShape(shape)
-        .onTapGesture {
+        .overlay {
+            if explain.explaining { shape.strokeBorder(PhonePalette.part("explain"), lineWidth: 2).allowsHitTesting(false) }
+        }
+        .background(GeometryReader { box in
+            Color.clear.onAppear { midY = box.frame(in: .global).midY }
+                .onChange(of: box.frame(in: .global).midY) { _, new in midY = new }
+        })
+        .onTapGesture(coordinateSpace: .global) { location in
+            if explain.explaining { read(atY: location.y); return }
             guard image != nil else { return }   // empty places do nothing
             if tapBuzz { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
             if tapClick { PhonePrefs.click() }
@@ -1677,6 +1783,7 @@ private struct KeyView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) { pressed = false }
         }
         .onLongPressGesture(minimumDuration: Navigator.longPress) {
+            if explain.explaining { read(atY: midY); return }
             guard image != nil else { return }
             if tapBuzz { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
             pressed = true
@@ -1703,11 +1810,11 @@ private extension View {
     /// A small button's word under its mark (his rule: a button that is only a symbol gets a word).
     /// `beside`: in the thin line of the big-keys screen the word stands beside the mark, not under it.
     @ViewBuilder
-    func worded(_ word: String, beside: Bool = false) -> some View {
+    func worded(_ word: String, beside: Bool = false, tint: Color = PhonePalette.part("settings")) -> some View {
         if beside {
             HStack(spacing: 5) {
                 self
-                Text(word).font(.caption.weight(.semibold)).foregroundStyle(PhonePalette.part("settings")).lineLimit(1)
+                Text(word).font(.caption.weight(.semibold)).foregroundStyle(tint).lineLimit(1)
                     .fixedSize()
             }
             .frame(minHeight: 30)
@@ -1715,7 +1822,7 @@ private extension View {
         } else {
             VStack(spacing: 1) {
                 self
-                Text(word).font(.caption2.weight(.semibold)).foregroundStyle(PhonePalette.part("settings")).lineLimit(1)
+                Text(word).font(.caption2.weight(.semibold)).foregroundStyle(tint).lineLimit(1)
                     .fixedSize()
             }
             .frame(minWidth: 44, minHeight: 44)

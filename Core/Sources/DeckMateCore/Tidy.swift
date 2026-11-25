@@ -146,9 +146,12 @@ public enum KeyCheck {
     public static func problem(_ key: DeckKey?, in profile: DeckProfile, deck: Deck, world: KeyWorld) -> String? {
         guard let key else { return nil }
         if let why = problem(key.action, in: profile, deck: deck, world: world) { return why }
-        guard key.hasHeld, let held = key.held,
-              let why = problem(held, in: profile, deck: deck, world: world) else { return nil }
-        return "Long press: " + why
+        if key.hasHeld, let held = key.held, let why = problem(held, in: profile, deck: deck, world: world) {
+            return "Long press: " + why
+        }
+        guard key.hasTwice, let twice = key.twice,
+              let why = problem(twice, in: profile, deck: deck, world: world) else { return nil }
+        return "Double press: " + why
     }
 
     static func problem(_ action: DeckAction, in profile: DeckProfile, deck: Deck, world: KeyWorld) -> String? {

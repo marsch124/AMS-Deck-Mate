@@ -26,7 +26,7 @@ final class FanKeysTests: XCTestCase {
     func testFanKeyShowsItselfAndOnlyTheOneThatIsOnIsLit() {
         let keys = FanKeys.choices.map { DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target($0))) }
         let shown = keys.map { $0.resolving(LiveKeys(on: ["fan:cool", SwitchKeys.dark])) }
-        XCTAssertEqual(shown.map(\.title), ["Automatic", "Cool 10 min", "Full 10 min"], "the words do not change with on and off")
+        XCTAssertEqual(shown.map(\.title), ["Automatic", "Cool", "Full 10 min"], "the key that is on without an end shows no minutes")
         XCTAssertEqual(shown.map(\.action.quiet), [false, true, false])
         XCTAssertEqual(keys[0].resolving(LiveKeys(on: ["fan:quiet"])).action.quiet, false)
         XCTAssertEqual(keys.map(\.shownIcon), ["app-fan", "app-fan", "app-fan"])
@@ -35,6 +35,26 @@ final class FanKeysTests: XCTestCase {
         func world(_ here: Bool) -> KeyWorld { KeyWorld(appExists: { _ in here }, fileExists: { _ in true }, raycastExtension: { _, _ in true }) }
         XCTAssertNil(KeyCheck.problem(keys[0], in: DeckProfile(), deck: Deck(), world: world(true)))
         XCTAssertEqual(KeyCheck.problem(keys[0], in: DeckProfile(), deck: Deck(), world: world(false)), "AMS Fan Menu is not on this Mac")
+    }
+
+    /// 0.20: the fan key that is on shows the minutes left of Fan Menu's timed choice.
+    func testTheKeyThatIsOnShowsTheMinutesLeft() {
+        let file = Data(#"{"choice":"cool","endsAt":1000}"#.utf8)
+        XCTAssertEqual(FanKeys.minutesLeft(state: file, now: 520), 8)
+        XCTAssertEqual(FanKeys.minutesLeft(state: file, now: 541), 8, "459 seconds left rounds up")
+        XCTAssertEqual(FanKeys.minutesLeft(state: file, now: 940), 0)
+        XCTAssertEqual(FanKeys.minutesLeft(state: file, now: 1003), 0)
+        XCTAssertNil(FanKeys.minutesLeft(state: file, now: 1010))
+        XCTAssertNil(FanKeys.minutesLeft(state: Data(#"{"choice":"cool"}"#.utf8), now: 520))
+        XCTAssertNil(FanKeys.minutesLeft(state: nil, now: 520))
+        XCTAssertEqual(FanKeys.keyWords("cool", isOn: true, left: 8), "Cool · 8 min")
+        XCTAssertEqual(FanKeys.keyWords("cool", isOn: true, left: 0), "Cool · <1 min")
+        XCTAssertEqual(FanKeys.keyWords("cool", isOn: true, left: nil), "Cool")
+        XCTAssertEqual(FanKeys.keyWords("cool", isOn: false, left: 8), "Cool 10 min")
+        XCTAssertEqual(FanKeys.keyWords("automatic", isOn: true, left: nil), "Automatic")
+        let keys = FanKeys.choices.map { DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target($0))) }
+        let shown = keys.map { $0.resolving(LiveKeys(on: ["fan:cool"], fanLeft: 8)) }
+        XCTAssertEqual(shown.map(\.title), ["Automatic", "Cool · 8 min", "Full 10 min"])
     }
 
     /// 0.19: Cool and Full are asked for ten minutes, and the key says so; Automatic has no time.

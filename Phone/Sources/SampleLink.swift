@@ -36,9 +36,10 @@ enum SampleLink {
     /// Four favourites, the fourth place left empty.
     static func favourites() -> [Int: PhoneLink.Key] {
         let tiles: [(Int, String, UIColor)] = [(0, "Play", green), (1, "Safari", blue), (2, "Writing", grey), (4, "Mute", green)]
+        let words = [0: "Plays or pauses the music", 1: "Opens Safari", 2: "Goes to the page group “Writing”", 4: "Mutes the Mac"]
         var result: [Int: PhoneLink.Key] = [:]
         for index in 0..<PhoneLink.favouriteCount { result[index] = PhoneLink.Key(index: index, title: "", picture: nil) }
-        for tile in tiles { result[tile.0] = PhoneLink.Key(index: tile.0, title: tile.1, picture: picture(tile.1, tile.2)) }
+        for tile in tiles { result[tile.0] = PhoneLink.Key(index: tile.0, title: tile.1, picture: picture(tile.1, tile.2), tap: words[tile.0]) }
         return result
     }
 
@@ -57,9 +58,16 @@ enum SampleLink {
             ("Play", green), ("Volume", green),
             ("Documents", grey)
         ]
+        let taps = ["Opens Mail", "Opens Notes", "Opens OmniFocus", "Opens Safari", "Opens the Translate window",
+                    "Shows the clipboard history", "Moves the window to the left half", "Opens today's tasks",
+                    "Opens the calendar", "Plays or pauses the music", "Presses ⌘↑ to turn the volume up",
+                    "Opens the Documents folder"]
+        let holds = [1: "Starts a new note", 5: "Clears the clipboard history"]
+        let twices = [1: "Opens the quick note"]
         var result: [Int: PhoneLink.Key] = [:]
         for (index, tile) in tiles.enumerated() {
-            result[index] = PhoneLink.Key(index: index, title: tile.0, picture: picture(tile.0, tile.1))
+            result[index] = PhoneLink.Key(index: index, title: tile.0, picture: picture(tile.0, tile.1),
+                                          tap: taps[index], hold: holds[index], twice: twices[index])
         }
         return result
     }
@@ -73,7 +81,8 @@ enum SampleLink {
             for (index, key) in one {
                 let place = (index + page * 3) % StreamDeckProtocol.keyCount
                 result[page * StreamDeckProtocol.keyCount + place] =
-                    PhoneLink.Key(index: page * StreamDeckProtocol.keyCount + place, title: key.title, picture: key.picture)
+                    PhoneLink.Key(index: page * StreamDeckProtocol.keyCount + place, title: key.title, picture: key.picture,
+                                  tap: key.tap, hold: key.hold, twice: key.twice)
             }
         }
         return result

@@ -81,14 +81,14 @@ extension AppModel {
             return false
         }
         switch command {
-        case let .press(wanted, long):
+        case let .press(wanted, long, twice):
             guard let found = DeckLinks.find(wanted, in: deck, first: position?.profile, name: Outside.name) else {
                 NSSound.beep()
                 return false
             }
-            let outcome = act(found.index, at: found.position, long: long, careful: true)
+            let outcome = act(found.index, at: found.position, long: long, careful: true, twice: twice)
             // A key that changes the page group does so on the Mac's own keys.
-            if found.key.action(long: long).type == .profile { show(outcome.position) }
+            if found.key.action(long: long, twice: twice).type == .profile { show(outcome.position) }
         case let .show(wanted):
             if let group = DeckLinks.group(wanted, in: deck) { visit(group.id) }
         case .toggleKeys:

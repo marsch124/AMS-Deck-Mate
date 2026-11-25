@@ -802,6 +802,18 @@ struct SetupView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        FieldLabel("Double press")
+                        Picker("", selection: twiceType) {
+                            ForEach(ActionType.forLongPress, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .labelsHidden()
+                        .accessibilityIdentifier("twiceType")
+                        if draft.hasTwice {
+                            ActionFields(action: twiceAction, deck: model.deck, profile: profile)
+                            Text("Press the key twice within a third of a second. It shows a small ×2 in its corner. This key then waits a third of a second after one press before it acts, to see whether a second follows.")
+                                .font(.caption).foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     .padding(.trailing, 4)
                 }
@@ -861,6 +873,19 @@ struct SetupView: View {
 
     private var heldAction: Binding<DeckAction> {
         Binding(get: { draft.held ?? .none }, set: { draft.held = $0 })
+    }
+
+    /// The double-press action; "Nothing" = no double press of its own.
+    private var twiceType: Binding<ActionType> {
+        Binding(get: { draft.twice?.type ?? .none },
+                set: { new in
+                    guard new != (draft.twice?.type ?? .none) else { return }
+                    draft.twice = new == .none ? nil : DeckAction.fresh(new)
+                })
+    }
+
+    private var twiceAction: Binding<DeckAction> {
+        Binding(get: { draft.twice ?? .none }, set: { draft.twice = $0 })
     }
 
     /// Turns the empty places of this key's row into parts of the bar and numbers the row's bar keys

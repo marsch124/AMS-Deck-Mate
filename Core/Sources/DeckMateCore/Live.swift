@@ -37,13 +37,17 @@ public struct LiveKeys: Equatable, Sendable {
     public var breath: BreathKeys.Showing?
     /// What the progress bar keys follow right now; nil = nothing runs.
     public var bar: BarKeys.Now?
+    /// The minutes left of the fan choice that is on (AMS Fan Menu's timed choice); nil = it has no end.
+    public var fanLeft: Int?
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
                 timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
                 glances: [String: Glance] = [:], battery: Int? = nil, cover: CoverKeys.Now? = nil,
                 coverReady: Bool = false, counts: [String: Int] = [:], watches: [String: Int] = [:],
                 watchesRunning: Set<String> = [], focus: FocusKeys.Showing? = nil, covers: Set<String> = [],
-                breath: BreathKeys.Showing? = nil, bar: BarKeys.Now? = nil) {
+                breath: BreathKeys.Showing? = nil, bar: BarKeys.Now? = nil,
+                fanLeft: Int? = nil) {
+        self.fanLeft = fanLeft
         self.breath = breath
         self.bar = bar
         self.covers = covers
@@ -191,7 +195,7 @@ extension DeckKey {
         case .toggle:
             let isOn = live.on.contains(key.action.target)
             key.action.quiet = isOn
-            if key.title.isEmpty { key.title = SwitchKeys.words(key.action.target, isOn: isOn) }
+            if key.title.isEmpty { key.title = SwitchKeys.words(key.action.target, isOn: isOn, fanLeft: live.fanLeft) }
         case .micLight:
             key.action.quiet = live.micInUse
             if key.title.isEmpty { key.title = live.micInUse ? "Mic in use" : "Mic free" }
@@ -298,6 +302,7 @@ extension DeckKey {
             break
         }
         if let held = key.held, held.type == .recentFile || held.type == .running { key.held = held.resolving(live) }
+        if let twice = key.twice, twice.type == .recentFile || twice.type == .running { key.twice = twice.resolving(live) }
         return key
     }
 }
@@ -320,7 +325,7 @@ extension Deck {
             return action.type == type || action.steps.contains { has($0) }
         }
         let keys = profiles.flatMap { $0.pages.flatMap { $0.keys.values } } + Array(favourites.values)
-        return keys.contains { has($0.action) || has($0.held) }
+        return keys.contains { has($0.action) || has($0.held) || has($0.twice) }
     }
 }
 

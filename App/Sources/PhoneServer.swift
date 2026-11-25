@@ -449,19 +449,50 @@ final class PhoneServer: ObservableObject {
     /// A tap or long press from an iPhone. With its own keys only its own place moves: the Mac's
     /// keys on screen and the box stay where they are, and the Mac still does what the key says.
     private func press(_ index: Int, long: Bool, favourite: Bool, from phone: Phone) {
+        // A key that has a double press waits a third of a second for a second tap (0.20). The Mac
+        // keeps the time, so every version of the iPhone and iPad app has the double press.
+        if !long, let key = key(index, favourite: favourite, of: phone), key.hasTwice {
+            let place = "phone:\(ObjectIdentifier(phone).hashValue):\(favourite ? "f" : "k")\(index)"
+            model.pressOrTwice(place, once: { [weak self, weak phone] in
+                // The same key must still be there: another page may show by now.
+                guard let self, let phone, self.key(index, favourite: favourite, of: phone)?.id == key.id else { return }
+                self.act(index, long: false, favourite: favourite, twice: false, from: phone)
+            }, twice: { [weak self, weak phone] in
+                guard let self, let phone else { return }
+                self.act(index, long: false, favourite: favourite, twice: true, from: phone)
+            })
+            return
+        }
+        act(index, long: long, favourite: favourite, twice: false, from: phone)
+    }
+
+    /// The key a tap from this device means, as it is set up: a favourite, a key of one of the pages
+    /// shown at once, a key of the device's own place, or a key of the page the Mac shows.
+    private func key(_ index: Int, favourite: Bool, of phone: Phone) -> DeckKey? {
+        if favourite { return model.deck.favourites[index] }
+        let (tile, place) = PhoneLink.tile(of: index)
+        guard let first = ownPlace(of: phone) ?? model.position else { return nil }
+        if phone.wide > 1, phone.version >= 9 {
+            let pages = Navigator.spread(at: first, count: phone.wide, in: model.deck)
+            return tile < pages.count ? Navigator.keys(at: pages[tile], in: model.deck)[place] : nil
+        }
+        return Navigator.keys(at: first, in: model.deck)[index]
+    }
+
+    private func act(_ index: Int, long: Bool, favourite: Bool, twice: Bool, from phone: Phone) {
         let (tile, place) = PhoneLink.tile(of: index)
         // Several pages at once: with his own places (0.19) the first page shown need not be the page
         // the device is on, so every key acts from the page it is drawn on.
         if !favourite, phone.wide > 1, phone.version >= 9, tile > 0 || !firstTileIsHere(phone) {
-            pressOnTile(tile, place: place, index: index, long: long, from: phone)
+            pressOnTile(tile, place: place, index: index, long: long, twice: twice, from: phone)
             return
         }
         guard let own = ownPlace(of: phone) else {
-            model.pressFromPhone(index, long: long, favourite: favourite)
+            model.pressFromPhone(index, long: long, favourite: favourite, twice: twice)
             return
         }
         if !favourite, phone.version >= 2 { send(.pressed(index: index), to: phone) }
-        phone.own = model.act(index, at: own, long: long, favourite: favourite).position
+        phone.own = model.act(index, at: own, long: long, favourite: favourite, twice: twice).position
         sendKeys(to: phone)
     }
 
@@ -473,13 +504,13 @@ final class PhoneServer: ObservableObject {
 
     /// "Several pages at once": a key of the second, third or fourth page. It acts from its own page;
     /// a key that opens a folder or another page moves the view there (that page becomes the first).
-    private func pressOnTile(_ tile: Int, place: Int, index: Int, long: Bool, from phone: Phone) {
+    private func pressOnTile(_ tile: Int, place: Int, index: Int, long: Bool, twice: Bool, from phone: Phone) {
         guard let first = ownPlace(of: phone) ?? model.position else { return }
         let pages = Navigator.spread(at: first, count: phone.wide, in: model.deck)
         guard tile < pages.count else { return }
         send(.pressed(index: index), to: phone)
         let at = pages[tile]
-        let moved = model.act(place, at: at, long: long).position
+        let moved = model.act(place, at: at, long: long, twice: twice).position
         if moved != at {
             if phone.own != nil { phone.own = moved } else { model.show(moved) }
         }
@@ -583,10 +614,14 @@ final class PhoneServer: ObservableObject {
             : [place]
         var list: [PhoneLink.Key] = []
         for (tile, page) in pages.enumerated() {
-            let keys = model.live(page.map { Navigator.keys(at: $0, in: model.deck) } ?? [:])
+            let plain = page.map { Navigator.keys(at: $0, in: model.deck) } ?? [:]
+            let keys = model.live(plain)
             list += (0..<StreamDeckProtocol.keyCount).map { index in
-                PhoneLink.Key(index: tile * StreamDeckProtocol.keyCount + index, title: KeyArt.title(keys[index]),
-                              picture: KeyArt.pngForPhone(keys[index]))
+                // The words for what the key does ride along, for "Explain" (an app from 0.32 on).
+                let says = phone.version >= 10 ? model.says(plain[index], in: page?.profile) : nil
+                return PhoneLink.Key(index: tile * StreamDeckProtocol.keyCount + index, title: KeyArt.title(keys[index]),
+                                     picture: KeyArt.pngForPhone(keys[index]),
+                                     tap: says?.tap, hold: says?.hold, twice: says?.twice)
             }
         }
         if phone.version >= 9 {
@@ -614,8 +649,10 @@ final class PhoneServer: ObservableObject {
         phone.lastPlace = line
         if phone.version >= 3 {
             let row = (0..<PhoneLink.favouriteCount).map { index in
-                PhoneLink.Key(index: index, title: KeyArt.title(model.live(model.deck.favourites[index])),
-                              picture: KeyArt.pngForPhone(model.live(model.deck.favourites[index])))
+                let says = phone.version >= 10 ? model.says(model.deck.favourites[index], in: place?.profile) : nil
+                return PhoneLink.Key(index: index, title: KeyArt.title(model.live(model.deck.favourites[index])),
+                                     picture: KeyArt.pngForPhone(model.live(model.deck.favourites[index])),
+                                     tap: says?.tap, hold: says?.hold, twice: says?.twice)
             }
             let frame = PhoneLink.frame(.favourites(keys: row))
             if frame != phone.lastFavourites {

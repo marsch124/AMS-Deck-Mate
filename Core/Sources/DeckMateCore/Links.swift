@@ -9,8 +9,8 @@ public enum DeckLinks {
     public static let scheme = "amsdeckmate"
 
     public enum Command: Equatable, Sendable {
-        /// Press a key, found by its id or by its words; `long` = hold it.
-        case press(key: String, long: Bool)
+        /// Press a key, found by its id or by its words; `long` = hold it; `twice` = its double press (0.20).
+        case press(key: String, long: Bool, twice: Bool = false)
         /// Show a page group, found by its id or its name.
         case show(group: String)
         /// Show or hide the keys on screen.
@@ -28,7 +28,7 @@ public enum DeckLinks {
         switch (parts.host ?? "").lowercased() {
         case "press":
             guard let key = said["key"], !key.isEmpty else { return nil }
-            return .press(key: key, long: said["hold"] == "1")
+            return .press(key: key, long: said["hold"] == "1", twice: said["twice"] == "1")
         case "show":
             guard let group = said["group"], !group.isEmpty else { return nil }
             return .show(group: group)

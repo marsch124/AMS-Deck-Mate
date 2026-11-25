@@ -9,10 +9,28 @@ struct ClickCatcher: NSViewRepresentable {
     var onDown: (CGPoint) -> Void
     /// The mouse button came up again (for long presses).
     var onUp: (() -> Void)?
+    /// Where the pointer is over it, also while another app is in front; nil = it left (0.20).
+    var onPoint: ((CGPoint?) -> Void)?
 
     final class Catcher: NSView {
         var onDown: ((CGPoint) -> Void)?
         var onUp: (() -> Void)?
+        var onPoint: ((CGPoint?) -> Void)?
+        private var tracking: NSTrackingArea?
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            if let tracking { removeTrackingArea(tracking) }
+            guard onPoint != nil else { tracking = nil; return }
+            let area = NSTrackingArea(rect: .zero, options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                      owner: self, userInfo: nil)
+            addTrackingArea(area)
+            tracking = area
+        }
+        // Entering says nothing: the keys may have appeared under a pointer that stands still (seen 25 Nov:
+        // the note came up by itself). Only a pointer that really moves over a key counts.
+        override func mouseEntered(with event: NSEvent) {}
+        override func mouseMoved(with event: NSEvent) { onPoint?(convert(event.locationInWindow, from: nil)) }
+        override func mouseExited(with event: NSEvent) { onPoint?(nil) }
         override func mouseUp(with event: NSEvent) { onUp?() }
         override var isFlipped: Bool { true }
         override var mouseDownCanMoveWindow: Bool { false }
@@ -26,12 +44,14 @@ struct ClickCatcher: NSViewRepresentable {
         let view = Catcher()
         view.onDown = onDown
         view.onUp = onUp
+        view.onPoint = onPoint
         return view
     }
 
     func updateNSView(_ view: Catcher, context: Context) {
         view.onDown = onDown
         view.onUp = onUp
+        view.onPoint = onPoint
     }
 }
 
@@ -52,8 +72,20 @@ struct KeyGrid: View {
     var onDrop: ((String, Int) -> Void)?
     /// The keys on screen: the mouse button came up (a long press ends, or a short one acts).
     var onRelease: ((Int) -> Void)?
+    /// The keys on screen: the key the pointer is over; nil = none (0.20).
+    var onPointer: ((Int?) -> Void)?
     var onPress: (Int) -> Void
     @State private var down: Int?
+
+    /// The key at a point of the grid; nil = a gap between keys, or outside.
+    private func place(at point: CGPoint) -> Int? {
+        let column = Int(point.x / (side + gap))
+        let row = Int(point.y / (side + gap))
+        guard point.x >= 0, point.y >= 0, (0..<5).contains(column), (0..<3).contains(row),
+              point.x - CGFloat(column) * (side + gap) <= side,
+              point.y - CGFloat(row) * (side + gap) <= side else { return nil }
+        return row * 5 + column
+    }
 
     private var width: CGFloat { side * 5 + gap * 4 }
     private var height: CGFloat { side * 3 + gap * 2 }
@@ -66,17 +98,13 @@ struct KeyGrid: View {
             }
             if dragPage == nil {
             ClickCatcher(onDown: { point in
-                let column = Int(point.x / (side + gap))
-                let row = Int(point.y / (side + gap))
-                guard (0..<5).contains(column), (0..<3).contains(row),
-                      point.x - CGFloat(column) * (side + gap) <= side,
-                      point.y - CGFloat(row) * (side + gap) <= side else { return }
-                down = row * 5 + column
-                onPress(row * 5 + column)
+                guard let index = place(at: point) else { return }
+                down = index
+                onPress(index)
             }, onUp: {
                 if let down { onRelease?(down) }
                 down = nil
-            })
+            }, onPoint: onPointer.map { tell in { point in tell(point.flatMap { place(at: $0) }) } })
             .frame(width: width, height: height)
             }
         }
@@ -137,6 +165,11 @@ struct ScreenDeckView: View {
     var find: () -> Void = {}
     /// A found key was picked.
     var runFound: (KeyFinder.Hit) -> Void = { _ in }
+    /// For check pictures: the key whose note shows from the start.
+    var startSaying: Int?
+    /// The key the pointer is over, and the key whose note shows (the pointer rested on it for a second).
+    @State private var pointed: Int?
+    @State private var saying: Int?
 
     private var gridWidth: CGFloat { model.deck.screenSize.keySide * 5 + model.deck.screenSize.gap * 4 }
 
@@ -172,7 +205,11 @@ struct ScreenDeckView: View {
             KeyGrid(keys: model.keys, pressed: model.pressed, side: model.deck.screenSize.keySide,
                     gap: model.deck.screenSize.gap,
                     broken: Set(model.problems(on: model.page, of: model.profile).keys),
-                    letters: model.keyboardOn && !model.finding, onRelease: { model.release($0) }) { model.click($0) }
+                    letters: model.keyboardOn && !model.finding, onRelease: { model.release($0) },
+                    onPointer: { pointer($0) }) { saying = nil; pointed = nil; model.click($0) }
+                .overlay(alignment: (saying ?? startSaying).map { $0 < 10 ? .bottom : .top } ?? .bottom) {
+                    if let index = saying ?? startSaying, let says = model.says(index) { saysPlate(index, says) }
+                }
             if model.finding { findList }
         }
         .padding(10)
@@ -180,6 +217,46 @@ struct ScreenDeckView: View {
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
         .fixedSize()
         .accessibilityIdentifier("screenDeck")
+    }
+
+    /// The pointer moved to another key, or left the keys. Resting on one key for a second shows its note.
+    private func pointer(_ index: Int?) {
+        guard index != pointed else { return }
+        pointed = index
+        saying = nil
+        guard let index, model.keys[index] != nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + ScreenDeckRules.pointerRest) {
+            if pointed == index { saying = index }
+        }
+    }
+
+    /// What the key under the pointer does, on a light plate over the other rows of keys (never over
+    /// the key itself): a click, a hold (when holding does something else), a double press (when it has one).
+    private func saysPlate(_ index: Int, _ says: KeySays.Lines) -> some View {
+        let small = model.deck.screenSize == .small
+        let rows = [("Click", Optional(says.tap)), ("Hold", says.hold), ("Twice", says.twice)]
+        return VStack(alignment: .leading, spacing: 2) {
+            ForEach(rows.indices, id: \.self) { row in
+                if let words = rows[row].1 {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(rows[row].0).font((small ? Font.caption2 : Font.caption).weight(.bold))
+                            .foregroundStyle(Color(red: 0.36, green: 0.27, blue: 0.72))
+                            .frame(width: small ? 32 : 38, alignment: .leading)
+                        Text(words).font(small ? .caption2 : .caption).foregroundStyle(Color.black.opacity(0.88))
+                            .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 6)
+        .frame(maxWidth: gridWidth - 12, alignment: .leading)
+        .fixedSize(horizontal: true, vertical: true)
+        .background(Color(white: 0.97), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(4)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("keySays")
     }
 
     /// The keys that fit the typed words, under the keys: ↑ ↓ choose, Return or a click runs one.

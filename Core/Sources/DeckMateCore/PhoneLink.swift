@@ -19,11 +19,21 @@ public enum PhoneLink {
         public var title: String
         /// The key as a PNG picture; nil = an empty place.
         public var picture: Data?
+        /// What the key does, in a few words, for "Explain" on the iPhone and iPad (version 10; a Mac
+        /// before 0.20 leaves all three out): a tap, a hold (nil = the same as a tap), a double press
+        /// (nil = it has none).
+        public var tap: String?
+        public var hold: String?
+        public var twice: String?
 
-        public init(index: Int, title: String, picture: Data?) {
+        public init(index: Int, title: String, picture: Data?, tap: String? = nil, hold: String? = nil,
+                    twice: String? = nil) {
             self.index = index
             self.title = title
             self.picture = picture
+            self.tap = tap
+            self.hold = hold
+            self.twice = twice
         }
     }
 
@@ -113,7 +123,8 @@ public enum PhoneLink {
     /// 7 = the line is private: sealed from its first moment (`SecureLine`); older versions are no longer answered.
     /// 8 = only the keys that changed are sent, and the iPhone asks "are you there?" every few seconds.
     /// 9 = several pages at once (`wide`, `tiles`), for an iPhone or iPad used without the box.
-    public static let currentVersion = 9
+    /// 10 = every key comes with the words for what it does (`tap`, `hold`, `twice`), for "Explain".
+    public static let currentVersion = 10
 
     /// "Several pages at once": at most this many pages (an iPad: two above, two below).
     public static let mostTiles = 4

@@ -39,6 +39,10 @@ public enum ScreenSize: String, Codable, CaseIterable, Sendable {
 
 /// The rules of the keys on screen. No window, no mouse: numbers in, the answer out.
 public enum ScreenDeckRules {
+    /// The pointer rests on a key of the keys on screen for this long (one second) before the note with
+    /// what the key does shows (0.20).
+    public static let pointerRest = 1.0
+
     /// Where the keys go when they appear at the mouse pointer: centred on it, but never off the
     /// screen — near an edge they move in until they are whole, `margin` points from the edge.
     /// `area` is the usable part of the screen the pointer is on; the answer is the lower left corner.

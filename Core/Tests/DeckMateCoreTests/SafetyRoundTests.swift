@@ -178,7 +178,7 @@ final class SafetyRoundTests: XCTestCase {
     // MARK: D. The line to the iPhone
 
     func testVersionEightMessagesAndTheDeadLine() {
-        XCTAssertEqual(PhoneLink.currentVersion, 9)
+        XCTAssertEqual(PhoneLink.currentVersion, 10)
         let some = PhoneLink.Message.some(place: "p", keys: [PhoneLink.Key(index: 1, title: "A", picture: nil)])
         let all: [PhoneLink.Message] = [some, .ping, .pong]
         for message in all { XCTAssertEqual(message.since, 8) }

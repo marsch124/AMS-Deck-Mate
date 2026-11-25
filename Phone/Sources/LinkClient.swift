@@ -75,6 +75,8 @@ final class LinkClient: ObservableObject {
     var wideOn: Bool { UserDefaults.standard.bool(forKey: "widePages") }
     /// The Mac knows several pages at once (Mac 0.17 on).
     var wideMac: Bool { macVersion >= 9 }
+    /// The Mac sends the words for what each key does (Mac 0.20 on): the Explain button shows.
+    var explains: Bool { macVersion >= 10 }
 
     /// Tells the Mac how many pages to send (after connecting, and when the setting changes).
     func sendWide() {

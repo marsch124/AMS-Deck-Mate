@@ -79,7 +79,7 @@ enum KeyArt {
 
     /// The key as a picture of `pixels` x `pixels`. nil = an empty place.
     static func image(for key: DeckKey?, pixels: Int) -> CGImage? {
-        let cacheKey = "\(pixels)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)|\(key?.hasHeld ?? false)"
+        let cacheKey = "\(pixels)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)|\(key?.hasHeld ?? false)|\(key?.hasTwice ?? false)"
         if let hit = pictures[cacheKey] { return hit }
         let size = CGFloat(pixels)
         guard let context = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
@@ -120,6 +120,15 @@ enum KeyArt {
                 let k = size / 72
                 NSColor.white.withAlphaComponent(0.95).setFill()
                 NSBezierPath(ovalIn: CGRect(x: size - 13 * k, y: size - 13 * k, width: 7 * k, height: 7 * k)).fill()
+            }
+            if key.hasTwice {
+                // A small white "×2" top right, left of the long-press dot's place: this key does something else on a double press.
+                let k = size / 72
+                let words = NSAttributedString(string: "×2", attributes: [
+                    .font: NSFont.systemFont(ofSize: 11 * k, weight: .bold),
+                    .foregroundColor: NSColor.white.withAlphaComponent(0.95)])
+                let box = words.size()
+                words.draw(at: CGPoint(x: size - 16 * k - box.width, y: size - 9.5 * k - box.height / 2))
             }
             NSGraphicsContext.restoreGraphicsState()
         }
@@ -289,7 +298,7 @@ enum KeyArt {
     /// The key as a PNG picture of 216 x 216, for the iPhone. nil = an empty place.
     static func pngForPhone(_ key: DeckKey?) -> Data? {
         guard let key, let picture = image(for: key, pixels: 216) else { return nil }
-        let cacheKey = "\(title(key))|\(key.shownIcon)|\(key.action.hashValue)|\(key.hasHeld)"
+        let cacheKey = "\(title(key))|\(key.shownIcon)|\(key.action.hashValue)|\(key.hasHeld)|\(key.hasTwice)"
         if let hit = phonePictures[cacheKey] { return hit }
         let png = NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
         if phonePictures.count > 300 { phonePictures.removeAll() }
