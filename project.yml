@@ -26,7 +26,7 @@ targets:
       properties:
         CFBundleDisplayName: AMS Deck Mate
         CFBundleShortVersionString: "0.21"
-        CFBundleVersion: "30"
+        CFBundleVersion: "31"
         CFBundleIconFile: AppIcon
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
