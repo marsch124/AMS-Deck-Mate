@@ -325,6 +325,7 @@ struct ActionFields: View {
                 Text("Mute the sound").tag(SwitchKeys.mute)
                 Text("Keep the Mac awake").tag(SwitchKeys.awake)
                 ForEach(FanKeys.choices, id: \.self) { Text("Fans: \(FanKeys.longWords($0))").tag(FanKeys.target($0)) }
+                Text(ChipKey.longWords).tag(ChipKey.target)
                 Text("Two things in turn").tag("own")
             }
             .labelsHidden()
@@ -349,6 +350,8 @@ struct ActionFields: View {
                 note("The key remembers whether it is on or off, also after a restart.")
             } else if action.target == SwitchKeys.dark {
                 note("Switches the Mac between its light and its dark look. The first time, the Mac asks once whether AMS Deck Mate may control “System Events”: choose Allow.")
+            } else if ChipKey.isChip(action.target) {
+                note("Shows the Mac's chip temperature in whole degrees (\"Chip 56°\"), live. A press opens the large graph of AMS Fan Menu. It needs AMS Fan Menu 0.6 or later running on this Mac; without it the key reads \"Chip –\". It is a figure, not a switch, so it shows no switch mark.")
             } else if FanKeys.isFan(action.target) {
                 note("Asks AMS Fan Menu, which must be on this Mac, to run the fans this way. Cool and Full last \(FanKeys.minutes) minutes, then the fans go back to Automatic by themselves (AMS Fan Menu 0.3.1 or later); a second press starts the \(FanKeys.minutes) minutes afresh. The fan key of the choice that is on shows the filled switch mark.")
             } else if action.target == SwitchKeys.awake {
@@ -356,7 +359,9 @@ struct ActionFields: View {
             } else {
                 note("Mutes the Mac’s sound, and brings it back.")
             }
-            note("The key shows a small switch mark in its top left corner: filled when on, an outline when off.")
+            if !ChipKey.isChip(action.target) {
+                note("The key shows a small switch mark in its top left corner: filled when on, an outline when off.")
+            }
         }
     }
 

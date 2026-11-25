@@ -63,6 +63,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var switchedOn: Set<String> = []
     /// The minutes left of the fan choice that is on; nil = no end.
     @Published private(set) var fanLeft: Int?
+    /// The chip temperature in whole degrees from AMS Fan Menu's now.json; nil = no fresh reading ("Chip –").
+    @Published private(set) var chipDegrees: Int?
     /// An app is listening to the microphone (looked at only while a key shows it).
     @Published private(set) var micInUse = false
     /// The counters, by their names: how far each has counted. Kept across restarts.
@@ -126,6 +128,7 @@ final class AppModel: ObservableObject {
             runningApps = ["com.apple.Safari", "com.apple.mail", "com.apple.Notes"]
             switchedOn = [SwitchKeys.dark, FanKeys.target("cool")]
             fanLeft = 8
+            chipDegrees = 56
             micInUse = true
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259), "5": day.addingTimeInterval(45)])
@@ -310,7 +313,7 @@ final class AppModel: ObservableObject {
                  covers: glance.coversReady,
                  breath: BreathKeys.showing(breathRun, now: sampleNow ?? Date()),
                  bar: BarKeys.now(focus: focusRun, timers: timers, at: sampleNow ?? Date()),
-                 fanLeft: fanLeft)
+                 fanLeft: fanLeft, chip: chipDegrees)
     }
     /// Pictures with made-up keys stand still at this moment.
     var sampleNow: Date?
@@ -373,10 +376,14 @@ final class AppModel: ObservableObject {
         if let fan = FanKeys.on(state: fanFile) { on.insert(fan) }
         // This runs every 2 seconds, so the fan key is redrawn only when its minute changes.
         let left = FanKeys.minutesLeft(state: fanFile, now: Date().timeIntervalSince1970)
+        // The chip temperature, from Fan Menu's now.json; redrawn only when the whole degree shown changes.
+        let chip = deck.allActions.contains(where: { $0.type == .toggle && ChipKey.isChip($0.target) })
+            ? ChipKey.degrees(file: try? Data(contentsOf: AppModel.chipFile), now: Date().timeIntervalSince1970) : nil
         let mic = deck.uses(.micLight) && MacSwitches.micInUse
-        guard on != switchedOn || mic != micInUse || left != fanLeft else { return }
+        guard on != switchedOn || mic != micInUse || left != fanLeft || chip != chipDegrees else { return }
         switchedOn = on
         fanLeft = left
+        chipDegrees = chip
         micInUse = mic
         bump()
     }
@@ -517,6 +524,7 @@ final class AppModel: ObservableObject {
         scheduleTick()
     }
 
+    private static let chipFile = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(ChipKey.nowFile)
     private static let fanState = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(FanKeys.stateFile)
 
     /// A fan key was pressed: AMS Fan Menu is asked for the choice. When it is not open it is opened
@@ -540,6 +548,26 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// The chip temperature key was pressed: AMS Fan Menu opens its large graph window. When Fan Menu is not
+    /// open it is opened first and asked a moment later; when it is not on this Mac the note says so.
+    private func askChipGraph() {
+        let ask = {
+            DistributedNotificationCenter.default().postNotificationName(
+                Notification.Name(ChipKey.openGraph), object: nil, userInfo: nil, deliverImmediately: true)
+        }
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: FanKeys.app).isEmpty {
+            ask()
+        } else if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: FanKeys.app) {
+            let quietly = NSWorkspace.OpenConfiguration()
+            quietly.activates = false
+            NSWorkspace.shared.openApplication(at: url, configuration: quietly) { _, _ in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { ask() }
+            }
+        } else {
+            ranEvents.send(("AMS Fan Menu is not on this Mac", false))
+        }
+    }
+
     /// A switch key was pressed.
     func switchPressed(_ action: DeckAction) {
         switch action.target {
@@ -550,6 +578,9 @@ final class AppModel: ObservableObject {
         case SwitchKeys.awake:
             KeepAwake.set(!KeepAwake.isOn)
             lookAtMac()
+            return
+        case ChipKey.target:
+            askChipGraph()
             return
         case let target where FanKeys.isFan(target):
             askFans(FanKeys.choice(of: target) ?? "")
@@ -1161,6 +1192,7 @@ enum Sample {
                        5: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("automatic"))),
                        6: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("cool"))),
                        7: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("full"))),
+                       8: DeckKey(action: DeckAction(type: .toggle, target: ChipKey.target)),
                        14: key("Next page", DeckAction(type: .nextPage))]
         var fifth = DeckPage(name: "Page 5")
         fifth.keys = [0: DeckKey(action: DeckAction(type: .macDo, target: MacDo.lock.rawValue)),

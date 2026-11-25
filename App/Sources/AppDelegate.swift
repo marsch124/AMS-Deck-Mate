@@ -686,6 +686,15 @@ enum Snapshots {
         if let data = MainActor.assumeIsolated({ KeysPDF.data(for: model.deck, note: { $0.apps.isEmpty ? "By hand" : "With apps" }) }) {
             try? data.write(to: folder.appendingPathComponent("keys.pdf"))
         }
+        // The chip temperature key (0.21) with a reading and without one, as the box and the phone get it.
+        let chipKey = DeckKey(action: DeckAction(type: .toggle, target: ChipKey.target))
+        for (name, degrees) in [("chip-56", Optional(56)), ("chip-none", nil)] {
+            let shown = chipKey.resolving(LiveKeys(chip: degrees))
+            if let picture = KeyArt.image(for: shown, pixels: 216) {
+                let png = NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
+                try? png?.write(to: folder.appendingPathComponent("key-\(name).png"))
+            }
+        }
         for (name, look) in [("day", NSAppearance.Name.aqua), ("night", NSAppearance.Name.darkAqua)] {
             shot(ScreenDeckView(model: model).padding(16), "deck-\(name)", look, folder)
             // The note under the pointer (0.20): on a key of the top row it stands below, on one of the bottom row above.

@@ -39,6 +39,8 @@ public struct LiveKeys: Equatable, Sendable {
     public var bar: BarKeys.Now?
     /// The minutes left of the fan choice that is on (AMS Fan Menu's timed choice); nil = it has no end.
     public var fanLeft: Int?
+    /// The chip temperature in whole degrees, from AMS Fan Menu's now.json; nil = no fresh reading.
+    public var chip: Int?
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
                 timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
@@ -46,8 +48,9 @@ public struct LiveKeys: Equatable, Sendable {
                 coverReady: Bool = false, counts: [String: Int] = [:], watches: [String: Int] = [:],
                 watchesRunning: Set<String> = [], focus: FocusKeys.Showing? = nil, covers: Set<String> = [],
                 breath: BreathKeys.Showing? = nil, bar: BarKeys.Now? = nil,
-                fanLeft: Int? = nil) {
+                fanLeft: Int? = nil, chip: Int? = nil) {
         self.fanLeft = fanLeft
+        self.chip = chip
         self.breath = breath
         self.bar = bar
         self.covers = covers
@@ -193,6 +196,12 @@ extension DeckKey {
                 key.title = "\(minutes) min"
             }
         case .toggle:
+            if ChipKey.isChip(key.action.target) {
+                // A figure, not a state: never lit.
+                key.action.quiet = false
+                if key.title.isEmpty { key.title = ChipKey.keyWords(live.chip) }
+                break
+            }
             let isOn = live.on.contains(key.action.target)
             key.action.quiet = isOn
             if key.title.isEmpty { key.title = SwitchKeys.words(key.action.target, isOn: isOn, fanLeft: live.fanLeft) }

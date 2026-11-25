@@ -90,3 +90,38 @@ public enum FanKeys {
         return target(state.choice)
     }
 }
+
+/// The chip temperature key (0.21): a switch-kind key whose target is "fanmenu:chip". It shows the Mac's chip
+/// temperature live ("Chip 56°"), read from AMS Fan Menu's now.json (Fan Menu 0.6 or later), and a press opens
+/// Fan Menu's large graph window. It is a figure, not a state: it never shows the switch mark and is never "on".
+/// The keys file keeps the old format: an older Deck Mate sees an ordinary switch it does not know.
+public enum ChipKey {
+    public static let target = "fanmenu:chip"
+    public static func isChip(_ target: String) -> Bool { target == Self.target }
+
+    /// What a press posts (no object): Fan Menu opens its graph window.
+    public static let openGraph = "com.schabbauer.AMSFanMenu.openGraph"
+    /// The file Fan Menu rewrites every 5 seconds while it runs (inside the home folder).
+    public static let nowFile = "Library/Application Support/AMS Fan Menu/now.json"
+    /// A reading older than this many seconds counts as no reading (Fan Menu is not running).
+    public static let staleAfter = 30.0
+
+    /// The whole degrees of the chip from the bytes of now.json; nil when the file is missing, unreadable,
+    /// has no "chip" or a figure that is not a number, or its "time" is missing or more than 30 seconds old.
+    public static func degrees(file data: Data?, now: Double) -> Int? {
+        struct Now: Decodable { var time: Double?; var chip: Double? }
+        guard let data, let reading = try? JSONDecoder().decode(Now.self, from: data),
+              let time = reading.time, let chip = reading.chip, chip.isFinite,
+              now - time <= staleAfter, abs(chip) < 1000 else { return nil }
+        return Int(chip.rounded())
+    }
+
+    /// The words on the key: "Chip 56°", or "Chip –" without a fresh reading.
+    public static func keyWords(_ degrees: Int?) -> String {
+        degrees.map { "Chip \($0)°" } ?? "Chip –"
+    }
+
+    /// In lists and notes.
+    public static let longWords = "Fans: chip temperature"
+    public static let says = "Shows the chip temperature. Click: opens AMS Fan Menu's graphs."
+}

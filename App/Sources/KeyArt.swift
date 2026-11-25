@@ -96,7 +96,8 @@ enum KeyArt {
             } else {
                 draw(key, size: size)
             }
-            if key.action.type == .toggle {
+            if key.action.type == .toggle, !ChipKey.isChip(key.action.target) {
+                // (The chip temperature key shows a figure, not a state: no mark.)
                 // A small switch top left: filled with its knob to the right when on, an outline when off.
                 let k = size / 72
                 let pill = CGRect(x: 6 * k, y: size - 16 * k, width: 17 * k, height: 10 * k)

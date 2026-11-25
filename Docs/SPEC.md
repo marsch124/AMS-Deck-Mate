@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.21 (Mac; iPhone and iPad stay 0.32, build 38): the Switch key has an eighth choice, "Fans: chip temperature" (section 143): a key that shows the chip temperature ("Chip 56°") from AMS Fan Menu 0.6's now.json, with no switch mark; a press opens Fan Menu's graph. Keys-file format stays 3.
 - Since 0.20 (Mac) and 0.32 (iPhone and iPad): the fan key that is on shows the minutes left (section 140); a double press, a third action of every key, marked by a small white "×2" (section 141); words that say what a key does, shown as a plate under the Mac pointer and by the new "Explain" button on the iPhone and iPad (section 142). Link version is now 10 (was 9), keys-file format stays 3 (new optional field `twice` per key).
 - Since 0.19 (Mac) and 0.31 (iPhone and iPad): Cool and Full fan keys last 10 minutes (section 137); the "Set up keys" window is taller so nothing is cut off (137); the owner places pages in four places for several pages at once (section 138); a switch between 1 page and 4 pages, the left-edge pull on an iPhone on its side and the blue name of the page you are on (section 139). Link version stays 9, keys-file format stays 3 (new optional field `places` per page group).
 - Since 0.18 (Mac; iPhone and iPad stay 0.29, build 35): three new choices of the Switch key, "Fans: Automatic", "Fans: Cool" and "Fans: Full" (7 choices in all instead of 4), which ask AMS Fan Menu (0.2 or newer) for the fan speed and show which choice is on (section 135); one more drawing, a fan (`app-fan.svg`), 257 in all instead of 256. No link version change (still 9), no keys-file format change (still 3).
@@ -254,6 +255,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.21 (Mac, build 31, 25 Nov 2026; iPhone and iPad stay 0.32, build 38).** The chip temperature key (section 143). Keys-file format (3) and link version (10) unchanged. Not yet proven: with a real AMS Fan Menu 0.6; the Stream Deck box.
 
 **0.20 (Mac, build 30, 25 Nov 2026; iPhone and iPad 0.32, build 38).** The fan key that is on shows the minutes left (section 140); double press (141); what a key does in words, the pointer note on the Mac and the "Explain" button on the phone (142); link version 10. Keys-file format (3) unchanged. Not yet proven: the double press on the real Stream Deck box, a real finger double-tapping on a real iPhone or iPad with the real Mac, and the full 10 minutes counting down on the key.
 
@@ -1285,6 +1288,20 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Signs.** New: a small white "×2" (section 141); on the iPhone and iPad a question mark in a ring with the word "Explain", pink = the Explain button, filled pink = Explain is on, and a thin pink frame round every key = Explain is on, a tap reads the key instead of pressing it. Changed: the words on a fan key (section 140). Unchanged: the small white dot = long press.
 - **Texts.** What's new 0.20 and 0.32; How it works (Mac: new part "What a key says it does", "Keys on screen"; phone: new part "Explain", "Settings"), "Signs in this app" (both).
 - **Not yet proven.** A real finger on a real iPhone or iPad with the real Mac.
+
+## 143. The chip temperature key (Mac 0.21)
+- **Version.** Before: Mac 0.20 (build 30); fan keys (section 135) only set the fans. Now: Mac 0.21 (build 31), 25 Nov 2026; iPhone and iPad stay 0.32 (build 38).
+- **What.** A key that SHOWS the Mac's chip temperature live in whole degrees as words on its face, "Chip 56°", and opens AMS Fan Menu's large graph window on a press. It is a figure, not a state.
+- **Model.** `ActionType.toggle` with `target` `fanmenu:chip` (`ChipKey.target`). Not `fan:` (that prefix means a fan choice, `FanKeys.isFan` is false for it). No new field, keys-file format stays 3; an older Deck Mate sees a switch with an unknown target. In Set up keys, "Switch (on or off)" has an eighth entry "Fans: chip temperature" (`ChipKey.longWords`), after the three fan choices.
+- **Contract with AMS Fan Menu 0.6.** The file `~/Library/Application Support/AMS Fan Menu/now.json`, rewritten every 5 seconds while Fan Menu runs, a flat object: `time` (seconds since 1970), `chip` (degrees C, decimal), optional `hottest`, `graphics`, `battery`, `storage`, `case`, `power`, `fans`, `version`. Only `time` and `chip` are read.
+- **Reading.** `ChipKey.degrees(file:now:)` (pure, bytes and `now` in): the chip rounded to whole degrees; nil when the file is missing or unreadable, has no `chip` or no `time`, or `time` is more than 30 seconds old (`ChipKey.staleAfter`). `AppModel.lookAtMac` (every 2 seconds, only while a chip key is in the deck) reads it and redraws only when the whole degree changes (`chipDegrees` -> `LiveKeys.chip`).
+- **Words.** `ChipKey.keyWords`: "Chip 56°" or "Chip –" (en dash). A title of the owner's own is kept. `KeySays`: "Shows the chip temperature. Click: opens AMS Fan Menu's graphs."; done words "Opened the Fan Menu graph"; lists "Fans: chip temperature".
+- **Press.** Posts the distributed notification `com.schabbauer.AMSFanMenu.openGraph` with no object (`ChipKey.openGraph`); opens Fan Menu first (1.5 s later) when it is not running; "AMS Fan Menu is not on this Mac" when not installed. No long press of its own. Key check: same note as a fan key.
+- **Look.** Purple (switch), fan drawing (`app-fan`), NO switch mark (`KeyArt`), `action.quiet` always false.
+- **iPhone and iPad.** The phone shows the picture and title the Mac sends and presses through the Mac, so it shows "Chip 56°" and works with no phone change; link version stays 10.
+- **Signs.** New line in "Signs in this app": "Chip 56°" = a figure, "Chip –" = no fresh reading; the switch mark keeps its one meaning.
+- **Tests.** `ChipKeyTests` (two small data tests).
+- **Not yet proven.** With a real AMS Fan Menu 0.6; the Stream Deck box.
 
 ## 136. Pull the navigation picture in from the left edge (iPhone and iPad 0.30 build 36)
 - **Version.** Before: iPhone and iPad app 0.29 (build 35). Now: 0.30 (build 36), 25 Nov 2026. It works with the Mac app as it is (Mac 0.18, build 28); no Mac update is needed and the link version is unchanged.

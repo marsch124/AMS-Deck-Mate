@@ -30,6 +30,7 @@ enum Outside {
         case .garmin: return GarminKeys.number(key.action.target).title
         case .macNow: return MacNowKeys.number(key.action.target).title
         case .timer: return "Timer, \(TimerKeys.minutes(key.action.target)) min"
+        case .toggle where ChipKey.isChip(key.action.target): return ChipKey.longWords
         case .toggle where FanKeys.isFan(key.action.target):
             return "Fans: \(FanKeys.longWords(FanKeys.choice(of: key.action.target) ?? ""))"
         default: return key.action.type.title

@@ -26,6 +26,8 @@ Since 0.18 the Switch key has three fan choices (Fans: Automatic, Cool and Full)
 
 Since 0.19 the Cool and Full fan keys last 10 minutes (AMS Fan Menu 0.3.1 or newer), "Set up keys" is taller so nothing is cut off, and each page group has four places for the pages an iPad shows at once (an iPhone: two). The iPhone and iPad app 0.31 has a switch between one page and several on top of the navigation picture, the pull from the left edge also on an iPhone with two pages, and bigger keys there.
 
+Since 0.21 the Switch key has an eighth choice, "Fans: chip temperature": a key that shows the Mac's chip temperature live ("Chip 56°", "Chip –" when there is no fresh reading) from AMS Fan Menu 0.6 or newer, with no switch mark; a press opens Fan Menu's graph. The iPhone and iPad app needs no update.
+
 Since 0.20 (iPhone and iPad 0.32) the fan key that is on shows the minutes left ("Cool · 8 min"), every key can have a double press (two presses within a third of a second, marked by a small white "×2"; a key that has one waits a third of a second, other keys act at once), and keys say in words what they do: a small plate when the pointer rests on a key on the Mac, and an "Explain" button on the iPhone and iPad that reads a key without pressing it.
 
 Since 0.17 (iPhone and iPad 0.19) there is "Several pages at once" for using the iPhone or iPad without the box: 2 pages on an iPhone, 4 on an iPad, arranged for the biggest keys. Since 0.17.1 (iPhone and iPad 0.19.1) the page group's folders fill the empty spots, so a group with one page and three folders still shows 4 pages on an iPad. Both guides also have a part "Signs in this app", and the small buttons now carry words.
