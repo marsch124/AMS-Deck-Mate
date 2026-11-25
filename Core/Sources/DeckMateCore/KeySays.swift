@@ -84,6 +84,7 @@ public enum KeySays {
             return "Timer: \(TimerKeys.minutes(target)) min, start or stop"
         case .toggle:
             if ChipKey.isChip(target) { return ChipKey.says }
+            if FanSpeedKey.isFans(target) { return FanSpeedKey.says }
             if let choice = FanKeys.choice(of: target) { return "Fans: \(FanKeys.longWords(choice))" }
             if target == SwitchKeys.dark { return "Switches dark mode" }
             if target == SwitchKeys.mute { return "Switches the sound on or off" }

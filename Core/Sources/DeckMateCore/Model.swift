@@ -257,7 +257,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .timer: return "app-timer"
         case .toggle:
             return target == SwitchKeys.dark ? "app-moon" : target == SwitchKeys.mute ? "deck-mute"
-                : target == SwitchKeys.awake ? "coffee" : FanKeys.isFan(target) || ChipKey.isChip(target) ? "app-fan" : "deck-multi"
+                : target == SwitchKeys.awake ? "coffee" : FanKeys.isFan(target) || FanSpeedKey.isFanMenuFigure(target) ? "app-fan" : "deck-multi"
         case .appleShortcut: return "deck-script"
         case .list: return "control-list"
         case .running: return "deck-app"

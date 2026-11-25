@@ -196,7 +196,7 @@ public enum KeyCheck {
             return action.steps.isEmpty ? "The list is empty" : nil
         case .toggle:
             // A fan key only works with AMS Fan Menu on this Mac.
-            if FanKeys.isFan(target) || ChipKey.isChip(target) { return world.appExists(FanKeys.app) ? nil : "AMS Fan Menu is not on this Mac" }
+            if FanKeys.isFan(target) || FanSpeedKey.isFanMenuFigure(target) { return world.appExists(FanKeys.app) ? nil : "AMS Fan Menu is not on this Mac" }
             guard SwitchKeys.isOwn(target) else { return nil }
             for step in action.steps where step.type != .none {
                 if let found = problem(step, in: profile, deck: deck, world: world) { return found }
@@ -281,7 +281,7 @@ public enum ActionWords {
         case .recentFile: return "No recent file yet"
         case .timer: return "Timer: \(TimerKeys.minutes(action.target)) min"
         case .toggle:
-            if ChipKey.isChip(action.target) { return "Opened the Fan Menu graph" }
+            if FanSpeedKey.isFanMenuFigure(action.target) { return "Opened the Fan Menu graph" }
             if let choice = FanKeys.choice(of: action.target) { return "Fans: \(FanKeys.longWords(choice))" }
             return action.target == SwitchKeys.dark ? "Switched dark mode" : action.target == SwitchKeys.mute ? "Switched the sound"
                 : action.target == SwitchKeys.awake ? "Switched keep awake" : "Switched"

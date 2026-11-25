@@ -125,3 +125,47 @@ public enum ChipKey {
     public static let longWords = "Fans: chip temperature"
     public static let says = "Shows the chip temperature. Click: opens AMS Fan Menu's graphs."
 }
+
+/// The fan speed key (0.22): like the chip key, a switch-kind key whose target is "fanmenu:fans". It shows the
+/// speed of the faster fan live ("Fans 1,650"), read from the same now.json as the chip key, and a press opens Fan
+/// Menu's graph window. A figure, not a state: no switch mark, never "on". Same file format as before.
+public enum FanSpeedKey {
+    public static let target = "fanmenu:fans"
+    public static func isFans(_ target: String) -> Bool { target == Self.target }
+
+    /// Either Fan Menu key (chip or fans): the keys that read now.json and open the graph.
+    public static func isFanMenuFigure(_ target: String) -> Bool { ChipKey.isChip(target) || isFans(target) }
+
+    /// The speed in turns per minute of the FASTER fan, from the bytes of now.json ("fans": [1590, 1648]);
+    /// 0 = every fan stands still. nil when the file is missing, unreadable, has no "fans" (or an empty list),
+    /// no "time", or its "time" is more than 30 seconds old (`ChipKey.staleAfter`).
+    public static func speed(file data: Data?, now: Double) -> Int? {
+        struct Now: Decodable { var time: Double?; var fans: [Double]? }
+        guard let data, let reading = try? JSONDecoder().decode(Now.self, from: data),
+              let time = reading.time, let fans = reading.fans, !fans.isEmpty,
+              now - time <= ChipKey.staleAfter, fans.allSatisfy({ $0.isFinite && $0 >= 0 && $0 < 100_000 }),
+              let fastest = fans.max() else { return nil }
+        return Int(fastest.rounded())
+    }
+
+    /// The figure with a comma between the thousands, the same on every Mac: 1650 -> "1,650".
+    public static func grouped(_ number: Int) -> String {
+        let digits = String(abs(number))
+        var out = ""
+        for (index, digit) in digits.reversed().enumerated() {
+            if index > 0, index % 3 == 0 { out.append(",") }
+            out.append(digit)
+        }
+        return (number < 0 ? "-" : "") + String(out.reversed())
+    }
+
+    /// The words on the key: "Fans 1,650", "Fans off" when every fan stands still, "Fans –" without a fresh reading.
+    public static func keyWords(_ speed: Int?) -> String {
+        guard let speed else { return "Fans –" }
+        return speed == 0 ? "Fans off" : "Fans \(grouped(speed))"
+    }
+
+    /// In lists and notes.
+    public static let longWords = "Fans: fan speed"
+    public static let says = "Shows the fan speed. Click: opens AMS Fan Menu's graphs."
+}

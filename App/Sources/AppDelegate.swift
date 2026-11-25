@@ -688,6 +688,14 @@ enum Snapshots {
         }
         // The chip temperature key (0.21) with a reading and without one, as the box and the phone get it.
         let chipKey = DeckKey(action: DeckAction(type: .toggle, target: ChipKey.target))
+        let fansKey = DeckKey(action: DeckAction(type: .toggle, target: FanSpeedKey.target))
+        for (name, speed) in [("fans-1650", Optional(1650)), ("fans-off", Optional(0)), ("fans-none", nil)] {
+            let shown = fansKey.resolving(LiveKeys(fans: speed))
+            if let picture = KeyArt.image(for: shown, pixels: 216) {
+                let png = NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
+                try? png?.write(to: folder.appendingPathComponent("key-\(name).png"))
+            }
+        }
         for (name, degrees) in [("chip-56", Optional(56)), ("chip-none", nil)] {
             let shown = chipKey.resolving(LiveKeys(chip: degrees))
             if let picture = KeyArt.image(for: shown, pixels: 216) {

@@ -41,6 +41,8 @@ public struct LiveKeys: Equatable, Sendable {
     public var fanLeft: Int?
     /// The chip temperature in whole degrees, from AMS Fan Menu's now.json; nil = no fresh reading.
     public var chip: Int?
+    /// The speed of the faster fan in turns per minute (0 = stopped), from now.json; nil = no fresh reading.
+    public var fans: Int?
 
     public init(apps: [String] = [], copied: [String] = [], files: [String] = [], running: [String] = [],
                 timers: [String: Int] = [:], on: Set<String> = [], micInUse: Bool = false,
@@ -48,9 +50,10 @@ public struct LiveKeys: Equatable, Sendable {
                 coverReady: Bool = false, counts: [String: Int] = [:], watches: [String: Int] = [:],
                 watchesRunning: Set<String> = [], focus: FocusKeys.Showing? = nil, covers: Set<String> = [],
                 breath: BreathKeys.Showing? = nil, bar: BarKeys.Now? = nil,
-                fanLeft: Int? = nil, chip: Int? = nil) {
+                fanLeft: Int? = nil, chip: Int? = nil, fans: Int? = nil) {
         self.fanLeft = fanLeft
         self.chip = chip
+        self.fans = fans
         self.breath = breath
         self.bar = bar
         self.covers = covers
@@ -200,6 +203,11 @@ extension DeckKey {
                 // A figure, not a state: never lit.
                 key.action.quiet = false
                 if key.title.isEmpty { key.title = ChipKey.keyWords(live.chip) }
+                break
+            }
+            if FanSpeedKey.isFans(key.action.target) {
+                key.action.quiet = false
+                if key.title.isEmpty { key.title = FanSpeedKey.keyWords(live.fans) }
                 break
             }
             let isOn = live.on.contains(key.action.target)

@@ -103,3 +103,43 @@ final class ChipKeyTests: XCTestCase {
         XCTAssertEqual(KeyCheck.problem(key, in: DeckProfile(), deck: Deck(), world: world(false)), "AMS Fan Menu is not on this Mac")
     }
 }
+
+/// 0.22: the fan speed key.
+final class FanSpeedKeyTests: XCTestCase {
+    func testTheHigherFanFromNowFile() {
+        let file = Data(#"{"time":1000,"fans":[1590,1648],"chip":68.9}"#.utf8)
+        XCTAssertEqual(FanSpeedKey.speed(file: file, now: 1004), 1648)
+        XCTAssertEqual(FanSpeedKey.speed(file: Data(#"{"time":1000,"fans":[1700,1200]}"#.utf8), now: 1000), 1700)
+        XCTAssertEqual(FanSpeedKey.speed(file: Data(#"{"time":1000,"fans":[0,0]}"#.utf8), now: 1000), 0)
+    }
+
+    func testNoReadingIsNil() {
+        let file = Data(#"{"time":1000,"fans":[1590,1648]}"#.utf8)
+        XCTAssertNil(FanSpeedKey.speed(file: file, now: 1031), "older than 30 seconds")
+        XCTAssertNil(FanSpeedKey.speed(file: nil, now: 1000))
+        XCTAssertNil(FanSpeedKey.speed(file: Data(#"{"fans":[1500]}"#.utf8), now: 1000), "no time")
+        XCTAssertNil(FanSpeedKey.speed(file: Data(#"{"time":1000,"chip":60}"#.utf8), now: 1000), "no fans")
+        XCTAssertNil(FanSpeedKey.speed(file: Data(#"{"time":1000,"fans":[]}"#.utf8), now: 1000), "no fan at all")
+    }
+
+    func testWordsKeyAndSayings() {
+        XCTAssertEqual(FanSpeedKey.keyWords(1650), "Fans 1,650")
+        XCTAssertEqual(FanSpeedKey.keyWords(980), "Fans 980")
+        XCTAssertEqual(FanSpeedKey.keyWords(12345), "Fans 12,345")
+        XCTAssertEqual(FanSpeedKey.keyWords(0), "Fans off")
+        XCTAssertEqual(FanSpeedKey.keyWords(nil), "Fans –")
+        XCTAssertFalse(FanKeys.isFan(FanSpeedKey.target))
+        XCTAssertFalse(ChipKey.isChip(FanSpeedKey.target))
+        let key = DeckKey(action: DeckAction(type: .toggle, target: FanSpeedKey.target))
+        let shown = key.resolving(LiveKeys(on: [FanSpeedKey.target], chip: 56, fans: 1650))
+        XCTAssertEqual(shown.title, "Fans 1,650")
+        XCTAssertFalse(shown.action.quiet, "a figure is never lit")
+        XCTAssertEqual(key.resolving(LiveKeys()).title, "Fans –")
+        XCTAssertEqual(key.shownIcon, "app-fan")
+        XCTAssertEqual(KeySays.does(key.action, in: Deck(), profile: nil, appName: { $0 }),
+                       "Shows the fan speed. Click: opens AMS Fan Menu's graphs.")
+        func world(_ here: Bool) -> KeyWorld { KeyWorld(appExists: { _ in here }, fileExists: { _ in true }, raycastExtension: { _, _ in true }) }
+        XCTAssertEqual(KeyCheck.problem(key, in: DeckProfile(), deck: Deck(), world: world(false)), "AMS Fan Menu is not on this Mac")
+        XCTAssertEqual(FanSpeedKey.longWords, "Fans: fan speed")
+    }
+}

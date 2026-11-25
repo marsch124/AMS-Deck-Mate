@@ -494,6 +494,7 @@ struct SettingsView: View {
             case .copied: return "Last copied text"
             case .toggle:
                 if ChipKey.isChip(key.action.target) { return ChipKey.longWords }
+                if FanSpeedKey.isFans(key.action.target) { return FanSpeedKey.longWords }
                 if let choice = FanKeys.choice(of: key.action.target) { return "Fans: \(FanKeys.longWords(choice))" }
                 return key.action.target == SwitchKeys.dark ? "Dark mode switch" : key.action.target == SwitchKeys.mute ? "Mute switch"
                     : key.action.target == SwitchKeys.awake ? "Keep awake switch" : "Switch"

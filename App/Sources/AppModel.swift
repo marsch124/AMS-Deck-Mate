@@ -65,6 +65,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var fanLeft: Int?
     /// The chip temperature in whole degrees from AMS Fan Menu's now.json; nil = no fresh reading ("Chip –").
     @Published private(set) var chipDegrees: Int?
+    /// The speed of the faster fan from now.json (0 = stopped); nil = no fresh reading ("Fans –").
+    @Published private(set) var fanSpeed: Int?
     /// An app is listening to the microphone (looked at only while a key shows it).
     @Published private(set) var micInUse = false
     /// The counters, by their names: how far each has counted. Kept across restarts.
@@ -129,6 +131,7 @@ final class AppModel: ObservableObject {
             switchedOn = [SwitchKeys.dark, FanKeys.target("cool")]
             fanLeft = 8
             chipDegrees = 56
+            fanSpeed = 1650
             micInUse = true
             let day = Date(timeIntervalSince1970: 1_794_800_000)
             timers = TimerKeys.State(ends: ["25": day.addingTimeInterval(1259), "5": day.addingTimeInterval(45)])
@@ -313,7 +316,7 @@ final class AppModel: ObservableObject {
                  covers: glance.coversReady,
                  breath: BreathKeys.showing(breathRun, now: sampleNow ?? Date()),
                  bar: BarKeys.now(focus: focusRun, timers: timers, at: sampleNow ?? Date()),
-                 fanLeft: fanLeft, chip: chipDegrees)
+                 fanLeft: fanLeft, chip: chipDegrees, fans: fanSpeed)
     }
     /// Pictures with made-up keys stand still at this moment.
     var sampleNow: Date?
@@ -377,13 +380,19 @@ final class AppModel: ObservableObject {
         // This runs every 2 seconds, so the fan key is redrawn only when its minute changes.
         let left = FanKeys.minutesLeft(state: fanFile, now: Date().timeIntervalSince1970)
         // The chip temperature, from Fan Menu's now.json; redrawn only when the whole degree shown changes.
-        let chip = deck.allActions.contains(where: { $0.type == .toggle && ChipKey.isChip($0.target) })
-            ? ChipKey.degrees(file: try? Data(contentsOf: AppModel.chipFile), now: Date().timeIntervalSince1970) : nil
+        // The fan speed (0.22) comes from the same file: it is read once when either key is on the deck.
+        let wantsChip = deck.allActions.contains(where: { $0.type == .toggle && ChipKey.isChip($0.target) })
+        let wantsFans = deck.allActions.contains(where: { $0.type == .toggle && FanSpeedKey.isFans($0.target) })
+        let nowFile = wantsChip || wantsFans ? try? Data(contentsOf: AppModel.chipFile) : nil
+        let clock = Date().timeIntervalSince1970
+        let chip = wantsChip ? ChipKey.degrees(file: nowFile, now: clock) : nil
+        let fans = wantsFans ? FanSpeedKey.speed(file: nowFile, now: clock) : nil
         let mic = deck.uses(.micLight) && MacSwitches.micInUse
-        guard on != switchedOn || mic != micInUse || left != fanLeft || chip != chipDegrees else { return }
+        guard on != switchedOn || mic != micInUse || left != fanLeft || chip != chipDegrees || fans != fanSpeed else { return }
         switchedOn = on
         fanLeft = left
         chipDegrees = chip
+        fanSpeed = fans
         micInUse = mic
         bump()
     }
@@ -548,7 +557,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// The chip temperature key was pressed: AMS Fan Menu opens its large graph window. When Fan Menu is not
+    /// The chip temperature key or the fan speed key was pressed: AMS Fan Menu opens its large graph window. When Fan Menu is not
     /// open it is opened first and asked a moment later; when it is not on this Mac the note says so.
     private func askChipGraph() {
         let ask = {
@@ -579,7 +588,7 @@ final class AppModel: ObservableObject {
             KeepAwake.set(!KeepAwake.isOn)
             lookAtMac()
             return
-        case ChipKey.target:
+        case ChipKey.target, FanSpeedKey.target:
             askChipGraph()
             return
         case let target where FanKeys.isFan(target):
@@ -1193,6 +1202,7 @@ enum Sample {
                        6: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("cool"))),
                        7: DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target("full"))),
                        8: DeckKey(action: DeckAction(type: .toggle, target: ChipKey.target)),
+                       9: DeckKey(action: DeckAction(type: .toggle, target: FanSpeedKey.target)),
                        14: key("Next page", DeckAction(type: .nextPage))]
         var fifth = DeckPage(name: "Page 5")
         fifth.keys = [0: DeckKey(action: DeckAction(type: .macDo, target: MacDo.lock.rawValue)),
