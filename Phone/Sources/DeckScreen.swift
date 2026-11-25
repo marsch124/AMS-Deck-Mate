@@ -104,6 +104,16 @@ struct DeckScreen: View {
         isPad && (onItsSide || CommandLine.arguments.contains("-forceMap")) && connected
             && (2...4).contains(link.tiles.count)
     }
+    /// The navigation picture can be pulled in from the far left edge, over the keys: on the big-keys
+    /// iPad screen (0.30) and on an iPhone on its side that shows two pages (0.31), where it has no other place.
+    private var drawerPlace: Bool {
+        connected && EdgePull.offered(bigKeys: bigKeys, phoneSideways: phoneSideways, pages: link.tiles.count,
+                                      hasPicture: !link.map.isEmpty)
+    }
+    /// An iPhone on its side showing two pages at once.
+    private var phoneWide: Bool { phoneSideways && connected && link.tiles.count >= 2 }
+    /// The strip beside the camera cut-out of an iPhone on its side: the picture slides in behind it.
+    private var drawerInset: CGFloat { bigKeys ? 0 : sideInsets.leading }
     /// The height of the small marks: lower in the thin line of the big-keys screen.
     private var markHeight: CGFloat { bigKeys ? 26 : (isPad ? 34 : 30) }
     /// The width of the navigation picture while a finger drags it (nil when no finger is on it).
@@ -130,16 +140,18 @@ struct DeckScreen: View {
                 } else if phoneSideways {
                     // iPhone on its side: everything but the keys sits in a panel on the left, so the keys get the whole height.
                     HStack(spacing: 12) {
-                        sidePanel
+                        // Two pages at once (0.31): no panel at the left, the pages take the whole width
+                        // (the navigation picture is pulled in from the left edge instead).
+                        if !phoneWide { sidePanel }
                         // His pick (0.16): the heading in one line in the middle over the keys, in the room
                         // that was free there anyway, so the keys keep their size and their place.
                         VStack(spacing: 2) {
                             // His pick (0.24): the picture hidden, the heading steps aside and the keys take its height.
                             if headingShows { sideHeading.transition(.opacity) }
-                            keysColumn(note: false)
+                            if phoneWide { phoneWideKeys } else { keysColumn(note: false) }
                         }
                         .overlay(alignment: .top) {
-                            if linesOverKeys {
+                            if linesOverKeys || phoneWide {
                                 VStack(spacing: 4) {
                                     if let battery {
                                         batteryLine(battery)
@@ -183,7 +195,7 @@ struct DeckScreen: View {
             .padding(.horizontal, bigKeys ? 8 : (isPad ? 20 : 12))
             .padding(.vertical, bigKeys ? 4 : (isPad ? 14 : 8))
             .opacity(resting || dark ? 0 : 1)
-            if bigKeys, !resting, !dark { pagesDrawer }
+            if drawerPlace, !resting, !dark { pagesDrawer }
             if dark { asleepScreen } else if resting { restingClock }
         }
         // Big keys (0.30): a finger sliding in from the far left edge pulls the navigation picture over the keys.
@@ -227,7 +239,7 @@ struct DeckScreen: View {
         }
         .onDisappear { restoreScreen() }
         .onChange(of: link.macAsleep) { _, _ in keysWhileAsleep = false }
-        .onChange(of: bigKeys) { _, big in if !big { drawerOpen = false; drawerPull = nil; drawerLive = false } }
+        .onChange(of: drawerPlace) { _, there in if !there { drawerOpen = false; drawerPull = nil; drawerLive = false } }
         // Turned from one side straight to the other the size stays the same: only this tells.
         .onReceive(NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)) { _ in readIslandSide() }
         .preferredColorScheme(ground == .auto ? nil : .dark)
@@ -645,7 +657,8 @@ struct DeckScreen: View {
     private var keysSwipe: some Gesture {
         DragGesture(minimumDistance: 30, coordinateSpace: .global).onEnded { drag in
             // Big keys (0.30): a swipe that starts at the far left edge pulls the navigation picture in instead.
-            if bigKeys, drawerOpen || drawerLive || EdgePull.atEdge(startX: drag.startLocation.x) { return }
+            if drawerPlace, drawerOpen || drawerLive
+                || EdgePull.atEdge(startX: drag.startLocation.x, inset: drawerInset) { return }
             let across = drag.translation.width
             let along = drag.translation.height
             if abs(across) > 60, abs(across) > abs(along) * 1.5 {
@@ -710,6 +723,34 @@ struct DeckScreen: View {
         .accessibilityIdentifier("bigKeysScreen")
     }
 
+    /// iPhone on its side with two pages at once (0.31): the pages fill the width, and the favourites and
+    /// the "Pages" button stand in a row under them, as big as the keys — the iPad's big-keys rule
+    /// (`BigKeys.plan`). Before, the pages shared a box made for one page, beside an empty panel.
+    private var phoneWideKeys: some View {
+        GeometryReader { box in
+            let gap = keyGap.points
+            let plan = BigKeys.plan(width: box.size.width, height: box.size.height, gap: gap,
+                                    pages: link.tiles.count, favourites: favouritesShow)
+            let side = CGFloat(plan?.side ?? 30) * keySize.scale
+            let between = CGFloat(BigKeys.between)
+            VStack(spacing: between) {
+                WideGrid(link: link, side: side, gap: gap, corner: keyShape.corner,
+                         across: plan?.across ?? 2, between: between)
+                if favouritesShow { extrasRow(side: side, gap: gap) }
+            }
+            .background(GeometryReader { keys in
+                Color.clear.preference(key: KeysFrameKey.self, value: keys.frame(in: .named("keysRow")))
+            })
+            .frame(width: box.size.width, height: box.size.height,
+                   alignment: Self.keysAlignment(keysPlace, leading: false))
+            .opacity(connected ? 1 : 0.35)
+            .contentShape(Rectangle())
+            .gesture(keysSwipe)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("phoneWideKeys")
+    }
+
     // MARK: The navigation picture pulled in from the left edge (0.30)
 
     /// The navigation picture over the big keys: it slides in from the far left edge with the finger, the
@@ -732,7 +773,7 @@ struct DeckScreen: View {
             if drawerLive {
                 navigationPicture(width: full) { setDrawer(false) }
                     .padding(.vertical, 8)
-                    .offset(x: CGFloat(EdgePull.offset(shown: Double(open), margin: 8)))
+                    .offset(x: CGFloat(EdgePull.offset(shown: Double(open), margin: 8 + Double(drawerInset))))
                     .padding(.leading, 8)
                     .allowsHitTesting(drawerOpen && drawerPull == nil)
                     .accessibilityHidden(!drawerOpen)
@@ -741,8 +782,8 @@ struct DeckScreen: View {
             // The screen itself shows where to pull: a short purple line at the edge (purple = pages).
             Capsule()
                 .fill(PhonePalette.fill("profiles"))
-                .frame(width: 4, height: 64)
-                .frame(width: 8, height: 96)
+                .frame(width: 4, height: bigKeys ? 64 : 56)
+                .frame(width: bigKeys ? 8 : 12, height: 96)
                 .contentShape(Rectangle())
                 .onTapGesture { setDrawer(true) }
                 .opacity(Double(1 - shown))
@@ -778,10 +819,11 @@ struct DeckScreen: View {
     private var drawerDrag: some Gesture {
         DragGesture(minimumDistance: 10, coordinateSpace: .global)
             .onChanged { drag in
-                guard bigKeys, !resting, !dark else { return }
+                guard drawerPlace, !resting, !dark else { return }
                 if drawerPull == nil {
                     guard EdgePull.takes(startX: drag.startLocation.x, open: drawerOpen,
-                                         across: drag.translation.width, along: drag.translation.height) else { return }
+                                         across: drag.translation.width, along: drag.translation.height,
+                                         inset: drawerInset) else { return }
                     drawerLive = true
                 }
                 drawerPull = CGFloat(MapSwipe.shownWidth(wasOpen: drawerOpen, moved: drag.translation.width,
@@ -1030,6 +1072,7 @@ struct DeckScreen: View {
     private func navigationPicture(width: CGFloat, picked: (() -> Void)? = nil) -> some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 8) {
+                if link.wideMac { pagesSwitch(picked: picked) }
                 ForEach(link.map, id: \.id) { group in
                     let here = group.id == link.status?.current
                     // His pick (0.16, "style 4"): every page group in its own frame, its name on a full-colour
@@ -1088,6 +1131,41 @@ struct DeckScreen: View {
         .background(PhonePalette.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("navigationPicture")
+    }
+
+    /// On top of the navigation picture (his pick "3", 0.31): a two-part switch between several pages at
+    /// once (4 on an iPad, 2 on an iPhone) and one page. The part in full purple is what shows now.
+    private func pagesSwitch(picked: (() -> Void)?) -> some View {
+        let many = link.wideOn
+        return HStack(spacing: 2) {
+            ForEach([true, false], id: \.self) { wide in
+                let on = wide == many
+                let shape = RoundedRectangle(cornerRadius: 7, style: .continuous)
+                Text(wide ? "\(link.wideCount) pages" : "1 page")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(on ? Color.white : PhonePalette.part("profiles"))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 30)
+                    .background(on ? PhonePalette.fill("profiles") : Color.clear, in: shape)
+                    .contentShape(shape)
+                    .onTapGesture {
+                        guard !on else { return }
+                        snapFeel()
+                        link.setWide(wide)
+                        picked?()
+                    }
+                    .accessibilityElement()
+                    .accessibilityLabel(wide ? "Show \(link.wideCount) pages at once" : "Show 1 page")
+                    .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
+                    .accessibilityAction { if !on { link.setWide(wide); picked?() } }
+                    .accessibilityIdentifier(wide ? "showManyPages" : "showOnePage")
+            }
+        }
+        .padding(2)
+        .background(PhonePalette.part("profiles").opacity(0.16), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("pagesSwitch")
     }
 
     // MARK: Music
@@ -1530,11 +1608,14 @@ private struct WideGrid: View {
                         let page = row * across + column
                         if page < names.count {
                             VStack(alignment: .leading, spacing: gap) {
+                                // The page the device is on: its name blue and bold, like its frame in the navigation picture (0.31).
                                 Text(names[page].isEmpty ? "Page" : names[page])
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.secondary)
+                                    .font(.caption.weight(link.tileHere == page ? .bold : .semibold))
+                                    .foregroundStyle(link.tileHere == page ? PhonePalette.part("screen") : Color.secondary)
+                                    .accessibilityAddTraits(link.tileHere == page ? .isSelected : [])
                                     .lineLimit(1)
-                                    .frame(height: Self.nameHeight)
+                                    // As wide as its keys, so a name is cut short only when it really is longer.
+                                    .frame(width: 5 * side + 4 * gap, height: Self.nameHeight, alignment: .leading)
                                     .accessibilityIdentifier("pageName\(page)")
                                 KeyGrid(link: link, side: side, gap: gap, corner: corner,
                                         first: page * StreamDeckProtocol.keyCount)

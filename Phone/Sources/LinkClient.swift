@@ -20,6 +20,8 @@ final class LinkClient: ObservableObject {
     @Published private(set) var place = ""
     /// "Several pages at once": the names of the pages shown side by side; empty = one page, as ever.
     @Published private(set) var tiles: [String] = []
+    /// Which of those pages is the page this device is on (Mac 0.19 on; nil = not told).
+    @Published private(set) var tileHere: Int?
     @Published private(set) var keys: [Int: PhoneLink.Key] = [:]
     /// The profiles and pages (from a Mac at 0.4 or later).
     @Published private(set) var status: PhoneLink.Status?
@@ -76,9 +78,29 @@ final class LinkClient: ObservableObject {
 
     /// Tells the Mac how many pages to send (after connecting, and when the setting changes).
     func sendWide() {
-        guard case .connected = state, wideMac, !isSample else { return }
+        if isSample { sampleWide(wideOn); return }
+        guard case .connected = state, wideMac else { return }
         send(.wide(count: wideOn ? PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad) : 1))
-        if !wideOn { tiles = [] }
+        if !wideOn { tiles = []; tileHere = nil }
+    }
+
+    /// How many pages this device shows with "Several pages at once": 4 on an iPad, 2 on an iPhone.
+    var wideCount: Int { PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad) }
+
+    /// The switch on top of the navigation picture (0.31), and the one in Settings: several pages or one.
+    func setWide(_ on: Bool) {
+        guard on != wideOn else { return }
+        UserDefaults.standard.set(on, forKey: "widePages")
+        objectWillChange.send()
+        sendWide()
+    }
+
+    /// The made-up keys of the `-sample` launch follow the switch, so it can be tried without a Mac.
+    private func sampleWide(_ on: Bool) {
+        guard macVersion >= 9 else { return }
+        tiles = on ? Array(SampleLink.wideNames.prefix(wideCount)) : []
+        tileHere = on ? 0 : nil
+        keys = on ? SampleLink.wideKeys(wideCount) : SampleLink.keys()
     }
 
     /// "My own keys": this device moves through one page group on its own place.
@@ -180,6 +202,7 @@ final class LinkClient: ObservableObject {
                         $0 + 1 < CommandLine.arguments.count ? Int(CommandLine.arguments[$0 + 1]) : nil }
                     let count = asked ?? PhoneLink.tiles(pad: UIDevice.current.userInterfaceIdiom == .pad)
                     client.tiles = Array(SampleLink.wideNames.prefix(count))
+                    client.tileHere = 0
                     client.keys = SampleLink.wideKeys(count)
                 }
             }
@@ -455,8 +478,9 @@ final class LinkClient: ObservableObject {
             // Only the keys that look different: the others stay as they are.
             self.place = place
             for key in list { keys[key.index] = key }
-        case let .tiles(names):
+        case let .tiles(names, at):
             tiles = wideOn ? names : []
+            tileHere = wideOn ? at : nil
         case let .status(status):
             self.status = status
         case let .pressed(index):

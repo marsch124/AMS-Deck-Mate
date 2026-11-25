@@ -8,6 +8,8 @@ struct SetupView: View {
     var close: () -> Void = {}
 
     @State private var profileID: UUID?
+    /// The place of "Several pages at once" a dragged page is over right now.
+    @State private var placeAimed: Int?
     @State private var pageID: UUID?
     @State private var slot: Int?
     @State private var draft = DeckKey()
@@ -42,17 +44,21 @@ struct SetupView: View {
 
     var body: some View {
         VStack(spacing: 10) {
+            // 0.19: everything starts at the top. The columns had grown taller than the window, which
+            // pushed their tops under the title bar and the bottom line out of sight; now a column that
+            // does not fit (a small screen) scrolls by itself and the bottom line always shows.
             HStack(alignment: .top, spacing: 14) {
-                profilesColumn.frame(width: 200)
+                ScrollView(.vertical, showsIndicators: false) { profilesColumn }.frame(width: 200)
                 Divider()
                 if showOverview {
                     overview
                 } else {
-                    keysColumn
+                    ScrollView(.vertical, showsIndicators: false) { keysColumn }.frame(width: 426)
                     Divider()
                     editorColumn.frame(width: 300)
                 }
             }
+            .frame(maxHeight: .infinity, alignment: .top)
             Divider()
             HStack(spacing: 6) {
                 Button("Undo") { undo() }
@@ -73,7 +79,7 @@ struct SetupView: View {
             }
         }
         .padding(14)
-        .frame(width: 1010, height: 620)
+        .frame(width: 1014, height: SetupWindow.height(screen: NSScreen.main?.visibleFrame.height), alignment: .top)
         .background(slot == nil ? Button("") { model.saveNow(); close() }.keyboardShortcut(.cancelAction).opacity(0) : nil)
         .onAppear {
             model.edit.copy = { copyKey() }
@@ -327,6 +333,7 @@ struct SetupView: View {
                      : "Shows by itself when one of these apps is in front.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 HoursRows(model: model, profile: profile.id)
+                placesBox(profile)
                 HStack(spacing: 6) {
                     if !isDefault(profile) {
                         Button("Make default") { model.change { $0.defaultProfile = profile.id } }
@@ -353,6 +360,84 @@ struct SetupView: View {
     }
 
     private func isDefault(_ item: DeckProfile) -> Bool { model.deck.fallbackProfile?.id == item.id }
+
+    // MARK: Several pages at once: his four places (0.19)
+
+    /// The four places an iPad shows at once (an iPhone: places 1 and 2), for this page group. A page is
+    /// dragged in from the row of pages; from place to place the two swap.
+    private func placesBox(_ profile: DeckProfile) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Several pages at once").font(.callout.weight(.semibold)).foregroundStyle(Palette.part("profiles", scheme))
+            LazyVGrid(columns: [GridItem(.fixed(97), spacing: 6), GridItem(.fixed(97))], spacing: 6) {
+                ForEach(0..<DeckProfile.placeCount, id: \.self) { place in placeSlot(profile, place) }
+            }
+            Text("Drag a page here from the row of pages. An iPad shows all four places, an iPhone 1 and 2.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if profile.hasPlaces {
+                Button("Let the app choose") { edit(profile) { $0.places = DeckProfile.tidy([]) } }
+                    .buttonStyle(PlainButton())
+                    .help("Empties all four places: the page you are on comes first again, then the next ones")
+                    .accessibilityIdentifier("clearPlaces")
+            }
+        }
+        .padding(.top, 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("placesBox")
+    }
+
+    private func placeSlot(_ profile: DeckProfile, _ place: Int) -> some View {
+        let page = place < profile.places.count ? profile.places[place].flatMap { profile.page($0) } : nil
+        let colour = Palette.part("profiles", scheme)
+        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
+        return VStack(alignment: .leading, spacing: 2) {
+            ZStack {
+                if let page {
+                    PlacePicture(page: page)
+                } else {
+                    Text("Drag a page here").font(.caption2).foregroundStyle(colour).multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            .frame(width: 97, height: 50)
+            .background(Color(red: 0.11, green: 0.11, blue: 0.115).opacity(page == nil ? 0.25 : 1), in: shape)
+            .overlay(shape.strokeBorder(colour.opacity(placeAimed == place ? 1 : (page == nil ? 0.55 : 0)),
+                                        style: StrokeStyle(lineWidth: placeAimed == place ? 2.5 : 1, dash: page == nil && placeAimed != place ? [4, 3] : [])))
+            // The number of the place: 1 top left, 2 top right, 3 bottom left, 4 bottom right.
+            .overlay(alignment: .topLeading) {
+                Text("\(place + 1)").font(.caption2.weight(.bold)).foregroundStyle(.white)
+                    .frame(width: 16, height: 16)
+                    .background(Palette.fill("profiles"), in: Circle())
+                    .offset(x: -3, y: -3)
+            }
+            .overlay(alignment: .topTrailing) {
+                if page != nil {
+                    Button { edit(profile) { $0.put(nil, inPlace: place) } } label: {
+                        Mark(name: "control-close", size: 11).padding(3)
+                            .background(.regularMaterial, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Empty this place")
+                    .offset(x: 3, y: -3)
+                    .accessibilityLabel("Empty place \(place + 1)")
+                    .accessibilityIdentifier("emptyPlace\(place + 1)")
+                }
+            }
+            Text(page.map { $0.name.isEmpty ? "Page" : $0.name } ?? "The app chooses")
+                .font(.caption2).foregroundStyle(page == nil ? .secondary : .primary).lineLimit(1)
+        }
+        .contentShape(Rectangle())
+        .draggable(PagePlaces.placeDrag + (page == nil ? "none" : "\(place)"))
+        .dropDestination(for: String.self) { items, _ in
+            guard let moved = PagePlaces.page(dropped: items.first ?? "", in: profile) else { return false }
+            edit(profile) { $0.put(moved, inPlace: place) }
+            return true
+        } isTargeted: { aimed in
+            if aimed { placeAimed = place } else if placeAimed == place { placeAimed = nil }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Place \(place + 1): \(page?.name ?? "the app chooses")")
+        .accessibilityIdentifier("place\(place + 1)")
+    }
 
     private func profileNote(_ item: DeckProfile) -> String {
         if !item.apps.isEmpty { return item.apps.map { KeyArt.appName($0) }.joined(separator: ", ") }
@@ -462,18 +547,20 @@ struct SetupView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         ForEach(profile.pages) { item in
-                            Button { showPage(item) } label: {
-                                HStack(spacing: 4) {
-                                    if item.parent != nil { Mark(name: "deck-folder", size: 13) }
-                                    Text(item.name.isEmpty ? "Page" : item.name).lineLimit(1)
-                                }
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 3)
-                                .background(Palette.part("keys", scheme).opacity(item.id == page.id ? 0.22 : 0.07),
-                                            in: Capsule())
-                                .contentShape(Capsule())
+                            // A plain tap (not a button), so the page can also be dragged into one of the
+                            // four places of "Several pages at once" (0.19).
+                            HStack(spacing: 4) {
+                                if item.parent != nil { Mark(name: "deck-folder", size: 13) }
+                                Text(item.name.isEmpty ? "Page" : item.name).lineLimit(1)
                             }
-                            .buttonStyle(.plain)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 3)
+                            .background(Palette.part("keys", scheme).opacity(item.id == page.id ? 0.22 : 0.07),
+                                        in: Capsule())
+                            .contentShape(Capsule())
+                            .onTapGesture { showPage(item) }
+                            .draggable(PagePlaces.pageDrag + item.id.uuidString)
+                            .accessibilityAddTraits(.isButton)
                             .dropDestination(for: String.self) { items, _ in
                                 guard let first = items.first, first.hasPrefix("deckkey:"),
                                       let at = Int(first.split(separator: ":").last ?? "") else { return false }
@@ -824,6 +911,37 @@ struct SetupView: View {
         }
         draft = key
         saved = key
+    }
+}
+
+/// The height of the "Set up keys" window (0.19): tall enough for its columns, never taller than the screen.
+enum SetupWindow {
+    static func height(screen: CGFloat?) -> CGFloat {
+        CGFloat(PagePlaces.windowHeight(screen: screen.map(Double.init)))
+    }
+}
+
+/// A page in one of the four places: its 15 keys as a small picture.
+struct PlacePicture: View {
+    let page: DeckPage
+    var body: some View {
+        VStack(spacing: 2) {
+            ForEach(0..<3, id: \.self) { row in
+                HStack(spacing: 2) {
+                    ForEach(0..<5, id: \.self) { column in
+                        Group {
+                            if let picture = KeyArt.image(for: page.keys[row * 5 + column], pixels: 48) {
+                                Image(decorative: picture, scale: 1).resizable().interpolation(.high)
+                            } else {
+                                Color.white.opacity(0.06)
+                            }
+                        }
+                        .frame(width: 13, height: 13)
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                    }
+                }
+            }
+        }
     }
 }
 

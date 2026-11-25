@@ -59,7 +59,8 @@ public enum MapSwipe {
     }
 }
 
-/// The big-keys iPad screen (0.30): the navigation picture is pulled in from the far left edge, over the keys.
+/// The big-keys iPad screen (0.30) and an iPhone on its side showing two pages (0.31): the navigation
+/// picture is pulled in from the far left edge, over the keys.
 public enum EdgePull {
     /// How near the left edge a finger must start to pull the picture in.
     public static let zone = 32.0
@@ -67,13 +68,21 @@ public enum EdgePull {
     public static let width = 320.0
 
     /// Whether a drag starts in the edge zone (such a swipe never changes the page).
-    public static func atEdge(startX: Double) -> Bool { startX <= zone }
+    /// `inset`: the strip beside the camera cut-out of an iPhone on its side, where no key can stand;
+    /// the zone starts behind it.
+    public static func atEdge(startX: Double, inset: Double = 0) -> Bool { startX <= zone + max(0, inset) }
 
     /// Whether this drag moves the picture: closed, a mostly sideways drag to the right that starts at the
     /// edge; open, a mostly sideways drag anywhere (up and down still scroll the picture).
-    public static func takes(startX: Double, open: Bool, across: Double, along: Double) -> Bool {
+    public static func takes(startX: Double, open: Bool, across: Double, along: Double, inset: Double = 0) -> Bool {
         guard abs(across) > abs(along) * 1.3 else { return false }
-        return open || (atEdge(startX: startX) && across > 0)
+        return open || (atEdge(startX: startX, inset: inset) && across > 0)
+    }
+
+    /// The pull is there on the big-keys iPad screen, and on an iPhone on its side that shows two or
+    /// more pages at once (there the picture has no other place).
+    public static func offered(bigKeys: Bool, phoneSideways: Bool, pages: Int, hasPicture: Bool) -> Bool {
+        hasPicture && (bigKeys || (phoneSideways && pages >= 2))
     }
 
     /// How far the picture stands left of its place while `shown` of its width shows (0 = fully in);

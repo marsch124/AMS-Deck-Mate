@@ -25,4 +25,12 @@ final class BigKeysTests: XCTestCase {
         XCTAssertNil(BigKeys.plan(width: 1117, height: 656, gap: 8, pages: 1, favourites: true))
         XCTAssertNil(BigKeys.plan(width: 1117, height: 656, gap: 8, pages: 5, favourites: true))
     }
+
+    /// 0.31: an iPhone on its side with two pages uses the same rule (726 x 337 points on an iPhone 17 Pro):
+    /// side by side, the favourites in a row under them, 64-point keys (before: 28 in a box made for one page).
+    func testTwoPagesFillAnIPhoneOnItsSide() {
+        let plan = BigKeys.plan(width: 726, height: 337, gap: 8, pages: 2, favourites: true)
+        XCTAssertEqual(plan, BigKeys.Plan(across: 2, down: 1, side: 64, extras: .row))
+        XCTAssertLessThanOrEqual(16 + 8 + 3 * 64.0 + 2 * 8 + BigKeys.between + 64, 337)
+    }
 }

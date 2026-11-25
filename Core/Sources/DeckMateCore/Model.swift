@@ -384,6 +384,11 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
     public var hoursOn = false
     public var hoursFrom = 6 * 60
     public var hoursTo = 9 * 60
+    /// "Several pages at once" (0.19): the pages he put into the four places himself, by their ids.
+    /// Place 1 = top left, 2 = top right, 3 = bottom left, 4 = bottom right (an iPhone shows 1 and 2).
+    /// nil = the app fills that place (see `Navigator.spread`). Always `placeCount` entries.
+    public var places: [UUID?] = Array(repeating: nil, count: DeckProfile.placeCount)
+    public static let placeCount = 4
 
     public init(id: UUID = UUID(), name: String = "", apps: [String] = [], pages: [DeckPage] = []) {
         self.id = id
@@ -401,7 +406,30 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
         hoursOn = c.value(.hoursOn, false)
         hoursFrom = min(DayMinutes.perDay - 1, max(0, c.value(.hoursFrom, 6 * 60)))
         hoursTo = min(DayMinutes.perDay - 1, max(0, c.value(.hoursTo, 9 * 60)))
+        places = DeckProfile.tidy(c.value(.places, [UUID?]()))
     }
+
+    /// Exactly four places, and no page in two of them (the first one keeps it).
+    public static func tidy(_ places: [UUID?]) -> [UUID?] {
+        var seen: Set<UUID> = []
+        return (0..<placeCount).map { index in
+            guard index < places.count, let page = places[index], seen.insert(page).inserted else { return nil }
+            return page
+        }
+    }
+
+    /// A page is put into a place (0…3), or the place is emptied (nil). A page that already has a
+    /// place swaps with the one that was here, so no page ever stands in two places.
+    public mutating func put(_ page: UUID?, inPlace place: Int) {
+        guard (0..<DeckProfile.placeCount).contains(place) else { return }
+        var now = DeckProfile.tidy(places)
+        if let page, let from = now.firstIndex(of: page), from != place { now[from] = now[place] }
+        now[place] = page
+        places = DeckProfile.tidy(now)
+    }
+
+    /// Whether he placed any page himself (a page that is gone does not count).
+    public var hasPlaces: Bool { places.contains { $0.flatMap { page($0) } != nil } }
 
     /// The pages in order, without the folders.
     public var topPages: [DeckPage] { pages.filter { $0.parent == nil } }

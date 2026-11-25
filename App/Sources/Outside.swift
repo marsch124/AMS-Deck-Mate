@@ -31,7 +31,7 @@ enum Outside {
         case .macNow: return MacNowKeys.number(key.action.target).title
         case .timer: return "Timer, \(TimerKeys.minutes(key.action.target)) min"
         case .toggle where FanKeys.isFan(key.action.target):
-            return "Fans: \(FanKeys.words(FanKeys.choice(of: key.action.target) ?? ""))"
+            return "Fans: \(FanKeys.longWords(FanKeys.choice(of: key.action.target) ?? ""))"
         default: return key.action.type.title
         }
     }

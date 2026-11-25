@@ -41,10 +41,46 @@ public enum Navigator {
     /// first, then the next top pages of its page group in their order, going round to the start,
     /// then its folders, until `count` pages show. A folder counts from the top page it sits in
     /// (that top page itself is then not shown again).
+    ///
+    /// His own places (0.19): a page he put into a place in "Set up keys" always shows there. Going to
+    /// one of them moves nothing. The places he left empty are filled as above, starting with the page
+    /// at `position`. When every place is taken and `position` is none of them, it shows in place 1
+    /// for the moment.
     public static func spread(at position: DeckPosition, count: Int, in deck: Deck) -> [DeckPosition] {
         guard count > 1, let profile = deck.profile(position.profile), profile.page(position.page) != nil else {
             return [position]
         }
+        let free = freeSpread(at: position, count: count + DeckProfile.placeCount, in: profile)
+        guard profile.hasPlaces else { return Array(free.prefix(count)) }
+        var shown: [DeckPosition?] = (0..<count).map { place in
+            guard place < profile.places.count, let id = profile.places[place], let page = profile.page(id) else { return nil }
+            return id == position.page ? position : self.position(of: page, in: profile)
+        }
+        let here = shown.contains { $0?.page == position.page }
+        if !here, !shown.contains(where: { $0 == nil }) { shown[0] = position }
+        for place in shown.indices where shown[place] == nil {
+            let taken = Set(shown.compactMap { $0?.page })
+            shown[place] = free.first { !taken.contains($0.page) }
+        }
+        return shown.compactMap { $0 }
+    }
+
+    /// A page with the way back out of it: a folder is entered from the page it opens from.
+    static func position(of page: DeckPage, in profile: DeckProfile) -> DeckPosition {
+        var trail: [UUID] = []
+        var at = page.parent
+        var steps = 0
+        while let id = at, let parent = profile.page(id), steps < 50 { trail.insert(parent.id, at: 0); at = parent.parent; steps += 1 }
+        return DeckPosition(profile: profile.id, page: page.id, trail: trail)
+    }
+
+    /// Which of the pages shown is the page the device is on (for its blue name); nil when it is none.
+    public static func spot(of position: DeckPosition, in shown: [DeckPosition]) -> Int? {
+        shown.firstIndex { $0.page == position.page && $0.profile == position.profile }
+    }
+
+    /// The pages the app picks by itself: the page at `position`, the next top pages going round, the folders.
+    private static func freeSpread(at position: DeckPosition, count: Int, in profile: DeckProfile) -> [DeckPosition] {
         var top = position.page
         var seen: Set<UUID> = [top]
         while let parent = profile.page(top)?.parent, profile.page(parent) != nil, !seen.contains(parent) {
@@ -186,5 +222,32 @@ public enum Navigator {
         let before = profile(forApp: previousApp, in: deck, now: now)
         guard let wanted, wanted != before, wanted != position.profile else { return position }
         return start(in: deck, profile: wanted) ?? position
+    }
+}
+
+/// "Set up keys" (0.19): dragging pages into the four places of "Several pages at once".
+public enum PagePlaces {
+    /// What a dragged page of the row of pages carries (then its id), and a dragged place (then 0…3).
+    public static let pageDrag = "deckpage:"
+    public static let placeDrag = "deckplace:"
+
+    /// The page a drop brings: a page of this group from the row of pages, or the page standing in
+    /// another place (the two then swap, see `DeckProfile.put`). nil = nothing to put here.
+    public static func page(dropped item: String, in profile: DeckProfile) -> UUID? {
+        if item.hasPrefix(pageDrag) {
+            return UUID(uuidString: String(item.dropFirst(pageDrag.count))).flatMap { profile.page($0)?.id }
+        }
+        if item.hasPrefix(placeDrag), let from = Int(item.dropFirst(placeDrag.count)),
+           profile.places.indices.contains(from) {
+            return profile.places[from].flatMap { profile.page($0)?.id }
+        }
+        return nil
+    }
+
+    /// The height of the "Set up keys" window: 840 points, less on a screen that is not that tall
+    /// (28 points stay free for the title bar), never under 560.
+    public static func windowHeight(screen: Double?) -> Double {
+        guard let screen else { return 840 }
+        return max(560, min(840, screen - 28))
     }
 }

@@ -5,6 +5,7 @@ import Foundation
 ///
 /// A fan key is a switch key whose target is "fan:<choice>", the choice in Fan Menu's own word.
 /// Unlike the other switches a press never switches it off: it asks for its choice, every time.
+/// Cool and Full are asked for ten minutes (0.19); Fan Menu then goes back to Automatic by itself.
 public enum FanKeys {
     public static let prefix = "fan:"
     /// The choices offered in "Set up keys", in Fan Menu's own words.
@@ -35,6 +36,29 @@ public enum FanKeys {
         case "follow": return "Follow"
         default: return choice.prefix(1).uppercased() + choice.dropFirst()
         }
+    }
+
+    /// Cool and Full last ten minutes, then AMS Fan Menu gives the fans back to the Mac and its choice
+    /// goes to Automatic (his ask, 0.19). Automatic has no time.
+    public static let minutes = 10
+    public static func seconds(for choice: String) -> Int? {
+        choice == "cool" || choice == "full" ? minutes * 60 : nil
+    }
+
+    /// What a press asks AMS Fan Menu for: the choice word, with its time in seconds behind a colon
+    /// when it has one ("automatic", "cool:600"). Fan Menu 0.3.1 or later understands the time.
+    public static func wish(_ choice: String) -> String {
+        seconds(for: choice).map { "\(choice):\($0)" } ?? choice
+    }
+
+    /// The words on the key: "Automatic", "Cool 10 min", "Full 10 min" — the key itself says how long.
+    public static func keyWords(_ choice: String) -> String {
+        seconds(for: choice) == nil ? words(choice) : "\(words(choice)) \(minutes) min"
+    }
+
+    /// In lists and notes: "Automatic", "Cool for 10 minutes".
+    public static func longWords(_ choice: String) -> String {
+        seconds(for: choice) == nil ? words(choice) : "\(words(choice)) for \(minutes) minutes"
     }
 
     /// The switch that is on, from the bytes of Fan Menu's state file: "fan:cool". nil when the file

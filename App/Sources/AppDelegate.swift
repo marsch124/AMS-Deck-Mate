@@ -708,6 +708,21 @@ enum Snapshots {
                     shot(ScreenDeckView(model: model).padding(16), "deck-glance2-\(name)", look, folder)
                     // 0.18: the fan keys are on this page too (places 6 to 8); "Cool" is the one that is on.
                     shot(SetupView(model: model, startSlot: 6), "setup-fan-\(name)", look, folder)
+                    // 0.19: his four places of "Several pages at once": three taken, one left to the app.
+                    let tops = group.topPages
+                    if tops.count >= 4 {
+                        model.change { deck in
+                            guard let g = deck.profiles.firstIndex(where: { $0.id == group.id }) else { return }
+                            deck.profiles[g].put(tops[0].id, inPlace: 0)
+                            deck.profiles[g].put(tops[3].id, inPlace: 1)
+                            deck.profiles[g].put(tops[2].id, inPlace: 3)
+                        }
+                        shot(SetupView(model: model), "setup-places-\(name)", look, folder)
+                        model.change { deck in
+                            guard let g = deck.profiles.firstIndex(where: { $0.id == group.id }) else { return }
+                            deck.profiles[g].places = DeckProfile.tidy([])
+                        }
+                    }
                 }
                 // 0.13: on the Mac, meeting, playlist, search, counter, stopwatch, keep awake (page 5).
                 if let fifth = group.topPages.dropFirst(4).first {

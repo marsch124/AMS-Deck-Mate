@@ -26,14 +26,24 @@ final class FanKeysTests: XCTestCase {
     func testFanKeyShowsItselfAndOnlyTheOneThatIsOnIsLit() {
         let keys = FanKeys.choices.map { DeckKey(action: DeckAction(type: .toggle, target: FanKeys.target($0))) }
         let shown = keys.map { $0.resolving(LiveKeys(on: ["fan:cool", SwitchKeys.dark])) }
-        XCTAssertEqual(shown.map(\.title), ["Automatic", "Cool", "Full"], "the words do not change with on and off")
+        XCTAssertEqual(shown.map(\.title), ["Automatic", "Cool 10 min", "Full 10 min"], "the words do not change with on and off")
         XCTAssertEqual(shown.map(\.action.quiet), [false, true, false])
         XCTAssertEqual(keys[0].resolving(LiveKeys(on: ["fan:quiet"])).action.quiet, false)
         XCTAssertEqual(keys.map(\.shownIcon), ["app-fan", "app-fan", "app-fan"])
         XCTAssertEqual(keys[1].action.kind, .shortcut, "purple like every switch")
-        XCTAssertEqual(ActionWords.done([keys[2].action], appName: { $0 }), "Fans: Full")
+        XCTAssertEqual(ActionWords.done([keys[2].action], appName: { $0 }), "Fans: Full for 10 minutes")
         func world(_ here: Bool) -> KeyWorld { KeyWorld(appExists: { _ in here }, fileExists: { _ in true }, raycastExtension: { _, _ in true }) }
         XCTAssertNil(KeyCheck.problem(keys[0], in: DeckProfile(), deck: Deck(), world: world(true)))
         XCTAssertEqual(KeyCheck.problem(keys[0], in: DeckProfile(), deck: Deck(), world: world(false)), "AMS Fan Menu is not on this Mac")
+    }
+
+    /// 0.19: Cool and Full are asked for ten minutes, and the key says so; Automatic has no time.
+    func testCoolAndFullLastTenMinutes() {
+        XCTAssertEqual(FanKeys.choices.map(FanKeys.wish), ["automatic", "cool:600", "full:600"])
+        XCTAssertNil(FanKeys.seconds(for: "automatic"))
+        XCTAssertNil(FanKeys.seconds(for: "quiet"), "only the two keys he asked for")
+        XCTAssertEqual(FanKeys.choices.map(FanKeys.keyWords), ["Automatic", "Cool 10 min", "Full 10 min"])
+        XCTAssertEqual(FanKeys.choices.map(FanKeys.longWords), ["Automatic", "Cool for 10 minutes", "Full for 10 minutes"])
+        XCTAssertEqual(FanKeys.on(state: Data(#"{"choice":"cool","endsAt":1795589769.3}"#.utf8)), "fan:cool", "a timed choice lights its key like any other")
     }
 }

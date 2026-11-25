@@ -493,7 +493,7 @@ struct SettingsView: View {
             case .recentFile: return "Recent file \(RecentApps.number(key.action.target))"
             case .copied: return "Last copied text"
             case .toggle:
-                if let choice = FanKeys.choice(of: key.action.target) { return "Fans: \(FanKeys.words(choice))" }
+                if let choice = FanKeys.choice(of: key.action.target) { return "Fans: \(FanKeys.longWords(choice))" }
                 return key.action.target == SwitchKeys.dark ? "Dark mode switch" : key.action.target == SwitchKeys.mute ? "Mute switch"
                     : key.action.target == SwitchKeys.awake ? "Keep awake switch" : "Switch"
             case .macDo: return MacDoKeys.what(key.action.target).title

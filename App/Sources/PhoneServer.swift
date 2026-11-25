@@ -79,6 +79,7 @@ final class PhoneServer: ObservableObject {
         /// "Several pages at once": how many pages this iPhone or iPad shows (1 = one, as ever).
         var wide = 1
         var lastTiles: [String]?
+        var lastSpot: Int?
         init(_ connection: NWConnection) { self.connection = connection }
     }
 
@@ -449,7 +450,9 @@ final class PhoneServer: ObservableObject {
     /// keys on screen and the box stay where they are, and the Mac still does what the key says.
     private func press(_ index: Int, long: Bool, favourite: Bool, from phone: Phone) {
         let (tile, place) = PhoneLink.tile(of: index)
-        if !favourite, tile > 0 {
+        // Several pages at once: with his own places (0.19) the first page shown need not be the page
+        // the device is on, so every key acts from the page it is drawn on.
+        if !favourite, phone.wide > 1, phone.version >= 9, tile > 0 || !firstTileIsHere(phone) {
             pressOnTile(tile, place: place, index: index, long: long, from: phone)
             return
         }
@@ -460,6 +463,12 @@ final class PhoneServer: ObservableObject {
         if !favourite, phone.version >= 2 { send(.pressed(index: index), to: phone) }
         phone.own = model.act(index, at: own, long: long, favourite: favourite).position
         sendKeys(to: phone)
+    }
+
+    /// Whether the first of the pages shown is the page this device is on (always so without places of his own).
+    private func firstTileIsHere(_ phone: Phone) -> Bool {
+        guard let here = ownPlace(of: phone) ?? model.position else { return true }
+        return Navigator.spot(of: here, in: Navigator.spread(at: here, count: phone.wide, in: model.deck)) == 0
     }
 
     /// "Several pages at once": a key of the second, third or fourth page. It acts from its own page;
@@ -582,9 +591,12 @@ final class PhoneServer: ObservableObject {
         }
         if phone.version >= 9 {
             let names = phone.wide > 1 ? pages.map { pageName(at: $0) } : []
-            if names != phone.lastTiles {
+            // Which of them is the page the device is on (its name is blue there, from 0.31 on).
+            let at = phone.wide > 1 ? place.flatMap { Navigator.spot(of: $0, in: pages.compactMap { $0 }) } : nil
+            if names != phone.lastTiles || at != phone.lastSpot {
                 phone.lastTiles = names
-                send(.tiles(names: names), to: phone)
+                phone.lastSpot = at
+                send(.tiles(names: names, at: at), to: phone)
             }
         }
         let line = model.placeLine(at: place)

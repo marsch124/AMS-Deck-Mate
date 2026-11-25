@@ -86,8 +86,9 @@ public enum PhoneLink {
         /// iPhone → Mac (version 9): "Several pages at once": show me this many pages (1 = one, as ever;
         /// at most `mostTiles`). The keys then come as one long list, 15 per page.
         case wide(count: Int)
-        /// Mac → iPhone (version 9): the names of the pages shown at once, first = the page it is on.
-        case tiles(names: [String])
+        /// Mac → iPhone (version 9): the names of the pages shown at once. `at` (Mac 0.19): which of
+        /// them is the page the device is on; nil from an older Mac = the first.
+        case tiles(names: [String], at: Int? = nil)
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.

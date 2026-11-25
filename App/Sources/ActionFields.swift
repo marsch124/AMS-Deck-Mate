@@ -324,7 +324,7 @@ struct ActionFields: View {
                 Text("Dark mode").tag(SwitchKeys.dark)
                 Text("Mute the sound").tag(SwitchKeys.mute)
                 Text("Keep the Mac awake").tag(SwitchKeys.awake)
-                ForEach(FanKeys.choices, id: \.self) { Text("Fans: \(FanKeys.words($0))").tag(FanKeys.target($0)) }
+                ForEach(FanKeys.choices, id: \.self) { Text("Fans: \(FanKeys.longWords($0))").tag(FanKeys.target($0)) }
                 Text("Two things in turn").tag("own")
             }
             .labelsHidden()
@@ -350,7 +350,7 @@ struct ActionFields: View {
             } else if action.target == SwitchKeys.dark {
                 note("Switches the Mac between its light and its dark look. The first time, the Mac asks once whether AMS Deck Mate may control “System Events”: choose Allow.")
             } else if FanKeys.isFan(action.target) {
-                note("Asks AMS Fan Menu, which must be on this Mac, to run the fans this way. The fan key of the choice that is on shows the filled switch mark. A second press changes nothing: press another fan key to change.")
+                note("Asks AMS Fan Menu, which must be on this Mac, to run the fans this way. Cool and Full last \(FanKeys.minutes) minutes, then the fans go back to Automatic by themselves (AMS Fan Menu 0.3.1 or later); a second press starts the \(FanKeys.minutes) minutes afresh. The fan key of the choice that is on shows the filled switch mark.")
             } else if action.target == SwitchKeys.awake {
                 note("While it is on, the Mac and its screen do not go to sleep by themselves. Press again to switch it off. It is off again after AMS Deck Mate quits or the Mac restarts.")
             } else {

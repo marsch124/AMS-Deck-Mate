@@ -516,7 +516,7 @@ final class AppModel: ObservableObject {
     private func askFans(_ choice: String) {
         let ask = {
             DistributedNotificationCenter.default().postNotificationName(
-                Notification.Name(FanKeys.ask), object: choice, userInfo: nil, deliverImmediately: true)
+                Notification.Name(FanKeys.ask), object: FanKeys.wish(choice), userInfo: nil, deliverImmediately: true)
         }
         if !NSRunningApplication.runningApplications(withBundleIdentifier: FanKeys.app).isEmpty {
             ask()

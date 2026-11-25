@@ -93,4 +93,18 @@ final class TabGroupSwipeTests: XCTestCase {
         XCTAssertNil(MapSwipe.groupStep(across: 0, along: 40), "too short")
         XCTAssertNil(MapSwipe.groupStep(across: 80, along: 90), "not clearly up or down")
     }
+
+    /// 0.31: the same pull on an iPhone on its side with two pages; its edge zone starts behind the camera strip.
+    func testThePullOnAnIPhoneWithTwoPages() {
+        XCTAssertTrue(EdgePull.offered(bigKeys: false, phoneSideways: true, pages: 2, hasPicture: true))
+        XCTAssertFalse(EdgePull.offered(bigKeys: false, phoneSideways: true, pages: 1, hasPicture: true), "one page: the picture stands beside the keys")
+        XCTAssertFalse(EdgePull.offered(bigKeys: false, phoneSideways: false, pages: 2, hasPicture: true), "upright: no pull")
+        XCTAssertFalse(EdgePull.offered(bigKeys: true, phoneSideways: false, pages: 4, hasPicture: false), "an old Mac sends no picture")
+        XCTAssertTrue(EdgePull.offered(bigKeys: true, phoneSideways: false, pages: 4, hasPicture: true))
+        XCTAssertFalse(EdgePull.atEdge(startX: 70), "an iPad: 70 points in is on the keys")
+        XCTAssertTrue(EdgePull.atEdge(startX: 70, inset: 62), "an iPhone: 70 points in is just behind the camera strip")
+        XCTAssertFalse(EdgePull.atEdge(startX: 120, inset: 62))
+        XCTAssertTrue(EdgePull.takes(startX: 80, open: false, across: 40, along: 5, inset: 62))
+        XCTAssertEqual(EdgePull.offset(shown: 0, margin: 70), -390, "closed, nothing of it peeks into the camera strip")
+    }
 }

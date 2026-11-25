@@ -199,11 +199,11 @@ struct PhoneSettings: View {
                 note("Hold a key for half a second for its long-press action (keys with a small dot have one).")
             }
             card("Showing", "settings") {
-                Toggle("Several pages at once", isOn: Binding(get: { widePages }, set: { widePages = $0; link.sendWide() }))
+                Toggle("Several pages at once", isOn: Binding(get: { widePages }, set: { link.setWide($0) }))
                     .accessibilityIdentifier("widePages")
                 note(DeckScreen.device == "iPad"
-                     ? "For using the iPad without the Stream Deck: four pages at once, two above two (60 keys). The first is the page you are on, then the next ones of the page group. Needs AMS Deck Mate 0.17 on the Mac."
-                     : "For using the iPhone without the Stream Deck: two pages side by side (30 keys). The first is the page you are on, then the next one of the page group. Needs AMS Deck Mate 0.17 on the Mac.")
+                     ? "For using the iPad without the Stream Deck: four pages at once, two above two (60 keys). They are the pages you put into the four places in “Set up keys” on the Mac (AMS Deck Mate 0.19); without that, the page you are on comes first, then the next ones of the page group. The same switch sits on top of the navigation picture."
+                     : "For using the iPhone without the Stream Deck: two pages side by side (30 keys). They are the pages you put into places 1 and 2 in “Set up keys” on the Mac (AMS Deck Mate 0.19); without that, the page you are on comes first, then the next one of the page group. The same switch sits on top of the navigation picture.")
                 if widePages, link.macName != nil, case .connected = link.state, !link.wideMac {
                     note("Your Mac's AMS Deck Mate is older than 0.17: it shows one page until you update it.")
                 }

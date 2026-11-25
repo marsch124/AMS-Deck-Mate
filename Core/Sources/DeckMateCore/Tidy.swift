@@ -278,7 +278,7 @@ public enum ActionWords {
         case .recentFile: return "No recent file yet"
         case .timer: return "Timer: \(TimerKeys.minutes(action.target)) min"
         case .toggle:
-            if let choice = FanKeys.choice(of: action.target) { return "Fans: \(FanKeys.words(choice))" }
+            if let choice = FanKeys.choice(of: action.target) { return "Fans: \(FanKeys.longWords(choice))" }
             return action.target == SwitchKeys.dark ? "Switched dark mode" : action.target == SwitchKeys.mute ? "Switched the sound"
                 : action.target == SwitchKeys.awake ? "Switched keep awake" : "Switched"
         case .appleShortcut: return action.target.isEmpty ? "No Shortcut picked" : "Ran the Shortcut “\(action.target)”"
