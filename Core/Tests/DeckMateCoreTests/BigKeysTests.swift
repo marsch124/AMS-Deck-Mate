@@ -31,8 +31,8 @@ final class BigKeysTests: XCTestCase {
     func testTwoPagesFillAnIPhoneOnItsSide() {
         let plan = BigKeys.plan(width: 726, height: 337, gap: 8, pages: 2, favourites: true)
         XCTAssertEqual(plan, BigKeys.Plan(across: 2, down: 1, side: 64, extras: .row))
-        // In small steps: GitHub's compiler gives up on one long sum.
-        let pages: Double = 16 + 8 + 3 * 64 + 2 * 8
+        // Figures, not a sum: GitHub's compiler gives up on a sum of whole and decimal numbers.
+        let pages = 232.0       // the name 16, a gap 8, three keys of 64, two gaps of 8
         let row: Double = BigKeys.between + 64
         XCTAssertLessThanOrEqual(pages + row, 337)
     }
