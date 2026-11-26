@@ -194,7 +194,7 @@ public enum Navigator {
              .timer, .toggle, .appleShortcut, .list, .running, .wait,
              .nextEvent, .weather, .dueToday, .cover, .bodyBattery, .desk, .weatherTown,
              .garmin, .macNow, .worldClock, .sunTimes, .freeUntil,
-             .macDo, .joinMeeting, .playlist, .searchCopied, .counter, .stopwatch, .zero, .paragon, .focus, .breath, .often, .training:
+             .macDo, .joinMeeting, .playlist, .searchCopied, .counter, .stopwatch, .zero, .paragon, .focus, .breath, .often, .training, .steward:
             outcome.run.append(action)
         }
     }

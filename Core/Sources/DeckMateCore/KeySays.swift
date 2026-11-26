@@ -166,6 +166,8 @@ public enum KeySays {
             }
         case .training:
             return TrainingKeys.setupSays
+        case .steward:
+            return StewardKeys.setupSays
         case .focus:
             return target.isEmpty ? "Starts focus rounds" : "Starts the focus rounds “\(target)”"
         case .breath:

@@ -52,6 +52,9 @@ final class GlanceWatch {
         if trainingOn {
             all[TrainingKeys.glanceName] = TrainingKeys.glance(trainingBest, installed: trainingHere || !phoneTraining.isEmpty)
         }
+        if stewardOn {
+            all[StewardKeys.glanceName] = StewardKeys.glance(stewardFile, installed: stewardHere, now: Date())
+        }
         if let glance = batteryGlance { all[GlanceKeys.battery] = glance }
         return all
     }
@@ -106,6 +109,7 @@ final class GlanceWatch {
         setMac(deck.macNumbers)
         setParagon(due: deck.uses(.dueToday), keys: deck.uses(.paragon))
         setTraining(deck.uses(.training))
+        setSteward(deck.uses(.steward))
         setPlaylists(deck.playlistLinks)
         setCover(deck.uses(.cover))
         setBattery(deck.uses(.bodyBattery) || deck.uses(.garmin))
@@ -130,6 +134,7 @@ final class GlanceWatch {
             open(app: WeatherKeys.weatherApp)
         case .dueToday, .paragon: paragonPressed(action)
         case .training: trainingPressed()
+        case .steward: stewardPressed()
         case .desk: Desk.arrange(DeskKeys.spots(of: action))
         default: break
         }
@@ -587,6 +592,65 @@ final class GlanceWatch {
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
             guard let self, self.trainingTimer != nil else { return }
             self.readTraining()
+        }
+    }
+
+    // MARK: Steward: to decide (0.25, the note AMS Financial Steward writes on this Mac)
+
+    private var stewardOn = false
+    private(set) var stewardFile: StewardKeys.Note?
+    private var stewardHere = false
+    private var stewardTimer: Timer?
+    private let stewardQueue = DispatchQueue(label: "steward file", qos: .utility)
+    private var stewardReading = false
+
+    /// Steward is on this Mac when something opens its links.
+    static var stewardInstalled: Bool {
+        URL(string: StewardKeys.link).flatMap { NSWorkspace.shared.urlForApplication(toOpen: $0) } != nil
+    }
+
+    /// Steward's note on this Mac as it is now. Only read, never written.
+    static func stewardNote() -> StewardKeys.Note? {
+        let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(StewardKeys.macFile)
+        return StewardKeys.note(from: try? Data(contentsOf: file))
+    }
+
+    private func setSteward(_ on: Bool) {
+        stewardOn = on
+        guard on != (stewardTimer != nil) else { return }
+        stewardTimer?.invalidate()
+        stewardTimer = nil
+        stewardFile = nil
+        guard on else { return }
+        stewardTimer = every(StewardKeys.everySeconds) { [weak self] in self?.readSteward() }
+        readSteward()
+    }
+
+    /// Read away from the main thread: the first time, the Mac asks whether AMS Deck Mate may read another
+    /// app's data, and the read waits for that answer.
+    private func readSteward() {
+        stewardHere = GlanceWatch.stewardInstalled
+        guard !stewardReading else { return }
+        stewardReading = true
+        stewardQueue.async { [weak self] in
+            let note = GlanceWatch.stewardNote()
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.stewardReading = false
+                guard self.stewardTimer != nil else { return }
+                self.stewardFile = note
+                self.tell()   // also when nothing changed: a count turns old by the clock alone
+            }
+        }
+    }
+
+    /// Opens Steward at To decide, then reads the note again soon (Steward counts when it comes to the front).
+    private func stewardPressed() {
+        guard let url = URL(string: StewardKeys.link), GlanceWatch.stewardInstalled else { NSSound.beep(); return }
+        NSWorkspace.shared.open(url)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.stewardTimer != nil else { return }
+            self.readSteward()
         }
     }
 

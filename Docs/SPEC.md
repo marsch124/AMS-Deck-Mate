@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.24 (build 34), 26 Nov 2026; iPhone and iPad app 0.33 (build 39)
+# AMS Deck Mate, specification, version 0.25 (build 35), 26 Nov 2026; iPhone and iPad app 0.33 (build 39)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.25 (Mac, build 35; iPhone and iPad stay 0.33), 26 Nov 2026: a new kind of key, "Steward: to decide" (`steward`, section 147): shows how many bank rows wait in AMS Financial Steward 0.21 or later; a press opens Steward at To decide. Keys-file format stays 3.
 - Since 0.24 (Mac, build 34; iPhone and iPad stay 0.33), 26 Nov 2026: a key can wear a colour of its own (`colour`, section 146), so a page group made for one app can wear that app's colours. Keys-file format stays 3.
 - Since 0.23 (Mac, build 33) and 0.33 (iPhone and iPad, build 39), 26 Nov 2026: a new kind of key, "Training today" (`training`, section 145): shows today's session from AMS Triathlon Training 2.8 or later; a press logs it as done on the iPhone, else opens it in AMS Triathlon Training. Link version 11 (messages `training` and `open`). Keys-file format stays 3.
 - Since 0.22 (Mac; iPhone and iPad stay 0.32, build 38): the Switch key has a ninth choice, "Fans: fan speed" (section 144): a key that shows the speed of the faster fan ("Fans 1,650", "Fans off", "Fans –") from the same now.json, with no switch mark; a press opens Fan Menu's graph. Keys-file format stays 3.
@@ -258,6 +259,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.25 (Mac, build 35; iPhone and iPad stay 0.33; 26 Nov 2026).** The Steward: to decide key (section 147). Keys-file format (3) and link version (11) unchanged. Not yet proven: the file on a real Mac and macOS's question about data from other apps, the link really opening AMS Financial Steward at To decide, the real Stream Deck box.
 
 **0.24 (Mac, build 34; iPhone and iPad stay 0.33; 26 Nov 2026).** A key can wear a colour of its own (section 146). Keys-file format (3) unchanged. Not yet proven: the colours on the real Stream Deck box and on the real iPhone and iPad.
 
@@ -1403,3 +1406,23 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Signs.** One new line in "Signs in this app": a key in a colour that is not one of the kind colours wears the colour of a part of another app (for example Steward's Budget teal); signal colours are never replaced.
 - **Texts.** What's new Mac 0.24; How it works: parts "Set up keys" (Colour well) and "Page groups change by themselves" (a paragraph on page groups that wear an app's colours); "Signs in this app"; this section.
 - **Not yet proven.** The colours on the real Stream Deck box and on the real iPhone and iPad.
+
+## 147. The Steward: to decide key (Mac 0.25; iPhone and iPad stay 0.33)
+- **Version.** Before: Mac 0.24 (build 34); no key showed anything from AMS Financial Steward. Now: Mac 0.25 (build 35), 26 Nov 2026. The iPhone and iPad app stays 0.33 (build 39): keys reach the phone as pictures drawn by the Mac. Link version unchanged (11). Needs AMS Financial Steward 0.21 or later.
+- **Model.** New key kind `steward` (`ActionType.steward`) with `target` `waiting`. Rules in `Core/Sources/DeckMateCore/StewardKeys.swift`, enum `StewardKeys`; tests `StewardKeysTests`. In Set up keys, "What it does" lists "Steward: to decide" in the group "At a glance", beside "Training today". Keys-file format stays 3; an older Deck Mate keeps a key it does not know as it is (section 85). No key was added to the owner's pages by the app.
+- **`StewardKeys`.** Constants: `target` ("waiting"), `glanceName` ("steward:waiting"), `macFile` ("Library/Containers/com.schabbauer.AMSFinancialSteward/Data/Library/Application Support/deck-note.json", under the home folder), `everySeconds` (60), `staleAfter` (36 hours), `knownFormat` (1), `largest` (4000 bytes: a larger file is not read), `link` ("amsfinancialsteward://open/to-decide"). Functions: `note(from:)` reads the file's bytes to a note or nil; `glance(_:installed:now:)` gives the words and colour of the key; `says` gives the words for the pointer note and Explain; `setupSays` gives the line shown in Set up keys.
+- **The note.** AMS Financial Steward 0.21 writes `{"v":1,"written":"<ISO 8601>","waiting":12}`: the format number, the time it counted and the number of bank rows in To decide. ONLY the count and the time: no amounts, no names. Deck Mate only reads it; it never writes it. A note with a higher `v` than `knownFormat`, or with a missing or negative `waiting`, is not used as a number.
+- **Words on the key** (the same on the Mac's keys on screen, the Stream Deck and the phone):
+  - Rows wait: the number large ("12"), under it "to decide"; amber.
+  - Nothing waits: "0" large, under it "all decided"; green.
+  - No fresh note (never counted, or `written` older than 36 hours): "–" large, "Open Steward" under it; grey-blue. Never red.
+  - AMS Financial Steward not on this Mac (`installed` false): "No Steward".
+  - A note in a newer format than `knownFormat`: "–" large, "Update Deck Mate" under it; grey-blue.
+- **What a press does.** Opens `amsfinancialsteward://open/to-decide` (AMS Financial Steward at To decide). The same on every state, also on "–" with "Open Steward". On "No Steward" (nothing on this Mac opens the link) the Mac beeps and nothing opens. `StewardKeys.says` (`AppModel.says`) and Explain: for example "12 bank rows wait in Steward’s To decide. A press opens Steward’s To decide." The Mac's pointer note says "Click".
+- **Where the key gets its facts.** The file at `macFile`, read once a minute (`everySeconds`) and only while such a key is on a page. The read runs off the main thread in `GlanceWatch` (App/Sources/Glances.swift), like the other glance reads, so a slow disk or a macOS question never stops the app. The first time, macOS may ask whether AMS Deck Mate may access data from other apps (the same question as for PARAGON's and AMS Triathlon Training's files); the owner must click Allow. A refused or missing file counts as no fresh note.
+- **Colour.** The colour says something, so `DeckAction.colourSpeaks` includes `.steward` (section 146): no colour well in Set up keys, a stored `colour` is ignored. One colour, one meaning.
+- **Own keys (the owner's file, not the app).** On the page group "Steward": the key "To decide" (row 1, third place) is now this kind. On the page group "Triathlon": a new key "New session" (keys ⌘N, in Triathlon's Plan blue) took the place of "Ironman plan", which opened the old Excel file that no longer follows the plan since the plan moved into AMS Triathlon Training on 25 Nov 2026.
+- **Signs.** One new line in "Signs in this app": amber = rows wait, green = "0" and "all decided", grey-blue = no fresh count ("–", "Open Steward"); never red.
+- **Texts.** What's new Mac 0.25; How it works: new part "Steward: to decide key" and changed "What a key can do", "Set up keys" (colour well list), "What the Mac asks for" and "Signs in this app"; this section.
+- **Tests.** `StewardKeysTests` (small data tests: the words in each case, the stale rule, the format check, the size limit, the link).
+- **Not yet proven.** Only signed builds on real devices can show: the file on a real Mac and macOS's question about data from other apps; the link really opening AMS Financial Steward at To decide; the real Stream Deck box; the phone and iPad pictures.

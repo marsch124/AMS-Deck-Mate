@@ -32,7 +32,7 @@ extension DeckAction {
     /// Set up keys offers no colour for it: one colour, one meaning.
     public var colourSpeaks: Bool {
         switch type {
-        case .micLight, .weather, .dueToday, .paragon, .training, .focus, .bodyBattery, .garmin, .macNow,
+        case .micLight, .weather, .dueToday, .paragon, .training, .steward, .focus, .bodyBattery, .garmin, .macNow,
              .worldClock, .freeUntil, .bar:
             return true
         default:

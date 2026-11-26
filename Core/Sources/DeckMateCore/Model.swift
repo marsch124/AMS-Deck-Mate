@@ -58,6 +58,9 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// The 0.23 kind (see TrainingKeys.swift): training = today's session from AMS Triathlon Training
     /// (target "today"); a press opens it there, and on the iPhone logs it as done.
     case training
+    /// The 0.25 kind (see StewardKeys.swift): steward = how many bank rows wait in AMS Financial Steward's
+    /// To decide (target "waiting"); a press opens To decide.
+    case steward
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -212,6 +215,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .dueToday, .paragon: return KeyKind(rawValue: name) ?? .shortcut
         // Teal as long as nothing else is said: green when done, grey-blue without fresh facts.
         case .training: return KeyKind(rawValue: name) ?? .web
+        // Amber while rows wait, green when all is decided, grey-blue without a fresh count.
+        case .steward: return KeyKind(rawValue: name) ?? .text
         case .focus: return KeyKind(rawValue: name) ?? .text
         case .cover: return .media
         // On a key as it shows right now the target is the level: green, amber or red.
@@ -287,6 +292,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .stopwatch, .zero: return "stopwatch"
         case .paragon: return ParagonKeys.what(target).icon
         case .training: return "triathlon"
+        case .steward: return "app-trayFull"
         case .focus: return "app-hourglass"
         case .breath: return "pulse"
         case .bar: return "control-list"

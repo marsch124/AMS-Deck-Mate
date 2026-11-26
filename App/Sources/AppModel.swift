@@ -785,6 +785,8 @@ final class AppModel: ObservableObject {
             var lines = KeySays.lines(key, in: deck, profile: profile, appName: { KeyArt.appName($0) })
             // A training key says the session it shows right now (0.23).
             if key.action.type == .training, !isSample { lines.tap = TrainingKeys.says(trainingBest, logs: false) }
+            // A Steward key says the count it shows right now (0.25).
+            if key.action.type == .steward, !isSample { lines.tap = StewardKeys.says(glance.stewardFile, now: Date()) }
             return lines
         }
     }

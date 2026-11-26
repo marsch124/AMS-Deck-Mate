@@ -294,6 +294,8 @@ extension DeckKey {
             }
         case .training:
             key.showing(live.glances[TrainingKeys.glanceName], else: TrainingKeys.title)
+        case .steward:
+            key.showing(live.glances[StewardKeys.glanceName], else: StewardKeys.title)
         case .focus:
             if let now = live.focus, now.name == key.action.target {
                 // While it runs the key says the step and its time, whatever the key is called.

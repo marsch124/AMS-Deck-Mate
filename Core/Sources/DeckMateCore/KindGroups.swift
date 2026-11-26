@@ -4,7 +4,7 @@ extension ActionType {
     /// The kinds to pick for a key in "Set up keys", in the order of the old flat list.
     public static let forKeys: [ActionType] = [.app, .running, .recent, .often, .link, .recentFile, .raycast, .askAI, .shortcut, .appleShortcut, .text, .copied,
                                                .macDo, .searchCopied, .media, .playlist, .timer, .focus, .stopwatch, .counter, .breath, .bar, .toggle, .micLight,
-                                               .joinMeeting, .paragon, .training,
+                                               .joinMeeting, .paragon, .training, .steward,
                                                .nextEvent, .freeUntil, .weather, .worldClock, .sunTimes, .bodyBattery, .garmin, .macNow,
                                                .dueToday, .cover, .desk, .list, .multi,
                                                .folder, .back, .nextPage, .previousPage, .profile, .none]
@@ -24,7 +24,7 @@ public struct KindGroup: Sendable {
         KindGroup(title: "Music and sound", part: "settings", kinds: [.media, .playlist, .cover, .micLight]),
         KindGroup(title: "Time", part: "profiles",
                   kinds: [.timer, .stopwatch, .counter, .focus, .breath, .bar, .worldClock, .sunTimes, .nextEvent, .freeUntil, .joinMeeting]),
-        KindGroup(title: "At a glance", part: "box", kinds: [.weather, .bodyBattery, .garmin, .macNow, .dueToday, .paragon, .training]),
+        KindGroup(title: "At a glance", part: "box", kinds: [.weather, .bodyBattery, .garmin, .macNow, .dueToday, .paragon, .training, .steward]),
         KindGroup(title: "On the Mac", part: "keys", kinds: [.macDo, .toggle]),
         KindGroup(title: "Moving around", part: "iphone", kinds: [.folder, .back, .nextPage, .previousPage, .profile]),
         KindGroup(title: "Nothing", part: "keys", kinds: [.none]),
@@ -71,6 +71,7 @@ public struct KindGroup: Sendable {
         case .dueToday: return "tasks todo paragon"
         case .paragon: return "tasks notes"
         case .training: return "triathlon workout session sport run bike swim done"
+        case .steward: return "steward finance money bank rows decide waiting budget"
         case .macDo: return "lock screen desktop quit apps bin trash eject disks paste plain text"
         case .toggle: return "on off keep awake caffeinate switch"
         case .folder: return "box group keys"
