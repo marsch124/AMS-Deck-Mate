@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.25 (build 35), 26 Nov 2026; iPhone and iPad app 0.33 (build 39)
+# AMS Deck Mate, specification, version 0.25 (build 35), 26 Nov 2026; iPhone and iPad app 0.34 (build 40)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.34 (iPhone and iPad, build 40; Mac stays 0.25), 26 Nov 2026: a page group with one page keeps the usual screen of "Several pages at once" (section 148), so the favourites stay in their place. Link version (11) and keys-file format (3) stay.
 - Since 0.25 (Mac, build 35; iPhone and iPad stay 0.33), 26 Nov 2026: a new kind of key, "Steward: to decide" (`steward`, section 147): shows how many bank rows wait in AMS Financial Steward 0.21 or later; a press opens Steward at To decide. Keys-file format stays 3.
 - Since 0.24 (Mac, build 34; iPhone and iPad stay 0.33), 26 Nov 2026: a key can wear a colour of its own (`colour`, section 146), so a page group made for one app can wear that app's colours. Keys-file format stays 3.
 - Since 0.23 (Mac, build 33) and 0.33 (iPhone and iPad, build 39), 26 Nov 2026: a new kind of key, "Training today" (`training`, section 145): shows today's session from AMS Triathlon Training 2.8 or later; a press logs it as done on the iPhone, else opens it in AMS Triathlon Training. Link version 11 (messages `training` and `open`). Keys-file format stays 3.
@@ -259,6 +260,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.34 (iPhone and iPad, build 40; Mac stays 0.25; 26 Nov 2026).** A page group with one page keeps the favourites in their place (section 148). Link version (11) and keys-file format (3) unchanged. Not yet proven on a real iPhone or iPad.
 
 **0.25 (Mac, build 35; iPhone and iPad stay 0.33; 26 Nov 2026).** The Steward: to decide key (section 147). Keys-file format (3) and link version (11) unchanged. Not yet proven: the file on a real Mac and macOS's question about data from other apps, the link really opening AMS Financial Steward at To decide, the real Stream Deck box.
 
@@ -1426,3 +1429,14 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Texts.** What's new Mac 0.25; How it works: new part "Steward: to decide key" and changed "What a key can do", "Set up keys" (colour well list), "What the Mac asks for" and "Signs in this app"; this section.
 - **Tests.** `StewardKeysTests` (small data tests: the words in each case, the stale rule, the format check, the size limit, the link).
 - **Not yet proven.** Only signed builds on real devices can show: the file on a real Mac and macOS's question about data from other apps; the link really opening AMS Financial Steward at To decide; the real Stream Deck box; the phone and iPad pictures.
+
+## 148. A page group with one page keeps the favourites in place (iPhone and iPad 0.34; Mac stays 0.25)
+- **Version.** Before: iPhone and iPad app 0.33 (build 39). Now: 0.34 (build 40), 26 Nov 2026. Mac stays 0.25 (build 35). Link version (11) and keys-file format (3) unchanged. The owner's words: "WTF happened to the Favourites? They have moved position!!"; his pick: "Keep them right".
+- **The fault.** With "Several pages at once" on, an iPad on its side shows 4 pages with the favourites and the "Pages" button in a column at the right (sections 138, 139). A page group that shows only one page (the page groups "Steward" and "Triathlon", made on the Mac on 26 Nov) used the one-page screen, where the favourites stood in a column at the left of the keys (a row under them while the navigation picture shows). An iPhone on its side did the same: with 2 pages the favourites stand in a row under them (section 139), with one page they moved.
+- **The rule.** `BigKeys.slots(tiles:usual:)` in `Core/Sources/DeckMateCore/MapSwipe.swift`: a group that shows 1 page gets the device's usual count of places (`usual`: iPad 4, iPhone 2); else the number of pages shown. In `DeckScreen`, `slots` feeds `bigKeys`, `phoneWide`, `drawerPlace` and both plans, so the screen, the favourites' place, the "Pages" button and the pull from the left edge all follow the usual layout.
+- **Look.** The one page stands in the first place (top left); the other places stay empty. `WideGrid(slots:)` draws an empty place as a clear frame of full size, so the favourites keep their place. The navigation picture is pulled in from the left edge as on the usual screen.
+- **Unchanged.** "Several pages at once" off; groups with 2, 3 or 4 pages; an iPad held upright; the iPhone held upright.
+- **Signs.** No change (no mark or colour changed its meaning).
+- **Texts.** What's new 0.34, How it works (part "Several pages at once"), this section, the header and the history.
+- **Tests.** `BigKeysTests.testOnePageKeepsTheUsualPlaces` (small data test: one page gives the usual count on iPad and iPhone; else the number of pages).
+- **Not yet proven.** On a real iPhone or iPad.

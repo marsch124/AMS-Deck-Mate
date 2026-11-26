@@ -124,16 +124,19 @@ struct DeckScreen: View {
     /// and the "Pages" button stand in one more column, everything else is one thin line under them.
     private var bigKeys: Bool {
         isPad && (onItsSide || CommandLine.arguments.contains("-forceMap")) && connected
-            && (2...4).contains(link.tiles.count)
+            && (2...4).contains(slots)
     }
+    /// The places the screen of several pages lays out (0.34): a page group with one page keeps the usual
+    /// number, so the favourites stay where they always are (his "Keep them right", 26 Nov 2026).
+    private var slots: Int { BigKeys.slots(tiles: link.tiles.count, usual: link.wideCount) }
     /// The navigation picture can be pulled in from the far left edge, over the keys: on the big-keys
     /// iPad screen (0.30) and on an iPhone on its side that shows two pages (0.31), where it has no other place.
     private var drawerPlace: Bool {
-        connected && EdgePull.offered(bigKeys: bigKeys, phoneSideways: phoneSideways, pages: link.tiles.count,
+        connected && EdgePull.offered(bigKeys: bigKeys, phoneSideways: phoneSideways, pages: slots,
                                       hasPicture: !link.map.isEmpty)
     }
     /// An iPhone on its side showing two pages at once.
-    private var phoneWide: Bool { phoneSideways && connected && link.tiles.count >= 2 }
+    private var phoneWide: Bool { phoneSideways && connected && slots >= 2 }
     /// The strip beside the camera cut-out of an iPhone on its side: the picture slides in behind it.
     private var drawerInset: CGFloat { bigKeys ? 0 : sideInsets.leading }
     /// The height of the small marks: lower in the thin line of the big-keys screen.
@@ -715,11 +718,11 @@ struct DeckScreen: View {
             GeometryReader { box in
                 let gap = keyGap.points
                 let plan = BigKeys.plan(width: box.size.width, height: box.size.height, gap: gap,
-                                        pages: link.tiles.count, favourites: favouritesShow)
+                                        pages: slots, favourites: favouritesShow)
                 let side = CGFloat(plan?.side ?? 40) * keySize.scale
                 let between = CGFloat(BigKeys.between)
                 let pages = WideGrid(link: link, side: side, gap: gap, corner: keyShape.corner,
-                                     across: plan?.across ?? 2, between: between)
+                                     across: plan?.across ?? 2, between: between, slots: slots)
                 Group {
                     switch plan?.extras ?? .none {
                     case .column:
@@ -766,12 +769,12 @@ struct DeckScreen: View {
         GeometryReader { box in
             let gap = keyGap.points
             let plan = BigKeys.plan(width: box.size.width, height: box.size.height, gap: gap,
-                                    pages: link.tiles.count, favourites: favouritesShow)
+                                    pages: slots, favourites: favouritesShow)
             let side = CGFloat(plan?.side ?? 30) * keySize.scale
             let between = CGFloat(BigKeys.between)
             VStack(spacing: between) {
                 WideGrid(link: link, side: side, gap: gap, corner: keyShape.corner,
-                         across: plan?.across ?? 2, between: between)
+                         across: plan?.across ?? 2, between: between, slots: slots)
                 if favouritesShow { extrasRow(side: side, gap: gap) }
             }
             .background(GeometryReader { keys in
@@ -1697,16 +1700,20 @@ private struct WideGrid: View {
 
     /// The room between two pages; nil = the usual one for this key gap.
     var between: CGFloat?
+    /// The places to lay out (0.34); more than the pages = empty places of full size, so the favourites
+    /// beside or under the pages stay where they are on a page group with one page. 0 = one per page.
+    var slots = 0
 
     static let nameHeight: CGFloat = 16
     static func between(_ gap: CGFloat) -> CGFloat { max(14, gap * 2.5) }
 
     var body: some View {
         let names = link.tiles
-        let across = max(1, min(across, names.count))
+        let count = max(names.count, slots)
+        let across = max(1, min(across, count))
         let between = between ?? Self.between(gap)
         VStack(spacing: between) {
-            ForEach(0..<(names.count + across - 1) / across, id: \.self) { row in
+            ForEach(0..<(count + across - 1) / across, id: \.self) { row in
                 HStack(alignment: .top, spacing: between) {
                     ForEach(0..<across, id: \.self) { column in
                         let page = row * across + column
@@ -1725,7 +1732,9 @@ private struct WideGrid: View {
                                         first: page * StreamDeckProtocol.keyCount)
                             }
                         } else {
-                            Color.clear.frame(width: 5 * side + 4 * gap, height: 1)
+                            // An empty place: as large as a page where a page could stand, so nothing moves.
+                            Color.clear.frame(width: 5 * side + 4 * gap,
+                                              height: page < count ? Self.nameHeight + 3 * side + 3 * gap : 1)
                         }
                     }
                 }

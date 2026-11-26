@@ -63,8 +63,8 @@ targets:
       path: Phone/Config/Info.plist
       properties:
         CFBundleDisplayName: Deck Mate
-        CFBundleShortVersionString: "0.33"
-        CFBundleVersion: "39"
+        CFBundleShortVersionString: "0.34"
+        CFBundleVersion: "40"
         ITSAppUsesNonExemptEncryption: false
         CFBundleIconName: AppIcon
         LSRequiresIPhoneOS: true
@@ -88,8 +88,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
-        MARKETING_VERSION: "0.33"
-        CURRENT_PROJECT_VERSION: "39"
+        MARKETING_VERSION: "0.34"
+        CURRENT_PROJECT_VERSION: "40"
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: D24ENP83QQ
     dependencies:

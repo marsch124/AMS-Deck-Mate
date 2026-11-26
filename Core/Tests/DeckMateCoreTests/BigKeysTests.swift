@@ -36,4 +36,13 @@ final class BigKeysTests: XCTestCase {
         let row: Double = BigKeys.between + 64
         XCTAssertLessThanOrEqual(pages + row, 337)
     }
+
+    /// 0.34 (his "Keep them right"): a page group with one page keeps the usual places, so the favourites stay put.
+    func testOnePageKeepsTheUsualPlaces() {
+        XCTAssertEqual(BigKeys.slots(tiles: 1, usual: 4), 4)
+        XCTAssertEqual(BigKeys.slots(tiles: 1, usual: 2), 2)
+        XCTAssertEqual(BigKeys.slots(tiles: 3, usual: 4), 3)
+        XCTAssertEqual(BigKeys.slots(tiles: 0, usual: 4), 0)   // several pages off: unchanged
+        XCTAssertEqual(BigKeys.plan(width: 1100, height: 700, gap: 6, pages: BigKeys.slots(tiles: 1, usual: 4), favourites: true)?.extras, .column)
+    }
 }

@@ -136,6 +136,14 @@ public enum BigKeys {
         public let extras: Extras
     }
 
+    /// How many places the screen of several pages lays out (iPhone and iPad 0.34, his "Keep them right",
+    /// 26 Nov 2026): a page group that shows only ONE page keeps the device's usual number of places (`usual`:
+    /// 4 on an iPad, 2 on an iPhone), its page in the first one and the rest empty, so the favourites never
+    /// move. Any other number of pages shown is laid out as it is; 0 (several pages off) stays 0.
+    public static func slots(tiles: Int, usual: Int) -> Int {
+        tiles == 1 ? max(1, usual) : tiles
+    }
+
     /// The layout that gives the biggest square keys for `pages` pages in width × height; nil for fewer
     /// than 2 pages or more than 4 (then the usual screen shows).
     public static func plan(width: Double, height: Double, gap: Double, pages: Int, favourites: Bool) -> Plan? {
