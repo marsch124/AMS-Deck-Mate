@@ -31,6 +31,12 @@ enum Palette {
         }
     }
 
+    /// The tile of this key: its own colour when it has one (0.24), else its kind's.
+    static func tile(for key: DeckKey?) -> NSColor {
+        if let own = key?.ownColour { return rgb(own.red, own.green, own.blue) }
+        return tile(key?.action.kind ?? .empty)
+    }
+
     static func kindName(_ kind: KeyKind) -> String {
         switch kind {
         case .app: return "Apps"

@@ -305,15 +305,20 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     public var held: DeckAction?
     /// What a double press (two presses within a third of a second) does; nil = two presses, one after the other (0.20).
     public var twice: DeckAction?
+    /// A colour of its own, "RRGGBB" (0.24); empty = the colour of its kind. A page group for one app wears
+    /// that app's own colours this way (Steward's Budget teal, Triathlon's Plan blue). Ignored on a key whose
+    /// colour already says something (see `DeckAction.colourSpeaks`).
+    public var colour: String = ""
 
     public init(id: UUID = UUID(), title: String = "", icon: String = "", action: DeckAction = .none,
-                held: DeckAction? = nil, twice: DeckAction? = nil) {
+                held: DeckAction? = nil, twice: DeckAction? = nil, colour: String = "") {
         self.id = id
         self.title = title
         self.icon = icon
         self.action = action
         self.held = held
         self.twice = twice
+        self.colour = colour
     }
 
     public init(from decoder: Decoder) throws {
@@ -324,6 +329,26 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         action = c.value(.action, .none)
         held = try? c.decodeIfPresent(DeckAction.self, forKey: .held)
         twice = try? c.decodeIfPresent(DeckAction.self, forKey: .twice)
+        colour = KeyColour.clean(c.value(.colour, ""))
+    }
+
+    enum CodingKeys: String, CodingKey { case id, title, icon, action, held, twice, colour }
+
+    /// Written like before 0.24 when the key has no colour of its own, so a file without own colours stays the same.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(title, forKey: .title)
+        try c.encode(icon, forKey: .icon)
+        try c.encode(action, forKey: .action)
+        try c.encodeIfPresent(held, forKey: .held)
+        try c.encodeIfPresent(twice, forKey: .twice)
+        if !colour.isEmpty { try c.encode(colour, forKey: .colour) }
+    }
+
+    /// The colour this key wears instead of its kind's, as red, green, blue from 0 to 1; nil = its kind's.
+    public var ownColour: (red: Double, green: Double, blue: Double)? {
+        action.colourSpeaks ? nil : KeyColour.rgb(colour)
     }
 
     /// True when a long press does something of its own (the key then shows a small dot).

@@ -79,14 +79,14 @@ enum KeyArt {
 
     /// The key as a picture of `pixels` x `pixels`. nil = an empty place.
     static func image(for key: DeckKey?, pixels: Int) -> CGImage? {
-        let cacheKey = "\(pixels)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)|\(key?.hasHeld ?? false)|\(key?.hasTwice ?? false)"
+        let cacheKey = "\(pixels)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)|\(key?.hasHeld ?? false)|\(key?.hasTwice ?? false)|\(key?.colour ?? "")"
         if let hit = pictures[cacheKey] { return hit }
         let size = CGFloat(pixels)
         guard let context = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        let kind = key?.action.kind ?? .empty
-        context.setFillColor(Palette.tile(kind).cgColor)
+        let tile = Palette.tile(for: key)
+        context.setFillColor(tile.cgColor)
         context.fill(CGRect(x: 0, y: 0, width: size, height: size))
         if let key {
             NSGraphicsContext.saveGraphicsState()
@@ -107,7 +107,7 @@ enum KeyArt {
                 if key.action.quiet {
                     NSColor.white.setFill()
                     path.fill()
-                    Palette.tile(kind).setFill()
+                    tile.setFill()
                 } else {
                     NSColor.white.withAlphaComponent(0.9).setStroke()
                     path.lineWidth = 1.4 * k

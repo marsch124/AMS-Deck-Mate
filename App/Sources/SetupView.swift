@@ -734,6 +734,20 @@ struct SetupView: View {
 
     // MARK: The picked key
 
+    /// The key's own colour (0.24); shows the kind's colour while it has none. Picking one stores "RRGGBB".
+    private var ownColour: Binding<Color> {
+        Binding(
+            get: { Color(nsColor: Palette.tile(for: draft)) },
+            set: { picked in
+                guard let c = NSColor(picked).usingColorSpace(.sRGB) else { return }
+                let hex = KeyColour.hex(red: Double(c.redComponent), green: Double(c.greenComponent), blue: Double(c.blueComponent))
+                // Picking the kind's own colour again is no colour of its own.
+                let kind = Palette.tile(draft.action.kind).usingColorSpace(.sRGB)
+                let kindHex = kind.map { KeyColour.hex(red: Double($0.redComponent), green: Double($0.greenComponent), blue: Double($0.blueComponent)) }
+                draft.colour = hex == kindHex ? "" : hex
+            })
+    }
+
     @ViewBuilder
     private var editorColumn: some View {
         if let slot, let profile {
@@ -777,6 +791,18 @@ struct SetupView: View {
                             }
                         }
                     Spacer()
+                    // 0.24: a colour of its own — not for a key whose colour already says something.
+                    if !draft.action.colourSpeaks, draft.action.type != .none {
+                        Text("Colour").font(.caption).foregroundStyle(.secondary)
+                        ColorPicker("Colour", selection: ownColour, supportsOpacity: false)
+                            .labelsHidden()
+                            .accessibilityIdentifier("keyColour")
+                        if !draft.colour.isEmpty {
+                            Button("Kind’s colour") { draft.colour = "" }
+                                .buttonStyle(PlainButton())
+                                .accessibilityIdentifier("keyColourReset")
+                        }
+                    }
                 }
                 FieldLabel("What it does")
                 KindChooser(selection: actionType, allowed: { favourite == nil || $0.fitsFavourite })

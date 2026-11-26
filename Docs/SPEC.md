@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.23 (build 33), 26 Nov 2026; iPhone and iPad app 0.33 (build 39)
+# AMS Deck Mate, specification, version 0.24 (build 34), 26 Nov 2026; iPhone and iPad app 0.33 (build 39)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.24 (Mac, build 34; iPhone and iPad stay 0.33), 26 Nov 2026: a key can wear a colour of its own (`colour`, section 146), so a page group made for one app can wear that app's colours. Keys-file format stays 3.
 - Since 0.23 (Mac, build 33) and 0.33 (iPhone and iPad, build 39), 26 Nov 2026: a new kind of key, "Training today" (`training`, section 145): shows today's session from AMS Triathlon Training 2.8 or later; a press logs it as done on the iPhone, else opens it in AMS Triathlon Training. Link version 11 (messages `training` and `open`). Keys-file format stays 3.
 - Since 0.22 (Mac; iPhone and iPad stay 0.32, build 38): the Switch key has a ninth choice, "Fans: fan speed" (section 144): a key that shows the speed of the faster fan ("Fans 1,650", "Fans off", "Fans –") from the same now.json, with no switch mark; a press opens Fan Menu's graph. Keys-file format stays 3.
 - Since 0.21 (Mac; iPhone and iPad stay 0.32, build 38): the Switch key has an eighth choice, "Fans: chip temperature" (section 143): a key that shows the chip temperature ("Chip 56°") from AMS Fan Menu 0.6's now.json, with no switch mark; a press opens Fan Menu's graph. Keys-file format stays 3.
@@ -257,6 +258,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.24 (Mac, build 34; iPhone and iPad stay 0.33; 26 Nov 2026).** A key can wear a colour of its own (section 146). Keys-file format (3) unchanged. Not yet proven: the colours on the real Stream Deck box and on the real iPhone and iPad.
 
 **0.23 (Mac, build 33; iPhone and iPad 0.33, build 39; 26 Nov 2026).** The Training today key (section 145); link version 11. Keys-file format (3) unchanged. Not yet proven: the Keychain group shared with AMS Triathlon Training on a real iPhone, the file on a real Mac and macOS's question, the links really opening AMS Triathlon Training, the real Stream Deck box.
 
@@ -1388,3 +1391,15 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Signs.** None new. The switch mark keeps its one meaning: filled = on, outline = off; on a fan key, "on" means that fan choice is on right now.
 - **Texts.** What's new 0.18, How it works (part "Switch key (on or off)", the list of drawings) are updated.
 - **Not yet proven.** The Stream Deck box itself (the owner is away until January 2027), and the keys on his real iPhone and iPad.
+
+## 146. A key with a colour of its own (Mac 0.24; iPhone and iPad stay 0.33)
+- **Version.** Before: Mac 0.23 (build 33); every key had the colour of its kind and it could not be changed. Now: Mac 0.24 (build 34), 26 Nov 2026. The iPhone and iPad app stays 0.33 (build 39): keys reach the phone as pictures drawn by the Mac, so the phone shows the new colours without a new build. Link version unchanged (11).
+- **Aim.** A page group made for one app can wear that app's own colours. Example, added to the owner's keys at the same time (they live in his keys, not in the app): the page group "Steward" (belongs to AMS Financial Steward; one key per part of Steward: Overview, Routine, To decide, Transactions, Report, Budget, Big tickets, Long term, Strategy, Events, Wealth, Pension, Purchase note, Settings, each in that part's colour, plus a key back to AMS Deck) and the page group "Triathlon" (belongs to AMS Triathlon Training: Training today, Today, Plan, Body, Progress, Settings in Triathlon's colours, Body Battery and the Garmin numbers, the Ironman plan, Workouts).
+- **Model.** `DeckKey` has a new optional field `colour`: six hex letters "RRGGBB", for example "1F6BCC". Read in `KeyColour` in `Core/Sources/DeckMateCore/KeyColour.swift`: `KeyColour.rgb` (text to red, green, blue; nil when it is not valid), `KeyColour.clean` (tidies the text: no "#", upper case; empty when not valid) and `KeyColour.hex` (the colour as "RRGGBB"). `DeckKey.ownColour` is the colour of its own the key wears, or nil.
+- **Which keys offer it.** `DeckAction.colourSpeaks` is true for the kinds whose colour already says something; for them the colour well is not shown and a stored `colour` is ignored. These are: the microphone light, Weather, Due today, PARAGON, Training today, Focus rounds, Body Battery, Garmin number, Mac at a glance (battery, free space, busy), World clock, Free until and Progress bar (part of a row). One colour, one meaning. Signal colours (green, amber, red, grey-blue for old facts) are never replaced.
+- **Look.** The key's colour is `ownColour` when it has one and the kind does not speak, else the colour of its kind. The same on the keys on screen, in the pictures for the Stream Deck box and in the pictures sent to the iPhone and iPad.
+- **Set up keys.** Beside the Icon: a "Colour" well (Apple's colour picker) and a small button "Kind's colour" that clears the colour. Cancel and Save as for every edit; Escape is Cancel.
+- **Stored.** `colour` in the keys file. Encoding skips an empty colour, so a key without one is written exactly as before. The keys file format stays 3; an older Deck Mate ignores the field and shows the colour of the kind.
+- **Signs.** One new line in "Signs in this app": a key in a colour that is not one of the kind colours wears the colour of a part of another app (for example Steward's Budget teal); signal colours are never replaced.
+- **Texts.** What's new Mac 0.24; How it works: parts "Set up keys" (Colour well) and "Page groups change by themselves" (a paragraph on page groups that wear an app's colours); "Signs in this app"; this section.
+- **Not yet proven.** The colours on the real Stream Deck box and on the real iPhone and iPad.
