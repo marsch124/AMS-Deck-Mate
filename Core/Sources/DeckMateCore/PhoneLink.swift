@@ -99,6 +99,12 @@ public enum PhoneLink {
         /// Mac → iPhone (version 9): the names of the pages shown at once. `at` (Mac 0.19): which of
         /// them is the page the device is on; nil from an older Mac = the first.
         case tiles(names: [String], at: Int? = nil)
+        /// iPhone → Mac (version 11): the "today" note AMS Triathlon Training keeps on this device, as it
+        /// is (JSON); nil = there is none. For the "Training today" key (`TrainingKeys`).
+        case training(note: String?)
+        /// Mac → iPhone (version 11): open this link on the device. Only ever the answer to a press of a
+        /// "Training today" key on that device, and only a link of AMS Triathlon Training (`TrainingKeys.allows`).
+        case open(link: String)
 
         /// The oldest version of the other side that understands this message. Anything newer than
         /// the other side knows must not be sent: it would close the line.
@@ -113,6 +119,7 @@ public enum PhoneLink {
             case .secure: return 7
             case .some, .ping, .pong: return 8
             case .wide, .tiles: return 9
+            case .training, .open: return 11
             }
         }
     }
@@ -124,7 +131,9 @@ public enum PhoneLink {
     /// 8 = only the keys that changed are sent, and the iPhone asks "are you there?" every few seconds.
     /// 9 = several pages at once (`wide`, `tiles`), for an iPhone or iPad used without the box.
     /// 10 = every key comes with the words for what it does (`tap`, `hold`, `twice`), for "Explain".
-    public static let currentVersion = 10
+    /// 11 = the "Training today" key: the device hands over Triathlon Training's note (`training`) and opens
+    /// the link the Mac answers a press with (`open`).
+    public static let currentVersion = 11
 
     /// "Several pages at once": at most this many pages (an iPad: two above, two below).
     public static let mostTiles = 4

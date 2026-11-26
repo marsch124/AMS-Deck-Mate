@@ -781,8 +781,20 @@ final class AppModel: ObservableObject {
 
     /// The lines for a key as it is set up (not as it shows right now): a tap, a hold, a double press.
     func says(_ key: DeckKey?, in profile: UUID?) -> KeySays.Lines? {
-        key.map { KeySays.lines($0, in: deck, profile: profile, appName: { KeyArt.appName($0) }) }
+        key.map { key in
+            var lines = KeySays.lines(key, in: deck, profile: profile, appName: { KeyArt.appName($0) })
+            // A training key says the session it shows right now (0.23).
+            if key.action.type == .training, !isSample { lines.tap = TrainingKeys.says(trainingBest, logs: false) }
+            return lines
+        }
     }
+
+    // MARK: Training today (0.23)
+
+    /// The newest fresh note from AMS Triathlon Training the Mac has: its own file or a phone's.
+    var trainingBest: TrainingKeys.Note? { glance.trainingBest }
+    /// An iPhone or iPad handed over the note it has (nil = none).
+    func phoneTraining(_ note: TrainingKeys.Note?, from device: String) { glance.setPhoneTraining(note, from: device) }
 
     /// The lines for a key of the page the Mac shows.
     func says(_ index: Int) -> KeySays.Lines? {
@@ -1230,6 +1242,7 @@ enum Sample {
                       5: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[0])),
                       6: DeckKey(action: FocusKeys.action(for: FocusKeys.builtIn[4])),
                       7: DeckKey(action: DeckAction(type: .paragon, target: ParagonKeys.What.plan.rawValue)),
+                      8: DeckKey(action: DeckAction(type: .training, target: TrainingKeys.target)),
                       13: key("Next page", DeckAction(type: .nextPage)),
                       14: key("Back a page", DeckAction(type: .previousPage))]
         // 0.16: live keys: plan, breathing, an old temperature, whole minutes, a bar across a row.

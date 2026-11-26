@@ -164,6 +164,8 @@ public enum KeySays {
             case .note: return "Starts a quick note in PARAGON"
             case .plan: return "Shows what is now on your plan; opens PARAGON"
             }
+        case .training:
+            return TrainingKeys.setupSays
         case .focus:
             return target.isEmpty ? "Starts focus rounds" : "Starts the focus rounds “\(target)”"
         case .breath:

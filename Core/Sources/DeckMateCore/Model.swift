@@ -55,6 +55,9 @@ public enum ActionType: String, Codable, CaseIterable, Sendable {
     /// together (target "<place>/<count>", see `BarKeys`); often = one of the keys pressed most
     /// (target "1"–"5", see `OftenKeys`).
     case breath, bar, often
+    /// The 0.23 kind (see TrainingKeys.swift): training = today's session from AMS Triathlon Training
+    /// (target "today"); a press opens it there, and on the iPhone logs it as done.
+    case training
 
     public init(from decoder: Decoder) throws {
         let raw = (try? decoder.singleValueContainer().decode(String.self)) ?? ""
@@ -207,6 +210,8 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .weather: return KeyKind(rawValue: name) ?? .web
         case .weatherTown: return .web
         case .dueToday, .paragon: return KeyKind(rawValue: name) ?? .shortcut
+        // Teal as long as nothing else is said: green when done, grey-blue without fresh facts.
+        case .training: return KeyKind(rawValue: name) ?? .web
         case .focus: return KeyKind(rawValue: name) ?? .text
         case .cover: return .media
         // On a key as it shows right now the target is the level: green, amber or red.
@@ -281,6 +286,7 @@ public struct DeckAction: Codable, Hashable, Sendable {
         case .counter: return "control-addCircle"
         case .stopwatch, .zero: return "stopwatch"
         case .paragon: return ParagonKeys.what(target).icon
+        case .training: return "triathlon"
         case .focus: return "app-hourglass"
         case .breath: return "pulse"
         case .bar: return "control-list"

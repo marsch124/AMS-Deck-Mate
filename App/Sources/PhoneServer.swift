@@ -60,6 +60,9 @@ final class PhoneServer: ObservableObject {
         var name = "iPhone"
         var token: String?
         var trusted = false
+        /// The note AMS Triathlon Training keeps on this device, as the device handed it over (0.23);
+        /// nil = it handed over none (no Triathlon Training there, or a Deck Mate before 0.33).
+        var training: TrainingKeys.Note?
         /// The keys this iPhone shows now, and the line above them.
         var lastKeys: [PhoneLink.Key]?
         var lastPlace: String?
@@ -387,6 +390,14 @@ final class PhoneServer: ObservableObject {
         case let .hold(index):
             guard phone.trusted, (0..<StreamDeckProtocol.keyCount * phone.wide).contains(index) else { return }
             press(index, long: true, favourite: false, from: phone)
+        case let .training(note):
+            // The device's own note from AMS Triathlon Training (0.23). Read as far as it makes sense; too large = none.
+            guard phone.trusted else { return }
+            let read = TrainingKeys.note(from: note.map { Data($0.utf8) })
+            guard read != phone.training else { return }
+            phone.training = read
+            model.phoneTraining(read, from: phone.token ?? phone.name)
+            sendKeys(to: phone)
         case let .wide(count):
             guard phone.trusted else { return }
             phone.wide = min(max(count, 1), PhoneLink.mostTiles)
@@ -479,7 +490,47 @@ final class PhoneServer: ObservableObject {
         return Navigator.keys(at: first, in: model.deck)[index]
     }
 
+    /// A "Training today" key tapped on a device that has Triathlon Training's note (0.23): that device opens
+    /// the link, because only there can the session be logged (or opened on the device in his hand). The Mac
+    /// answers with the link; the device checks it against its own note. True = taken care of.
+    private func trainingOnPhone(_ index: Int, favourite: Bool, from phone: Phone) -> Bool {
+        guard phone.version >= 11, phone.training != nil,
+              let key = key(index, favourite: favourite, of: phone), key.action.type == .training else { return false }
+        let now = Date()
+        let press = TrainingKeys.press(phone: phone.training, best: model.trainingBest, today: TrainingKeys.day(now), now: now)
+        guard press.onPhone else { return false }
+        if !favourite { send(.pressed(index: index), to: phone) }
+        send(.open(link: press.link), to: phone)
+        if CommandLine.arguments.contains("--checks") {
+            BoxLog.note("check: training key from “\(phone.name)” → the device opens \(press.link)\(press.logs ? " (logs it)" : "")")
+        }
+        return true
+    }
+
+    /// A key as this device shows it: a training key is drawn from the device's own note while that is from
+    /// today, with "press for done" where a press there logs the session. Every other key as the Mac shows it.
+    private func shown(_ plain: DeckKey?, live: DeckKey?, to phone: Phone) -> DeckKey? {
+        guard let plain, plain.action.type == .training, let note = ownTraining(of: phone) else { return live }
+        return plain.showingTraining(TrainingKeys.glance(note, installed: true, logs: true))
+    }
+
+    /// What a key does, in words, for this device ("Explain").
+    private func says(_ plain: DeckKey?, in profile: UUID?, to phone: Phone) -> KeySays.Lines? {
+        guard phone.version >= 10, var lines = model.says(plain, in: profile) else { return nil }
+        if plain?.action.type == .training, let note = ownTraining(of: phone) { lines.tap = TrainingKeys.says(note, logs: true) }
+        return lines
+    }
+
+    /// The device's own note, while it is from today.
+    private func ownTraining(of phone: Phone) -> TrainingKeys.Note? {
+        let now = Date()
+        guard phone.version >= 11, let note = phone.training,
+              TrainingKeys.isFresh(note, today: TrainingKeys.day(now), now: now) else { return nil }
+        return note
+    }
+
     private func act(_ index: Int, long: Bool, favourite: Bool, twice: Bool, from phone: Phone) {
+        if !long, !twice, trainingOnPhone(index, favourite: favourite, from: phone) { return }
         let (tile, place) = PhoneLink.tile(of: index)
         // Several pages at once: with his own places (0.19) the first page shown need not be the page
         // the device is on, so every key acts from the page it is drawn on.
@@ -618,9 +669,10 @@ final class PhoneServer: ObservableObject {
             let keys = model.live(plain)
             list += (0..<StreamDeckProtocol.keyCount).map { index in
                 // The words for what the key does ride along, for "Explain" (an app from 0.32 on).
-                let says = phone.version >= 10 ? model.says(plain[index], in: page?.profile) : nil
-                return PhoneLink.Key(index: tile * StreamDeckProtocol.keyCount + index, title: KeyArt.title(keys[index]),
-                                     picture: KeyArt.pngForPhone(keys[index]),
+                let says = says(plain[index], in: page?.profile, to: phone)
+                let key = shown(plain[index], live: keys[index], to: phone)
+                return PhoneLink.Key(index: tile * StreamDeckProtocol.keyCount + index, title: KeyArt.title(key),
+                                     picture: KeyArt.pngForPhone(key),
                                      tap: says?.tap, hold: says?.hold, twice: says?.twice)
             }
         }
@@ -649,9 +701,9 @@ final class PhoneServer: ObservableObject {
         phone.lastPlace = line
         if phone.version >= 3 {
             let row = (0..<PhoneLink.favouriteCount).map { index in
-                let says = phone.version >= 10 ? model.says(model.deck.favourites[index], in: place?.profile) : nil
-                return PhoneLink.Key(index: index, title: KeyArt.title(model.live(model.deck.favourites[index])),
-                                     picture: KeyArt.pngForPhone(model.live(model.deck.favourites[index])),
+                let says = says(model.deck.favourites[index], in: place?.profile, to: phone)
+                let key = shown(model.deck.favourites[index], live: model.live(model.deck.favourites[index]), to: phone)
+                return PhoneLink.Key(index: index, title: KeyArt.title(key), picture: KeyArt.pngForPhone(key),
                                      tap: says?.tap, hold: says?.hold, twice: says?.twice)
             }
             let frame = PhoneLink.frame(.favourites(keys: row))

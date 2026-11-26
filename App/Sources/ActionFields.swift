@@ -51,6 +51,7 @@ extension ActionType {
         case .stopwatch: return "Stopwatch"
         case .zero: return "Back to 0"
         case .paragon: return "PARAGON"
+        case .training: return TrainingKeys.title
         case .focus: return "Focus rounds (PomoTimer)"
         case .breath: return "Breathing pacer"
         case .bar: return "Progress bar (part of a row)"
@@ -257,6 +258,8 @@ struct ActionFields: View {
             case .dueToday:
                 note("Shows how many PARAGON tasks are due today; overdue ones are named in small words and turn the key red. A press opens Today in PARAGON. The numbers come from the small file PARAGON on this Mac writes for its own widget, read every minute: they are as fresh as PARAGON’s last look at your notes here. A file from an earlier day shows “–” and “Open PARAGON”.")
             case .paragon: ParagonFields(action: $action)
+            case .training:
+                note("Shows today’s session from AMS Triathlon Training (2.8 or later): its length, its sport and whether it is still to do; “Done” in green when today’s training is done, “Rest” on a rest day. A press opens the session in Triathlon Training. In Deck Mate on the iPhone a press logs the session as done, exactly as planned: only the iPhone can log. The facts come from the small note Triathlon Training writes each time it is opened: on this Mac from its own folder, read every minute, and from your iPhone or iPad when Deck Mate is open there. Without a note from today the key shows “–” and “Open Triathlon”. The first time, the Mac asks once whether AMS Deck Mate may read data from other apps: choose Allow.")
             case .focus: FocusFields(action: $action)
             case .breath: BreathFields(action: $action)
             case .bar: BarFields(action: $action)

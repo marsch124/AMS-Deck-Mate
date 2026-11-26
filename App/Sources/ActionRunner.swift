@@ -127,7 +127,7 @@ enum ActionRunner {
         case .running:
             let now = action.resolving(live())
             if now.type == .app { run(now) }
-        case .nextEvent, .weather, .dueToday, .paragon, .desk, .macNow, .worldClock, .sunTimes, .freeUntil:
+        case .nextEvent, .weather, .dueToday, .paragon, .training, .desk, .macNow, .worldClock, .sunTimes, .freeUntil:
             glancePressed?(action)
         case .weatherTown:
             townAsked?(action.target)

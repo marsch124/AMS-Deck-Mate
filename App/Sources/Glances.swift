@@ -49,6 +49,9 @@ final class GlanceWatch {
                 }
             }
         }
+        if trainingOn {
+            all[TrainingKeys.glanceName] = TrainingKeys.glance(trainingBest, installed: trainingHere || !phoneTraining.isEmpty)
+        }
         if let glance = batteryGlance { all[GlanceKeys.battery] = glance }
         return all
     }
@@ -102,6 +105,7 @@ final class GlanceWatch {
         setClocks(deck.towns(of: .worldClock), suns: deck.towns(of: .sunTimes))
         setMac(deck.macNumbers)
         setParagon(due: deck.uses(.dueToday), keys: deck.uses(.paragon))
+        setTraining(deck.uses(.training))
         setPlaylists(deck.playlistLinks)
         setCover(deck.uses(.cover))
         setBattery(deck.uses(.bodyBattery) || deck.uses(.garmin))
@@ -125,6 +129,7 @@ final class GlanceWatch {
             refreshWeather()
             open(app: WeatherKeys.weatherApp)
         case .dueToday, .paragon: paragonPressed(action)
+        case .training: trainingPressed()
         case .desk: Desk.arrange(DeskKeys.spots(of: action))
         default: break
         }
@@ -505,6 +510,86 @@ final class GlanceWatch {
         NSWorkspace.shared.open(url, configuration: how)
     }
 
+    // MARK: Training today (the note AMS Triathlon Training writes)
+
+    private var trainingOn = false
+    private var trainingFile: TrainingKeys.Note?
+    private var trainingHere = false
+    private var trainingTimer: Timer?
+    /// The notes iPhones and iPads handed over, by the id the Mac gave each device.
+    private var phoneTraining: [String: TrainingKeys.Note] = [:]
+
+    /// Triathlon Training is on this Mac when something opens its links.
+    static var trainingInstalled: Bool {
+        URL(string: TrainingKeys.todayLink).flatMap { NSWorkspace.shared.urlForApplication(toOpen: $0) } != nil
+    }
+
+    /// Triathlon Training's note on this Mac as it is now. Only read, never written.
+    static func trainingNote() -> TrainingKeys.Note? {
+        let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(TrainingKeys.macFile)
+        return TrainingKeys.note(from: try? Data(contentsOf: file))
+    }
+
+    /// The newest fresh note of all the Mac has: its own file and each phone's. nil = none is from today.
+    var trainingBest: TrainingKeys.Note? {
+        let now = Date()
+        return TrainingKeys.best([trainingFile] + Array(phoneTraining.values), today: TrainingKeys.day(now), now: now)
+    }
+
+    /// An iPhone or iPad handed over the note it has (nil = it has none).
+    func setPhoneTraining(_ note: TrainingKeys.Note?, from device: String) {
+        guard phoneTraining[device] != note else { return }
+        phoneTraining[device] = note
+        tell()
+    }
+
+    private func setTraining(_ on: Bool) {
+        trainingOn = on
+        guard on != (trainingTimer != nil) else { return }
+        trainingTimer?.invalidate()
+        trainingTimer = nil
+        trainingFile = nil
+        guard on else { return }
+        trainingTimer = every(TrainingKeys.everySeconds) { [weak self] in self?.readTraining() }
+        readTraining()
+    }
+
+    private let trainingQueue = DispatchQueue(label: "training file", qos: .utility)
+    private var trainingReading = false
+
+    /// Reads the note away from the main thread, like PARAGON's file: the first time, the Mac asks whether
+    /// AMS Deck Mate may read another app's data, and the read waits for that answer.
+    private func readTraining() {
+        trainingHere = GlanceWatch.trainingInstalled
+        guard !trainingReading else { return }
+        trainingReading = true
+        trainingQueue.async { [weak self] in
+            let note = GlanceWatch.trainingNote()
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.trainingReading = false
+                guard self.trainingTimer != nil else { return }
+                self.trainingFile = note
+                // Also when nothing changed in the file: a note turns old by the clock alone (midnight).
+                self.tell()
+            }
+        }
+    }
+
+    /// The key was pressed on the Mac or the box (or on a device without Triathlon Training): the Mac opens
+    /// the session's page, or Triathlon Training's Today page. The Mac never logs: only the iPhone can.
+    private func trainingPressed() {
+        let now = Date()
+        let press = TrainingKeys.press(phone: nil, best: trainingBest, today: TrainingKeys.day(now), now: now)
+        guard let url = URL(string: press.link), GlanceWatch.trainingInstalled else { NSSound.beep(); return }
+        NSWorkspace.shared.open(url)
+        // Triathlon Training writes its note anew when it comes to the front.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, self.trainingTimer != nil else { return }
+            self.readTraining()
+        }
+    }
+
     // MARK: Spotify playlist covers
 
     private var listCovers: [String] = []
@@ -662,6 +747,7 @@ final class GlanceWatch {
         ParagonKeys.glanceName(.inbox): Glance(big: "4", words: "Inbox", tone: .text),
         ParagonKeys.glanceName(.next): Glance(big: "today", words: "Book the flights"),
         ParagonKeys.glanceName(.plan): Glance(big: "14:30", words: "until Design review"),
+        TrainingKeys.glanceName: Glance(big: "45 min", words: "Run · to do"),
         GlanceKeys.weather("Oslo"): Glance(big: "4°", words: "As of 14:20", tone: .move),
         GlanceKeys.battery: Glance(big: "62", words: BatteryKeys.words),
         GlanceKeys.garmin(.steps): Glance(big: "8 412", words: "Steps today"),

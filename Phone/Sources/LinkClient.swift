@@ -295,6 +295,8 @@ final class LinkClient: ObservableObject {
     private func stopPinging() {
         pingTimer?.invalidate()
         pingTimer = nil
+        trainingTimer?.invalidate()
+        trainingTimer = nil
     }
 
     private func ping() {
@@ -469,6 +471,7 @@ final class LinkClient: ObservableObject {
             if ownOn { sendOwn() }
             tiles = []
             if wideOn { sendWide() }
+            startTraining()
         case .refused:
             state = .refused(talkingTo)
             connection?.cancel()
@@ -499,8 +502,57 @@ final class LinkClient: ObservableObject {
         case let .asleep(asleep):
             if let words = PhoneLink.wakeNote(wasAsleep: macAsleep, asleep: asleep) { show(words, ok: true) }
             macAsleep = asleep
-        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit, .ping, .pong, .wide:
+        case let .open(link):
+            openFromMac(link)
+        case .hello, .press, .page, .profile, .own, .hold, .favourite, .music, .go, .visit, .ping, .pong, .wide, .training:
             break
+        }
+    }
+
+    // MARK: Training today (0.33)
+
+    /// When a key was last tapped or held here: the Mac's "open this link" only counts right after one.
+    private var lastPress = Date.distantPast
+    private var trainingTimer: Timer?
+    /// The note as last handed to the Mac on this line, and whether anything was handed over yet.
+    private var trainingSent: String?
+    private var trainingSaid = false
+
+    /// Hands the Mac the note AMS Triathlon Training keeps on this device (a Mac from 0.23 on): once the
+    /// line stands, and then once a minute, only when it changed. A device without a note says nothing.
+    private func startTraining() {
+        trainingTimer?.invalidate()
+        trainingTimer = nil
+        trainingSaid = false
+        trainingSent = nil
+        guard macVersion >= 11, !isSample else { return }
+        sendTraining()
+        let timer = Timer(timeInterval: TrainingKeys.everySeconds, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.sendTraining() }
+        }
+        timer.tolerance = 5
+        RunLoop.main.add(timer, forMode: .common)
+        trainingTimer = timer
+    }
+
+    private func sendTraining() {
+        guard case .connected = state, macVersion >= 11, !isSample else { return }
+        let note = TrainingNoteStore.read()
+        guard note != nil || trainingSaid, !trainingSaid || note != trainingSent else { return }
+        trainingSaid = true
+        trainingSent = note
+        send(.training(note: note))
+    }
+
+    /// The Mac's answer to a tap on a "Training today" key: open this link here, where AMS Triathlon Training
+    /// can log the session. Three guards: only right after a tap on this device, only a link of Triathlon
+    /// Training's own, and only one that stands in this device's OWN note (or its Today page).
+    private func openFromMac(_ link: String) {
+        guard Date().timeIntervalSince(lastPress) <= TrainingKeys.answerWithin,
+              TrainingKeys.allows(link, note: TrainingNoteStore.note()), let url = URL(string: link) else { return }
+        UIApplication.shared.open(url, options: [:]) { [weak self] opened in
+            guard !opened else { return }
+            Task { @MainActor in self?.show("Triathlon Training is not on this device", ok: false) }
         }
     }
 
@@ -555,6 +607,7 @@ final class LinkClient: ObservableObject {
     func press(_ index: Int) {
         guard !isSample else { return }
         guard case .connected = state else { return show("Looking for your Mac", ok: false) }
+        lastPress = Date()
         send(.press(index: index))
     }
 
@@ -562,6 +615,7 @@ final class LinkClient: ObservableObject {
     func hold(_ index: Int) {
         guard !isSample else { return }
         guard case .connected = state else { return show("Looking for your Mac", ok: false) }
+        lastPress = Date()
         send(newMac ? .hold(index: index) : .press(index: index))
     }
 
@@ -570,6 +624,7 @@ final class LinkClient: ObservableObject {
         litFavourites.insert(index)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in self?.litFavourites.remove(index) }
         guard case .connected = state, newMac, !isSample else { return }
+        lastPress = Date()
         send(.favourite(index: index, long: long))
     }
 

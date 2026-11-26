@@ -26,6 +26,8 @@ Since 0.18 the Switch key has three fan choices (Fans: Automatic, Cool and Full)
 
 Since 0.19 the Cool and Full fan keys last 10 minutes (AMS Fan Menu 0.3.1 or newer), "Set up keys" is taller so nothing is cut off, and each page group has four places for the pages an iPad shows at once (an iPhone: two). The iPhone and iPad app 0.31 has a switch between one page and several on top of the navigation picture, the pull from the left edge also on an iPhone with two pages, and bigger keys there.
 
+Since 0.23 (Mac) and 0.33 (iPhone and iPad) there is one more kind of key, "Training today": it shows today's session from AMS Triathlon Training 2.8 or later ("45 min" with "Run · to do", "Done" in green, "Missed", "Rest", or "–" with "Open Triathlon" when nothing is fresh). A press on the iPhone logs the session as done; on the Mac, the Stream Deck and the iPad it opens the session in AMS Triathlon Training. The app adds no key to your pages by itself.
+
 Since 0.22 the Switch key has a ninth choice, "Fans: fan speed": a key that shows how fast the Mac's fans turn live ("Fans 1,650" turns per minute, the faster fan; "Fans off" when they stand still, "Fans –" when there is no fresh reading) from the same AMS Fan Menu 0.6 note, with no switch mark; a press opens Fan Menu's graph. The app adds no key to your pages by itself. The iPhone and iPad app needs no update.
 
 Since 0.21 the Switch key has an eighth choice, "Fans: chip temperature": a key that shows the Mac's chip temperature live ("Chip 56°", "Chip –" when there is no fresh reading) from AMS Fan Menu 0.6 or newer, with no switch mark; a press opens Fan Menu's graph. The iPhone and iPad app needs no update.

@@ -104,6 +104,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             NSApp.terminate(nil)
             return
         }
+        // For checks: "--training" says what the Training today key would show right now and does nothing.
+        if arguments.contains("--training") {
+            let note = GlanceWatch.trainingNote()
+            let here = GlanceWatch.trainingInstalled
+            let now = Date()
+            let best = TrainingKeys.best([note], today: TrainingKeys.day(now), now: now)
+            let glance = TrainingKeys.glance(best, installed: here)
+            let press = TrainingKeys.press(phone: nil, best: best, today: TrainingKeys.day(now), now: now)
+            print("Triathlon Training on this Mac: \(here ? "yes" : "no"); its note: \(note == nil ? "not readable" : "read, day \(note?.day ?? "")")\(best == nil && note != nil ? " (not from today)" : "")")
+            print("Key: \(glance.big) | \(glance.words) | \(glance.tone?.rawValue ?? "own colour")")
+            print("Says: \(TrainingKeys.says(best, logs: false))")
+            print("A press opens: \(press.link)")
+            NSApp.terminate(nil)
+            return
+        }
         // For checks: "--paragon" says what the PARAGON and focus keys would show right now and does nothing.
         if arguments.contains("--paragon") {
             let shot = GlanceWatch.paragonSnapshot()
@@ -776,6 +791,36 @@ enum Snapshots {
                     model.show(profile: group.id, page: sixth.id)
                     shot(ScreenDeckView(model: model).padding(16), "deck-paragon-\(name)", look, folder)
                     shot(SetupView(model: model, startSlot: 1), "setup-paragon-\(name)", look, folder)
+                    // 0.23: the Training today key in Set up keys, and every face of the key in one row.
+                    shot(SetupView(model: model, startSlot: 8), "setup-training-\(name)", look, folder)
+                    if name == "day" {
+                        let plain = DeckKey(action: DeckAction(type: .training, target: TrainingKeys.target))
+                        func note(_ sessions: String) -> TrainingKeys.Note? {
+                            TrainingKeys.note(from: Data("{\"v\":1,\"day\":\"d\",\"sessions\":[\(sessions)]}".utf8))
+                        }
+                        let run = "{\"sport\":\"run\",\"sportWord\":\"Run\",\"length\":\"45 min\",\"state\":\"todo\",\"canDone\":true,\"done\":\"amsworkoutsync://done/a\"}"
+                        let bike = "{\"sport\":\"bike\",\"sportWord\":\"Bike\",\"length\":\"1 h 10 min\",\"state\":\"todo\"}"
+                        let done = "{\"sport\":\"swim\",\"sportWord\":\"Swim\",\"state\":\"done\"}"
+                        let missed = "{\"sport\":\"bike\",\"sportWord\":\"Bike\",\"state\":\"missed\"}"
+                        let faces: [Glance] = [
+                            TrainingKeys.glance(note(run), installed: true), TrainingKeys.glance(note(run), installed: true, logs: true),
+                            TrainingKeys.glance(note(bike + "," + run), installed: true), TrainingKeys.glance(note("{\"sport\":\"strength\",\"sportWord\":\"Strength\",\"state\":\"todo\"}"), installed: true),
+                            TrainingKeys.glance(note(done), installed: true), TrainingKeys.glance(note(missed), installed: true),
+                            TrainingKeys.glance(note("{\"sport\":\"rest\",\"state\":\"rest\"}"), installed: true),
+                            TrainingKeys.glance(nil, installed: true), TrainingKeys.glance(nil, installed: false)]
+                        let row = NSImage(size: NSSize(width: faces.count * 224 + 8, height: 232))
+                        row.lockFocus()
+                        NSColor.black.setFill()
+                        NSRect(x: 0, y: 0, width: row.size.width, height: row.size.height).fill()
+                        for (index, face) in faces.enumerated() {
+                            if let picture = KeyArt.image(for: plain.showingTraining(face), pixels: 216) {
+                                NSImage(cgImage: picture, size: NSSize(width: 216, height: 216))
+                                    .draw(in: NSRect(x: 8 + index * 224, y: 8, width: 216, height: 216))
+                            }
+                        }
+                        row.unlockFocus()
+                        if let tiff = row.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) { save(rep, "training-faces", folder) }
+                    }
                     shot(SetupView(model: model, startSlot: 5), "setup-focus-\(name)", look, folder)
                 }
                 // 0.16: live keys (page 7): plan, breathing, old temperature, whole minutes, a bar across a row.

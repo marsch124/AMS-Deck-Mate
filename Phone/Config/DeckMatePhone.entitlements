@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 0.33: the app's OWN group stays FIRST (the first entry is the default group: the remembered Macs
+	     of `MacKeyStore` are kept there). The second is AMS Triathlon Training's group, read only, for
+	     its "today" note (`TrainingNoteStore`). -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.schabbauer.AMSDeckMatePhone</string>
+		<string>$(AppIdentifierPrefix)com.schabbauer.AMSWorkoutSync</string>
+	</array>
+</dict>
+</plist>

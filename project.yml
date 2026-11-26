@@ -25,8 +25,8 @@ targets:
       path: App/Config/Info.plist
       properties:
         CFBundleDisplayName: AMS Deck Mate
-        CFBundleShortVersionString: "0.22"
-        CFBundleVersion: "32"
+        CFBundleShortVersionString: "0.23"
+        CFBundleVersion: "33"
         CFBundleIconFile: AppIcon
         LSUIElement: true
         LSApplicationCategoryType: public.app-category.utilities
@@ -45,8 +45,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_BUNDLE_IDENTIFIER: com.schabbauer.AMSDeckMate
         SWIFT_VERSION: "5.0"
-        MARKETING_VERSION: "0.22"
-        CURRENT_PROJECT_VERSION: "32"
+        MARKETING_VERSION: "0.23"
+        CURRENT_PROJECT_VERSION: "33"
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: Apple Development
         DEVELOPMENT_TEAM: D24ENP83QQ
@@ -63,8 +63,8 @@ targets:
       path: Phone/Config/Info.plist
       properties:
         CFBundleDisplayName: Deck Mate
-        CFBundleShortVersionString: "0.32"
-        CFBundleVersion: "38"
+        CFBundleShortVersionString: "0.33"
+        CFBundleVersion: "39"
         ITSAppUsesNonExemptEncryption: false
         CFBundleIconName: AppIcon
         LSRequiresIPhoneOS: true
@@ -75,6 +75,12 @@ targets:
         UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSLocalNetworkUsageDescription: Deck Mate finds your Mac close by to show its keys.
         NSBonjourServices: [_amsdeckmate._tcp, _amsdeckdirect._tcp]
+    # 0.33: the Keychain group shared with AMS Triathlon Training (its "today" note, read only). The app's
+    # OWN group stays FIRST: the remembered Macs (`MacKeyStore`, no group named) are found there.
+    entitlements:
+      path: Phone/Config/DeckMatePhone.entitlements
+      properties:
+        keychain-access-groups: [$(AppIdentifierPrefix)com.schabbauer.AMSDeckMatePhone, $(AppIdentifierPrefix)com.schabbauer.AMSWorkoutSync]
     settings:
       base:
         PRODUCT_NAME: Deck Mate
@@ -82,8 +88,8 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
-        MARKETING_VERSION: "0.32"
-        CURRENT_PROJECT_VERSION: "38"
+        MARKETING_VERSION: "0.33"
+        CURRENT_PROJECT_VERSION: "39"
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: D24ENP83QQ
     dependencies:

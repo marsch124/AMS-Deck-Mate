@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.22 (build 32), 25 Nov 2026; iPhone and iPad app 0.32 (build 38)
+# AMS Deck Mate, specification, version 0.23 (build 33), 26 Nov 2026; iPhone and iPad app 0.33 (build 39)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.23 (Mac, build 33) and 0.33 (iPhone and iPad, build 39), 26 Nov 2026: a new kind of key, "Training today" (`training`, section 145): shows today's session from AMS Triathlon Training 2.8 or later; a press logs it as done on the iPhone, else opens it in AMS Triathlon Training. Link version 11 (messages `training` and `open`). Keys-file format stays 3.
 - Since 0.22 (Mac; iPhone and iPad stay 0.32, build 38): the Switch key has a ninth choice, "Fans: fan speed" (section 144): a key that shows the speed of the faster fan ("Fans 1,650", "Fans off", "Fans –") from the same now.json, with no switch mark; a press opens Fan Menu's graph. Keys-file format stays 3.
 - Since 0.21 (Mac; iPhone and iPad stay 0.32, build 38): the Switch key has an eighth choice, "Fans: chip temperature" (section 143): a key that shows the chip temperature ("Chip 56°") from AMS Fan Menu 0.6's now.json, with no switch mark; a press opens Fan Menu's graph. Keys-file format stays 3.
 - Since 0.20 (Mac) and 0.32 (iPhone and iPad): the fan key that is on shows the minutes left (section 140); a double press, a third action of every key, marked by a small white "×2" (section 141); words that say what a key does, shown as a plate under the Mac pointer and by the new "Explain" button on the iPhone and iPad (section 142). Link version is now 10 (was 9), keys-file format stays 3 (new optional field `twice` per key).
@@ -256,6 +257,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.23 (Mac, build 33; iPhone and iPad 0.33, build 39; 26 Nov 2026).** The Training today key (section 145); link version 11. Keys-file format (3) unchanged. Not yet proven: the Keychain group shared with AMS Triathlon Training on a real iPhone, the file on a real Mac and macOS's question, the links really opening AMS Triathlon Training, the real Stream Deck box.
 
 **0.22 (Mac, build 32, 25 Nov 2026; iPhone and iPad stay 0.32, build 38).** The fan speed key (section 144). Keys-file format (3) and link version (10) unchanged. Not yet proven: with a real AMS Fan Menu 0.6; the Stream Deck box.
 
@@ -1320,6 +1323,37 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Signs.** New line in "Signs in this app": "Fans 1,650" = the faster fan's speed, "Fans off" = all stand still, "Fans –" = no fresh reading; the switch mark keeps its one meaning.
 - **Tests.** `FanSpeedKeyTests` (three small data tests: the higher fan, no reading is nil, words and sayings).
 - **Not yet proven.** With a real AMS Fan Menu 0.6; the Stream Deck box.
+
+## 145. The Training today key (Mac 0.23; iPhone and iPad 0.33)
+- **Version.** Before: Mac 0.22 (build 32), iPhone and iPad 0.32 (build 38); no key showed anything from AMS Triathlon Training. Now: Mac 0.23 (build 33) and iPhone and iPad 0.33 (build 39), 26 Nov 2026. His pick: "a key that shows today's training session from AMS Triathlon Training, press for done". Needs AMS Triathlon Training 2.8 or later.
+- **Model.** New key kind `training` (`ActionType.training`) with `target` `today`. Rules in `Core/Sources/DeckMateCore/TrainingKeys.swift`, enum `TrainingKeys`; tests `TrainingKeysTests`. Glance name `training:today`. In Set up keys, "What it does" lists "Training today" in the same group as the PARAGON kinds. Keys-file format stays 3; an older Deck Mate keeps a key it does not know as it is (section 85). No key was added to the owner's pages: he places it himself in Set up keys. The built-in sample deck (shown on a Mac without keys of its own) has one.
+- **The note.** AMS Triathlon Training 2.8 writes a small "today" note with only: sport, the session's name, planned length, whether it is done, and this week's hours. Deck Mate only reads it; it never writes it.
+- **Words on the key** (the same on the Mac's keys on screen, the Stream Deck and the phone, except the "press for done" line):
+  - A session to do: the length large ("45 min"), under it "Run · to do". With more than one to do: "Run · to do +1". A session without a planned length: the sport large ("Run"), under it "to do". Colour: teal (the key's own colour).
+  - On an iPhone where a press will log it: under the length "Run · press for done" instead of "Run · to do".
+  - All of today's sessions done: "Done" large, the sport under it (or "2 sessions"); the key turns green.
+  - Missed (nothing left to do, at least one missed): "Missed" large, the sport under it; grey-blue.
+  - Rest day: "Rest" large, "Rest day" under it; teal.
+  - No fresh note: "–" large, "Open Triathlon" under it; grey-blue. Never red.
+  - AMS Triathlon Training not on the Mac and no phone has told Deck Mate anything: "No Triathlon".
+  - A note in a newer format than Deck Mate knows: "Update Deck Mate".
+- **Stale rule.** A note is not fresh when AMS Triathlon Training was not opened today on any device Deck Mate can see, when the note is older than 36 hours, or when its day is not the reader's local today. Then the key shows "–" and "Open Triathlon". It never shows yesterday's session.
+- **What a press does** (his choice on 25 Nov 2026, "Log on iPhone, open elsewhere"):
+  - In Deck Mate on the iPhone, when AMS Triathlon Training is on that iPhone, the session is today's, to do and has a planned length: the press logs it as done, exactly as planned, the same as the button "Done as planned" in AMS Triathlon Training. AMS Triathlon Training comes to the front on the session's page; that is the confirmation. A second press is harmless.
+  - On the Mac, on the Stream Deck, on the iPad, or whenever logging is not possible: the press only opens the session in AMS Triathlon Training, on the device where it was pressed if AMS Triathlon Training is there, else on the Mac. Nothing is changed. Why: only the iPhone can log sessions in AMS Triathlon Training; the Mac and iPad versions cannot.
+  - On "–  Open Triathlon": a press opens Today in AMS Triathlon Training. Once it has been opened, the key shows the session (within a minute on the Mac; on the phone when Deck Mate comes to the front again).
+  - `KeySays` and Explain say the session's full name, for example "Easy run, 45 min, to do. A press logs it as done in Triathlon Training." or "... A press opens it in Triathlon Training." The Mac's pointer note says "Click".
+- **Links.** `amsworkoutsync://done/<session key>` (log), `amsworkoutsync://session/<key>` (open), `amsworkoutsync://today`.
+- **Where the key gets its facts, Mac.** The file `today-note.json` in AMS Triathlon Training's own folder: `~/Library/Containers/com.schabbauer.AMSWorkoutSync/Data/Library/Application Support/today-note.json`, read once a minute and only while such a key is on a page. The first time, macOS asks whether AMS Deck Mate may access data from other apps (the same question as for PARAGON's file); the owner must click Allow.
+- **Where the key gets its facts, iPhone and iPad.** AMS Triathlon Training keeps the same note in the device's Keychain: service `ams.training.today`, account `v1`, group `D24ENP83QQ.com.schabbauer.AMSWorkoutSync`, this device only, never iCloud. Deck Mate on the phone reads it (read only) when it connects to the Mac, when it comes to the front and once a minute, and tells the Mac over the private line. The Mac draws the key from the newest note it has, its own file or a phone's. So the Stream Deck also shows "Done" after he logged on the iPhone, as long as Deck Mate on the phone was open after it.
+- **Link version 11.** `PhoneLink.currentVersion` is 11 (was 10, section 142). Two new messages: `training` (phone to Mac: the phone's note) and `open` (Mac to phone: the link to open for a press on that phone).
+- **Three guards on the phone.** The phone opens a link only if (1) it starts with `amsworkoutsync://`, (2) it is within 3 seconds of a press on that phone, and (3) it is in the phone's own note, or is `amsworkoutsync://today`.
+- **Old and new.** A Deck Mate on the phone before 0.33 still shows the key (the Mac draws it), but a press there always opens the session on the Mac. A Mac before 0.23 does not know the key kind.
+- **Signing, phone.** `Phone/Config/DeckMatePhone.entitlements` may read the Keychain group above. The phone's own group stays first, so the remembered Macs stay.
+- **Signs.** New lines in "Signs in this app" (Mac and phone): green "Done" = today's training is done (green as on other keys: good, all fine); teal = to do or rest; grey-blue = nothing fresh ("–") or nothing left to do and one missed ("Missed"); "+1" = one more session today; "–" = nothing fresh to show; "press for done" (iPhone) = a press logs it. Never red.
+- **Texts.** What's new Mac 0.23 and phone 0.33; How it works: Mac new part "Training today key" and changed "What a key can do", "What the Mac asks for"; phone new part "Training today"; "Signs in this app" (both).
+- **Tests.** `TrainingKeysTests` (small data tests: the words in each case, the stale rule, the press rule per device, the link guards).
+- **Not yet proven.** Only signed builds on real devices can show: the Keychain group shared between the two apps on a real iPhone; the file on a real Mac and macOS's question about data from other apps; the links really opening AMS Triathlon Training and the logging taking effect; the real Stream Deck box.
 
 ## 136. Pull the navigation picture in from the left edge (iPhone and iPad 0.30 build 36)
 - **Version.** Before: iPhone and iPad app 0.29 (build 35). Now: 0.30 (build 36), 25 Nov 2026. It works with the Mac app as it is (Mac 0.18, build 28); no Mac update is needed and the link version is unchanged.

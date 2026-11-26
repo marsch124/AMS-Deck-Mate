@@ -292,6 +292,8 @@ extension DeckKey {
             } else if key.title.isEmpty {
                 key.title = what.short
             }
+        case .training:
+            key.showing(live.glances[TrainingKeys.glanceName], else: TrainingKeys.title)
         case .focus:
             if let now = live.focus, now.name == key.action.target {
                 // While it runs the key says the step and its time, whatever the key is called.
@@ -331,6 +333,16 @@ extension DeckKey {
         if let glance, !glance.big.isEmpty { icon = GlanceKeys.textPrefix + glance.big }
         if let tone = glance?.tone, action.type != .bodyBattery { action.name = tone.rawValue }
         if title.isEmpty { title = glance.map { $0.words.isEmpty ? words : $0.words } ?? words }
+    }
+}
+
+extension DeckKey {
+    /// A training key as it shows for one device (0.23): an iPhone that would log the session on a press
+    /// gets its own words ("Run · press for done"). `self` is the key as it is set up, not as it shows.
+    public func showingTraining(_ glance: Glance) -> DeckKey {
+        var key = self
+        key.showing(glance, else: TrainingKeys.title)
+        return key
     }
 }
 

@@ -18,6 +18,7 @@ extension DeckAction {
         case .counter: return DeckAction(type: type, target: CounterKeys.newID())
         case .stopwatch: return DeckAction(type: type, target: StopwatchKeys.newID())
         case .paragon: return DeckAction(type: type, target: ParagonKeys.What.inbox.rawValue)
+        case .training: return DeckAction(type: type, target: TrainingKeys.target)
         case .focus: return FocusKeys.action(for: FocusKeys.builtIn[0])
         default: return DeckAction(type: type)
         }
