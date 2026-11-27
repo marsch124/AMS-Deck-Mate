@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.25 (build 35), 26 Nov 2026; iPhone and iPad app 0.34 (build 40)
+# AMS Deck Mate, specification, version 0.26 (build 36), 27 Nov 2026; iPhone and iPad app 0.35 (build 41)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.26 (Mac, build 36) and 0.35 (iPhone and iPad, build 41), 27 Nov 2026: Hubs, start screens (section 149): a page group can be marked as a Hub; an iPad on its side shows a Hub with all its pages and any other page group with one page; a Hub key under the Favourites goes between the Hubs.
 - Since 0.34 (iPhone and iPad, build 40; Mac stays 0.25), 26 Nov 2026: a page group with one page keeps the usual screen of "Several pages at once" (section 148), so the favourites stay in their place. Link version (11) and keys-file format (3) stay.
 - Since 0.25 (Mac, build 35; iPhone and iPad stay 0.33), 26 Nov 2026: a new kind of key, "Steward: to decide" (`steward`, section 147): shows how many bank rows wait in AMS Financial Steward 0.21 or later; a press opens Steward at To decide. Keys-file format stays 3.
 - Since 0.24 (Mac, build 34; iPhone and iPad stay 0.33), 26 Nov 2026: a key can wear a colour of its own (`colour`, section 146), so a page group made for one app can wear that app's colours. Keys-file format stays 3.
@@ -260,6 +261,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.26 (Mac, build 36) and 0.35 (iPhone and iPad, build 41; 27 Nov 2026).** Hubs, start screens (section 149). Not yet proven on a real iPhone or iPad.
 
 **0.34 (iPhone and iPad, build 40; Mac stays 0.25; 26 Nov 2026).** A page group with one page keeps the favourites in their place (section 148). Link version (11) and keys-file format (3) unchanged. Not yet proven on a real iPhone or iPad.
 
@@ -1440,3 +1443,18 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Texts.** What's new 0.34, How it works (part "Several pages at once"), this section, the header and the history.
 - **Tests.** `BigKeysTests.testOnePageKeepsTheUsualPlaces` (small data test: one page gives the usual count on iPad and iPhone; else the number of pages).
 - **Not yet proven.** On a real iPhone or iPad.
+
+## 149. Hubs, start screens (Mac 0.26 build 36; iPhone and iPad 0.35 build 41)
+- **Version.** Before: Mac 0.25 (build 35), iPhone and iPad 0.34 (build 40). Now: Mac 0.26 (build 36) and iPhone and iPad 0.35 (build 41), 27 Nov 2026.
+- **Hub.** A page group can be marked as a Hub. On the Mac, in Set up keys, in the page group's settings: the switch "Hub — a start screen". A Hub is a start screen.
+- **The owner's two Hubs.** "Now": where Deck Mate always starts; four pages: Live, My apps, Mac apps, Do. "Life": four pages: Training & health, Money & home, Work & focus, Mac (every one of his apps). The first Hub is Now.
+- **iPad on its side, "Several pages at once" on.** A Hub shows all its pages at once (up to four). Any other page group (an app's page) shows ONE page with the biggest keys. The Favourites stay in their column on the right, with the Hub key under them. An app page with more pages: swipe sideways, or press its "More keys" key (last place), for the next one.
+- **The Hub key.** It stands under the Favourites, where the "Pages" key was, and only when the keys have a Hub. Without Hubs the "Pages" key stays as before. On an app page it says "Hub" and goes to the first Hub (Now). On a Hub it says "→ Life" or "→ Now" and goes to the other Hub. Holding it lists all page groups, as the "Pages" key did. The navigation picture still comes in with a pull from the far left edge (the thin purple line, section 136).
+- **Swipe.** Sideways on a Hub goes to the other Hub.
+- **Following the Mac.** Unchanged: an app with its own page group comes to the front, its page shows; another app, the start Hub (Now). A page picked by hand stays while the Mac moves between apps that have no page group.
+- **Long press on a Hub.** Holding an app key on a Hub shows that app's page without bringing the app forward on the Mac. It is set per key as its long-press action (section 24).
+- **Unchanged.** The iPhone, the Stream Deck box and the Mac's keys on screen: a Hub shows there as a normal page group, one page at a time.
+- **Signs.** One new line in "Signs in this app" (Mac and iPhone/iPad guide): the key-sized frame in purple with the word "Hub", "→ Life" or "→ Now": goes to a start screen; hold = all page groups. Purple keeps its one meaning, pages.
+- **The owner's keys (an example; they live in his keys file, not in the app).** Rebuilt; a copy of the old ones is in Backups. New: the Hubs Now and Life; the app pages PARAGON, Seedboard, Raycast, Alfred, Notion (WET and Daily Tracking made into one page). Steward, Triathlon and Claude follow the same places: Settings in the bottom row, "More keys" in the last place; the old "AMS Deck" home key is gone (the Hub key does it). Removed at his wish: the old AMS Deck group (Home and its folders), OmniFocus, the Elgato tutorial page.
+- **Texts.** What's new Mac 0.26 and iPhone and iPad 0.35; How it works (new part "Hubs: start screens" in both apps; changed "Set up keys", "Page groups change by themselves", "Several pages at once", "Signs in this app"); this section, the header and the history.
+- **Not yet proven.** On a real iPhone or iPad and on the real box.

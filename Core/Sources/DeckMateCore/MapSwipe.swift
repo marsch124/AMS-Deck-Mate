@@ -165,3 +165,45 @@ public enum BigKeys {
         return best
     }
 }
+
+/// An app's page on the iPad (0.35, his overhaul of 27 Nov 2026): once his keys have a Hub, every other page
+/// group shows ONE page with the biggest keys; the five favourites and the Hub key stand in one column at the
+/// right (where they stand on a Hub), smaller than the keys so the column is as tall as the three rows.
+public enum OnePage {
+    /// The side of a key and of a favourite, so 5 × 3 keys (with the page name above) and a column of 6
+    /// (with "Favourites" above) fill width × height. The column's word sits level with the page name.
+    public static func sides(width: Double, height: Double, gap: Double) -> (key: Double, favourite: Double) {
+        // Column: six places and five gaps beside three keys and two gaps → favourite = (key − gap) / 2.
+        let byWidth = (width - 4 * gap - BigKeys.between + gap / 2) / 5.5
+        let byHeight = (height - BigKeys.nameHeight - 3 * gap) / 3
+        let key = max(10, min(byWidth, byHeight).rounded(.down))
+        return (key, max(6, ((key - gap) / 2).rounded(.down)))
+    }
+}
+
+/// The Hub key (0.35): under the favourites, in place of the "Pages" key once his keys have a Hub.
+public enum HubKey {
+    /// Where a tap leads: on a Hub, the next Hub (going round); anywhere else, the first Hub.
+    /// nil = no Hub (then the "Pages" key shows instead), or a Hub that is the only one.
+    public static func target(current: String?, hubs: [String]) -> String? {
+        guard let first = hubs.first else { return nil }
+        guard let current, let at = hubs.firstIndex(of: current) else { return first }
+        let next = hubs[(at + 1) % hubs.count]
+        return next == current ? nil : next
+    }
+
+    /// The word on the key: "Hub" on an app's page, "→ Life" on a Hub (the name of the Hub it leads to).
+    public static func word(current: String?, hubs: [(id: String, name: String)]) -> String {
+        let ids = hubs.map(\.id)
+        guard let current, ids.contains(current) else { return "Hub" }
+        guard let next = target(current: current, hubs: ids),
+              let name = hubs.first(where: { $0.id == next })?.name else { return "Hub" }
+        return "→ " + name
+    }
+
+    /// A sideways swipe on a Hub (0.35): the other Hub instead of the next page. nil = not on a Hub.
+    public static func swipe(current: String?, hubs: [String], step: Int) -> String? {
+        guard let current, let at = hubs.firstIndex(of: current), hubs.count > 1 else { return nil }
+        return hubs[((at + step) % hubs.count + hubs.count) % hubs.count]
+    }
+}

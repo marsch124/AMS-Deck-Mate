@@ -92,6 +92,12 @@ struct HoursRows: View {
                 }
                 Text("In these hours it shows instead of the default page group, for apps that have no page group of their own. An app’s own page group, and one you picked by hand, always stay.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Toggle("Hub — a start screen", isOn: Binding(get: { current.hub }, set: { on in change { $0.hub = on } }))
+                    .toggleStyle(.checkbox)
+                    .padding(.top, 6)
+                    .accessibilityIdentifier("hubOn")
+                Text("An iPad showing several pages at once shows all pages of a Hub, and one page with big keys of every other page group. The Hub key under the Favourites leads to the first Hub, and from a Hub to the next one.")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }
     }

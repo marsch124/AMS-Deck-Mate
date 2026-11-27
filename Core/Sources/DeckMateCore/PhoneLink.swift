@@ -182,7 +182,11 @@ public enum PhoneLink {
         public var id: String
         public var name: String
         public var pages: [Page]
-        public init(id: String, name: String, pages: [Page]) { self.id = id; self.name = name; self.pages = pages }
+        /// A start screen (Mac 0.26). nil from an older Mac = no Hubs.
+        public var hub: Bool?
+        public init(id: String, name: String, pages: [Page], hub: Bool? = nil) {
+            self.id = id; self.name = name; self.pages = pages; self.hub = hub
+        }
     }
     /// How many keys the favourites row has.
     public static let favouriteCount = 5

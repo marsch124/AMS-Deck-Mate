@@ -50,6 +50,9 @@ public enum Navigator {
         guard count > 1, let profile = deck.profile(position.profile), profile.page(position.page) != nil else {
             return [position]
         }
+        // Hubs (0.26): once his keys have a start screen, every other page group is an app's page and
+        // shows one page at a time, with the biggest keys.
+        if !profile.hub, !deck.hubs.isEmpty { return [position] }
         let free = freeSpread(at: position, count: count + DeckProfile.placeCount, in: profile)
         guard profile.hasPlaces else { return Array(free.prefix(count)) }
         var shown: [DeckPosition?] = (0..<count).map { place in

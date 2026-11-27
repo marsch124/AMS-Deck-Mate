@@ -720,7 +720,7 @@ final class PhoneServer: ObservableObject {
                                        pages: group.pages.map {
                         .init(id: $0.id.uuidString, name: $0.name.isEmpty ? "Page" : $0.name, folder: $0.parent != nil,
                               picture: KeyArt.pngForMap($0))
-                    })
+                    }, hub: group.hub ? true : nil)
                 }))
             }
             if let mapFrame, mapFrame != phone.lastMap {

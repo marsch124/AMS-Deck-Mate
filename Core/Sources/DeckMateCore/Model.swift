@@ -441,6 +441,9 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
     /// nil = the app fills that place (see `Navigator.spread`). Always `placeCount` entries.
     public var places: [UUID?] = Array(repeating: nil, count: DeckProfile.placeCount)
     public static let placeCount = 4
+    /// A Hub (0.26, his overhaul of 27 Nov 2026): a start screen. An iPad showing several pages at once
+    /// shows all pages of a Hub, and only ONE page (big keys) of every other page group, once a Hub exists.
+    public var hub = false
 
     public init(id: UUID = UUID(), name: String = "", apps: [String] = [], pages: [DeckPage] = []) {
         self.id = id
@@ -459,6 +462,7 @@ public struct DeckProfile: Codable, Equatable, Identifiable, Sendable {
         hoursFrom = min(DayMinutes.perDay - 1, max(0, c.value(.hoursFrom, 6 * 60)))
         hoursTo = min(DayMinutes.perDay - 1, max(0, c.value(.hoursTo, 9 * 60)))
         places = DeckProfile.tidy(c.value(.places, [UUID?]()))
+        hub = c.value(.hub, false)
     }
 
     /// Exactly four places, and no page in two of them (the first one keeps it).
@@ -554,6 +558,9 @@ public struct Deck: Codable, Equatable, Sendable {
     public func profile(_ id: UUID) -> DeckProfile? { profiles.first { $0.id == id } }
 
     /// The default profile, or the first one when the default is gone.
+    /// The start screens, in their order (0.26). The first one is where the Hub key leads from an app's page.
+    public var hubs: [DeckProfile] { profiles.filter(\.hub) }
+
     public var fallbackProfile: DeckProfile? {
         defaultProfile.flatMap { profile($0) } ?? profiles.first
     }

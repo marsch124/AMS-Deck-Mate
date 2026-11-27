@@ -4,8 +4,11 @@ import DeckMateCore
 /// Made-up keys for the `-sample` launch, so the screens can be seen and tested without a Mac.
 enum SampleLink {
     static let place = "Default · Page 1"
-    static let status = PhoneLink.Status(profiles: [.init(id: "1", name: "Default"), .init(id: "2", name: "Writing")],
-                                         current: "1", held: CommandLine.arguments.contains("-locked"), page: 0, pages: 3,
+    /// "-hubs" (0.35): "Default" is the Hub "Now" and a second Hub "Life" follows; "-onApp" stands on "Writing".
+    static let hubs = CommandLine.arguments.contains("-hubs")
+    static let status = PhoneLink.Status(profiles: [.init(id: "1", name: hubs ? "Now" : "Default"), .init(id: "2", name: "Writing")]
+                                            + (hubs ? [.init(id: "3", name: "Life")] : []),
+                                         current: CommandLine.arguments.contains("-onApp") ? "2" : "1", held: CommandLine.arguments.contains("-locked"), page: 0, pages: 3,
                                          pageID: "p1")
 
     /// Two page groups with five pages, for the navigation picture.
@@ -13,9 +16,11 @@ enum SampleLink {
         func page(_ id: String, _ name: String, _ filled: Int, folder: Bool = false) -> PhoneLink.MapGroup.Page {
             .init(id: id, name: name, folder: folder, picture: mapPicture(filled))
         }
-        return [PhoneLink.MapGroup(id: "1", name: "Default", pages: [page("p1", "Page 1", 12), page("p2", "Page 2", 4),
-                                                                      page("p3", "Page 3", 7), page("f1", "Sound", 5, folder: true)]),
+        return [PhoneLink.MapGroup(id: "1", name: hubs ? "Now" : "Default", pages: [page("p1", "Page 1", 12), page("p2", "Page 2", 4),
+                                                                      page("p3", "Page 3", 7), page("f1", "Sound", 5, folder: true)],
+                                   hub: hubs ? true : nil),
                 PhoneLink.MapGroup(id: "2", name: "Writing", pages: [page("w1", "Page 1", 2)])]
+            + (hubs ? [PhoneLink.MapGroup(id: "3", name: "Life", pages: [page("l1", "Training", 9)], hub: true)] : [])
     }
 
     private static func mapPicture(_ filled: Int) -> Data? {

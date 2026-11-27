@@ -124,11 +124,16 @@ struct DeckScreen: View {
     /// and the "Pages" button stand in one more column, everything else is one thin line under them.
     private var bigKeys: Bool {
         isPad && (onItsSide || CommandLine.arguments.contains("-forceMap")) && connected
-            && (2...4).contains(slots)
+            && (1...4).contains(slots)
     }
     /// The places the screen of several pages lays out (0.34): a page group with one page keeps the usual
     /// number, so the favourites stay where they always are (his "Keep them right", 26 Nov 2026).
-    private var slots: Int { BigKeys.slots(tiles: link.tiles.count, usual: link.wideCount) }
+    /// 0.35 (his overhaul, 27 Nov 2026): on the iPad one page means an app's page, shown alone with the biggest keys
+    /// (`OnePage`); the favourites keep their column at the right.
+    private var slots: Int { isPad ? link.tiles.count : BigKeys.slots(tiles: link.tiles.count, usual: link.wideCount) }
+    /// The Hubs (Mac 0.26), in their order, and where the Hub key leads from here (nil = no Hub: the "Pages" key shows).
+    private var hubs: [(id: String, name: String)] { link.map.filter { $0.hub == true }.map { ($0.id, $0.name) } }
+    private var hubTarget: String? { HubKey.target(current: link.status?.current, hubs: hubs.map(\.id)) }
     /// The navigation picture can be pulled in from the far left edge, over the keys: on the big-keys
     /// iPad screen (0.30) and on an iPhone on its side that shows two pages (0.31), where it has no other place.
     private var drawerPlace: Bool {
@@ -701,7 +706,13 @@ struct DeckScreen: View {
             let across = drag.translation.width
             let along = drag.translation.height
             if abs(across) > 60, abs(across) > abs(along) * 1.5 {
-                link.page(across < 0 ? 1 : -1)
+                // On a Hub (0.35) a sideways swipe goes to the other Hub; elsewhere it turns the pages.
+                if let other = HubKey.swipe(current: link.status?.current, hubs: hubs.map(\.id), step: across < 0 ? 1 : -1) {
+                    snapFeel()
+                    link.swipeProfile(other)
+                } else {
+                    link.page(across < 0 ? 1 : -1)
+                }
             } else if swipeProfiles, abs(along) > 60, abs(along) > abs(across) * 1.5,
                       let next = link.status?.profile(after: along < 0 ? 1 : -1) {
                 link.swipeProfile(next)
@@ -724,6 +735,9 @@ struct DeckScreen: View {
                 let pages = WideGrid(link: link, side: side, gap: gap, corner: keyShape.corner,
                                      across: plan?.across ?? 2, between: between, slots: slots)
                 Group {
+                    if slots == 1 {
+                        onePage(width: box.size.width, height: box.size.height, gap: gap)
+                    } else {
                     switch plan?.extras ?? .none {
                     case .column:
                         HStack(alignment: .top, spacing: between) {
@@ -737,6 +751,7 @@ struct DeckScreen: View {
                         }
                     case .none:
                         pages
+                    }
                     }
                 }
                 .frame(width: box.size.width, height: box.size.height,
@@ -895,7 +910,7 @@ struct DeckScreen: View {
                     VStack(spacing: gap) {
                         ForEach(0..<3, id: \.self) { row in
                             let place = half * 3 + row
-                            if place < PhoneLink.favouriteCount { favouriteKey(place, side: side) } else { pagesKey(side: side) }
+                            if place < PhoneLink.favouriteCount { favouriteKey(place, side: side) } else { hubOrPagesKey(side: side) }
                         }
                     }
                 }
@@ -909,10 +924,81 @@ struct DeckScreen: View {
     private func extrasRow(side: CGFloat, gap: CGFloat) -> some View {
         HStack(spacing: gap) {
             ForEach(0..<PhoneLink.favouriteCount, id: \.self) { favouriteKey($0, side: side) }
-            pagesKey(side: side)
+            hubOrPagesKey(side: side)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("favouritesRow")
+    }
+
+    /// An app's page on the iPad (0.35): its one page as big as the screen allows, the favourites and the
+    /// Hub key in one column at the right, smaller than the keys.
+    private func onePage(width: CGFloat, height: CGFloat, gap: CGFloat) -> some View {
+        let sides = OnePage.sides(width: Double(width), height: Double(height), gap: Double(gap))
+        let side = CGFloat(sides.key) * keySize.scale
+        let small = CGFloat(sides.favourite) * keySize.scale
+        return HStack(alignment: .top, spacing: CGFloat(BigKeys.between)) {
+            WideGrid(link: link, side: side, gap: gap, corner: keyShape.corner, across: 1,
+                     between: CGFloat(BigKeys.between), slots: 1)
+            if favouritesShow {
+                VStack(spacing: gap) {
+                    Text("Favourites")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(PhonePalette.part("favourites"))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(width: small, height: CGFloat(BigKeys.nameHeight))
+                    ForEach(0..<PhoneLink.favouriteCount, id: \.self) { favouriteKey($0, side: small) }
+                    hubOrPagesKey(side: small)
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("favouritesColumn")
+            }
+        }
+        .accessibilityIdentifier("onePage")
+    }
+
+    /// The Hub key once his keys have a Hub (0.35), else the "Pages" key as before.
+    @ViewBuilder private func hubOrPagesKey(side: CGFloat) -> some View {
+        if let target = hubTarget { hubKey(side: side, target: target) } else { pagesKey(side: side) }
+    }
+
+    /// "Hub" (on an app's page) or "→ Life" (on a Hub): a purple frame as big as a key, like the "Pages" key it
+    /// replaces (purple = pages). A tap goes there, without locking; holding lists the page groups.
+    private func hubKey(side: CGFloat, target: String) -> some View {
+        let shape = RoundedRectangle(cornerRadius: side * keyShape.corner, style: .continuous)
+        let colour = PhonePalette.part("profiles")
+        let word = HubKey.word(current: link.status?.current, hubs: hubs)
+        return VStack(spacing: 2) {
+            Text(word).font(side >= 70 ? .headline.weight(.bold) : .footnote.weight(.bold))
+                .lineLimit(1).minimumScaleFactor(0.6)
+            if side >= 80 {
+                Text("Hold: groups").font(.caption2).lineLimit(1).minimumScaleFactor(0.7).opacity(0.7)
+            }
+        }
+        .foregroundStyle(colour)
+        .padding(.horizontal, 4)
+        .frame(width: side, height: side)
+        .background(PhonePalette.card, in: shape)
+        .overlay(shape.strokeBorder(colour, lineWidth: 2))
+        .contentShape(shape)
+        .onTapGesture {
+            snapFeel()
+            link.swipeProfile(target)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(word == "Hub" ? "Hub" : "Hub, \(word.dropFirst(2))")
+        .accessibilityHint("Goes to a start screen. Hold for a list of page groups.")
+        .accessibilityAction { link.swipeProfile(target) }
+        .accessibilityIdentifier("hubKey")
+        .contextMenu {
+            ForEach(link.map, id: \.id) { group in
+                if let first = group.pages.first {
+                    Button(group.id == link.status?.current ? "\(group.name) (here)" : group.name) {
+                        link.go(group: group.id, page: first.id)
+                    }
+                }
+            }
+        }
     }
 
     /// "Pages", as big as a key but only a frame, so it never looks like one of his own keys: a tap opens the
