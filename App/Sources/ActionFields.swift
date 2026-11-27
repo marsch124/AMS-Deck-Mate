@@ -270,7 +270,7 @@ struct ActionFields: View {
             case .cover:
                 note("Shows the cover of the song Spotify plays, with the song’s name. A press plays or pauses. The cover appears with the next song change after AMS Deck Mate starts. The picture comes from Spotify’s own open look-up, by the track only.")
             case .bodyBattery:
-                note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50, teal from 25, amber below. A press opens the board (while the key says “Board off”, it starts the board). Nothing leaves the Mac.")
+                note("Shows your latest Body Battery from the AMS Garmin Bridge Board on this Mac, asked again every 10 minutes: green from 50; from 25 the colour of the board app’s icon; amber below. A press opens the board (while the key says “Board off”, it starts the board). Nothing leaves the Mac.")
             case .desk: DeskFields(action: $action)
             case .weatherTown: note("Asks for another town for a weather key.")
             case .macDo: MacDoFields(action: $action)

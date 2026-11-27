@@ -238,6 +238,12 @@ final class AppModel: ObservableObject {
         ActionRunner.switchPressed = { [weak self] in self?.switchPressed($0) }
         ActionRunner.glancePressed = { [weak self] in self?.glance.pressed($0) }
         ActionRunner.boardPressed = { [weak self] in self?.glance.openBoard() }
+        // A website's icon arrived (0.28): link keys get their site's colour.
+        SiteIcons.arrived = { [weak self] in
+            KeyArt.forgetAppIcons()
+            self?.shown = []
+            self?.bump()
+        }
         counts = (UserDefaults.standard.dictionary(forKey: AppModel.countsKey) as? [String: Int]) ?? [:]
         if let data = UserDefaults.standard.data(forKey: AppModel.watchesKey),
            let kept = try? JSONDecoder().decode(StopwatchKeys.State.self, from: data) {

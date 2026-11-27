@@ -48,3 +48,22 @@ final class KeyLookTests: XCTestCase {
         XCTAssertEqual(DeckAction(type: .macDo, target: MacDo.emptyBin.rawValue).withoutAsking.quiet, true)
     }
 }
+
+/// 0.28: keys that would wear the plain "Links" colour wear what they open.
+final class KeyOpenerTests: XCTestCase {
+    func testWhatAKeyOpensAndWhereASiteKeepsItsIcon() {
+        XCTAssertEqual(KeyOpener.target(DeckAction(type: .link, target: "https://www.youtube.com/feed")), .site("https://www.youtube.com/feed"))
+        XCTAssertEqual(KeyOpener.target(DeckAction(type: .link, target: "amspara://capture")), .openedBy("amspara://capture"))
+        XCTAssertEqual(KeyOpener.target(DeckAction(type: .bodyBattery)), .board)
+        XCTAssertEqual(KeyOpener.target(DeckAction(type: .weather, target: "Lund")), .app(WeatherKeys.weatherApp))
+        XCTAssertNil(KeyOpener.target(DeckAction(type: .app, target: "com.apple.Safari")))
+        // Only the site itself, https (plain http only on this Mac).
+        // A page in a folder: that folder first, then the site's own root.
+        XCTAssertEqual(KeyOpener.siteIconLinks("https://www.youtube.com/feed").prefix(2).map(\.absoluteString),
+                       ["https://www.youtube.com/feed/apple-touch-icon.png", "https://www.youtube.com/apple-touch-icon.png"])
+        XCTAssertTrue(KeyOpener.siteIconLinks("http://example.com").isEmpty)
+        XCTAssertEqual(KeyOpener.siteIconLinks("http://localhost:7777/").first?.absoluteString, "http://localhost:7777/apple-touch-icon.png")
+        XCTAssertEqual(KeyOpener.siteFileName("https://www.youtube.com/feed"), "www.youtube.com-feed.png")
+        XCTAssertEqual(KeyOpener.siteFileName("https://example.org/"), "example.org.png")
+    }
+}

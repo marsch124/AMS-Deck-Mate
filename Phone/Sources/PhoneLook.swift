@@ -20,7 +20,7 @@ enum PhonePalette {
         switch part {
         case "raycast": return dynamic(day: rgb(0.78, 0.17, 0.20), night: rgb(1.00, 0.52, 0.52))
         case "profiles": return dynamic(day: rgb(0.43, 0.32, 0.78), night: rgb(0.72, 0.64, 0.98))
-        case "box": return dynamic(day: rgb(0.05, 0.48, 0.42), night: rgb(0.36, 0.80, 0.72))
+        case "box": return dynamic(day: rgb(0.66, 0.16, 0.38), night: rgb(1.00, 0.56, 0.74))   // raspberry (0.37; was teal)
         case "screen": return dynamic(day: rgb(0.14, 0.40, 0.84), night: rgb(0.47, 0.71, 1.00))
         case "explain": return dynamic(day: rgb(0.77, 0.16, 0.50), night: rgb(1.00, 0.56, 0.80))
         case "settings": return dynamic(day: rgb(0.13, 0.52, 0.26), night: rgb(0.45, 0.82, 0.55))
@@ -35,7 +35,7 @@ enum PhonePalette {
         switch part {
         case "raycast": return Color(uiColor: rgb(0.86, 0.22, 0.25))
         case "profiles": return Color(uiColor: rgb(0.48, 0.37, 0.82))
-        case "box": return Color(uiColor: rgb(0.08, 0.54, 0.48))
+        case "box": return Color(uiColor: rgb(0.70, 0.19, 0.42))
         case "screen": return Color(uiColor: rgb(0.18, 0.44, 0.88))
         case "explain": return Color(uiColor: rgb(0.80, 0.22, 0.55))
         case "settings": return Color(uiColor: rgb(0.18, 0.61, 0.31))

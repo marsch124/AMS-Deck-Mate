@@ -139,10 +139,35 @@ enum KeyArt {
         return colour
     }
 
-    /// The tile of a key: its own colour, else its picture's colour (0.27), else its kind's.
+    /// The tile of a key: its own colour, else its picture's colour (0.27), else — for a key that would wear the
+    /// plain "Links" colour — the colour of what it opens (0.28), else its kind's.
     static func tile(for key: DeckKey?) -> NSColor {
-        guard let key, key.ownColour == nil, let picture = picture(key) else { return Palette.tile(for: key) }
-        return colour(of: picture.image)
+        guard let key, key.ownColour == nil else { return Palette.tile(for: key) }
+        if let picture = picture(key) { return colour(of: picture.image) }
+        if key.action.kind == .web, let icon = openerIcon(key.action) { return colour(of: icon) }
+        return Palette.tile(for: key)
+    }
+
+    private static var openers: [String: URL?] = [:]
+
+    /// The icon of what a key opens: an app, the app that opens its link or file, a website's own icon.
+    private static func openerIcon(_ action: DeckAction) -> NSImage? {
+        switch KeyOpener.target(action) {
+        case let .app(id)?: return appIcon(id)
+        case let .openedBy(link)?:
+            let app: URL?
+            if let hit = openers[link] { app = hit } else {
+                let url = link.hasPrefix("/") || link.hasPrefix("~")
+                    ? URL(fileURLWithPath: (link as NSString).expandingTildeInPath) : URL(string: link)
+                app = url.flatMap { NSWorkspace.shared.urlForApplication(toOpen: $0) }
+                if openers.count > 300 { openers.removeAll() }
+                openers[link] = .some(app)
+            }
+            return app.flatMap { appIcon($0.path) }
+        case let .site(link)?: return SiteIcons.image(forLink: link)
+        case .board?: return GlanceWatch.boardApp.flatMap { appIcon($0.path) }
+        case nil: return nil
+        }
     }
 
     /// The words on a key: its own, or the app's name for an app key without words.
@@ -518,6 +543,7 @@ enum KeyArt {
     static func forgetAppIcons() {
         mapPictures.removeAll()
         pictureColours.removeAll()
+        openers.removeAll()
         appIcons.removeAll()
         ownPictures.removeAll()
         pictures.removeAll()

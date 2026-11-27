@@ -21,7 +21,7 @@ enum Palette {
     static func tile(_ kind: KeyKind) -> NSColor {
         switch kind {
         case .app: return rgb(0.18, 0.44, 0.88)        // blue
-        case .web: return rgb(0.08, 0.54, 0.48)        // teal
+        case .web: return rgb(0.70, 0.19, 0.42)        // raspberry (0.28; was teal, which he dislikes)
         case .raycast: return rgb(0.86, 0.22, 0.25)    // a clear red, like Raycast's own (his pick, 0.9.1; was red-orange)
         case .shortcut: return rgb(0.48, 0.37, 0.82)   // purple
         case .text: return rgb(0.62, 0.38, 0.04)       // amber (darker in 0.16: white words reach 5.0:1)
@@ -59,7 +59,7 @@ enum Palette {
         switch part {
         case "raycast": return Color(nsColor: night ? rgb(1.00, 0.52, 0.52) : rgb(0.78, 0.17, 0.20))
         case "profiles": return Color(nsColor: night ? rgb(0.72, 0.64, 0.98) : rgb(0.43, 0.32, 0.78))
-        case "box": return Color(nsColor: night ? rgb(0.36, 0.80, 0.72) : rgb(0.05, 0.48, 0.42))
+        case "box": return Color(nsColor: night ? rgb(1.00, 0.56, 0.74) : rgb(0.66, 0.16, 0.38))   // raspberry (0.28; was teal)
         case "screen": return Color(nsColor: night ? rgb(0.47, 0.71, 1.00) : rgb(0.14, 0.40, 0.84))
         case "settings": return Color(nsColor: night ? rgb(0.45, 0.82, 0.55) : rgb(0.13, 0.52, 0.26))
         default: return Color(nsColor: night ? rgb(0.62, 0.68, 1.00) : brand)

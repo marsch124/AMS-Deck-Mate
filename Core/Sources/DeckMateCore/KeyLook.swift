@@ -210,3 +210,57 @@ extension DeckAction {
         return action
     }
 }
+
+/// What a key opens, for its colour (0.28): a key that would wear the plain "Links" colour wears the colour
+/// of what it opens instead — an app, the app that opens a link, or a website's own icon.
+public enum KeyOpener {
+    public enum Target: Equatable, Sendable {
+        /// An app by its bundle id.
+        case app(String)
+        /// A link or a file: the app the Mac opens it with.
+        case openedBy(String)
+        /// A web page: its site's own icon.
+        case site(String)
+        /// The AMS Garmin board (its app's icon).
+        case board
+    }
+
+    public static func target(_ action: DeckAction) -> Target? {
+        switch action.type {
+        case .link:
+            let link = action.target.trimmingCharacters(in: .whitespacesAndNewlines)
+            if link.hasPrefix("/") || link.hasPrefix("~") { return .openedBy(link) }
+            guard let scheme = URL(string: link)?.scheme?.lowercased() else { return nil }
+            return scheme == "http" || scheme == "https" ? .site(link) : .openedBy(link)
+        case .recentFile: return action.target.isEmpty ? nil : .openedBy(action.target)
+        case .bodyBattery, .garmin: return .board
+        case .weather, .sunTimes, .weatherTown: return .app(WeatherKeys.weatherApp)
+        case .training: return .openedBy(TrainingKeys.todayLink)
+        default: return nil
+        }
+    }
+
+    /// Where a site keeps its icon, most likely first. Only the site itself is asked; plain http only on this Mac.
+    public static func siteIconLinks(_ link: String) -> [URL] {
+        guard let url = URL(string: link), let host = url.host?.lowercased(), !host.isEmpty,
+              let scheme = url.scheme?.lowercased() else { return [] }
+        let local = host == "localhost" || host == "127.0.0.1"
+        guard scheme == "https" || (scheme == "http" && local) else { return [] }
+        let root = "\(scheme)://\(host)\(url.port.map { ":\($0)" } ?? "")"
+        var found: [String] = []
+        // A page in a folder of its own (a web app on a shared site) may keep its icon in that folder.
+        let folder = url.path.split(separator: "/").first.map(String.init)
+        if let folder, !folder.contains(".") { found.append("\(root)/\(folder)/apple-touch-icon.png") }
+        found += ["\(root)/apple-touch-icon.png", "\(root)/apple-touch-icon-precomposed.png", "\(root)/favicon.ico"]
+        return found.compactMap(URL.init(string:))
+    }
+
+    /// The file a site's icon is kept in: its host (and port, and folder when it has one), as a plain name.
+    public static func siteFileName(_ link: String) -> String? {
+        guard let first = siteIconLinks(link).first, let host = first.host else { return nil }
+        let folder = first.pathComponents.count > 2 ? "-" + first.pathComponents[1] : ""
+        let name = (host + (first.port.map { "-\($0)" } ?? "") + folder)
+            .map { $0.isLetter || $0.isNumber || $0 == "." || $0 == "-" ? $0 : "-" }
+        return String(name) + ".png"
+    }
+}

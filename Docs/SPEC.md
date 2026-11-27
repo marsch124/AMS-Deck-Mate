@@ -84,7 +84,7 @@ The icon opens a menu:
 
 ## 4. Key look and colours
 - A flat coloured tile, a white hand-drawn icon, a short title.
-- One colour per kind (`KeyKind`): app blue (until 0.26; since 0.27 an app key wears the colour of its app's icon, section 150, and blue is only the fallback), web (links) teal, raycast red, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
+- One colour per kind (`KeyKind`): app blue (until 0.26; since 0.27 an app key wears the colour of its app's icon, section 150, and blue is only the fallback), web (links) raspberry (until 0.27 teal; since 0.28 a link key takes the colour of its app or of its site's icon, section 154, and raspberry is the fallback), raycast red, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
 - A "several things" key takes the kind of its first step that is not "nothing".
 - An app key shows the app's own icon unless an icon is picked.
 - Since 0.9.3 any key can show a picture: its `icon` is "picture:<name>", meaning the file `<name>.png` in the folder "Pictures" beside the keys file (`~/Library/Application Support/AMS Deck Mate/Pictures/`). `DeckKey.pictureName` (Core/Sources/DeckMateCore/Model.swift) gives the name, nil when the icon is a drawing or empty. Drawn in App/Sources/KeyArt.swift with rounded corners like an app icon (corner 23 % of its side), 36 of the key's 72 points wide when the key has a title, 46 when it has none. The tile keeps the colour of its kind (links teal). A missing file falls back to the automatic drawing (`autoIcon`). It shows on the Stream Deck, on screen keys, in Set up keys, "All pages", and on the iPhone and iPad (the Mac draws the keys). In Set up keys the Icon button says "Own picture"; picking a drawing or "Automatic" replaces the picture. There is no button yet to choose a file; pictures are put there by `Tools/deck-pages.py --icons` in AMS Apps Overview, which also copies the icon files. The weekly iCloud copy and the safety copies hold only the keys file, not the Pictures folder.
@@ -594,7 +594,7 @@ Only the iPhone and iPad app changes; the Mac app is unchanged.
 - Set up keys, "What it does": two new action types. `copied` (ActionType, `target` "1" to "3") is shown as "Last copied text" with the choices "1st – the text copied just before the current one", "2nd", "3rd". `recentFile` (`target` "1" to "3") is shown as "Recent file" with "1st – the file opened last", "2nd", "3rd". An older Mac reads an unknown type as none. Code: `CopiedTexts` and `RecentFiles` in `Core/Sources/DeckMateCore/Live.swift`.
 - Last copied text, key: shows the first words of that text (18 letters). Press: pastes it where the cursor is (needs Accessibility, like "Type text") and makes it the current copied text. Colour: amber (kind text).
 - Last copied text, list: the current copied text plus the three before it (4 in all), newest first, in memory only: never written to disk, gone when the app quits. Copies that a password manager marks as secret (concealed pasteboard type) are skipped. The clipboard is only watched while at least one such key exists in the setup.
-- Recent file, key: shows the file's name; press opens it. Before a file exists for the place it shows "Recent file". Colour: teal (kind link). Broken-key check: never broken.
+- Recent file, key: shows the file's name; press opens it. Before a file exists for the place it shows "Recent file". Colour: the colour of the app that opens the file (since 0.28, section 154; until 0.27 teal, kind link). Broken-key check: never broken.
 - Recent file, list: taken from the Mac's own record of opened files (Spotlight, the "last used" date). Only the last 7 days, only inside the home folder, without the Library folder, hidden files, folders and apps. Newest first. Only looked up while at least one such key exists.
 - iPhone and iPad: both keys show and work there, drawn by the Mac (first words of a copied text are therefore visible on the iPhone and iPad key; noted in their How it works).
 
@@ -750,7 +750,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Follows calendar changes at once (the store's change notice) and reads again every minute.
 
 ## 58. Weather key (Mac 0.11)
-- `ActionType.weather`; `target` = the town as typed (a text field in Set up keys). Colour: teal. Drawing: sun. A press opens the Mac's Weather (`WeatherKeys.weatherApp`, `com.apple.weather`).
+- `ActionType.weather`; `target` = the town as typed (a text field in Set up keys). Colour: Weather's blue (since 0.28, section 154; until 0.27 teal). Drawing: sun. A press opens the Mac's Weather (`WeatherKeys.weatherApp`, `com.apple.weather`).
 - Large words: the temperature in whole degrees Celsius (`WeatherKeys.degrees`, "3°", "-4°"). Small words: the sky from the WMO code (`WeatherKeys.sky`): 0 Clear, 1 Mostly clear, 2 Partly cloudy, 3 Cloudy, 45 and 48 Fog, 51 to 57 Drizzle, 61 to 67 Rain, 71 to 77 Snow, 80 to 82 Showers, 85 and 86 Snow showers, 95 to 99 Thunder, anything else "Weather". No town: "Set a town" (`noTownWords`).
 - Several keys with different towns work: `GlanceKeys.weather(_:)` names a glance by the lower-case town (`WeatherKeys.name`). A key's own title (for instance the town) replaces the sky.
 - Service: Open-Meteo, no account, no key. Step 1, once per town: `https://geocoding-api.open-meteo.com/v1/search?name=<town>&count=1` (`searchURL`, `place(fromSearch:)`); only the town's name goes out. The place is kept in UserDefaults `weatherPlaces` (town to "lat,lon", `Place.text`). Step 2: `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&current=temperature_2m,weather_code` (`weatherURL`, `now(fromWeather:)`); only the place goes out. Asked again every `everyMinutes` = 20. The Mac asks nothing.
@@ -773,7 +773,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 ## 61. Body Battery key (Mac 0.11)
 - `ActionType.bodyBattery`. Large words: the latest Body Battery (0 to 100); small words "Body Battery". Drawing: battery.
 - Source: the AMS Garmin Bridge Board on this Mac, `http://127.0.0.1:7788/api/board` (`BatteryKeys.boardData`), field `today.bodyBattery.latest` (`BatteryKeys.level(fromBoard:)`; a number outside 0 to 100 is nothing). Info.plist `NSAllowsLocalNetworking` allows the plain http call. Again every `everyMinutes` = 10. Nothing leaves the Mac; the Mac asks nothing.
-- Colour (`BatteryKeys.kind`): green (media) from 50, teal (web) from 25 to 49, amber (text) below 25 (until 0.14: amber from 25 to 49, red below 25); grey-blue (move) while there is no number. If the board does not answer twice in a row, since 0.15 the key shows "–" and "Board off" (section 90; until 0.14 it showed its drawing).
+- Colour (`BatteryKeys.kind`): green (media) from 50, from 25 to 49 the colour of the AMS Garmin board app's icon (since 0.28, section 154; until 0.27 teal, web), amber (text) below 25 (until 0.14: amber from 25 to 49, red below 25); grey-blue (move) while there is no number. If the board does not answer twice in a row, since 0.15 the key shows "–" and "Board off" (section 90; until 0.14 it showed its drawing).
 - A press opens `http://127.0.0.1:7788/` in the browser. `LiveKeys.battery` holds the number.
 
 ## 62. Desk key (Mac 0.11)
@@ -787,18 +787,18 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Five new kinds, eleven things to show: Garmin number (five numbers; seven since 0.15, section 90), Mac at a glance (three), World clock, Sunrise and sunset, Free until. Rules in `Core/Sources/DeckMateCore/GlanceMore.swift`: `GarminKeys`, `MacNowKeys`, `ClockKeys`, `SunKeys`, `EventKeys.freeGlance` and `EventKeys.length`. Mac side in `App/Sources/Glances.swift`.
 - New `ActionType` cases: `garmin`, `macNow`, `worldClock`, `sunTimes`, `freeUntil`. Kinds of key: 34 (29 before).
 - Look as in section 56: the value in large white words, small words under it (a title replaces them), the drawing until a value is there.
-- New: a glance can change its colour. `Glance.tone` is a `KeyKind` (green `media`, teal `web`, amber `text`, red `raycast`, grey-blue `move`; none = the kind's own colour). On a key as it shows now, `action.name` carries the tone and `DeckAction.kind` reads it.
+- New: a glance can change its colour. `Glance.tone` is a `KeyKind` (green `media`, until 0.27 teal `web`, since 0.28 the app's own colour, section 154, amber `text`, red `raycast`, grey-blue `move`; none = the kind's own colour). On a key as it shows now, `action.name` carries the tone and `DeckAction.kind` reads it.
 - Glance names in `LiveKeys.glances`: "garmin:<number>" (`GlanceKeys.garmin`), "mac:<number>" (`GlanceKeys.mac`), "clock:<town>" (`GlanceKeys.clock`), "sun:<town>" (`GlanceKeys.sun`), "free" (`GlanceKeys.free`).
 - Helpers: `ActionType.hasTown` (weather, world clock, sunrise and sunset), `Deck.towns(of:)` (the towns of the keys of one kind, each once), `Deck.allTowns`, `Deck.macNumbers` (the Mac numbers the setup shows).
 - Each watcher runs only while a key of its kind exists in the setup. The keys show on the box, on screen keys and on the iPhone and iPad (the Mac draws them), so the iPhone and iPad need no update.
 
 ## 64. Garmin number key (Mac 0.12)
-- `ActionType.garmin`; `target` = "steps", "sleep", "pulse", "stress" or "workouts" (`GarminKeys.Number`; anything else counts as steps). Colour: teal unless the tone says otherwise. Drawings: shoes, sleep, heart, pulse, run. A press opens `http://127.0.0.1:7788/`.
+- `ActionType.garmin`; `target` = "steps", "sleep", "pulse", "stress" or "workouts" (`GarminKeys.Number`; anything else counts as steps). Colour: the colour of the AMS Garmin board app's icon unless the tone says otherwise (until 0.27 teal, section 154). Drawings: shoes, sleep, heart, pulse, run. A press opens `http://127.0.0.1:7788/`.
 - Source: the AMS Garmin Bridge Board, as for Body Battery (section 61). One fetch feeds Body Battery and all the numbers (five; seven since 0.15) (`GarminKeys.glances(fromBoard:)`), asked every 10 minutes. Nothing leaves the Mac; the Mac asks nothing. A number the board does not have is left out, and the key shows its drawing.
 - Steps today: `today.steps` as "8 412" (`count`, a space between thousands); small words "Steps today"; green once `today.stepGoal` is reached.
 - Sleep last night: `sleep.seconds` as "7:24" (`hours(seconds:)`), small words Garmin's own word (`sleep.qualifier`, "Good"); when `sleep.recorded` is not true: a dash and "No sleep recorded".
 - Resting pulse: `today.restingHr`, small words "Resting pulse". Against the latest of `restingTrend.avg7` (the 7-day average): from 5 beats over it the small words say "+<n> over usual" with no tone (until 0.14: amber); from 8 over the tone is amber (until 0.14: red).
-- Stress today: `today.stressAvg`; the words and tone from Garmin's own steps (`GarminKeys.stress`): to 25 "Resting" (green), to 50 "Low stress" (teal), to 75 "Medium stress" (teal; until 0.14 amber), above "High stress" (amber; until 0.14 red).
+- Stress today: `today.stressAvg`; the words and tone from Garmin's own steps (`GarminKeys.stress`): to 25 "Resting" (green), to 50 "Low stress" (the board app's blue; until 0.27 teal), to 75 "Medium stress" (the board app's blue; until 0.27 teal; until 0.14 amber), above "High stress" (amber; until 0.14 red).
 - Workouts, 7 days: `recentWorkouts.last7.count`; small words "7 days · <h> h" (whole hours of `seconds`), or "Workouts, 7 days" when under an hour.
 
 ## 65. Mac at a glance key (Mac 0.12)
@@ -853,7 +853,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Not a proper Spotify link: the key is broken (red corner, the reason in Set up keys).
 
 ## 74. Search for the copied text key (Mac 0.13)
-- `ActionType.searchCopied`; `target` = the search site (`SearchKeys.Engine`): "google" (the start choice, also for anything odd), "duckduckgo", "bing", "wikipedia", "youtube". Colour: teal. Opens the browser at `SearchKeys.address`: https://www.google.com/search?q=, https://duckduckgo.com/?q=, https://www.bing.com/search?q=, https://en.wikipedia.org/w/index.php?search=, https://www.youtube.com/results?search_query=, followed by the text, percent-coded.
+- `ActionType.searchCopied`; `target` = the search site (`SearchKeys.Engine`): "google" (the start choice, also for anything odd), "duckduckgo", "bing", "wikipedia", "youtube". Colour: raspberry, the colour of links (until 0.27 teal). Opens the browser at `SearchKeys.address`: https://www.google.com/search?q=, https://duckduckgo.com/?q=, https://www.bing.com/search?q=, https://en.wikipedia.org/w/index.php?search=, https://www.youtube.com/results?search_query=, followed by the text, percent-coded.
 - The text is the last copied text, with white space made into single spaces. A copied web address (one word starting with http:// or https://) opens as it is. Of a long text only the first 300 letters are searched (`SearchKeys.longest`). Nothing copied: nothing happens. The text goes only to the site picked.
 
 ## 75. Counter key (Mac 0.13)
@@ -1344,11 +1344,11 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Model.** New key kind `training` (`ActionType.training`) with `target` `today`. Rules in `Core/Sources/DeckMateCore/TrainingKeys.swift`, enum `TrainingKeys`; tests `TrainingKeysTests`. Glance name `training:today`. In Set up keys, "What it does" lists "Training today" in the same group as the PARAGON kinds. Keys-file format stays 3; an older Deck Mate keeps a key it does not know as it is (section 85). No key was added to the owner's pages: he places it himself in Set up keys. The built-in sample deck (shown on a Mac without keys of its own) has one.
 - **The note.** AMS Triathlon Training 2.8 writes a small "today" note with only: sport, the session's name, planned length, whether it is done, and this week's hours. Deck Mate only reads it; it never writes it.
 - **Words on the key** (the same on the Mac's keys on screen, the Stream Deck and the phone, except the "press for done" line):
-  - A session to do: the length large ("45 min"), under it "Run · to do". With more than one to do: "Run · to do +1". A session without a planned length: the sport large ("Run"), under it "to do". Colour: teal (the key's own colour).
+  - A session to do: the length large ("45 min"), under it "Run · to do". With more than one to do: "Run · to do +1". A session without a planned length: the sport large ("Run"), under it "to do". Colour: the green of AMS Triathlon Training (since 0.28, section 154; until 0.27 teal).
   - On an iPhone where a press will log it: under the length "Run · press for done" instead of "Run · to do".
   - All of today's sessions done: "Done" large, the sport under it (or "2 sessions"); the key turns green.
   - Missed (nothing left to do, at least one missed): "Missed" large, the sport under it; grey-blue.
-  - Rest day: "Rest" large, "Rest day" under it; teal.
+  - Rest day: "Rest" large, "Rest day" under it; the colour of AMS Triathlon Training (since 0.28; until 0.27 teal).
   - No fresh note: "–" large, "Open Triathlon" under it; grey-blue. Never red.
   - AMS Triathlon Training not on the Mac and no phone has told Deck Mate anything: "No Triathlon".
   - A note in a newer format than Deck Mate knows: "Update Deck Mate".
@@ -1365,7 +1365,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Three guards on the phone.** The phone opens a link only if (1) it starts with `amsworkoutsync://`, (2) it is within 3 seconds of a press on that phone, and (3) it is in the phone's own note, or is `amsworkoutsync://today`.
 - **Old and new.** A Deck Mate on the phone before 0.33 still shows the key (the Mac draws it), but a press there always opens the session on the Mac. A Mac before 0.23 does not know the key kind.
 - **Signing, phone.** `Phone/Config/DeckMatePhone.entitlements` may read the Keychain group above. The phone's own group stays first, so the remembered Macs stay.
-- **Signs.** New lines in "Signs in this app" (Mac and phone): green "Done" = today's training is done (green as on other keys: good, all fine); teal = to do or rest; grey-blue = nothing fresh ("–") or nothing left to do and one missed ("Missed"); "+1" = one more session today; "–" = nothing fresh to show; "press for done" (iPhone) = a press logs it. Never red.
+- **Signs.** New lines in "Signs in this app" (Mac and phone): green "Done" = today's training is done (green as on other keys: good, all fine); the green of AMS Triathlon Training (until 0.27 teal) = to do or rest; grey-blue = nothing fresh ("–") or nothing left to do and one missed ("Missed"); "+1" = one more session today; "–" = nothing fresh to show; "press for done" (iPhone) = a press logs it. Never red.
 - **Texts.** What's new Mac 0.23 and phone 0.33; How it works: Mac new part "Training today key" and changed "What a key can do", "What the Mac asks for"; phone new part "Training today"; "Signs in this app" (both).
 - **Tests.** `TrainingKeysTests` (small data tests: the words in each case, the stale rule, the press rule per device, the link guards).
 - **Not yet proven.** Only signed builds on real devices can show: the Keychain group shared between the two apps on a real iPhone; the file on a real Mac and macOS's question about data from other apps; the links really opening AMS Triathlon Training and the logging taking effect; the real Stream Deck box.
@@ -1412,7 +1412,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Look.** The key's colour is `ownColour` when it has one and the kind does not speak, else the colour of its kind. The same on the keys on screen, in the pictures for the Stream Deck box and in the pictures sent to the iPhone and iPad.
 - **Set up keys.** Beside the Icon: a "Colour" well (Apple's colour picker) and a small button "Kind's colour" that clears the colour. Cancel and Save as for every edit; Escape is Cancel.
 - **Stored.** `colour` in the keys file. Encoding skips an empty colour, so a key without one is written exactly as before. The keys file format stays 3; an older Deck Mate ignores the field and shows the colour of the kind.
-- **Signs.** One new line in "Signs in this app": a key in a colour that is not one of the kind colours wears the colour of a part of another app (for example Steward's Budget teal); signal colours are never replaced.
+- **Signs.** One new line in "Signs in this app": a key in a colour that is not one of the kind colours wears the colour of a part of another app (for example Steward's Budget colour); signal colours are never replaced.
 - **Texts.** What's new Mac 0.24; How it works: parts "Set up keys" (Colour well) and "Page groups change by themselves" (a paragraph on page groups that wear an app's colours); "Signs in this app"; this section.
 - **Not yet proven.** The colours on the real Stream Deck box and on the real iPhone and iPad.
 
@@ -1467,7 +1467,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **Before.** Every key that opens an app was the colour of its kind, app blue (section 4), with the app's icon in the middle.
 - **Now.** Such a key takes the main colour of its app's own icon, read by the Mac from the icon itself (no hand-picking). Examples: a green icon gives a green key, a lilac icon a dark lilac key, a dark blue icon a dark blue key.
 - **Which keys.** A key that opens an app; a key that shows an app's own picture (section 4, since 0.9.3); a Raycast key that shows its extension's icon (a music player's green logo gives a dark green key).
-- **Making the colour fit.** A light colour is made deeper so the white name stays easy to read. A green-blue (teal) colour is moved to a true green or a true blue (teal stays the colour of links). An icon with almost no colour (black and white) gives a dark graphite key.
+- **Making the colour fit.** A light colour is made deeper so the white name stays easy to read. A green-blue (teal) colour is moved to a true green or a true blue (in 0.27 teal stayed the colour of links; since 0.28 teal is gone from the keys, section 154). An icon with almost no colour (black and white) gives a dark graphite key.
 - **What keeps its colour.** A key with a colour of its own, set in Set up keys (section 146), keeps its own colour. Keys with a drawn mark (the fan keys, the Live figures, the Do keys) keep the colours they had. Signal colours are never replaced.
 - **Setting.** Mac Settings, part "Keys" (section 153): "App keys" with "App colour" (standard) and "Whole icon". With "Whole icon" the app's icon fills the whole key and the name stands on a dark strip at the bottom. The choice changes the box, the Mac screen and the iPhone and iPad together.
 - **Older Mac.** An iPhone or iPad with a Mac older than 0.27 keeps the old blue app keys.
@@ -1504,3 +1504,16 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **iPhone and iPad Settings.** A new choice "Groups" (section 152).
 - **Versions.** Mac 0.27 (build 37); iPhone and iPad 0.36 (build 42); 27 Nov 2026. The link version and the keys-file format are not changed by this text round; check the code for any change there.
 - **Texts.** What's new, How it works, this specification and the README name these versions.
+
+## 154. Live keys and link keys in the colour of their app (Mac 0.28 build 38; shown by iPhone and iPad 0.37 build 43)
+- **Version.** Before: Mac 0.27 (build 37), iPhone and iPad 0.36 (build 42). Now: Mac 0.28 (build 38), iPhone and iPad 0.37 (build 43), 27 Nov 2026. The Mac draws every key picture (box, Mac screen, iPhone, iPad), so the new key colours need no part of their own on the phone, but need the Mac at 0.28.
+- **Before.** A Live key showed teal whenever nothing special was going on: the Garmin keys (Body Battery from 25 to 49, sleep, mobility and the others), the weather and sun keys, and "Training today" while the session is still to do. Every link key was teal (the colour for "Links").
+- **Live keys now.** Instead of teal, such a key takes the main colour of the app it opens, read from that app's icon like an app key (section 150): Garmin keys the colour of the AMS Garmin board app's icon (a blue), weather and sun keys Weather's blue, "Training today" the green of AMS Triathlon Training, a "Recent file" key the colour of the app that opens the file.
+- **Signal colours do not change.** Green = good or done, amber = waits for you or low, red = bad, grey-blue = no fresh numbers. Example, Body Battery (section 61): 50 and up green; 25 to 49 now the board app's blue (until 0.27 teal); below 25 amber.
+- **Link keys now.** A link that an app on the Mac opens (for example a PARAGON or Steward link) wears that app's colour. A link to a website wears the colour of the website's own icon: the Mac fetches the site's icon once, from the site itself (only from that site; nothing else is sent anywhere), keeps it in the folder "Site icons" beside the keys file, and reads its main colour (a video site's red icon gives red). It is fetched again after 30 days. A site with no icon, a key before the icon has arrived, or no internet: raspberry, the new colour for "Links" (until 0.27 teal). The key's drawing does not change, only its colour. A key with a colour of its own (section 146) keeps it.
+- **Teal is gone.** The Settings parts "The box" and "First time with the box" (headings and buttons) are raspberry now. On the iPhone and iPad the part colour "box" (`PhonePalette`, in `Phone/Sources/PhoneLook.swift`) and the made-up sample keys are raspberry.
+- **Making the colour fit.** As in section 150: a light colour is made deeper so white words read (at least 4.5 to 1); a teal-like colour is moved to a true green or a true blue.
+- **Older Mac.** An iPhone or iPad with a Mac older than 0.28 shows the old teal on these keys.
+- **Signs.** One new line in "Signs in this app" (Mac and phone): a Live key in the colour of the app it opens = nothing special, with the signal colours listed; one line for raspberry (a link with no icon of its own yet). The lines that said teal or "links teal" are changed.
+- **Texts.** What's new Mac 0.28 and iPhone and iPad 0.37; How it works ("The look of a key", "Recent file key", "Weather key", "Garmin number key", "Body Battery key", "Search for the copied text key", "Training today key", "Signs in this app"); this section.
+- **Not yet proven.** On the real box and on a real iPhone or iPad.

@@ -24,7 +24,7 @@ enum SampleLink {
     }
 
     private static func mapPicture(_ filled: Int) -> Data? {
-        let colours = [blue, blue, raycast, teal, green, grey]
+        let colours = [blue, blue, raycast, raspberry, green, grey]
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
         return UIGraphicsImageRenderer(size: CGSize(width: 166, height: 98), format: format).image { _ in
@@ -50,7 +50,7 @@ enum SampleLink {
 
     private static let blue = UIColor(red: 0.18, green: 0.44, blue: 0.88, alpha: 1)
     private static let raycast = UIColor(red: 0.86, green: 0.22, blue: 0.25, alpha: 1)
-    private static let teal = UIColor(red: 0.08, green: 0.54, blue: 0.48, alpha: 1)
+    private static let raspberry = UIColor(red: 0.70, green: 0.19, blue: 0.42, alpha: 1)
     private static let green = UIColor(red: 0.14, green: 0.52, blue: 0.26, alpha: 1)
     private static let grey = UIColor(red: 0.36, green: 0.42, blue: 0.51, alpha: 1)
 
@@ -59,7 +59,7 @@ enum SampleLink {
         let tiles: [(String, UIColor)] = [
             ("Mail", blue), ("Notes", blue), ("OmniFocus", blue), ("Safari", blue),
             ("Translate", raycast), ("Clipboard", raycast), ("Window", raycast),
-            ("Today", teal), ("Calendar", teal),
+            ("Today", raspberry), ("Calendar", raspberry),
             ("Play", green), ("Volume", green),
             ("Documents", grey)
         ]

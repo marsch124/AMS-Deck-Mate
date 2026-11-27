@@ -18,6 +18,7 @@
 		1E9E0B037717E7C2264A4484 /* SmartLane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66319F701D3141A48F1570B4 /* SmartLane.swift */; };
 		25400F3FCE0C8D5C9C29F5A2 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 746B67243A944BBECEE02900 /* AppIcon.icon */; };
 		26D75374A396705120CCC51C /* KeyGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23E6227D8C44A9DFC3F2FA1A /* KeyGrid.swift */; };
+		34342A93F263F00273A5B3F4 /* SiteIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53DB8ADF26CAD3E5DC5589C4 /* SiteIcons.swift */; };
 		34E7DE0F68EA4D10AA121D6F /* DeckMateCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1D17AFF0C37A27F8AADFA9A8 /* DeckMateCore */; };
 		3B70ECA8DF91E158674A968C /* DeckMateCore in Frameworks */ = {isa = PBXBuildFile; productRef = FF894429027E7994D6F202BD /* DeckMateCore */; };
 		4A781AC1BFD7A07BC72A82A3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA62F3E5031DFF998CEDD376 /* main.swift */; };
@@ -86,6 +87,7 @@
 		42814D2A56D0969EB95965B2 /* KindChooser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KindChooser.swift; sourceTree = "<group>"; };
 		49A350CF35FC73A197CECBAA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		4FE2EB6D6F2F10CB60B37C28 /* AMSDeckMate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AMSDeckMate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		53DB8ADF26CAD3E5DC5589C4 /* SiteIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiteIcons.swift; sourceTree = "<group>"; };
 		564D1488659C79AEC8657E00 /* PhoneLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneLook.swift; sourceTree = "<group>"; };
 		597FD3445474A6E4FD56E384 /* Outside.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Outside.swift; sourceTree = "<group>"; };
 		66319F701D3141A48F1570B4 /* SmartLane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartLane.swift; sourceTree = "<group>"; };
@@ -221,6 +223,7 @@
 				AC9085CF6126FF6B11B8514D /* SettingsView.swift */,
 				D9F687C21B68404436C4430A /* SetupLaneViews.swift */,
 				3D4D729F81F0D52A25801405 /* SetupView.swift */,
+				53DB8ADF26CAD3E5DC5589C4 /* SiteIcons.swift */,
 				66319F701D3141A48F1570B4 /* SmartLane.swift */,
 				226C7454657DFF66CB604EBD /* SmartViews.swift */,
 				769601D7D405BCA33D04C661 /* Store.swift */,
@@ -422,6 +425,7 @@
 				6270ECDA1EC633414024EDD9 /* SettingsView.swift in Sources */,
 				CADBF45B4838B8A4D4D94024 /* SetupLaneViews.swift in Sources */,
 				1D78F56CC2AF64BCF5EC58B9 /* SetupView.swift in Sources */,
+				34342A93F263F00273A5B3F4 /* SiteIcons.swift in Sources */,
 				1E9E0B037717E7C2264A4484 /* SmartLane.swift in Sources */,
 				BB6CBBF1FCFC2FDFC83355D8 /* SmartViews.swift in Sources */,
 				AD1EC373A3DEA0F02085F5F6 /* Store.swift in Sources */,
@@ -547,7 +551,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -555,7 +559,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.27;
+				MARKETING_VERSION = 0.28;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;
@@ -570,14 +574,14 @@
 				CODE_SIGN_ENTITLEMENTS = Phone/Config/DeckMatePhone.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 42;
+				CURRENT_PROJECT_VERSION = 43;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				INFOPLIST_FILE = Phone/Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.36;
+				MARKETING_VERSION = 0.37;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
 				PRODUCT_NAME = "Deck Mate";
 				SDKROOT = iphoneos;
@@ -593,14 +597,14 @@
 				CODE_SIGN_ENTITLEMENTS = Phone/Config/DeckMatePhone.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 42;
+				CURRENT_PROJECT_VERSION = 43;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				INFOPLIST_FILE = Phone/Config/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.36;
+				MARKETING_VERSION = 0.37;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMatePhone;
 				PRODUCT_NAME = "Deck Mate";
 				SDKROOT = iphoneos;
@@ -698,7 +702,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = D24ENP83QQ;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = App/Config/Info.plist;
@@ -706,7 +710,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.27;
+				MARKETING_VERSION = 0.28;
 				PRODUCT_BUNDLE_IDENTIFIER = com.schabbauer.AMSDeckMate;
 				PRODUCT_NAME = "AMS Deck Mate";
 				SDKROOT = macosx;
