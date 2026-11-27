@@ -737,7 +737,7 @@ struct SetupView: View {
     /// The key's own colour (0.24); shows the kind's colour while it has none. Picking one stores "RRGGBB".
     private var ownColour: Binding<Color> {
         Binding(
-            get: { Color(nsColor: Palette.tile(for: draft)) },
+            get: { Color(nsColor: KeyArt.tile(for: draft)) },
             set: { picked in
                 guard let c = NSColor(picked).usingColorSpace(.sRGB) else { return }
                 let hex = KeyColour.hex(red: Double(c.redComponent), green: Double(c.greenComponent), blue: Double(c.blueComponent))
