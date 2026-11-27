@@ -840,6 +840,15 @@ struct SetupView: View {
                                 .font(.caption).foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        // 0.27, his ask: keys that are hard to undo ask first.
+                        Toggle("Ask first — press again to do it", isOn: Binding(
+                            get: { AskFirst.marked(draft) },
+                            set: { on in draft.askFirst = on == AskFirst.automatic(draft) ? nil : on }))
+                            .toggleStyle(.checkbox)
+                            .accessibilityIdentifier("askFirst")
+                        Text("The first press turns the key red: “Sure? Press again”. A second press within 3 seconds does it; otherwise nothing happens. The key shows a small light-grey ring bottom left. On by itself for Quit all, Empty bin, Eject, Lock, the keep-awake switch and Raycast’s Hide all apps.")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.trailing, 4)
                 }

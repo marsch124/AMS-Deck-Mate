@@ -19,6 +19,11 @@ public enum Navigator {
         public var position: DeckPosition
         /// The things to do on the Mac, in order (open an app, run a Raycast command ...).
         public var run: [DeckAction]
+
+        public init(position: DeckPosition, run: [DeckAction]) {
+            self.position = position
+            self.run = run
+        }
     }
 
     /// The first page of a profile; the default profile when `id` is nil or gone.

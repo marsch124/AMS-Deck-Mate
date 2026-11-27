@@ -31,6 +31,9 @@ enum Palette {
         }
     }
 
+    /// A key that asks first, waiting for its second press (0.27): a clear red, "Sure?".
+    static let waiting = rgb(0.80, 0.11, 0.14)
+
     /// The tile of this key: its own colour when it has one (0.24), else its kind's.
     static func tile(for key: DeckKey?) -> NSColor {
         if let own = key?.ownColour { return rgb(own.red, own.green, own.blue) }

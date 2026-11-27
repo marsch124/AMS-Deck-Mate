@@ -1,4 +1,4 @@
-# AMS Deck Mate, specification, version 0.26 (build 36), 27 Nov 2026; iPhone and iPad app 0.35 (build 41)
+# AMS Deck Mate, specification, version 0.27 (build 37), 27 Nov 2026; iPhone and iPad app 0.36 (build 42)
 
 A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its cable, without Elgato's app and without a subscription.
 
@@ -9,6 +9,7 @@ A Mac menu bar app that drives a Stream Deck box with 15 keys straight over its 
 - Mac app: menu bar only, no Dock icon. The version shows in Settings.
 - Since 0.3 also an iPhone app that shows and presses the same keys (section 17).
 - Since 0.6 (Mac) and 0.8 (iPad): the navigation picture on an iPad held on its side (section 29); since 0.10 also on an iPhone held on its side, with the side panel and the lock in Settings (section 34).
+- Since 0.27 (Mac, build 37) and 0.36 (iPhone and iPad, build 42), 27 Nov 2026: app keys wear the colour of their app's icon (section 150), keys can ask first with "press again" (section 151), and the pages of "Several pages at once" are set apart on the iPhone and iPad (section 152).
 - Since 0.26 (Mac, build 36) and 0.35 (iPhone and iPad, build 41), 27 Nov 2026: Hubs, start screens (section 149): a page group can be marked as a Hub; an iPad on its side shows a Hub with all its pages and any other page group with one page; a Hub key under the Favourites goes between the Hubs.
 - Since 0.34 (iPhone and iPad, build 40; Mac stays 0.25), 26 Nov 2026: a page group with one page keeps the usual screen of "Several pages at once" (section 148), so the favourites stay in their place. Link version (11) and keys-file format (3) stay.
 - Since 0.25 (Mac, build 35; iPhone and iPad stay 0.33), 26 Nov 2026: a new kind of key, "Steward: to decide" (`steward`, section 147): shows how many bank rows wait in AMS Financial Steward 0.21 or later; a press opens Steward at To decide. Keys-file format stays 3.
@@ -83,7 +84,7 @@ The icon opens a menu:
 
 ## 4. Key look and colours
 - A flat coloured tile, a white hand-drawn icon, a short title.
-- One colour per kind (`KeyKind`): app blue, web (links) teal, raycast red, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
+- One colour per kind (`KeyKind`): app blue (until 0.26; since 0.27 an app key wears the colour of its app's icon, section 150, and blue is only the fallback), web (links) teal, raycast red, shortcut purple, text amber, media green, move (folder, back, pages, page group) grey-blue, empty neutral.
 - A "several things" key takes the kind of its first step that is not "nothing".
 - An app key shows the app's own icon unless an icon is picked.
 - Since 0.9.3 any key can show a picture: its `icon` is "picture:<name>", meaning the file `<name>.png` in the folder "Pictures" beside the keys file (`~/Library/Application Support/AMS Deck Mate/Pictures/`). `DeckKey.pictureName` (Core/Sources/DeckMateCore/Model.swift) gives the name, nil when the icon is a drawing or empty. Drawn in App/Sources/KeyArt.swift with rounded corners like an app icon (corner 23 % of its side), 36 of the key's 72 points wide when the key has a title, 46 when it has none. The tile keeps the colour of its kind (links teal). A missing file falls back to the automatic drawing (`autoIcon`). It shows on the Stream Deck, on screen keys, in Set up keys, "All pages", and on the iPhone and iPad (the Mac draws the keys). In Set up keys the Icon button says "Own picture"; picking a drawing or "Automatic" replaces the picture. There is no button yet to choose a file; pictures are put there by `Tools/deck-pages.py --icons` in AMS Apps Overview, which also copies the icon files. The weekly iCloud copy and the safety copies hold only the keys file, not the Pictures folder.
@@ -261,6 +262,8 @@ Since 0.4 the Settings tab is a list on the left with one part at a time on the 
 5. Open it.
 
 Since 0.16.1 `Tools/install.sh` does steps 3 to 5: it stops the app politely, copies the Release build into `~/Applications`, opens it and checks that it runs under the keeper (section 120).
+
+**0.27 (Mac, build 37) and 0.36 (iPhone and iPad, build 42; 27 Nov 2026).** App keys in the colour of their app (section 150), keys that ask first (section 151), pages set apart on the iPhone and iPad (section 152), Settings parts (section 153). Not yet proven on a real iPhone, iPad or the real box.
 
 **0.26 (Mac, build 36) and 0.35 (iPhone and iPad, build 41; 27 Nov 2026).** Hubs, start screens (section 149). Not yet proven on a real iPhone or iPad.
 
@@ -532,7 +535,7 @@ Made after 0.7 on a real iPad, where the top was too crowded. Only the key scree
 - The list: the apps used last, newest first, kept by watching which app comes to the front. Deck Mate's own windows never count. The list is saved and is remembered when the Mac restarts.
 - The picture changes by itself as the app in front changes, on the box, the keys on screen and the iPhone and iPad (the Mac redraws and sends the pictures).
 - Press: the chosen app comes forward. If the place has no app yet, nothing happens.
-- Until enough apps have been used: a clock drawing and the title "Recent", in blue (the app kind colour). Three keys side by side set to 1st, 2nd and 3rd show the last three apps.
+- Until enough apps have been used: a clock drawing and the title "Recent", in blue (the plain app kind colour; it has no app of its own yet, so no app colour). Three keys side by side set to 1st, 2nd and 3rd show the last three apps.
 - Colour: blue (kind app). Broken-key check: never broken.
 
 ## 32. The "Ask AI (copied text)" key (Mac 0.7)
@@ -832,11 +835,11 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Lock the Mac: locks the screen at once; the password or Touch ID is needed to come back.
 - Show the desktop: moves all windows aside; a second press brings them back.
 - Quit all apps: quits every open app except the Finder (`QuitKeys.finder`, `com.apple.finder`), AMS Deck Mate itself and the apps that stay open (`QuitKeys.spared`: the key's `steps`, each of type `app`; in Set up keys the list "Stays open" with the button "Add app…" and a remove button on each). `QuitKeys.toQuit` leaves out those, empty names and doubles. Question first: "Quit 6 apps?" (one app: "Quit <name>?") with Quit and Cancel; the words list the apps (`Listing.words`: "A", "A and B", "A, B and C", at most 6 names then "and N more") and say they will quit, that an app with unsaved work asks you itself, and "Stays open: …". Nothing to quit: no question. An app with unsaved work asks for itself.
-- Empty the bin: question first (`BinKeys.question`): "Empty the bin?" with "12 things will be gone for good. This cannot be undone." ("1 thing" for one) with Empty and Cancel. If the Finder is set to warn before emptying, the Finder asks once more after that (Deck Mate never switches the Finder's own warning off); with "Ask first" off only the Finder's question shows. With both off the bin is emptied at once. An empty bin: the key says so and does nothing. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder (section 11); the answer is Allow.
+- Empty the bin: question first (`BinKeys.question`): "Empty the bin?" with "12 things will be gone for good. This cannot be undone." ("1 thing" for one) with Empty and Cancel. If the Finder is set to warn before emptying, the Finder asks once more after that (Deck Mate never switches the Finder's own warning off); with "Ask first" off only the Finder's question shows. Since 0.27 the window of the Mac is gone for a key press: the key asks with "press again" (section 151) and the window shows only for a press by link. With both off the bin is emptied at once. An empty bin: the key says so and does nothing. The first press makes the Mac ask once whether AMS Deck Mate may control the Finder (section 11); the answer is Allow.
 - Eject all disks: ejects every plugged-in disk, card, stick and disk picture (`EjectKeys.toEject`: local, under /Volumes, and ejectable or not built in); never the Mac's own disk, never a share on another computer. Question first (`EjectKeys.question`): "Eject 2 disks?" (one: "Eject <name>?"), with the names, Eject and Cancel. A disk still in use stays and the key names it (`EjectKeys.stayed`: "<names> is still in use and could not be ejected. Close what uses it, then press the key again."). No disk plugged in: the key says so.
 - Paste as plain text: pastes the copied text without its font, size and colour. Needs Accessibility (section 11).
-- "Ask first": for quitAll, emptyBin and ejectAll (`MacDo.canAsk`) the key asks on the Mac before it acts. `quiet` = without asking; the tick "Ask first" is on at first (`quiet` false) and can be taken off. `MacDoKeys.asks` says whether a key asks.
-- Pressed from the iPhone or iPad, the question opens on the Mac. In the question, Return and Escape both cancel and the action needs a click (until 0.15 Return did it; section 115). The iPhone's note on what ran (`MacDoKeys.done`): "Asks on the Mac: quit all apps", or "Locked the Mac", "Showed the desktop", "Quit all apps", "Emptied the bin", "Ejected the disks", "Pasted as plain text".
+- "Ask first": for quitAll, emptyBin and ejectAll (`MacDo.canAsk`) the key asks on the Mac before it acts. `quiet` = without asking; the tick "Ask first" is on at first (`quiet` false) and can be taken off. `MacDoKeys.asks` says whether a key asks. Changed in 0.27 (section 151): the question is "press again" on the key, not a window, and the tick became the checkbox "Ask first — press again to do it", which any key has.
+- Until 0.26, pressed from the iPhone or iPad, the question opened on the Mac (since 0.27 the key on the iPhone or iPad shows "Sure?" and "Press again", section 151). In the question, Return and Escape both cancel and the action needs a click (until 0.15 Return did it; section 115). The iPhone's note on what ran (`MacDoKeys.done`): "Asks on the Mac: quit all apps", or "Locked the Mac", "Showed the desktop", "Quit all apps", "Emptied the bin", "Ejected the disks", "Pasted as plain text".
 - Also works as a long press and as a step of "Several things in a row".
 
 ## 72. Join the meeting key (Mac 0.13)
@@ -951,7 +954,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - Settings, new part "Raycast and links". A folder "Raycast" beside the keys file holds one small command file per key that has words and does something (not Back, folders or page keys): `deck-<key id>.sh`. The folder is written again whenever the keys change. Button "Show the folder". Raycast needs the folder once: Settings › Extensions › Script Commands › Add Directories. The commands are listed under "Deck Mate · <page group> › <page>".
 - Link forms: `amsdeckmate://press?key=<id or words>&pass=<pass>` (optional `&hold=1` for the long press; since 0.20 optional `&twice=1` for the double press, section 141), `amsdeckmate://show?group=<name>&pass=<pass>`, `amsdeckmate://keys?pass=<pass>` (show or hide the keys on screen).
 - Every link needs this Mac's own pass: a random word made on this Mac, kept in UserDefaults `linkPass`. A link without it, or with a wrong one, does nothing.
-- A pressed key acts wherever it sits; the keys on screen and the box do not move, except for a "Switch page group" key. Quit all apps, Empty the bin and Eject all disks always ask first, also when "Ask first" is off.
+- A pressed key acts wherever it sits; the keys on screen and the box do not move, except for a "Switch page group" key. Quit all apps, Empty the bin and Eject all disks always ask first, also when "Ask first" is off. Since 0.27 a press by link still asks in a window on the Mac, as before (section 151).
 - UserDefaults `linksOff`: switches the whole thing off; the folder is then removed.
 
 ## 95. Box wake-up and diary (Mac 0.15)
@@ -1022,7 +1025,7 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 
 ## 110. Actions for Apple's Shortcuts app (Mac 0.16)
 - `DeckIntents.swift`: `PressDeckKeyIntent` ("Press a Deck Mate key"; the key is picked from a list of keys that have words and do something, subtitle "page group › page"), `ShowDeckGroupIntent` ("Show a Deck Mate page group", no lock) and `ToggleDeckKeysIntent` ("Show or hide the Deck Mate keys on screen").
-- "Quit all apps", "Empty the bin" and "Eject all disks" always ask first. With Settings › Raycast and links off the actions fail with "Pressing keys from outside is switched off. Switch it on in AMS Deck Mate: Settings › Raycast and links › “Keys can be pressed from Raycast and by link”." Not yet tried from the Shortcuts app.
+- "Quit all apps", "Empty the bin" and "Eject all disks" always ask first (since 0.27 still in a window on the Mac, section 151). With Settings › Raycast and links off the actions fail with "Pressing keys from outside is switched off. Switch it on in AMS Deck Mate: Settings › Raycast and links › “Keys can be pressed from Raycast and by link”." Not yet tried from the Shortcuts app.
 
 ## 111. Ready-made page group "My AMS apps" (Mac 0.16)
 - The + in Set up keys offers "My AMS apps – 12 link keys": Tidy Bar (show or hide, show, hide, arrange), Shopping (scan, trip), PARAGON (Inbox, Today, Overdue, Review, Plan), Seedboard (opens the app). Left out for lack of a link: PARAGON start and close the day, Shortcut Overview, Apps Overview. Same rules as the other ready-made groups (0.10): nothing you have is changed; Undo takes it back.
@@ -1264,9 +1267,9 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **iPhone with 2 pages: layout.** Before: on an iPhone on its side the two pages shared the box made for one page (ratio 5 to 4.1), beside the 200-pt panel that holds the navigation picture with one page and was empty with two; a key was 28 pt on an iPhone 17 Pro and the first page's name lay over the word "Mac". Now (`phoneWideKeys`): no panel; the pages fill the width by the big-keys rule `BigKeys.plan` (726 x 337 pt on an iPhone 17 Pro gives two pages side by side, 64-pt keys), the favourites and the "Pages" button stand in one row under them, as big as the keys; the heading line and the column in the strip beside the camera stay; the note on what a key did and the battery warning float over the top of the keys. Data test `BigKeysTests.testTwoPagesFillAnIPhoneOnItsSide`.
 - **Pull on an iPhone: details.** `EdgePull.offered(bigKeys:phoneSideways:pages:hasPicture:)` says where the pull exists; the edge zone starts behind the strip beside the camera cut-out (`atEdge(startX:inset:)`, 32 pt + the left safe-area inset, 62 pt on an iPhone 17 Pro); the picture slides in behind that strip (`EdgePull.offset` with the inset added to the margin); the purple line (4 x 56 pt) stands just inside the safe area, between the strip and the first key. Data test `EdgePullTests.testThePullOnAnIPhoneWithTwoPages`.
 - **Sample.** The `-sample` launch follows the switch (`LinkClient.setWide`, `sampleWide`), so it can be tried without a Mac.
-- **Blue name.** With several pages at once each page has its name above its keys. The name of the page you are on is now blue and bold, the same blue as the frame round that page in the navigation picture; the other names stay grey. It uses the `at` value of section 138 (Mac 0.19).
+- **Blue name.** With several pages at once each page has its name above its keys. The name of the page you are on is now blue and bold, the same blue as the frame round that page in the navigation picture; the other names stay grey. (Changed in 0.36, section 152: the names take the colour of their place and the page you are on is bold with a thicker frame.) It uses the `at` value of section 138 (Mac 0.19).
 - **Placed pages.** The pages the owner placed on the Mac (section 138) show in their places.
-- **Signs.** New: the purple two-part switch (full purple part = what shows now). Changed: the thin purple line now also on an iPhone on its side with 2 pages; the blue name = the page you are on (same meaning as the blue frame in the picture).
+- **Signs.** New: the purple two-part switch (full purple part = what shows now). Changed: the thin purple line now also on an iPhone on its side with 2 pages; the blue name = the page you are on (same meaning as the blue frame in the picture; since 0.36 the blue name is gone, section 152).
 - **Texts.** What's new 0.31, How it works (parts "Several pages at once", "The navigation picture" pointer) and "Signs in this app".
 - **Not yet proven.** On a real iPhone or iPad.
 
@@ -1458,3 +1461,46 @@ Only the key screen of the iPhone and iPad app changes; the Mac app is unchanged
 - **The owner's keys (an example; they live in his keys file, not in the app).** Rebuilt; a copy of the old ones is in Backups. New: the Hubs Now and Life; the app pages PARAGON, Seedboard, Raycast, Alfred, Notion (WET and Daily Tracking made into one page). Steward, Triathlon and Claude follow the same places: Settings in the bottom row, "More keys" in the last place; the old "AMS Deck" home key is gone (the Hub key does it). Removed at his wish: the old AMS Deck group (Home and its folders), OmniFocus, the Elgato tutorial page.
 - **Texts.** What's new Mac 0.26 and iPhone and iPad 0.35; How it works (new part "Hubs: start screens" in both apps; changed "Set up keys", "Page groups change by themselves", "Several pages at once", "Signs in this app"); this section, the header and the history.
 - **Not yet proven.** On a real iPhone or iPad and on the real box.
+
+## 150. App keys look like their app (Mac 0.27 build 37; shown by iPhone and iPad 0.36 build 42)
+- **Version.** Before: Mac 0.26 (build 36), iPhone and iPad 0.35 (build 41). Now: Mac 0.27 (build 37) and iPhone and iPad 0.36 (build 42), 27 Nov 2026. The Mac draws every key picture, so the box, the keys on the Mac screen and the iPhone and iPad show the same colours; the iPhone and iPad need no part of their own for it.
+- **Before.** Every key that opens an app was the colour of its kind, app blue (section 4), with the app's icon in the middle.
+- **Now.** Such a key takes the main colour of its app's own icon, read by the Mac from the icon itself (no hand-picking). Examples: a green icon gives a green key, a lilac icon a dark lilac key, a dark blue icon a dark blue key.
+- **Which keys.** A key that opens an app; a key that shows an app's own picture (section 4, since 0.9.3); a Raycast key that shows its extension's icon (a music player's green logo gives a dark green key).
+- **Making the colour fit.** A light colour is made deeper so the white name stays easy to read. A green-blue (teal) colour is moved to a true green or a true blue (teal stays the colour of links). An icon with almost no colour (black and white) gives a dark graphite key.
+- **What keeps its colour.** A key with a colour of its own, set in Set up keys (section 146), keeps its own colour. Keys with a drawn mark (the fan keys, the Live figures, the Do keys) keep the colours they had. Signal colours are never replaced.
+- **Setting.** Mac Settings, part "Keys" (section 153): "App keys" with "App colour" (standard) and "Whole icon". With "Whole icon" the app's icon fills the whole key and the name stands on a dark strip at the bottom. The choice changes the box, the Mac screen and the iPhone and iPad together.
+- **Older Mac.** An iPhone or iPad with a Mac older than 0.27 keeps the old blue app keys.
+- **Signs.** One new line in "Signs in this app" (Mac and phone): an app key in the colour of its app; blue no longer means "app" on its own. The line about coloured tiles now says apps wear the colour of their icon.
+- **Texts.** What's new Mac 0.27 and iPhone and iPad 0.36; How it works ("The look of a key", "Set up keys", "Settings", "Signs in this app"); this section.
+- **Not yet proven.** On the real box and on a real iPhone or iPad.
+
+## 151. Keys that ask first: press again (Mac 0.27 build 37; iPhone and iPad 0.36 build 42)
+- **Before.** Quit all apps, Empty the bin and Eject all disks asked on the Mac in a window (unless set to "without asking", section 71 and the tick "Ask first"); every other key acted at once.
+- **The sign.** A key that asks first shows a small light-grey ring in its bottom-left corner. It sits at the bottom left so it is not mixed up with the white dot and the "×2" at the top right.
+- **The press.** Press the key once: it turns red and says "Sure?" with "Press again" under it, for 3 seconds. Press it again within the 3 seconds and it does its job. Wait and it goes back to its usual look and nothing happens.
+- **Where.** The Stream Deck box, the keys on the Mac screen, the iPhone and iPad, and the favourites: the same on all.
+- **Long press and double press.** If the action of a long press or of a double press asks first, the first press shows "Sure?" and "Press again", and the second press does that action.
+- **Keys that ask first by themselves.** Quit all apps, Empty the bin, Eject all disks, Lock the Mac, the switch that lets the Mac sleep or keeps it awake (it says "May sleep" or "Awake"), and Raycast's "Hide all apps".
+- **The checkbox.** Any key can be set in Set up keys with the checkbox "Ask first — press again to do it". On by itself for the keys above; turn it off to make such a key act at once; turn it on for any other key. Before: only Quit all apps, Empty the bin and Eject all disks had the tick "Ask first", which opened the window; the keys above that were not among those three (Lock, the awake switch, Hide all apps) acted at once.
+- **The window.** After "press again", Quit all apps, Empty the bin and Eject all disks no longer also ask in a window on the Mac: one question is enough. A press that comes in by a link (Raycast or a web link, section 94) still asks in the window on the Mac, as before.
+- **iPhone and iPad.** The look (ring, red "Sure?" key) is part of the key picture the Mac draws, so it needs the Mac at 0.27; with an older Mac the iPhone and iPad show no ring and still open the question on the Mac.
+- **Signs.** Two new lines in "Signs in this app" (Mac and phone): the light-grey ring (bottom left = asks first, press again) and the red "Sure?" key (waiting for your second press, 3 seconds). Red here means waiting, not trouble.
+- **Texts.** What's new Mac 0.27 and iPhone and iPad 0.36; How it works (new part "Keys that ask first: press again" in the Mac guide; changed "The look of a key", "Keys on screen", "Set up keys", "Long press", "Double press", "On the Mac keys", "Switch key", "Raycast keys", "Press keys from Raycast and by link", "Tapping keys" on the phone); this section.
+- **Not yet proven.** On the real box, and with a real finger on the iPhone or iPad.
+
+## 152. The pages of "Several pages at once" are set apart (iPhone and iPad 0.36 build 42)
+- **Before.** The pages stood side by side with only their names above them (section 139). The page you were on had its name blue and bold, the other names grey.
+- **Now, standard "Frames".** Each page sits on a pale plate in its own colour with a thin frame of that colour, and its name is in that colour. The colour goes by place: the first page purple, the second blue, the third green, the fourth red (places 1 to 4 of section 138). The page you are on: its name bold and its frame a little thicker.
+- **Setting.** iPhone and iPad Settings: "Groups" with "Frames" (standard), "Plates" (each page on a light plain plate) and "Heading lines" (the name in the page's colour with a line under it, no plate). It is remembered on the device.
+- **Unchanged.** The navigation picture keeps its blue frame for the page showing now (section 29); the colours of places say which place a page has, not which page you are on, and red here is not trouble.
+- **Mac.** No Mac part. The place of a page is the number the Mac sends (section 138); an older Mac than 0.19 sends none.
+- **Signs.** In the phone guide: the new line for the frames, plates and heading lines and their colours; the old line "blue name = the page you are on" is replaced.
+- **Texts.** What's new iPhone and iPad 0.36, How it works ("Several pages at once", "Settings", "Signs in this app"); this section.
+- **Not yet proven.** On a real iPhone or iPad.
+
+## 153. Settings part "Keys" and the version (Mac 0.27 build 37; iPhone and iPad 0.36 build 42)
+- **Mac Settings.** A new part "Keys" with one choice, "App keys": "App colour" (standard) or "Whole icon" (section 150).
+- **iPhone and iPad Settings.** A new choice "Groups" (section 152).
+- **Versions.** Mac 0.27 (build 37); iPhone and iPad 0.36 (build 42); 27 Nov 2026. The link version and the keys-file format are not changed by this text round; check the code for any change there.
+- **Texts.** What's new, How it works, this specification and the README name these versions.

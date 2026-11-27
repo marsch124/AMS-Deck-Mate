@@ -72,6 +72,79 @@ enum KeyArt {
         return icon
     }
 
+    /// How keys with an app's own picture look (0.27), set from the keys file's "App keys" setting.
+    static var appLook: AppKeyLook = .colour {
+        didSet { if appLook != oldValue { forgetAppIcons() } }
+    }
+
+    /// What a key's picture depends on, for keeping drawn pictures.
+    private static func cacheKey(_ key: DeckKey?, _ pixels: Int) -> String {
+        "\(pixels)|\(appLook.rawValue)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)|\(key?.hasHeld ?? false)|\(key?.hasTwice ?? false)|\(key?.colour ?? "")|\(key.map(AskFirst.marked) ?? false)"
+    }
+
+    /// The kind of picture a key shows instead of a drawing.
+    private enum Picture {
+        /// An app's icon from the Mac (it has an empty edge round it).
+        case appIcon(NSImage)
+        /// A picture of its own, filling its square.
+        case own(NSImage)
+        /// A Raycast extension's icon (a logo, often see-through).
+        case raycast(NSImage)
+
+        var image: NSImage {
+            switch self {
+            case let .appIcon(image), let .own(image), let .raycast(image): return image
+            }
+        }
+    }
+
+    /// The picture a key shows, in the same order the drawing picks it; nil = a drawing or nothing.
+    private static func picture(_ key: DeckKey) -> Picture? {
+        guard GlanceKeys.coverTrack(key.icon) == nil, GlanceKeys.bigWords(key.icon) == nil,
+              BreathKeys.level(key.icon) == nil, BarKeys.percent(key.icon) == nil else { return nil }
+        if let name = key.pictureName, let picture = ownPicture(name) { return .own(picture) }
+        if key.icon.isEmpty, key.action.type == .raycast, let icon = RaycastIcons.image(forLink: key.action.target) {
+            return .raycast(icon)
+        }
+        let iconName = key.pictureName == nil ? key.shownIcon : key.action.autoIcon
+        if !iconName.isEmpty, IconStore.image(iconName) != nil { return nil }
+        if key.action.type == .app, let icon = appIcon(key.action.target) { return .appIcon(icon) }
+        return nil
+    }
+
+    private static var pictureColours: [ObjectIdentifier: NSColor] = [:]
+
+    /// The tile for a key with a picture (0.27): the main colour of the picture, read from it.
+    private static func colour(of picture: NSImage) -> NSColor {
+        let id = ObjectIdentifier(picture)
+        if let hit = pictureColours[id] { return hit }
+        let side = 32
+        var pixels: [(Double, Double, Double, Double)] = []
+        if let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: side, pixelsHigh: side, bitsPerSample: 8,
+                                      samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                                      bytesPerRow: 0, bitsPerPixel: 0) {
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+            picture.draw(in: NSRect(x: 0, y: 0, width: side, height: side))
+            NSGraphicsContext.restoreGraphicsState()
+            for y in 0..<side { for x in 0..<side {
+                guard let c = rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB) else { continue }
+                pixels.append((Double(c.redComponent), Double(c.greenComponent), Double(c.blueComponent), Double(c.alphaComponent)))
+            } }
+        }
+        let tile = AppColour.tile(fromPixels: pixels)
+        let colour = Palette.rgb(tile.red, tile.green, tile.blue)
+        if pictureColours.count > 300 { pictureColours.removeAll() }
+        pictureColours[id] = colour
+        return colour
+    }
+
+    /// The tile of a key: its own colour, else its picture's colour (0.27), else its kind's.
+    static func tile(for key: DeckKey?) -> NSColor {
+        guard let key, key.ownColour == nil, let picture = picture(key) else { return Palette.tile(for: key) }
+        return colour(of: picture.image)
+    }
+
     /// The words on a key: its own, or the app's name for an app key without words.
     static func title(_ key: DeckKey?) -> String {
         key?.shownTitle(appName: { appURL($0) == nil ? "" : appName($0) }) ?? ""
@@ -79,22 +152,40 @@ enum KeyArt {
 
     /// The key as a picture of `pixels` x `pixels`. nil = an empty place.
     static func image(for key: DeckKey?, pixels: Int) -> CGImage? {
-        let cacheKey = "\(pixels)|\(title(key))|\(key?.shownIcon ?? "")|\(key?.action.hashValue ?? 0)|\(key?.hasHeld ?? false)|\(key?.hasTwice ?? false)|\(key?.colour ?? "")"
+        let cacheKey = cacheKey(key, pixels)
         if let hit = pictures[cacheKey] { return hit }
         let size = CGFloat(pixels)
         guard let context = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        let tile = Palette.tile(for: key)
+        let waiting = key?.icon == AskFirst.waitingIcon
+        let tile = waiting ? Palette.waiting : tile(for: key)
         context.setFillColor(tile.cgColor)
         context.fill(CGRect(x: 0, y: 0, width: size, height: size))
         if let key {
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: false)
+            if waiting {
+                drawWaiting(size: size)
+                NSGraphicsContext.restoreGraphicsState()
+                let picture = context.makeImage()
+                pictures[cacheKey] = picture
+                return picture
+            }
             if let track = GlanceKeys.coverTrack(key.icon), let picture = cover(track) {
                 drawCover(key, picture, size: size)
+            } else if appLook == .icon, let picture = picture(key) {
+                drawWhole(key, picture, tile: tile, size: size)
             } else {
                 draw(key, size: size)
+            }
+            if AskFirst.marked(key) {
+                // A small light-grey ring bottom left: this key asks first, press again (0.27, his idea).
+                let k = size / 72
+                NSColor.white.withAlphaComponent(0.72).setStroke()
+                let ring = NSBezierPath(ovalIn: CGRect(x: 4 * k, y: 4 * k, width: 7 * k, height: 7 * k))
+                ring.lineWidth = 1.6 * k
+                ring.stroke()
             }
             if key.action.type == .toggle, !FanSpeedKey.isFanMenuFigure(key.action.target) {
                 // (The chip temperature and fan speed keys show a figure, not a state: no mark.)
@@ -161,6 +252,56 @@ enum KeyArt {
                                  options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
                                  attributes: [.font: NSFont.systemFont(ofSize: 9.5 * k, weight: .semibold),
                                               .foregroundColor: NSColor.white, .paragraphStyle: style])
+    }
+
+    /// "Whole icon" (0.27): the app's icon fills the key; the name stands on a dark strip at the bottom.
+    private static func drawWhole(_ key: DeckKey, _ picture: Picture, tile: NSColor, size: CGFloat) {
+        let k = size / 72
+        let whole = CGRect(x: 0, y: 0, width: size, height: size)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current?.imageInterpolation = .high
+        switch picture {
+        case let .appIcon(icon):
+            // A Mac app icon leaves about a tenth empty on each side: grown so its own shape fills the key.
+            icon.draw(in: whole.insetBy(dx: -0.122 * size, dy: -0.122 * size), from: .zero, operation: .sourceOver, fraction: 1)
+        case let .own(image):
+            image.draw(in: whole, from: .zero, operation: .sourceOver, fraction: 1)
+        case let .raycast(icon):
+            // A logo: large on a light key, so dark and coloured logos both read.
+            NSColor(white: 0.96, alpha: 1).setFill()
+            whole.fill()
+            let side = 44 * k
+            icon.draw(in: CGRect(x: (size - side) / 2, y: size - 8 * k - side, width: side, height: side),
+                      from: .zero, operation: .sourceOver, fraction: 1)
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        let title = Self.title(key)
+        guard !title.isEmpty else { return }
+        NSColor.black.withAlphaComponent(0.55).setFill()
+        CGRect(x: 0, y: 0, width: size, height: 19 * k).fill(using: .sourceOver)
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        style.lineBreakMode = .byTruncatingTail
+        let marked = AskFirst.marked(key)
+        (title as NSString).draw(with: CGRect(x: (marked ? 12 : 3) * k, y: 3.5 * k, width: size - (marked ? 24 : 6) * k, height: 12.5 * k),
+                                 options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
+                                 attributes: [.font: NSFont.systemFont(ofSize: 9.5 * k, weight: .semibold),
+                                              .foregroundColor: NSColor.white, .paragraphStyle: style])
+    }
+
+    /// A key that asks first, after its first press (0.27): red, "Sure?" large, "Press again" small.
+    private static func drawWaiting(size: CGFloat) {
+        let k = size / 72
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        ("Sure?" as NSString).draw(with: CGRect(x: 2 * k, y: 30 * k, width: size - 4 * k, height: 28 * k),
+                                   options: [.usesLineFragmentOrigin],
+                                   attributes: [.font: NSFont.systemFont(ofSize: 20 * k, weight: .bold),
+                                                .foregroundColor: NSColor.white, .paragraphStyle: style])
+        ("Press again" as NSString).draw(with: CGRect(x: 2 * k, y: 9 * k, width: size - 4 * k, height: 14 * k),
+                                         options: [.usesLineFragmentOrigin],
+                                         attributes: [.font: NSFont.systemFont(ofSize: 10 * k, weight: .semibold),
+                                                      .foregroundColor: NSColor.white.withAlphaComponent(0.95), .paragraphStyle: style])
     }
 
     /// The breathing bar: a soft rounded column that fills from the bottom, in white on the key's calm colour.
@@ -265,7 +406,9 @@ enum KeyArt {
             .foregroundColor: NSColor.white,
             .paragraphStyle: style,
         ]
-        let width = size - 6 * k
+        // A key that asks first keeps its words clear of the ring in the corner (0.27).
+        let inset: CGFloat = AskFirst.marked(key) ? 12 : 3
+        let width = size - 2 * inset * k
         // One line when it fits; a little smaller when it nearly fits; otherwise two lines.
         var oneLine = (title as NSString).size(withAttributes: attributes).width
         if oneLine > width, oneLine <= width * 1.15 {
@@ -277,7 +420,7 @@ enum KeyArt {
         if lines == 2 { style.lineBreakMode = .byWordWrapping }
         let height = lines * 11.5 * k + 2 * k
         let bottom = lines == 2 ? 3 * k : 8 * k
-        (title as NSString).draw(with: CGRect(x: 3 * k, y: bottom, width: width, height: height),
+        (title as NSString).draw(with: CGRect(x: inset * k, y: bottom, width: width, height: height),
                                  options: [.usesLineFragmentOrigin, .truncatesLastVisibleLine],
                                  attributes: attributes)
     }
@@ -299,7 +442,7 @@ enum KeyArt {
     /// The key as a PNG picture of 216 x 216, for the iPhone. nil = an empty place.
     static func pngForPhone(_ key: DeckKey?) -> Data? {
         guard let key, let picture = image(for: key, pixels: 216) else { return nil }
-        let cacheKey = "\(title(key))|\(key.shownIcon)|\(key.action.hashValue)|\(key.hasHeld)|\(key.hasTwice)"
+        let cacheKey = cacheKey(key, 216)
         if let hit = phonePictures[cacheKey] { return hit }
         let png = NSBitmapImageRep(cgImage: picture).representation(using: .png, properties: [:])
         if phonePictures.count > 300 { phonePictures.removeAll() }
@@ -374,6 +517,7 @@ enum KeyArt {
 
     static func forgetAppIcons() {
         mapPictures.removeAll()
+        pictureColours.removeAll()
         appIcons.removeAll()
         ownPictures.removeAll()
         pictures.removeAll()

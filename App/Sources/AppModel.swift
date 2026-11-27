@@ -4,7 +4,15 @@ import DeckMateCore
 
 /// The living state of the app: the setup, where the deck is right now, and the box.
 final class AppModel: ObservableObject {
-    @Published private(set) var deck: Deck
+    @Published private(set) var deck: Deck {
+        didSet {
+            // "App keys" changed (0.27): every key is drawn again, also on the box.
+            if deck.appKeys != oldValue.appKeys {
+                KeyArt.appLook = deck.appKeys
+                shown = []
+            }
+        }
+    }
     @Published private(set) var position: DeckPosition? { didSet { if position != oldValue { scheduleTick() } } }
     @Published private(set) var box: DeckDevice.State = .absent
     /// Keys held down right now (for the pressed look on screen).
@@ -123,6 +131,7 @@ final class AppModel: ObservableObject {
         isSample = sample != nil
         if let sample {
             deck = sample
+            KeyArt.appLook = sample.appKeys
             position = Navigator.start(in: sample)
             recentApps = ["com.apple.Safari", "com.apple.Notes"]
             copiedTexts = ["current", "Meeting notes for Monday"]
@@ -154,7 +163,9 @@ final class AppModel: ObservableObject {
         }
         let start = store.start()
         let firstStart = start.how == .first
-        deck = start.deck ?? Deck.starter()
+        let loaded = start.deck ?? Deck.starter()
+        deck = loaded
+        KeyArt.appLook = loaded.appKeys
         switch start.how {
         case let .recovered(date):
             let when = date.formatted(date: .abbreviated, time: .shortened)
@@ -325,8 +336,43 @@ final class AppModel: ObservableObject {
 
     /// Keys as they show now: a "Recent app" key turns into its app, a "Recent file" key into its
     /// file, a "Last copied text" key shows the first words of its text.
-    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] { let now = liveNow; return keys.mapValues { oftenShown($0, live: now) } }
-    func live(_ key: DeckKey?) -> DeckKey? { key.map { oftenShown($0, live: liveNow) } }
+    func live(_ keys: [Int: DeckKey]) -> [Int: DeckKey] {
+        let now = liveNow, waiting = waitingKey
+        return keys.mapValues { $0.id == waiting ? AskFirst.waiting($0) : oftenShown($0, live: now) }
+    }
+    func live(_ key: DeckKey?) -> DeckKey? {
+        key.map { $0.id == waitingKey ? AskFirst.waiting($0) : oftenShown($0, live: liveNow) }
+    }
+
+    // MARK: Ask first, press again (0.27)
+
+    private var pressAgain = PressAgain()
+    /// The key that waits for its second press (it shows "Sure?"), if any.
+    var waitingKey: UUID? { pressAgain.waitingKey(at: ProcessInfo.processInfo.systemUptime) }
+
+    /// A press of a key that may ask first. Returns the press to run (long / twice as they were at the
+    /// first press, and whether it was confirmed), or nil when the key now waits for the second press.
+    private func askFirst(_ key: DeckKey, long: Bool, twice: Bool) -> (long: Bool, twice: Bool, confirmed: Bool)? {
+        let now = ProcessInfo.processInfo.systemUptime
+        let before = pressAgain.waitingKey(at: now)
+        let step = pressAgain.press(key.id, asks: AskFirst.asks(key, long: long, twice: twice), long: long, twice: twice, at: now)
+        switch step {
+        case .wait:
+            bump()
+            DispatchQueue.main.asyncAfter(deadline: .now() + AskFirst.window + 0.05) { [weak self] in
+                guard let self, self.pressAgain.expire(at: ProcessInfo.processInfo.systemUptime) else { return }
+                self.bump()
+            }
+            return nil
+        case let .run(long, twice):
+            bump()
+            return (long, twice, true)
+        case .usual:
+            // Another key ended a wait: the waiting key shows itself again.
+            if before != nil { bump() }
+            return (long, twice, false)
+        }
+    }
 
     /// The clipboard and the list of opened files are only looked at while a key needs them.
     private func watchLive() {
@@ -743,10 +789,20 @@ final class AppModel: ObservableObject {
     @discardableResult
     func act(_ index: Int, at position: DeckPosition, long: Bool = false, favourite: Bool = false,
              careful: Bool = false, twice: Bool = false) -> Navigator.Outcome {
+        var long = long, twice = twice, confirmed = false
+        // Ask first (0.27): a key that asks waits for a second press; a press by link asks on the Mac instead.
+        if !careful, let key = favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index] {
+            guard let press = askFirst(key, long: long, twice: twice) else {
+                BoxLog.note("asks first: key \(index) waits for a second press")
+                return Navigator.Outcome(position: position, run: [])
+            }
+            (long, twice, confirmed) = press
+        }
         let outcome = favourite ? Navigator.pressFavourite(index, at: position, in: deck, long: long, twice: twice)
                                 : Navigator.press(index, at: position, in: deck, long: long, twice: twice)
         let now = liveNow
-        let run = outcome.run.map { oftenAction($0).resolving(now) }.map { careful ? $0.askingFirst : $0 }
+        // After "press again" the Mac's own question is not asked a second time.
+        let run = outcome.run.map { oftenAction($0).resolving(now) }.map { careful ? $0.askingFirst : confirmed ? $0.withoutAsking : $0 }
         // Count the press, for Settings › Key use (only keys that do something on the Mac).
         if !outcome.run.isEmpty, !isSample,
            let key = favourite ? deck.favourites[index] : Navigator.keys(at: position, in: deck)[index] {

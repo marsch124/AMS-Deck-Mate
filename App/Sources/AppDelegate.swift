@@ -147,7 +147,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             KeyArt.picturesFolder = store.pictures
             let folder = URL(fileURLWithPath: arguments[index + 1])
             try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            for group in store.load()?.profiles ?? [] {
+            let loaded = store.load()
+            KeyArt.appLook = loaded?.appKeys ?? .colour
+            for group in loaded?.profiles ?? [] {
                 for page in group.pages {
                     let name = "\(group.name) - \(page.name).png".replacingOccurrences(of: "/", with: "-")
                     try? KeyArt.pngForCheck(page)?.write(to: folder.appendingPathComponent(name))

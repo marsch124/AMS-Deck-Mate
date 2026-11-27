@@ -315,9 +315,11 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
     /// that app's own colours this way (Steward's Budget teal, Triathlon's Plan blue). Ignored on a key whose
     /// colour already says something (see `DeckAction.colourSpeaks`).
     public var colour: String = ""
+    /// Ask first, "press again" (0.27): true = always, false = never, nil = by itself (see `AskFirst.automatic`).
+    public var askFirst: Bool?
 
     public init(id: UUID = UUID(), title: String = "", icon: String = "", action: DeckAction = .none,
-                held: DeckAction? = nil, twice: DeckAction? = nil, colour: String = "") {
+                held: DeckAction? = nil, twice: DeckAction? = nil, colour: String = "", askFirst: Bool? = nil) {
         self.id = id
         self.title = title
         self.icon = icon
@@ -325,6 +327,7 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         self.held = held
         self.twice = twice
         self.colour = colour
+        self.askFirst = askFirst
     }
 
     public init(from decoder: Decoder) throws {
@@ -336,9 +339,10 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         held = try? c.decodeIfPresent(DeckAction.self, forKey: .held)
         twice = try? c.decodeIfPresent(DeckAction.self, forKey: .twice)
         colour = KeyColour.clean(c.value(.colour, ""))
+        askFirst = try? c.decodeIfPresent(Bool.self, forKey: .askFirst)
     }
 
-    enum CodingKeys: String, CodingKey { case id, title, icon, action, held, twice, colour }
+    enum CodingKeys: String, CodingKey { case id, title, icon, action, held, twice, colour, askFirst }
 
     /// Written like before 0.24 when the key has no colour of its own, so a file without own colours stays the same.
     public func encode(to encoder: Encoder) throws {
@@ -350,6 +354,7 @@ public struct DeckKey: Codable, Hashable, Identifiable, Sendable {
         try c.encodeIfPresent(held, forKey: .held)
         try c.encodeIfPresent(twice, forKey: .twice)
         if !colour.isEmpty { try c.encode(colour, forKey: .colour) }
+        try c.encodeIfPresent(askFirst, forKey: .askFirst)
     }
 
     /// The colour this key wears instead of its kind's, as red, green, blue from 0 to 1; nil = its kind's.
@@ -520,6 +525,8 @@ public struct Deck: Codable, Equatable, Sendable {
     public var eveningFrom = BoxEvening.defaultFrom
     public var eveningTo = BoxEvening.defaultTo
     public var eveningBrightness = BoxEvening.defaultBrightness
+    /// Keys with an app's own picture: in the app's colour, or the icon filling the key (0.27).
+    public var appKeys: AppKeyLook = .colour
 
     public init(version: Int = 1, profiles: [DeckProfile] = [], defaultProfile: UUID? = nil,
                 brightness: Int = 70, autoSwitch: Bool = true, screenAtPointer: Bool = false,
@@ -553,6 +560,7 @@ public struct Deck: Codable, Equatable, Sendable {
         eveningFrom = min(DayMinutes.perDay - 1, max(0, c.value(.eveningFrom, BoxEvening.defaultFrom)))
         eveningTo = min(DayMinutes.perDay - 1, max(0, c.value(.eveningTo, BoxEvening.defaultTo)))
         eveningBrightness = min(100, max(0, c.value(.eveningBrightness, BoxEvening.defaultBrightness)))
+        appKeys = c.value(.appKeys, .colour)
     }
 
     public func profile(_ id: UUID) -> DeckProfile? { profiles.first { $0.id == id } }

@@ -139,7 +139,7 @@ struct SettingsView: View {
 
     enum Part: String, CaseIterable, Identifiable {
         case box = "The box", firstTime = "First time with the box", screen = "Keys on screen", phone = "iPhone",
-             links = "Raycast and links", profiles = "Page groups", check = "Check keys", use = "Key use", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
+             links = "Raycast and links", keys = "Keys", profiles = "Page groups", check = "Check keys", use = "Key use", mac = "This Mac", elgato = "From Elgato", kept = "Where it is kept"
         var id: String { rawValue }
         var colour: String {
             switch self {
@@ -147,7 +147,7 @@ struct SettingsView: View {
             case .screen, .kept: return "screen"
             case .phone, .links: return "raycast"
             case .profiles: return "profiles"
-            case .check, .use, .elgato: return "keys"
+            case .check, .use, .elgato, .keys: return "keys"
             case .mac: return "settings"
             }
         }
@@ -256,6 +256,17 @@ struct SettingsView: View {
                     }
                 }
                 note("Open Deck Mate on the iPhone close to this Mac; on the same Wi-Fi it finds the Mac by itself. The first time, this Mac asks whether to allow it.")
+            }
+        case .keys:
+            card("Keys", "keys") {
+                HStack(spacing: 6) {
+                    Text("App keys")
+                    ForEach(AppKeyLook.allCases, id: \.self) { look in
+                        choice(look.title, model.deck.appKeys == look, "appLook-\(look.rawValue)") { model.change { $0.appKeys = look } }
+                    }
+                }
+                note("App colour: a key that opens an app wears the main colour of that app’s icon. Whole icon: the icon fills the key and the name stands on a dark strip. The box, the keys on screen and the iPhone and iPad all show it.")
+                note("A key with a small light-grey ring bottom left asks first: press it once and it turns red and says “Sure?”; press again within 3 seconds to do it. Set it for each key in Set up keys, “Ask first”.")
             }
         case .links:
             card("Press keys from Raycast", "raycast") {
