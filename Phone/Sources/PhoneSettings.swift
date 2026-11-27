@@ -37,6 +37,7 @@ struct PhoneSettings: View {
     @AppStorage("ownKeys") private var ownKeys = false
     @AppStorage("ownProfile") private var ownProfile = ""
     @AppStorage("showFavourites") private var showFavourites = true
+    @AppStorage("groupLook") private var groupLook = GroupLook.standard.rawValue
     @AppStorage("showMusic") private var showMusic = true
     @AppStorage("showGlance") private var showGlance = true
     @AppStorage("showMap") private var showMap = true
@@ -209,6 +210,13 @@ struct PhoneSettings: View {
                 }
                 Toggle("The note on what a key did", isOn: $showNote).accessibilityIdentifier("showNote")
                 note("A key that did not work always shows its note, also when this is off.")
+                Picker("Groups", selection: $groupLook) {
+                    Text("Frames").tag(GroupLook.frames.rawValue)
+                    Text("Plates").tag(GroupLook.plates.rawValue)
+                    Text("Heading lines").tag(GroupLook.lines.rawValue)
+                }
+                .accessibilityIdentifier("groupLook")
+                note("How the pages shown at once are set apart.")
                 Toggle("Favourites row", isOn: $showFavourites).accessibilityIdentifier("showFavourites")
                 note("Five keys under the others that stay in place on every page and in every page group. You fill them on the Mac, in Set up keys.")
                 Toggle("Music button", isOn: $showMusic).accessibilityIdentifier("showMusic")

@@ -1789,6 +1789,9 @@ private struct WideGrid: View {
     /// The places to lay out (0.34); more than the pages = empty places of full size, so the favourites
     /// beside or under the pages stay where they are on a page group with one page. 0 = one per page.
     var slots = 0
+    @AppStorage("groupLook") private var groupLook = GroupLook.standard.rawValue
+    @Environment(\.colorScheme) private var scheme
+    private var look: GroupLook { GroupLook.from(raw: groupLook) }
 
     static let nameHeight: CGFloat = 16
     static func between(_ gap: CGFloat) -> CGFloat { max(14, gap * 2.5) }
@@ -1804,18 +1807,40 @@ private struct WideGrid: View {
                     ForEach(0..<across, id: \.self) { column in
                         let page = row * across + column
                         if page < names.count {
+                            let here = link.tileHere == page
+                            let grouped = names.count > 1
+                            let tint = GroupPalette.colour(GroupColour.forPlace(page))
+                            let nameColour: Color = !grouped ? (here ? PhonePalette.part("screen") : Color.secondary)
+                                : (look == .plates ? (here ? Color.primary : Color.secondary) : tint)
                             VStack(alignment: .leading, spacing: gap) {
-                                // The page the device is on: its name blue and bold, like its frame in the navigation picture (0.31).
+                                // The page the device is on: its name bold (0.36: in the page's own colour), the others semibold.
                                 Text(names[page].isEmpty ? "Page" : names[page])
-                                    .font(.caption.weight(link.tileHere == page ? .bold : .semibold))
-                                    .foregroundStyle(link.tileHere == page ? PhonePalette.part("screen") : Color.secondary)
-                                    .accessibilityAddTraits(link.tileHere == page ? .isSelected : [])
+                                    .font(.caption.weight(here ? .bold : .semibold))
+                                    .foregroundStyle(nameColour)
+                                    .accessibilityAddTraits(here ? .isSelected : [])
                                     .lineLimit(1)
                                     // As wide as its keys, so a name is cut short only when it really is longer.
                                     .frame(width: 5 * side + 4 * gap, height: Self.nameHeight, alignment: .leading)
+                                    .overlay(alignment: .bottomLeading) {
+                                        if grouped, look == .lines {
+                                            Rectangle().fill(tint).frame(height: here ? 2.5 : 2)
+                                                .offset(y: gap / 2 + 1)
+                                        }
+                                    }
                                     .accessibilityIdentifier("pageName\(page)")
                                 KeyGrid(link: link, side: side, gap: gap, corner: corner,
                                         first: page * StreamDeckProtocol.keyCount)
+                            }
+                            // The plate or frame reaches outward into the room between the pages, so the keys never move.
+                            .background {
+                                if grouped, look != .lines {
+                                    let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    shape.fill(look == .frames ? tint.opacity(scheme == .dark ? 0.16 : 0.08) : GroupPalette.plate)
+                                        .overlay(shape.strokeBorder(look == .frames ? tint : Color.primary.opacity(0.14),
+                                                                    lineWidth: look == .frames ? (here ? 2.5 : 1.5) : (here ? 2.5 : 0.5)))
+                                        .padding(-6)
+                                        .allowsHitTesting(false)
+                                }
                             }
                         } else {
                             // An empty place: as large as a page where a page could stand, so nothing moves.
@@ -1940,4 +1965,21 @@ private extension View {
             .frame(minWidth: 44, minHeight: 44)
         }
     }
+}
+
+/// The colours of the page groups (0.36): by place purple, blue, green, red; lighter by night. No teal.
+enum GroupPalette {
+    private static func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat) -> UIColor { UIColor(red: r, green: g, blue: b, alpha: 1) }
+    static func colour(_ c: GroupColour) -> Color {
+        let (day, night): (UIColor, UIColor)
+        switch c {
+        case .purple: (day, night) = (rgb(0.48, 0.30, 0.80), rgb(0.76, 0.66, 1.00))
+        case .blue:   (day, night) = (rgb(0.14, 0.40, 0.84), rgb(0.47, 0.71, 1.00))
+        case .green:  (day, night) = (rgb(0.18, 0.56, 0.20), rgb(0.50, 0.86, 0.48))
+        case .red:    (day, night) = (rgb(0.80, 0.18, 0.20), rgb(1.00, 0.52, 0.52))
+        }
+        return Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? night : day })
+    }
+    /// The plain plate: near-white by day, a slightly lighter dark grey by night.
+    static let plate = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(white: 0.17, alpha: 1) : UIColor(white: 1.0, alpha: 1) })
 }
